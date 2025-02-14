@@ -1,0 +1,38 @@
+###### General Modifications on Alphafold Fine-tune and PANDORA
+Source-AFfine: https://github.com/phbradley/alphafold_finetune
+Source-PANDORA: https://github.com/X-lab-3D/PANDORA
+
+# Changes Made to Integrate Pandora and Affine Environments
+
+## Modifications from Pandora Environment:
+- Downgraded `python` from 3.11 to 3.9.19.
+- Updated `muscle` to retain version 5.1 but included build details.
+- Updated `blast` from 2.10 to 2.10.1 with build details.
+- Added specific versions for:
+  - `numpy`: 1.22.4
+  - `pip`: 24.3.1
+  - `setuptools`: 75.8.0
+  - `pandas`: 2.2.3
+  - `python-dateutil`: 2.9.0.post0
+  - `biopython`: 1.80 with build details.
+
+## Modifications from Affine Environment:
+- Updated `ml-collections` from 0.1.0 to 0.1.1.
+- Upgraded `numpy` from 1.21.0 to 1.22.4.
+- Upgraded `pandas` from 1.3.4 to 2.2.3.
+- Downgraded `scipy` from 1.7.3 to 1.7.0.
+- Added CUDA-specific builds for:
+  - `tensorflow`: 2.11.0
+  - `tensorflow-estimator`: 2.11.0.
+
+## Modifications to Alphafold:
+ Due to numpy version modifications:
+'alphafold/model/config.py' : np.int --> np.int32
+'alphafold/data/templates.py': np.object --> object
+
+## Modifications to AFfine Pipline:
+'run_prediction.py' flag --num_recycles added.
+'run_prediction.py' flag --shuffle_templates added.
+'run_prediction.py' flag --num_templates added.
+
+

@@ -55,8 +55,9 @@ parser.add_argument('--terse', action='store_true', help='Dont write out pdbs or
 parser.add_argument('--no_resample_msa', action='store_true', help='Dont randomly '
                     'resample from the MSA during recycling. Perhaps useful for '
                     'testing...')
-parser.add_argument('--num_recycles', type=int, nargs='*', default=3)
-
+parser.add_argument('--num_recycles', type=int, nargs='*', default=[3])
+parser.add_argument('--shuffle_templates', action='store_true', help='if set shuffles the templates. requires to have use_template column in aln files')
+parser.add_argument('--num_templates', type=int, nargs='*', default=4, help='num templates to use after shuffling.')
 args = parser.parse_args()
 
 import os
@@ -116,6 +117,17 @@ for counter, targetl in targets.iterrows():
     num_res = len(query_sequence)
 
     data = pd.read_table(alignfile)
+    if args.shuffle_templates:
+        if isinstance(args.num_templates, list):
+            num_templates = args.num_templates[0]  # Take the first element if it's a list
+        else:
+            num_templates = args.num_templates  # Use it directly if it's not a list
+        print('shuffle_templates flag == True, templates to use are:')
+        data = data[data['use_template'] == 1].reset_index(drop=True)
+        data = data.sample(frac=1).reset_index(drop=True)
+        data = data.iloc[:int(num_templates)]
+        print(data)
+        
     cols = ('template_pdbfile target_to_template_alignstring identities '
             'target_len template_len'.split())
     template_features_list = []
