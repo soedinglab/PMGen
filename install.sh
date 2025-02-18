@@ -6,8 +6,9 @@ set -e  # Exit immediately if a command fails
 error_handler() {
     echo "========================================="
     echo "⚠ An error occurred during the installation process."
-    echo "Please contact Amir Asgary at amir.asgary@mpinat.mpg.de or open an issue on our GitHub."
-    echo "GitHub: https://github.com/YOUR_USERNAME/YOUR_REPOSITORY"
+    echo "If it is a GPU related issue, please adjust your CUDA and CUDNN version in .yml files."
+    echo "Please open an issue on our GitHub. We try to fix it in 24 hours!"
+    echo "GitHub: https://github.com/AmirAsgary/ParseFold-MHC"
     echo "========================================="
     exit 1
 }
@@ -24,7 +25,6 @@ ENV_FILE="parsefold_mhc.yml"
 AFFINE_ZIP_URL="https://owncloud.gwdg.de/index.php/s/3TciEVlP4VIA9HN/download"  # Replace with the actual URL
 AFFINE_ZIP_NAME="AFfine.zip"
 AFFINE_FOLDER="AFfine"
-PANDORA_MODIF_LINK="https://owncloud.gwdg.de/index.php/s/d5tcLq9TRsDrGSr/download"
 PANDORA_MODIF_PATH="$CURRENT_DIR/PANDORA/PANDORA/Pandora/Modelling_functions.py"
 
 echo "========================================="
@@ -119,10 +119,9 @@ else
 fi
 
 # Step 10: Dowlnload modified files for PANDORA
-echo "Download and move modified scripts for PANDORA"
-wget -O "Modelling_functions.py" "$PANDORA_MODIF_LINK"
+echo "Change modified scripts in PANDORA"
 rm "$PANDORA_MODIF_PATH"
-mv "Modelling_functions.py" "$PANDORA_MODIF_PATH"
+mv "data/modified_files/Modelling_functions.py" "$PANDORA_MODIF_PATH"
 
 # Step 9: Cleanup and Completion
 cd "$CURRENT_DIR"

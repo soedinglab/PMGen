@@ -9,8 +9,17 @@ from Bio import PDB
 from Bio.SeqUtils import seq3
 from Bio import pairwise2
 from Bio import PDB
-from Bio.SubsMat import MatrixInfo
+#from Bio.SubsMat import MatrixInfo
+from Bio.Align import substitution_matrices
+
 from Bio.PDB import PDBIO
+import shutil
+import random
+
+import warnings
+# Suppress the specific warning
+warnings.filterwarnings("ignore")
+# Your code here
 
 
 def process_dataframe(df):
@@ -356,7 +365,9 @@ def process_string(input_string):
     return numbers_variable, final_result
 
 def map_query_template(target_sequence, template_sequence, tar_dist=0, temp_dist=0):
-    alignments = pairwise2.align.localds(target_sequence, template_sequence, MatrixInfo.blosum62, -11, -1)
+    blosum62 = substitution_matrices.load("BLOSUM62")
+    #alignments = pairwise2.align.localds(target_sequence, template_sequence, MatrixInfo.blosum62, -11, -1)
+    alignments = pairwise2.align.localds(target_sequence, template_sequence, blosum62, -11, -1)
     alignment = alignments[0]
     list_alignment = list((pairwise2.format_alignment(*alignment)).split("\n"))
     start_target,_ = process_string(list_alignment[0])
@@ -713,6 +724,34 @@ def remove_rows_from_file(file_path, df):
 
     return [new_df]
 
+def rename_files(directory, num_template, copy_if_less_template=False):
+    # Iterate through files in the specified directory
+    i = 0
+    for filename in os.listdir(directory):
+        if filename.endswith(".pdb") and "BL" in filename:
+            # Get the full path of the file
+            file_path = os.path.join(directory, filename)
+
+            # Create a new name based on your requirements
+            new_filename = f"mod{i}.pdb"
+            i = i + 1
+
+            # Rename the file
+            new_file_path = os.path.join(directory, new_filename)
+            shutil.move(file_path, new_file_path)
+    modified_files = os.listdir(directory)
+    modified_files = [os.path.join(directory, i) for i in modified_files if '.pdb' in i and 'mod' in i]
+    print(f'Only {len(modified_files)} PANDORA templates were generated')
+    if copy_if_less_template: # if less templates are created, copies randomly
+        print(f'copy_if_less_template==True, So, Duplicate Randomly')
+
+        if len(modified_files) < num_template and len(modified_files) != 0:
+            J = num_template - len(modified_files)
+            for jj in range(J):
+                source_file = os.path.join(directory, random.choice(modified_files))
+                dest_file = os.path.join(directory, f'mod{num_template - 1 - jj}.pdb')
+                shutil.copy(source_file, dest_file)
+    return modified_files
   
     
     
