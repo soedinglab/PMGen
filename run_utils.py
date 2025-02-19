@@ -1,4 +1,6 @@
-import pandas as pd
+import psutil
+import numpy as np
+import concurrent.futures
 import sys
 sys.path.append("PANDORA")
 import os
@@ -20,8 +22,30 @@ class run_parsefold_modeling():
                   anchors=None, mhc_allele=None, predict_anchor=True,
                  num_templates=4, num_recycles=3, models=['model_2_ptm'],
                  alphafold_param_folder = 'AFfine/af_params/params_original/',
-                 fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl'
+                 fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
+                 benchmark=False, n_homology_models=1, best_n_templates=1
                  ):
+        """
+        Initializes the ParseFold modeling pipeline.
+
+        Args:
+            peptide (str): Peptide sequence.
+            mhc_seq (str): MHC sequence(s) (single for MHC-I, two chains for MHC-II).
+            mhc_type (int): MHC class (1 or 2).
+            id (str): Unique identifier for the run.
+            output_dir (str): Directory for output files. Default is 'output'.
+            anchors (list or tuple, optional): Anchor positions for MHC binding.
+            mhc_allele (str, optional): Specific MHC allele name.
+            predict_anchor (bool): Whether to predict anchor residues. Default is True.
+            num_templates (int): Number of templates used in modeling.
+            num_recycles (int): Number of AlphaFold recycling iterations.
+            models (list): List of AlphaFold models to use.
+            alphafold_param_folder (str): Path to AlphaFold parameter files.
+            fine_tuned_model_path (str): Path to fine-tuned AlphaFold model.
+            benchmark (bool): Use different allele compared to the actual allele. make sure the id shouldbe pdb id.
+            n_homology_models (int): number of initial peptide homology models to generate by modeller, default=1.
+            best_n_templates (int): number of found templates used for homology modeling via modeler, default=1.
+        """
         super().__init__()
         self.peptide = peptide
         self.mhc_seq = mhc_seq
@@ -36,6 +60,9 @@ class run_parsefold_modeling():
         self.models = models
         self.alphafold_param_folder = alphafold_param_folder
         self.fine_tuned_model_path = fine_tuned_model_path
+        self.benchmark = benchmark
+        self.n_homology_models = n_homology_models
+        self.best_n_templates = best_n_templates
         self.input_assertion()
         if len(self.models) > 1:
             print(f'\n #### Warning! You are running for multiple models {self.models}'
@@ -49,10 +76,16 @@ class run_parsefold_modeling():
         self.db = Database.load() # load pandora db
         self.alignment_output = os.path.join(self.output_dir, 'alignment')
         self.alphafold_out = os.path.join(self.output_dir, 'alphafold')
+        self.alphafold_input_file = os.path.join(self.alphafold_out, self.id, f'alphafold_input_file.tsv')
         # vars defined later
         self.template_id = None
 
-    def run_parsefold(self, test_mode=False):
+    def run_parsefold(self, test_mode=False, run_alphafold=True):
+        """
+        Runs the full ParseFold pipeline, including Pandora alignment and AlphaFold prediction.
+        Args:
+            test_mode (bool): If True, runs in test mode without full execution.
+        """
         os.makedirs(self.output_dir, exist_ok=True)
         self.template_id = self.run_pandora()
         #pandora_template_path = os.path.join(self.pandora_output, self.id, self.template_id)
@@ -66,12 +99,19 @@ class run_parsefold_modeling():
         aln_output_file = os.path.join(self.alignment_output, self.id + '_with_pep.tsv')
         _ = self.alignment_with_peptide(pdb_files, mhc_pep_seq, output_path=aln_output_file)
         ## Prepare Alphafold Fine Input files
-        alphafold_input_file = os.path.join(self.alphafold_out, 'alphafold_input_file')
-        os.makedirs(self.alphafold_out, exist_ok=True)
-        self.alphafold_preparation(template_aln_file=aln_output_file, mhc_pep_seq=mhc_pep_seq, output=alphafold_input_file)
-        self.run_alphafold(input_file=alphafold_input_file, output_prefix=self.alphafold_out + f'/{self.id}_')
+        os.makedirs(self.alphafold_out + f'/{self.id}', exist_ok=True)
+        self.alphafold_preparation(template_aln_file=aln_output_file, mhc_pep_seq=mhc_pep_seq, output=self.alphafold_input_file)
+        if run_alphafold:
+            print('## To run Alphafold Please Make Sure GPU is Available and can be found ##')
+            self.run_alphafold(input_file=self.alphafold_input_file, output_prefix=self.alphafold_out + '/')
 
     def run_pandora(self):
+        """
+        Runs the Pandora module to generate template structures for MHC modeling.
+
+        Returns:
+            str: Template ID used in the modeling process.
+        """
         os.makedirs(self.pandora_output, exist_ok=True)
         mhc_allele = [] if not self.mhc_allele else [self.mhc_allele]
         anchor = [] if self.anchors is None else self.anchors
@@ -82,7 +122,9 @@ class run_parsefold_modeling():
                         use_netmhcpan=self.predict_anchor, anchors=anchor)
         # save ind self.pandora_output/self.id
         case = Pandora.Pandora(target, self.db)
-        case.model(n_loop_models=self.num_templates)
+        case.model(n_loop_models=self.num_templates, benchmark=self.benchmark,
+                   n_homology_models=self.n_homology_models,
+                   best_n_templates=self.best_n_templates)
         # get template id used in pandora
         files = [file for file in glob.glob(os.path.join(self.pandora_output, self.id, '????.pdb')) if "mod" not in file.split("/")[-1]]
         template_id = files[0].split("/")[-1]
@@ -90,14 +132,16 @@ class run_parsefold_modeling():
 
     def alignment_without_peptide(self, template_id, output_path, template_path,
                                        template_csv_path="data/all_templates.csv"):
-        '''
-        used for empty mhc pocket prediction
-        :param template_id: str, PDB id used as template for homology modeling.
-        :param output_path: str, save output path.
-        :param template_path: str, full template path.
-        :param template_csv_path: str, path to csv file containing all templates and their sequences.
-        :return: alignment dataframe, saved alignment files at given path.
-        '''
+        """
+        Generates an alignment file for MHC without the peptide.
+        Args:
+            template_id (str): PDB ID used as a template.
+            output_path (str): File path to save the alignment.
+            template_path (str): Path to the template structure.
+            template_csv_path (str): Path to the CSV file containing template sequences.
+        Returns:
+            pd.DataFrame: Alignment data.
+        """
         os.makedirs(self.alignment_output, exist_ok=True)
         df = processing_functions.prepare_alignment_file_without_peptide(template_id=template_id,
                                                                     mhc_seq=self.mhc_seq,
@@ -108,6 +152,17 @@ class run_parsefold_modeling():
         return df
 
     def alignment_with_peptide(self, pdb_files, mhc_pep_seq, output_path):
+        """
+        Generates an alignment file for MHC with the peptide.
+
+        Args:
+            pdb_files (list): List of PDB template file paths.
+            mhc_pep_seq (str): Full MHC-peptide sequence.
+            output_path (str): File path to save the alignment.
+
+        Returns:
+            pd.DataFrame: Alignment data.
+        """
         os.makedirs(self.alignment_output, exist_ok=True)
         DF = []
         for pdb_file in pdb_files:
@@ -122,12 +177,27 @@ class run_parsefold_modeling():
         return DF
 
     def alphafold_preparation(self, template_aln_file, mhc_pep_seq, output):
+        """
+        Prepares input files for AlphaFold.
+
+        Args:
+            template_aln_file (str): Path to the template alignment file.
+            mhc_pep_seq (str): Full MHC-peptide sequence.
+            output (str): Path to save the prepared input file.
+        """
         df = pd.DataFrame({"target_chainseq": [mhc_pep_seq],
                            "templates_alignfile": [template_aln_file],
                            "targetid": [self.id]})
         df.to_csv(output, sep='\t', index=False)
 
     def run_alphafold(self, input_file, output_prefix):
+        """
+        Runs AlphaFold with the specified input and parameters.
+
+        Args:
+            input_file (str): Path to the input file.
+            output_prefix (str): Prefix for output files.
+        """
         model_params_files = ''
         model_names = ''
         for model in self.models:
@@ -143,7 +213,8 @@ class run_parsefold_modeling():
             "--outfile_prefix", f"{output_prefix}",
             "--model_names", f"{model_names}",
             "--model_params_files", f"{model_params_files}",
-            "--ignore_identities"
+            "--ignore_identities",
+            "--num_recycles", f"{self.num_recycles}"
         ]
         print(command)
         try:
@@ -166,12 +237,13 @@ class run_parsefold_modeling():
 
     def input_assertion(self):
         assert isinstance(self.peptide, str), f"peptide must be a string, found: {self.peptide}"
-        assert self.mhc_type in [1, 2], f"mhc_seq must be an integer value of 1 or 2, found: {self.peptide}"
+        assert self.mhc_type in [1, 2], f"mhc_type must be an integer value of 1 or 2, found: {self.peptide}"
         assert isinstance(self.mhc_seq, str), f"mhc_seq must be a string, found: {self.mhc_seq}"
         assert isinstance(self.output_dir, str), f"output_dir must be a string, found: {self.output_dir}"
         if self.anchors:
             assert isinstance(self.anchors, (tuple, list)), (f"anchors must be a tuple or list, found: {self.anchors}"
                                                              f"alternatively use predict_anchor==True")
+            self.anchors = list(self.anchors)
         else:
             assert self.predict_anchor==True, f'If anchors arg is empty, please set predict_anchor=True'
         if self.mhc_allele is not None:
@@ -194,3 +266,188 @@ class run_parsefold_modeling():
         assert isinstance(self.alphafold_param_folder, str), f'alphafold_param_folder must be a string, found {self.alphafold_param_folder}'
 
 
+class run_parsefold_wrapper():
+    def __init__(self, df, output_dir, num_templates=4, num_recycles=3, models=['model_2_ptm'],
+                 alphafold_param_folder='AFfine/af_params/params_original/',
+                 fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
+                 max_ram_per_job=3, num_cpu=1, benchmark=False, best_n_templates=1, n_homology_models=1):
+        """
+        Initializes the run_parsefold_wrapper class.
+        :param df: pandas DataFrame containing input data. Required columns:
+            - 'peptide' (str): Peptide sequence.
+            - 'mhc_seq' (str): MHC sequence (one chain for MHC-I, two for MHC-II).
+            - 'mhc_type' (int): Type of MHC (1 for MHC-I, 2 for MHC-II).
+            - 'anchors' (str or NaN): Two numbers (MHC-I) or four numbers (MHC-II) separated by ";". If not provided, anchors will be predicted.
+            - 'id' (str): Unique identifier for each row.
+        :param output_dir: str, path to the output directory. This directory will be created if it does not exist.
+        :param num_templates: int, number of structural templates to use (default=4).
+        :param num_recycles: int, number of recycles in AlphaFold inference (default=3).
+        :param models: list of str, names of AlphaFold models to use (default=['model_2_ptm']).
+        :param alphafold_param_folder: str, path to the folder containing original AlphaFold model parameters.
+            - Must be an existing directory.
+        :param fine_tuned_model_path: str, path to the fine-tuned AlphaFold model parameters.
+            - Must be an existing file.
+        :param max_ram_per_job: int, maximum RAM (in GB) per parallel process (default=3).
+        :param num_cpu: int, number of CPU cores to use (default=1).
+        :param benchmark: bool, to do becnhmarking.
+        :param best_n_templates: int, how many models to used for homology modeling after sequence aln search, default=1.
+        :param n_homology_models: int, number of initial models to be done with modeller homology modelling, default=1.
+        The function `input_assertion()` checks if all inputs are correctly formatted and whether required files and directories exist.
+        Raises:
+            - AssertionError if any input is invalid.
+        """
+        self.df = df
+        self.output_dir = output_dir
+        self.num_templates = num_templates
+        self.num_recycles = num_recycles
+        self.models = models
+        self.alphafold_param_folder = alphafold_param_folder
+        self.fine_tuned_model_path = fine_tuned_model_path
+        self.max_ram_per_job = max_ram_per_job
+        self.num_cpu = num_cpu
+        self.benchmark = benchmark
+        self.best_n_templates = best_n_templates
+        self.n_homology_models = n_homology_models
+        self.input_assertion()
+
+    def run_wrapper(self):
+        INPUT_DF = []
+        for step, row in self.df.iterrows():
+            anchors = [int(r) for r in row['anchors'].split(';')] if isinstance(row['anchors'], str) and ';' in row['anchors'] else None
+            try:
+                mhc_allele = row['mhc_allele'] if row['mhc_allele'] else None
+            except:
+                mhc_allele = None
+            predict_anchor = False if anchors else True
+            runner = run_parsefold_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
+                                           mhc_type=row['mhc_type'], id=f"{row['id']}", output_dir=self.output_dir,
+                                            anchors=anchors, mhc_allele=mhc_allele, predict_anchor=predict_anchor,
+                                            num_templates=self.num_templates, num_recycles=self.num_recycles,
+                                            models=self.models, alphafold_param_folder=self.alphafold_param_folder,
+                                            fine_tuned_model_path=self.fine_tuned_model_path, benchmark=self.benchmark,
+                                            n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates)
+            runner.run_parsefold(run_alphafold=False)
+            input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
+            input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])] # id/id
+            INPUT_DF.append(input_df)
+        alphafold_out = self.output_dir + '/alphafold'
+        pd.concat(INPUT_DF).to_csv(f'{alphafold_out}/alphafold_input_file.tsv', sep='\t', index=False)
+        runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
+
+
+    def get_available_memory(self):
+        """ Returns available system memory in GB """
+        memory = psutil.virtual_memory()
+        return memory.available / (1024 ** 3)  # Convert bytes to GB
+
+
+    def process_row(self, row):
+        """ Process each row to generate input data for Alphafold """
+        anchors = [int(r) for r in row['anchors'].split(';')] if isinstance(row['anchors'], str) and ';' in row[
+            'anchors'] else None
+        try:
+            mhc_allele = row['mhc_allele'] if row['mhc_allele'] else None
+        except:
+            mhc_allele = None
+        predict_anchor = False if anchors else True
+        runner = run_parsefold_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
+                                        mhc_type=row['mhc_type'], id=f"{row['id']}", output_dir=self.output_dir,
+                                        anchors=anchors, mhc_allele=mhc_allele, predict_anchor=predict_anchor,
+                                        num_templates=self.num_templates, num_recycles=self.num_recycles,
+                                        models=self.models, alphafold_param_folder=self.alphafold_param_folder,
+                                        fine_tuned_model_path=self.fine_tuned_model_path, benchmark=self.benchmark,
+                                        n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates)
+        runner.run_parsefold(run_alphafold=False)
+        input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
+        input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])]  # id/id
+        return input_df
+
+    def run_wrapper_parallel(self, max_ram=3, max_cores=4):
+        """
+        Processes rows of input data in parallel, utilizing available system memory and CPU cores.
+        It ensures that the system memory does not exceed the specified `max_ram` per job,
+        divides the work among multiple processes, and then runs Alphafold on the final input file.
+        Args:
+            max_ram (float, optional): Maximum amount of system memory (in GB) allocated per parallel job. Default is 3 GB.
+            max_cores (int, optional): Maximum number of CPU cores to use for parallel processing. Default is 4.
+        """
+        # List to hold the processed dataframes
+        INPUT_DF = []
+        # Monitor system memory to ensure it doesn't exceed max_ram
+        available_memory = self.get_available_memory()
+        print(f"Available memory: {available_memory} GB")
+        # Calculate maximum number of jobs based on available memory and max_ram (in GB)
+        max_jobs = max_cores
+        if available_memory < max_ram:
+            max_jobs = int(np.floor(available_memory / max_ram))  # Limit jobs based on available memory
+        print(f"Max concurrent jobs based on available memory: {max_jobs}")
+        # Use ProcessPoolExecutor for parallelism
+        with concurrent.futures.ProcessPoolExecutor(max_workers=max_jobs) as executor:
+            # Submit tasks for each row
+            futures = {executor.submit(self.process_row, row): row for _, row in self.df.iterrows()}
+            # Collect results
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    result = future.result()
+                    INPUT_DF.append(result)
+                except Exception as e:
+                    print(f"Error processing row: {e}")
+        # Combine all the dataframes into one and save to file
+        alphafold_out = self.output_dir + '/alphafold'
+        pd.concat(INPUT_DF).to_csv(f'{alphafold_out}/alphafold_input_file.tsv', sep='\t', index=False)
+        # Now, run alphafold on the final input file
+        # Initialize a final runner for Alphafold
+        # Run alphafold model, initialize a runner
+        row = self.df.iloc[0, :]
+        anchors = [int(r) for r in row['anchors'].split(';')] if isinstance(row['anchors'], str) and ';' in row[
+            'anchors'] else None
+        try:
+            mhc_allele = row['mhc_allele'] if row['mhc_allele'] else None
+        except:
+            mhc_allele = None
+        predict_anchor = False if anchors else True
+        runner = run_parsefold_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
+                                            mhc_type=row['mhc_type'], id=f"{row['id']}", output_dir=self.output_dir,
+                                            anchors=anchors, mhc_allele=mhc_allele, predict_anchor=predict_anchor,
+                                            num_templates=self.num_templates, num_recycles=self.num_recycles,
+                                            models=self.models, alphafold_param_folder=self.alphafold_param_folder,
+                                            fine_tuned_model_path=self.fine_tuned_model_path)
+        runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
+
+
+    def input_assertion(self):
+        """
+        Validates input arguments to ensure correct data types and formats.
+        """
+        assert isinstance(self.df, pd.DataFrame), f"df must be a pandas DataFrame, found: {type(self.df)}"
+        assert isinstance(self.output_dir,
+                          str), f"output_dir must be a string (directory path), found: {type(self.output_dir)}"
+        assert isinstance(self.num_templates,
+                          int), f"num_templates must be an integer, found: {type(self.num_templates)}"
+        assert isinstance(self.num_recycles, int), f"num_recycles must be an integer, found: {type(self.num_recycles)}"
+        assert isinstance(self.models, list) and all(isinstance(m, str) for m in self.models), (
+            f"models must be a list of strings, found: {self.models}"
+        )
+        required_columns = {'peptide', 'mhc_seq', 'mhc_type', 'anchors', 'id'}
+        missing_columns = required_columns - set(self.df.columns)
+        assert not missing_columns, f"df is missing required columns: {missing_columns}"
+        assert self.df['peptide'].apply(lambda x: isinstance(x, str)).all(), "All peptide values must be strings."
+        assert self.df['mhc_seq'].apply(lambda x: isinstance(x, str)).all(), "All mhc_seq values must be strings."
+        assert self.df['mhc_type'].apply(
+            lambda x: x in [1, 2]).all(), "MHC type must be either 1 (MHC-I) or 2 (MHC-II)."
+        def valid_anchor_format(anchor, mhc_type):
+            if pd.isna(anchor):
+                return True  # Allow missing anchors (to be predicted)
+            parts = anchor.split(";")
+            return (mhc_type == 1 and len(parts) == 2) or (mhc_type == 2 and len(parts) == 4)
+        assert self.df.apply(lambda row: valid_anchor_format(row['anchors'], row['mhc_type']), axis=1).all(), (
+            "Anchors must be two numbers separated by ';' for MHC-I and four for MHC-II."
+        )
+        assert isinstance(self.alphafold_param_folder,
+                          str), f"alphafold_param_folder must be a string, found: {type(self.alphafold_param_folder)}"
+        assert os.path.isdir(
+            self.alphafold_param_folder), f"alphafold_param_folder does not exist or is not a directory: {self.alphafold_param_folder}"
+        assert isinstance(self.fine_tuned_model_path,
+                          str), f"fine_tuned_model_path must be a string, found: {type(self.fine_tuned_model_path)}"
+        assert os.path.isfile(
+            self.fine_tuned_model_path), f"fine_tuned_model_path does not exist or is not a file: {self.fine_tuned_model_path}"

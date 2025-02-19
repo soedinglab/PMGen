@@ -29,6 +29,7 @@ Source-PANDORA: https://github.com/X-lab-3D/PANDORA
  Due to numpy version modifications:
 'alphafold/model/config.py' : np.int --> np.int32
 'alphafold/data/templates.py': np.object --> object
+'run_prediction.py': outfile_prefix = args.outfile_prefix+'_'+targetl.targetid --> outfile_prefix = args.outfile_prefix+targetl.targetid
 
 ## Modifications to AFfine Pipline:
 'run_prediction.py' flag --num_recycles added.

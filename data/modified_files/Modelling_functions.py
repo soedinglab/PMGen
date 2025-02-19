@@ -18,6 +18,7 @@ from Bio.Align import PairwiseAligner
 from datetime import datetime
 from copy import deepcopy
 import re
+import json
 
 
 def check_target_template(target, template):
