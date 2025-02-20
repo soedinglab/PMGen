@@ -3,7 +3,7 @@
 # ParseFold-MHC: peptide-MHC structure prediction pipeline
 
 ## Installation
-a
+aa
 
 ## Set example environment variables
 ```
