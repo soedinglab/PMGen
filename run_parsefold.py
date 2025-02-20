@@ -12,9 +12,9 @@ def main():
     parser = argparse.ArgumentParser(description="Run ParseFold wrapper or modeling.")
 
     # Default settings
-    parser.add_argument('--run', choices=['parallel', 'single'], required=False, default='single',
+    parser.add_argument('--run', choices=['parallel', 'single'], required=False, default='parallel',
                         help='Run mode: parallel or single (one by one). parallel only works if --mode wrapper')
-    parser.add_argument('--mode', choices=['wrapper', 'modeling'], required=False, default='modeling',
+    parser.add_argument('--mode', choices=['wrapper', 'modeling'], required=False, default='wrapper',
                         help='Recommended. Select wrapper or modeling mode')
 
     # Required arguments for modeling mode
@@ -34,7 +34,8 @@ def main():
     parser.add_argument('--output_dir', type=str, required=True, help='Output directory')
     parser.add_argument('--num_templates', type=int, default=4, help='Number of engineered templates')
     parser.add_argument('--num_recycles', type=int, default=3, help='Number of recycles')
-    parser.add_argument('--models', nargs='+', default=['model_2_ptm'], help='List of models to use')
+    parser.add_argument('--models', nargs='+', default=['model_2_ptm'], help='List of models to use. if fine'
+                                                                             'tuned, please use _ft at the end of your model.')
     parser.add_argument('--alphafold_param_folder', type=str, default='AFfine/af_params/params_original/',
                         help='Path to AlphaFold parameters')
     parser.add_argument('--fine_tuned_model_path', type=str,
