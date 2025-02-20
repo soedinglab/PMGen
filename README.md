@@ -1,6 +1,11 @@
 
 
-# Set example environment variables
+# ParseFold-MHC: peptide-MHC structure prediction pipeline
+
+## Installation
+
+
+## Set example environment variables
 ```
 PEPTIDE='NLVPMVATV'
 # MHC-I
@@ -17,7 +22,7 @@ HLAALLEL_II='HLA-DRA*01/HLA-DRB1*0101'
 ### Basic Modeling Mode #
 #########################
 
-# Example 1: Minimal MHC-I modeling
+## Example 1: Minimal MHC-I modeling
 ```
 python run_parsefold.py \
   --mode modeling \
@@ -27,7 +32,7 @@ python run_parsefold.py \
   --output_dir outputs/basic_mhci \
   --predict_anchor
 ```
-# Example 2: MHC-II with manual anchors
+## Example 2: MHC-II with manual anchors
 We do not recommend to set anchors and it is better to predict them.
 ```
 python run_parsefold.py \
@@ -39,7 +44,7 @@ python run_parsefold.py \
   --anchors [2,5,7,9] \
   --id "custom_id123"
 ```
-# Example 3: Using FASTA input with allele name
+## Example 3: Using FASTA input with allele name
 ```
 python run_parsefold.py \
   --mode modeling \
@@ -59,8 +64,8 @@ defined resources in `--max_ram , --max_cores` per job. The single mode runs pre
 in a for loop one by one.
 
 ########################
+## Example 4: Basic wrapper mode (serial execution)
 ```
-# Example 4: Basic wrapper mode (serial execution)
 python run_parsefold.py \
   --mode wrapper \
   --run single \
@@ -69,7 +74,7 @@ python run_parsefold.py \
   --num_templates 4 \
   --num_recycles 3
 ```
-# Example 5: Parallel wrapper execution with resource limits
+## Example 5: Parallel wrapper execution with resource limits
 You can use as many as
 ```
 python run_parsefold.py \
@@ -83,7 +88,7 @@ python run_parsefold.py \
   --num_recycles 6 \
   --models model_2_ptm model_3_ptm
 ```
-# Example 6: Memory-intensive parallel run
+## Example 6: Memory-intensive parallel run
 ```
 python run_parsefold.py \
   --mode wrapper \
