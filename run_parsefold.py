@@ -2,6 +2,9 @@ import argparse
 import pandas as pd
 from run_utils import run_parsefold_wrapper, run_parsefold_modeling
 from Bio import SeqIO
+import warnings
+from Bio import BiopythonDeprecationWarning
+warnings.filterwarnings("ignore", category=BiopythonDeprecationWarning)
 
 
 
@@ -24,7 +27,7 @@ def main():
     parser.add_argument('--mhc_allele', type=str, help='MHC allele (optional). We recommend to use --mhc_seq instead.')
     parser.add_argument('--mhc_type', type=int, help='MHC type', choices=[1,2])
     parser.add_argument('--id', type=str, help='Identifier')
-    parser.add_argument('--anchors', type=str, default=None, help='Anchor positions as a list, e.g [1,2]. (optional)')
+    parser.add_argument('--anchors', type=str, default=None, help='Anchor positions as a list, e.g [2,9]. (optional)')
     parser.add_argument('--predict_anchor', action='store_true', help='Recommended. Enable anchor prediction')
 
     # General arguments
@@ -60,7 +63,7 @@ def main():
     if args.mode == 'wrapper':
         if not args.df:
             raise ValueError("--df is required for wrapper mode")
-        df = pd.read_csv(args.df, sep='\t')
+        df = pd.read_csv(args.df, sep='\t').iloc[:2, :]
         runner = run_parsefold_wrapper(df=df, output_dir=args.output_dir, num_templates=args.num_templates,
                                        num_recycles=args.num_recycles, models=args.models,
                                        alphafold_param_folder=args.alphafold_param_folder,

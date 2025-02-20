@@ -2,6 +2,7 @@ import psutil
 import numpy as np
 import concurrent.futures
 import sys
+import contextlib
 sys.path.append("PANDORA")
 import os
 from PANDORA import Target
@@ -113,22 +114,36 @@ class run_parsefold_modeling():
             str: Template ID used in the modeling process.
         """
         os.makedirs(self.pandora_output, exist_ok=True)
+        log_file = f'{self.pandora_output}/{self.id}/pandora.log'
         mhc_allele = [] if not self.mhc_allele else [self.mhc_allele]
         anchor = [] if self.anchors is None else self.anchors
-        # run pandora
-        target = Target(id=self.id, peptide=self.peptide, allele_type=mhc_allele,
-                        MHC_class=self.mhc_type_greek, M_chain_seq=self.m_chain,
-                        N_chain_seq=self.n_chain, output_dir=self.pandora_output,
-                        use_netmhcpan=self.predict_anchor, anchors=anchor)
-        # save ind self.pandora_output/self.id
-        case = Pandora.Pandora(target, self.db)
-        case.model(n_loop_models=self.num_templates, benchmark=self.benchmark,
-                   n_homology_models=self.n_homology_models,
-                   best_n_templates=self.best_n_templates)
+        # Redirect stdout and stderr to the log file
+        with open(log_file, 'w') as f, contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
+            try:
+                print(f"Starting {self.id} initialization...")
+                target = Target(id=self.id, peptide=self.peptide, allele_type=mhc_allele,
+                                MHC_class=self.mhc_type_greek, M_chain_seq=self.m_chain,
+                                N_chain_seq=self.n_chain, output_dir=self.pandora_output,
+                                use_netmhcpan=self.predict_anchor, anchors=anchor)
+                case = Pandora.Pandora(target, self.db)
+                case.model(n_loop_models=self.num_templates, benchmark=self.benchmark,
+                           n_homology_models=self.n_homology_models,
+                           best_n_templates=self.best_n_templates)
+                print("Pandora modeling completed successfully.")
+            except Exception as e:
+                print(f"❌ An error occurred during template engineering {self.id}: {str(e)}", file=sys.stderr)
+                raise
+        print("✔Pandora run completed. Check log file for details:", log_file)
         # get template id used in pandora
-        files = [file for file in glob.glob(os.path.join(self.pandora_output, self.id, '????.pdb')) if "mod" not in file.split("/")[-1]]
-        template_id = files[0].split("/")[-1]
-        return template_id
+        files = [file for file in glob.glob(os.path.join(self.pandora_output, self.id, '????.pdb')) if
+                 "mod" not in file.split("/")[-1]]
+        if files:
+            template_id = files[0].split("/")[-1]
+            print(f"✔ {self.id} log: Template ID used for homology modeling: {template_id}")
+            return template_id
+        else:
+            print(f"❌ {self.id} log: No template ID found.")
+            return None
 
     def alignment_without_peptide(self, template_id, output_path, template_path,
                                        template_csv_path="data/all_templates.csv"):
@@ -204,6 +219,7 @@ class run_parsefold_modeling():
             i = 'classic' if '_ft' not in model else self.fine_tuned_model_path
             model_params_files += f'{i} '
             model_names += f'{model} '
+
         model_names = model_names.rstrip()
         model_params_files = model_params_files.rstrip()
         command = [
@@ -211,29 +227,39 @@ class run_parsefold_modeling():
             "--targets", f"{input_file}",
             "--data_dir", f"{self.alphafold_param_folder}",
             "--outfile_prefix", f"{output_prefix}",
-            "--model_names", f"{model_names}",
-            "--model_params_files", f"{model_params_files}",
+            "--model_names", *model_names.split(),
+            "--model_params_files", *model_params_files.split(),
             "--ignore_identities",
             "--num_recycles", f"{self.num_recycles}"
         ]
+
         print(command)
         try:
-            # Run the command and stream output line by line
+            # Run the command with unbuffered output
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
-            print("### Running AFopt/run_prediction.py ###")
+
+            print("### Running AFfine/run_prediction.py ###", flush=True)
+
             # Print stdout and stderr in real-time
-            for line in process.stdout:
-                print(line, end="")  # Print each line immediately
+            while True:
+                output = process.stdout.readline()
+                if output:
+                    print(output, end="", flush=True)
+                elif process.poll() is not None:
+                    break  # Process has finished
+
+            # Capture remaining stderr output
             for err_line in process.stderr:
-                print(err_line, end="")  # Print stderr lines immediately
-            # Wait for the process to complete
+                print(err_line, end="", flush=True)
+
             exit_code = process.wait()
             if exit_code == 0:
-                print("\n✔ Alphafold executed successfully!")
+                print("\n✔ Alphafold executed successfully!", flush=True)
             else:
-                print("\n❌ Command failed with exit code:", exit_code)
+                print("\n❌ Command failed with exit code:", exit_code, flush=True)
+
         except Exception as e:
-            print("\n❌ Error running command:", str(e))
+            print("\n❌ Error running command:", str(e), flush=True)
 
     def input_assertion(self):
         assert isinstance(self.peptide, str), f"peptide must be a string, found: {self.peptide}"

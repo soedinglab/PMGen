@@ -29,12 +29,16 @@ Source-PANDORA: https://github.com/X-lab-3D/PANDORA
  Due to numpy version modifications:
 'alphafold/model/config.py' : np.int --> np.int32
 'alphafold/data/templates.py': np.object --> object
-'run_prediction.py': outfile_prefix = args.outfile_prefix+'_'+targetl.targetid --> outfile_prefix = args.outfile_prefix+targetl.targetid
+'alphafold/model/config.py': print('valid models: ',CONFIG_DIFFS.keys()) added.
 
 ## Modifications to AFfine Pipline:
 'run_prediction.py' flag --num_recycles added.
 'run_prediction.py' flag --shuffle_templates added.
 'run_prediction.py' flag --num_templates added.
+'run_prediction.py': outfile_prefix = args.outfile_prefix+'_'+targetl.targetid --> outfile_prefix = args.outfile_prefix+targetl.targetid
+'run_prediction.py': os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' added.
+'run_prediction.py': warnings.filterwarnings('ignore', category=FutureWarning) added.
+'run_prediction.py': warnings.filterwarnings('ignore', category=DeprecationWarning)
 
 ## Modifications to PANDORA
 'PANDORA/PANDORA/pandora_modifs.py' and 'PANDORA/PANDORA/Modelling_functions' , added netmhcipan_path, netmhciipan_path paths
