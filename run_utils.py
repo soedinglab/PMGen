@@ -118,6 +118,7 @@ class run_parsefold_modeling():
         mhc_allele = [] if not self.mhc_allele else [self.mhc_allele]
         anchor = [] if self.anchors is None else self.anchors
         # Redirect stdout and stderr to the log file
+        os.makedirs(self.pandora_output + '/' + self.id, exist_ok=True)
         with open(log_file, 'w') as f, contextlib.redirect_stdout(f), contextlib.redirect_stderr(f):
             try:
                 print(f"Starting {self.id} initialization...")

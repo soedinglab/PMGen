@@ -64,7 +64,7 @@ def main():
     if args.mode == 'wrapper':
         if not args.df:
             raise ValueError("--df is required for wrapper mode")
-        df = pd.read_csv(args.df, sep='\t').iloc[:2, :]
+        df = pd.read_csv(args.df, sep='\t')
         runner = run_parsefold_wrapper(df=df, output_dir=args.output_dir, num_templates=args.num_templates,
                                        num_recycles=args.num_recycles, models=args.models,
                                        alphafold_param_folder=args.alphafold_param_folder,

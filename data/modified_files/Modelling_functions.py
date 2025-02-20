@@ -20,7 +20,6 @@ from copy import deepcopy
 import re
 import json
 
-
 def check_target_template(target, template):
     """ Checks if the target and the template are the same. If the user gave sequence info in the target, use that, else
         use the allele type.
@@ -272,6 +271,7 @@ def predict_anchors_netMHCpan(peptide, allele_type, output_dir, verbose=True, rm
     #                      if type(x) == str])
     try:
         netmhcpan_file_path = netmhcipan_path
+        print('################', netmhcipan_path)
         # netmhcpan_file_path = netmhcpan_file_path.pop()
     except:
         raise Exception("Need netMHCpan to predict anchor positions. Please download and install netMHCpan.\n\n"

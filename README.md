@@ -42,7 +42,7 @@ MHC_BETA_CHAIN_SEQ='DTRPRFLEYSTSECHFFNGTERVRFLDRYFYNQEEYVRFDSDVGEFRAVTELGRPDEEYW
 HLAALLEL_II='HLA-DRA*01/HLA-DRB1*0101'
 ```
 
-### Basic Modeling Mode #
+### Basic Modeling Mode 
 
 #### Example 1: Minimal MHC-I modeling
 ```

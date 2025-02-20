@@ -26,6 +26,7 @@ AFFINE_ZIP_URL="https://owncloud.gwdg.de/index.php/s/3TciEVlP4VIA9HN/download"  
 AFFINE_ZIP_NAME="AFfine.zip"
 AFFINE_FOLDER="AFfine"
 PANDORA_MODIF_PATH="$CURRENT_DIR/PANDORA/PANDORA/Pandora/Modelling_functions.py"
+PANDORA_PMHC_PATH="$CURRENT_DIR/PANDORA/PANDORA/PMHC/PMHC.py"
 
 echo "========================================="
 echo " Starting Installation: ParseFold-MHC"
@@ -121,7 +122,9 @@ fi
 # Step 10: Dowlnload modified files for PANDORA
 echo "Change modified scripts in PANDORA"
 rm "$PANDORA_MODIF_PATH"
+rm "$PANDORA_PMHC_PATH"
 mv "data/modified_files/Modelling_functions.py" "$PANDORA_MODIF_PATH"
+mv "data/modified_files/PMHC.py" "$PANDORA_PMHC_PATH"
 
 # Step 9: Cleanup and Completion
 cd "$CURRENT_DIR"
