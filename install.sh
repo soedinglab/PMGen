@@ -43,6 +43,8 @@ echo "3. Modeller - Website: https://salilab.org/modeller/"
 echo "   Paper: A. Fiser, R.K. Do, & A. Sali. Modeling of loops in protein structures, Protein Science 9. 1753-1773, 2000."
 echo "4. AlphaFold - GitHub: https://github.com/google-deepmind/alphafold"
 echo "   Paper: https://www.nature.com/articles/s41586-021-03819-2"
+echo "5. ProteinMPNN - Github https://github.com/dauparas/ProteinMPNN"
+echo "   Paper: https://www.science.org/doi/10.1126/science.add2187"
 echo "########################################################"
 
 # Step 1: Ask for Modeller License Key
@@ -126,10 +128,15 @@ rm "$PANDORA_PMHC_PATH"
 mv "data/modified_files/Modelling_functions.py" "$PANDORA_MODIF_PATH"
 mv "data/modified_files/PMHC.py" "$PANDORA_PMHC_PATH"
 
-# Step 9: Cleanup and Completion
+# Step 11: Install ProteinMPNN
+echo "ProteinMPNN installation, we need to set it up on a different env."
+mamba env create -f proteinmpnn.yml
+echo "✔ ProteinMPNN environment Setup. "
+# Step 12: Cleanup and Completion
 cd "$CURRENT_DIR"
 echo "✔ Installation completed successfully!"
 echo "Please check and modify 'user_setting.py' file to customize for your usage"
 echo "If you want to use NetMHCpan predictions for Anchor, please make sure to install it and provide its path to 'user_setting.py'"
+echo "To use Parsefold, run: 'conda activate parsefold_mhc' "
 echo "========================================="
 echo "✅ ParseFold-MHC is ready to use!"
