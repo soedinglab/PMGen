@@ -1,17 +1,17 @@
 import pandas as pd
 import os
 import re
+import numpy as np
 from Bio import SeqIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
+#from Bio.Seq import Seq
+#from Bio.SeqRecord import SeqRecord
 from Bio.PDB import PDBParser
-from Bio import PDB
-from Bio.SeqUtils import seq3
+#from Bio.SeqUtils import seq3
 from Bio import pairwise2
 from Bio import PDB
 #from Bio.SubsMat import MatrixInfo
 from Bio.Align import substitution_matrices
-
+from scipy.spatial.distance import cdist
 from Bio.PDB import PDBIO
 import shutil
 import random
@@ -587,7 +587,7 @@ def split_and_generate_pdb(source_pdb, output_pdb, cut_num):
 
     # Create new chains for model_a and model_b
     chain_a = PDB.Chain.Chain('A')
-    chain_b = PDB.Chain.Chain('B')
+    chain_b = PDB.Chain.Chain('P')
 
     # Iterate through the structure and split the chain
     for model in structure:
@@ -677,6 +677,112 @@ def split_and_generate_pdb_peptide_mhc2(source_pdb, output_pdb, cut_nums):
         pdb_io = PDB.PDBIO()
         pdb_io.set_structure(new_structure)
         pdb_io.save(out_pdb_file, write_end=False)
+
+
+def split_and_renumber_pdb(input_pdb, output_dir, n=100, mhc_type=None):
+    parser = PDB.PDBParser(QUIET=True)
+    structure = parser.get_structure("protein", input_pdb)
+
+    # Get the first model
+    model = structure[0]
+
+    # Process residues
+    chains = []
+    current_chain = []
+    prev_res_id = None
+
+    for chain in model:
+        for res in chain.get_residues():
+            if res.get_id()[0] != ' ':  # Skip heteroatoms
+                continue
+            res_id = res.get_id()[1]
+            if prev_res_id is not None and res_id - prev_res_id >= n:
+                chains.append(current_chain)
+                current_chain = []
+            current_chain.append(res.copy())  # Copy residue to avoid modifying original structure
+            prev_res_id = res_id
+
+    if current_chain:
+        chains.append(current_chain)
+
+    # Renumber and assign new chains
+    chain_ids = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    if mhc_type:
+        if mhc_type==1: chain_ids='AP'
+        elif mhc_type==2: chain_ids='ABP'
+    else:
+        if len(chains) == 2: chain_ids='AP'
+        elif len(chains) == 3: chain_ids='ABP'
+
+    new_structure = PDB.Structure.Structure("new_protein")
+    new_model = PDB.Model.Model(0)
+    new_structure.add(new_model)
+    for chain_idx, chain_residues in enumerate(chains):
+        new_chain = PDB.Chain.Chain(chain_ids[chain_idx % len(chain_ids)])
+        new_residue_index = 1  # Reset numbering for each new chain
+        for res in chain_residues:
+            res.id = (' ', new_residue_index, ' ')
+            new_chain.add(res)
+            new_residue_index += 1
+        new_model.add(new_chain)
+    # Save new PDB
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_pdb = os.path.join(output_dir, f'multichain_{os.path.basename(input_pdb)}')
+    io = PDB.PDBIO()
+    io.set_structure(new_structure)
+    io.save(output_pdb)
+    return output_pdb
+
+
+def get_coords_from_res(residue, atom='CB'):
+    if atom in residue:
+        return residue[atom].coord
+
+    else:
+        if residue.get_resname() != 'GLY':
+            print(f'not {atom} , {residue.get_resname()} used, instead used another.')
+        if 'CA' in residue:
+            return residue['CA'].coord
+        if 'C' in residue:
+            return residue['C'].coord
+        if 'O' in residue:
+            return residue['O'].coord
+        if 'N' in residue:
+            return residue['N'].coord
+    print('no atom for residue found, skiping it with unreasonable coords')
+    return np.array([1e+9, 1e+9, 1e+9])
+
+
+def get_distance_matrices(input_pdb, target_chain, atom='CB'):
+    parser = PDB.PDBParser(QUIET=True)
+    structure = parser.get_structure("protein", input_pdb)
+    target_residues = structure[0][target_chain].get_residues()
+    target_coordinates = [get_coords_from_res(residue, atom) for residue in target_residues]
+    target_coordinates = np.array(target_coordinates)  # (N, 3)
+
+    other_chains = [chain for chain in structure.get_chains() if chain.id != target_chain]
+    final_dict = {}
+    for chain in other_chains:
+        chain_residues = list(chain.get_residues())  # Convert generator to list
+        if chain_residues:  # Ensure the list is not empty
+            chain_id = chain_residues[0].get_parent().id
+            coordinates = np.array([get_coords_from_res(residue, atom) for residue in chain_residues])
+            dist_matrix = cdist(target_coordinates, coordinates)
+            #dist_masked = np.where(dist_matrix <= thr, 1., 0.)
+            final_dict[chain_id] = dist_matrix  # Dict of coordinates (N_peptide, N_chain)
+    return final_dict # {'A':matrix, or 'A' and 'B' dist matrices}
+
+def get_hotspots(distance_matrix_dict, thr=6.0):
+    final_dict = {}
+    for key, dist_matrix in distance_matrix_dict.items():
+        dist_masked = np.where(dist_matrix <= thr, 1., 0.)
+        positions = np.argwhere(dist_masked == 1.)
+        final_dict[key] = positions
+    return final_dict
+
+
 
 
 def correct_residue_indexes(input_pdb, output_pdb):

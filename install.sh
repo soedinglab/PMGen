@@ -130,8 +130,8 @@ mv "data/modified_files/PMHC.py" "$PANDORA_PMHC_PATH"
 
 # Step 11: Install ProteinMPNN
 echo "ProteinMPNN installation, we need to set it up on a different env."
-mamba env create -f proteinmpnn.yml
-echo "✔ ProteinMPNN environment Setup. "
+git clone https://github.com/dauparas/ProteinMPNN.git
+echo "✔ ProteinMPNN setup is done. "
 # Step 12: Cleanup and Completion
 cd "$CURRENT_DIR"
 echo "✔ Installation completed successfully!"

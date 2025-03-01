@@ -12,10 +12,9 @@ import glob
 from utils import processing_functions
 import pandas as pd
 import subprocess
-
 import warnings
-# Suppress the specific warning
-#warnings.filterwarnings("ignore")
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 
 
 class run_parsefold_modeling():
@@ -478,3 +477,192 @@ class run_parsefold_wrapper():
                           str), f"fine_tuned_model_path must be a string, found: {type(self.fine_tuned_model_path)}"
         assert os.path.isfile(
             self.fine_tuned_model_path), f"fine_tuned_model_path does not exist or is not a file: {self.fine_tuned_model_path}"
+
+
+
+
+
+
+class run_proteinmpnn():
+    def __init__(self, parsefold_pdb, output_dir,
+                 num_sequences_peptide=10, num_sequences_mhc=3,
+                peptide_chain='P', mhc_design=True, peptide_design=True,
+                 only_pseudo_sequence_design=True, anchor_pred=True,
+                 sampling_temp=0.05, batch_size=1, hot_spot_thr=6.0):
+        self.pdb = parsefold_pdb
+        self.output_dir = output_dir
+        self.peptide_chain = peptide_chain
+        self.num_sequences_peptide = num_sequences_peptide
+        self.num_sequences_mhc = num_sequences_mhc
+        self.peptide_design = peptide_design
+        self.mhc_design = mhc_design
+        self.sampling_temp = sampling_temp
+        self.batch_size = batch_size
+        self.only_pseudo_sequence_design = only_pseudo_sequence_design
+        self.anchor_pred = anchor_pred
+        self.hot_spot_thr = hot_spot_thr
+        self.input_assertion()
+        os.makedirs(self.output_dir, exist_ok=True)
+        self.multichain_pdb = processing_functions.split_and_renumber_pdb(self.pdb,
+                                                                          os.path.join(self.output_dir, 'multichain_pdb'),
+                                                                          n=180) #multichain pdb,
+        # get distance matrices vs peptide as self.chain_dict_dist
+        self.chain_dict_dist = processing_functions.get_distance_matrices(input_pdb=self.multichain_pdb,
+                                                                          target_chain=self.peptide_chain, atom='CB')
+        self.hot_spots = processing_functions.get_hotspots(self.chain_dict_dist, thr=self.hot_spot_thr)#{mhc_chain:[n,2]--> [[1,2], [2, 10]...]}
+
+    def run(self, thr=5., atom='CB'):
+        if self.mhc_design: # redesign the whole MHC
+            self.__mhc_design()
+        if self.peptide_design:
+            self.__peptide_design()
+        if self.only_pseudo_sequence_design:
+            self.__only_pseudo_sequence_design()
+        if self.anchor_pred:
+            pass
+
+    def __mhc_design(self):
+        output_dir = os.path.join(self.output_dir, 'mhc_design')
+        print(f'***** Full MHC Sequence Generation Mode Start\n saving at{output_dir}')
+        os.makedirs(output_dir, exist_ok=True)
+        path_for_parsed_chains = os.path.join(output_dir, "parsed_pdbs.jsonl")
+        path_for_assigned_chains = os.path.join(output_dir, "assigned_pdbs.jsonl")
+        chains_to_design = ' '.join(list(self.chain_dict_dist.keys()))
+        # Run parse_multiple_chains.py
+        subprocess.run([
+            "python", "ProteinMPNN/helper_scripts/parse_multiple_chains.py",
+            "--input_path", os.path.dirname(self.multichain_pdb),
+            "--output_path", path_for_parsed_chains
+        ], check=True)
+        # Run assign_fixed_chains.py --> design chains of mhc and fix peptide chain 'P'
+        subprocess.run([
+            "python", "ProteinMPNN/helper_scripts/assign_fixed_chains.py",
+            "--input_path", path_for_parsed_chains,
+            "--output_path", path_for_assigned_chains,
+            "--chain_list", chains_to_design
+        ], check=True)
+        # Run protein_mpnn_run.py
+        subprocess.run([
+            "python", "-W", "ignore", "ProteinMPNN/protein_mpnn_run.py",
+            "--jsonl_path", path_for_parsed_chains,
+            "--chain_id_jsonl", path_for_assigned_chains,
+            "--out_folder", output_dir,
+            "--num_seq_per_target", f'{self.num_sequences_mhc}',
+            "--sampling_temp", f'{self.sampling_temp}',
+            "--seed", "37",
+            "--batch_size", f'{self.batch_size}',
+            "--save_probs", "1",
+            "--save_score", "1"
+        ], check=True)
+        print('Full MHC Sequence Generation Mode Done! *****\n')
+
+
+    def __peptide_design(self):
+        output_dir = os.path.join(self.output_dir, 'peptide_design')
+        print(f'***** Peptide Generation Mode Start\n saving at{output_dir}')
+        os.makedirs(output_dir, exist_ok=True)
+        path_for_parsed_chains = os.path.join(output_dir, "parsed_pdbs.jsonl")
+        path_for_assigned_chains = os.path.join(output_dir, "assigned_pdbs.jsonl")
+        chains_to_design = 'P'
+        # Run parse_multiple_chains.py
+        subprocess.run([
+            "python", "ProteinMPNN/helper_scripts/parse_multiple_chains.py",
+            "--input_path", os.path.dirname(self.multichain_pdb),
+            "--output_path", path_for_parsed_chains
+        ], check=True)
+        # Run assign_fixed_chains.py --> design chains of mhc and fix peptide chain 'P'
+        subprocess.run([
+            "python", "ProteinMPNN/helper_scripts/assign_fixed_chains.py",
+            "--input_path", path_for_parsed_chains,
+            "--output_path", path_for_assigned_chains,
+            "--chain_list", chains_to_design
+        ], check=True)
+        # Run protein_mpnn_run.py
+        subprocess.run([
+            "python", "-W", "ignore", "ProteinMPNN/protein_mpnn_run.py",
+            "--jsonl_path", path_for_parsed_chains,
+            "--chain_id_jsonl", path_for_assigned_chains,
+            "--out_folder", output_dir,
+            "--num_seq_per_target", f'{self.num_sequences_peptide}',
+            "--sampling_temp", f'{self.sampling_temp}',
+            "--seed", "37",
+            "--batch_size", f'{self.batch_size}',
+            "--save_probs", "1",
+            "--save_score", "1"
+        ], check=True)
+        print('Full MHC Sequence Generation Mode Done! *****\n')
+
+    def __only_pseudo_sequence_design(self):
+        output_dir = os.path.join(self.output_dir, 'only_pseudo_sequence_design')
+        print(f'***** MHC Pseudo-Sequence Generation Mode Start\n saving at{output_dir}')
+        os.makedirs(output_dir, exist_ok=True)
+        path_for_parsed_chains = os.path.join(output_dir, "parsed_pdbs.jsonl")
+        path_for_assigned_chains = os.path.join(output_dir, "assigned_pdbs.jsonl")
+        path_for_fixed_positions = os.path.join(output_dir,"fixed_pdbs.jsonl")
+        chains_to_design = ' '.join(list(self.chain_dict_dist.keys()))
+        design_only_positions = ""
+
+        for key, value in self.hot_spots.items():
+            unique_val = np.unique(value[:, 1])
+            design_only_positions += " ".join([str(i + 1) for i in unique_val]) + ", "
+        self.design_only_positions = design_only_positions.strip(", ")
+        # Run parse_multiple_chains.py
+        subprocess.run([
+            "python", "ProteinMPNN/helper_scripts/parse_multiple_chains.py",
+            "--input_path", os.path.dirname(self.multichain_pdb),
+            "--output_path", path_for_parsed_chains
+        ], check=True)
+        # Run assign_fixed_chains.py --> design chains of mhc and fix peptide chain 'P'
+        subprocess.run([
+            "python", "ProteinMPNN/helper_scripts/assign_fixed_chains.py",
+            "--input_path", path_for_parsed_chains,
+            "--output_path", path_for_assigned_chains,
+            "--chain_list", chains_to_design
+        ], check=True)
+        # Run make_fixed_positions_dict.py --> specify mhc pseudo sequences at mhc chains
+        subprocess.run([
+            "python", "ProteinMPNN/helper_scripts/make_fixed_positions_dict.py",
+            "--input_path", path_for_parsed_chains,
+            "--output_path", path_for_fixed_positions,
+            "--chain_list", chains_to_design,
+            "--position_list", design_only_positions,
+            "--specify_non_fixed"
+        ])
+        # Run protein_mpnn_run.py
+        subprocess.run([
+            "python", "-W", "ignore", "ProteinMPNN/protein_mpnn_run.py",
+            "--jsonl_path", path_for_parsed_chains,
+            "--chain_id_jsonl", path_for_assigned_chains,
+            "--fixed_positions_jsonl", path_for_fixed_positions,
+            "--out_folder", output_dir,
+            "--num_seq_per_target", f'{self.num_sequences_mhc}',
+            "--sampling_temp", f'{self.sampling_temp}',
+            "--seed", "37",
+            "--batch_size", f'{self.batch_size}',
+            "--save_probs", "1",
+            "--save_score", "1"
+        ], check=True)
+        print('MHC Pseudo Sequence Generation Mode Done! *****\n')
+
+
+    def input_assertion(self):
+        assert isinstance(self.pdb, str), f'parsefold_pdb should be a string, found {self.pdb}'
+        assert isinstance(self.output_dir, str), f'output_dir should be a string, found {self.output_dir}'
+        assert isinstance(self.peptide_chain, str), f'peptide_chain should be a string, found {self.peptide_chain}'
+        assert isinstance(self.peptide_design, bool), f'peptide_design should be boolean, found {self.peptide_design}'
+        assert isinstance(self.mhc_design, bool), f'peptide_design should be boolean, found {self.mhc_design}'
+        assert isinstance(self.only_pseudo_sequence_design, bool), f'peptide_design should be boolean, found {self.only_pseudo_sequence_design}'
+        assert isinstance(self.anchor_pred, bool), f'anchor_pred should be boolean, found {self.anchor_pred}'
+        assert isinstance(self.num_sequences_peptide, int), f'num_sequences_peptide should be int, found {self.num_sequences_peptide}'
+        assert isinstance(self.num_sequences_mhc, int), f'num_sequences_mhc should be int, found {self.num_sequences_mhc}'
+        assert isinstance(self.sampling_temp, float), f'sampling_temp should be float, found {self.sampling_temp}'
+        assert isinstance(self.batch_size, int), f'batch_size should be int, found {self.batch_size}'
+
+
+runner = run_proteinmpnn(parsefold_pdb='outputs/6DIG_parsefold.pdb', output_dir='outputs/protmpnn',
+                 num_sequences_peptide=10, num_sequences_mhc=3,
+                peptide_chain='P', mhc_design=True, peptide_design=True,
+                 only_pseudo_sequence_design=True, anchor_pred=True,
+                 sampling_temp=0.1, batch_size=1, hot_spot_thr=6.0)
+runner.run()
+print(runner.design_only_positions)
