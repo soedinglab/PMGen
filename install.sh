@@ -16,8 +16,6 @@ error_handler() {
 # Trap any error and call the error handler
 trap 'error_handler' ERR
 
-mkdir -p ParseFold_MHC
-cd ParseFold_MHC
 CURRENT_DIR=$(pwd)
 TMP_DIR="$CURRENT_DIR/tmp"
 ENV_NAME="parsefold_mhc"
