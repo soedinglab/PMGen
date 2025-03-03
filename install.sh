@@ -20,9 +20,9 @@ mkdir -p ParseFold_MHC
 cd ParseFold_MHC
 CURRENT_DIR=$(pwd)
 TMP_DIR="$CURRENT_DIR/tmp"
-ENV_NAME="parsefold_mhc2"
+ENV_NAME="parsefold_mhc"
 ENV_FILE="parsefold_mhc.yml"
-AFFINE_ZIP_URL="https://owncloud.gwdg.de/index.php/s/3TciEVlP4VIA9HN/download"  # Replace with the actual URL
+AFFINE_ZIP_URL="https://owncloud.gwdg.de/index.php/s/kXp5POS99SseFtG/download"
 AFFINE_ZIP_NAME="AFfine.zip"
 AFFINE_FOLDER="AFfine"
 PANDORA_MODIF_PATH="$CURRENT_DIR/PANDORA/PANDORA/Pandora/Modelling_functions.py"
@@ -55,6 +55,7 @@ echo "✔ Modeller license key has been set."
 
 # Step 2: Check if mamba exists; otherwise, use conda
 if command -v mamba &>/dev/null; then
+    echo "✔ Mamba found and using it"
     CONDA_CMD="mamba"
     ACTIVATE_CMD="mamba activate"
 else
