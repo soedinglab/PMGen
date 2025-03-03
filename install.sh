@@ -55,7 +55,7 @@ echo "✔ Modeller license key has been set."
 if command -v mamba &>/dev/null; then
     echo "✔ Mamba found and using it"
     CONDA_CMD="mamba"
-    ACTIVATE_CMD="mamba activate"
+    ACTIVATE_CMD="conda activate"
 else
     CONDA_CMD="conda"
     ACTIVATE_CMD="conda activate"

@@ -45,6 +45,9 @@ def plot_and_save_heatmap(input_data, output_path, npz_key=None, batch=None, cma
         data = data[batch]
     elif batch == 'all':
         data = np.mean(data, axis=0, keepdims=False)
+    elif not batch:
+        print('Batch==None, datashape:', data.shape)
+        pass
     # Apply softmax if log_prob is True
     if log_prob:
         print(data)
@@ -72,9 +75,9 @@ def plot_and_save_heatmap(input_data, output_path, npz_key=None, batch=None, cma
 
     print(f"Heatmap saved to {output_path}")
 
-input_data = '/home/amir/amir/ParseFold/ParseFold-MHC/ProteinMPNN/outputs/default_example_no_fixed/probs/3HTN.npz'
-output_path = '/home/amir/amir/ParseFold/ParseFold-MHC/ProteinMPNN/outputs/default_example_no_fixed/heatmap_probs.png'
-plot_and_save_heatmap(input_data, output_path, npz_key='probs', batch='all', cmap='viridis', figsize=(10, 8), dpi=600, log_prob=True)
+input_data = '/home/amir/amir/ParseFold/ParseFold-MHC/ProteinMPNN/outputs/default_example_no_fixed/scores/3HTN.npz'
+output_path = '/home/amir/amir/ParseFold/ParseFold-MHC/ProteinMPNN/outputs/default_example_no_fixed/heatmap_scores_all.png'
+plot_and_save_heatmap(input_data, output_path, npz_key='global_score', batch=None, cmap='viridis', figsize=(10, 8), dpi=600, log_prob=True)
 
 '''
 import numpy as np
