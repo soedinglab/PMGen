@@ -137,3 +137,18 @@ python run_parsefold.py \
   --best_n_templates 4 \
   --n_homology_models 2
 ```
+
+### Protein Design
+```
+python run_parsefold.py \  
+    --mode wrapper \   
+    --run parallel \  
+    --df "$DF" \   
+    --output_dir outputs/wrapper_and_protmpnn \   
+    --num_templates 1 \   
+    --num_recycles 1 \ 
+    --peptide_design \ 
+    --only_pseudo_sequence_design \ 
+    --mhc_design \
+    --models model_2_ptm model_1_ptm
+```
