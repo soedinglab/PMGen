@@ -101,9 +101,12 @@ class run_parsefold_modeling():
         ## Prepare Alphafold Fine Input files
         os.makedirs(self.alphafold_out + f'/{self.id}', exist_ok=True)
         self.alphafold_preparation(template_aln_file=aln_output_file, mhc_pep_seq=mhc_pep_seq, output=self.alphafold_input_file)
+        self.output_pdbs_dict = {}
         if run_alphafold:
             print('## To run Alphafold Please Make Sure GPU is Available and can be found ##')
             self.run_alphafold(input_file=self.alphafold_input_file, output_prefix=self.alphafold_out + '/')
+            # get the paths for proteinmpnn
+            self.output_pdbs_dict[self.id] = [os.path.join(self.alphafold_out, i) for i in os.listdir(self.alphafold_out) if i.endswith('.pdb') and 'model_' in i and not i.endswith('.npy')]
 
     def run_pandora(self):
         """
@@ -256,10 +259,23 @@ class run_parsefold_modeling():
             if exit_code == 0:
                 print("\n✔ Alphafold executed successfully!", flush=True)
             else:
+                self.error_handling()
                 print("\n❌ Command failed with exit code:", exit_code, flush=True)
 
+
         except Exception as e:
+            self.error_handling()
             print("\n❌ Error running command:", str(e), flush=True)
+
+    def error_handling(self, errotype='affine'):
+        if errotype == 'affine':
+            print('### ERROR MESSAGE ###:'
+                  'Alphafold Run Failed, It is common, please follow the debugging steps below: \n'
+                  '1- check if you have ptxas: "which ptxas" if not do:\n'
+                  'conda install -c nvidia cuda-nvcc\n'
+                  'or\n'
+                  'export PATH=/usr/local/cuda/bin:$PATH\n'
+                  'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH')
 
     def input_assertion(self):
         assert isinstance(self.peptide, str), f"peptide must be a string, found: {self.peptide}"
@@ -336,7 +352,7 @@ class run_parsefold_wrapper():
         self.n_homology_models = n_homology_models
         self.input_assertion()
 
-    def run_wrapper(self):
+    def run_wrapper(self, run_alphafold=True):
         INPUT_DF = []
         for step, row in self.df.iterrows():
             anchors = [int(r) for r in row['anchors'].split(';')] if isinstance(row['anchors'], str) and ';' in row['anchors'] else None
@@ -356,9 +372,10 @@ class run_parsefold_wrapper():
             input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
             input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])] # id/id
             INPUT_DF.append(input_df)
-        alphafold_out = self.output_dir + '/alphafold'
-        pd.concat(INPUT_DF).to_csv(f'{alphafold_out}/alphafold_input_file.tsv', sep='\t', index=False)
-        runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
+        if run_alphafold:
+            alphafold_out = self.output_dir + '/alphafold'
+            pd.concat(INPUT_DF).to_csv(f'{alphafold_out}/alphafold_input_file.tsv', sep='\t', index=False)
+            runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
 
 
     def get_available_memory(self):
@@ -388,7 +405,7 @@ class run_parsefold_wrapper():
         input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])]  # id/id
         return input_df
 
-    def run_wrapper_parallel(self, max_ram=3, max_cores=4):
+    def run_wrapper_parallel(self, max_ram=3, max_cores=4, run_alphafold=True):
         """
         Processes rows of input data in parallel, utilizing available system memory and CPU cores.
         It ensures that the system memory does not exceed the specified `max_ram` per job,
@@ -438,7 +455,8 @@ class run_parsefold_wrapper():
                                             num_templates=self.num_templates, num_recycles=self.num_recycles,
                                             models=self.models, alphafold_param_folder=self.alphafold_param_folder,
                                             fine_tuned_model_path=self.fine_tuned_model_path)
-        runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
+        if run_alphafold:
+            runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
 
 
     def input_assertion(self):
@@ -658,11 +676,3 @@ class run_proteinmpnn():
         assert isinstance(self.sampling_temp, float), f'sampling_temp should be float, found {self.sampling_temp}'
         assert isinstance(self.batch_size, int), f'batch_size should be int, found {self.batch_size}'
 
-
-runner = run_proteinmpnn(parsefold_pdb='outputs/6DIG_parsefold.pdb', output_dir='outputs/protmpnn',
-                 num_sequences_peptide=10, num_sequences_mhc=3,
-                peptide_chain='P', mhc_design=True, peptide_design=True,
-                 only_pseudo_sequence_design=True, anchor_pred=True,
-                 sampling_temp=0.1, batch_size=1, hot_spot_thr=6.0)
-runner.run()
-print(runner.design_only_positions)

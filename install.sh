@@ -17,10 +17,9 @@ error_handler() {
 trap 'error_handler' ERR
 
 CURRENT_DIR=$(pwd)
-TMP_DIR="$CURRENT_DIR/tmp"
 ENV_NAME="parsefold_mhc"
 ENV_FILE="parsefold_mhc.yml"
-AFFINE_ZIP_URL="https://owncloud.gwdg.de/index.php/s/kXp5POS99SseFtG/download"
+AFFINE_ZIP_URL="https://zenodo.org/records/14961621/files/AFfine.zip?download=1"
 AFFINE_ZIP_NAME="AFfine.zip"
 AFFINE_FOLDER="AFfine"
 PANDORA_MODIF_PATH="$CURRENT_DIR/PANDORA/PANDORA/Pandora/Modelling_functions.py"
@@ -86,16 +85,12 @@ $ACTIVATE_CMD "$ENV_NAME"
 
 # Step 5: Clone and Install PANDORA
 echo "✔ Cloning and installing PANDORA..."
-mkdir -p "$TMP_DIR"
-cd "$TMP_DIR"
-
 if [ ! -d "PANDORA" ]; then
     git clone https://github.com/X-lab-3D/PANDORA.git
 fi
-
 cd PANDORA
 pip install -e .
-
+cd ..
 # Step 6: Ensure dependencies are correctly set after installing PANDORA
 echo "✔ Reinstalling dependencies to match $ENV_FILE..."
 $CONDA_CMD env update -f "$CURRENT_DIR/$ENV_FILE"
@@ -107,8 +102,6 @@ pandora-fetch
 # Step 8: Download and Extract AFfine Data
 echo "✔ Downloading AFfine data..."
 cd "$CURRENT_DIR"
-mkdir -p data
-cd data
 
 if [ ! -d "$AFFINE_FOLDER" ]; then
     if [ ! -f "$AFFINE_ZIP_NAME" ]; then
@@ -128,7 +121,7 @@ mv "data/modified_files/Modelling_functions.py" "$PANDORA_MODIF_PATH"
 mv "data/modified_files/PMHC.py" "$PANDORA_PMHC_PATH"
 
 # Step 11: Install ProteinMPNN
-echo "ProteinMPNN installation, we need to set it up on a different env."
+echo "ProteinMPNN installation"
 git clone https://github.com/dauparas/ProteinMPNN.git
 echo "✔ ProteinMPNN setup is done. "
 # Step 12: Cleanup and Completion
