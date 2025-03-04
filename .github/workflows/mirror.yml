@@ -17,8 +17,10 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-mirror-key
           chmod 600 ~/.ssh/github-mirror-key
           ssh-keyscan github.com >> ~/.ssh/known_hosts
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/github-mirror-key  # Use your key
 
       - name: Push to SoedingLab
         run: |
-          git remote add mirror git@github.com:soedinglab/ParseFold-MHC.git
+          git remote add mirror git@github.com:soedinglab/ParseFold-MHC.git || true
           git push --mirror mirror
