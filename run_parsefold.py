@@ -2,7 +2,7 @@ import argparse
 import shutil
 
 import pandas as pd
-from run_utils import run_parsefold_wrapper, run_parsefold_modeling, run_proteinmpnn
+from run_utils import run_parsefold_wrapper, run_parsefold_modeling, run_proteinmpnn, run_single_proteinmpnn, protein_mpnn_wrapper
 from Bio import SeqIO
 import warnings
 import os
@@ -72,6 +72,7 @@ def main():
 
     # Setting to Run only a part:
     parser.add_argument('--no_alphafold', action='store_false', help='does not run alphafold.')
+    parser.add_argument('--only_protein_mpnn', action='store_true', help='Skips PANDORA and AF modeling, and runs ProteinMPNN for already available predictions.')
 
     args = parser.parse_args()
 
@@ -99,10 +100,12 @@ def main():
                                        fine_tuned_model_path=args.fine_tuned_model_path,
                                        benchmark=args.benchmark, best_n_templates=args.best_n_templates,
                                        n_homology_models=args.n_homology_models)
-        if args.run == 'parallel':
+        if args.run == 'parallel' and not args.only_protein_mpnn:
             runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
-        else:
+        elif args.run == 'single' and not args.only_protein_mpnn:
             runner.run_wrapper(run_alphafold=args.no_alphafold)
+        else:
+            print('--Warning!-- Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
         # check outputs if they exist:
         output_pdbs_dict = {}
         for key, value in tmp_pdb_dict.items():
@@ -128,17 +131,27 @@ def main():
                                         fine_tuned_model_path=args.fine_tuned_model_path,
                                         benchmark=args.benchmark, best_n_templates=args.best_n_templates,
                                         n_homology_models=args.n_homology_models)
-        runner.run_parsefold(run_alphafold=args.no_alphafold)
-        output_pdbs_dict = runner.output_pdbs_dict # {'id':[output1, output2, ...]}
+        if not args.only_protein_mpnn:
+            runner.run_parsefold(run_alphafold=args.no_alphafold)
+        else:
+            print('--Warning!-- Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
+        output_pdbs_dict = {}
+        out_alphafold = os.path.join(args.output_dir, 'alphafold', args.id)
+        output_pdbs_dict[args.id] = [os.path.join(out_alphafold, i) for i in os.listdir(out_alphafold) if i.endswith('.pdb') and 'model_' in i and not i.endswith('.npy')]
+        # {'id':[output1, output2, ...]}
 
-    print("Alphafold Runs completed.")
+    if not args.only_protein_mpnn:
+        print("Alphafold Runs completed.")
+    else:
+        print('Alphafold Runs Skipped!')
     # get the pdb outputs for listing them and protmpnn
 
 
     if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design:
         print("### Start ProteinMPNN runs ###")
         print('files:\n', output_pdbs_dict)
-        for id_m, path_list in output_pdbs_dict.items():
+        protein_mpnn_wrapper(output_pdbs_dict, args, mode=args.run)
+        '''for id_m, path_list in output_pdbs_dict.items():
             directory = os.path.join(args.output_dir, 'protienmpnn', id_m)
             os.makedirs(directory, exist_ok=True)
             for path in path_list:
@@ -156,7 +169,7 @@ def main():
                                          anchor_pred=True,
                                          sampling_temp=args.sampling_temp, batch_size=args.batch_size,
                                          hot_spot_thr=args.hot_spot_thr)
-                runner_mpnn.run()
+                runner_mpnn.run()'''
 
 
 if __name__ == "__main__":

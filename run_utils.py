@@ -5,6 +5,7 @@ import sys
 import contextlib
 sys.path.append("PANDORA")
 import os
+import shutil
 from PANDORA import Target
 from PANDORA import Pandora
 from PANDORA import Database
@@ -676,3 +677,54 @@ class run_proteinmpnn():
         assert isinstance(self.sampling_temp, float), f'sampling_temp should be float, found {self.sampling_temp}'
         assert isinstance(self.batch_size, int), f'batch_size should be int, found {self.batch_size}'
 
+
+def run_single_proteinmpnn(path, directory, args):
+    """Function to be executed in parallel for each path in path_list"""
+    model_dir = os.path.join(directory, path.split('/')[-1].strip('.pdb'))  # Create model-specific directory
+    os.makedirs(model_dir, exist_ok=True)
+
+    # Copy PDB file to the new directory
+    shutil.copy(path, os.path.join(model_dir, path.split('/')[-1]))
+    parsefold_pdb = os.path.join(model_dir, path.split('/')[-1])
+    print('#########', parsefold_pdb)
+
+    # Run ProteinMPNN
+    runner_mpnn = run_proteinmpnn(
+        parsefold_pdb=parsefold_pdb, output_dir=model_dir,
+        num_sequences_peptide=args.num_sequences_peptide,
+        num_sequences_mhc=args.num_sequences_mhc,
+        peptide_chain='P', mhc_design=args.mhc_design, peptide_design=args.peptide_design,
+        only_pseudo_sequence_design=args.only_pseudo_sequence_design,
+        anchor_pred=True,
+        sampling_temp=args.sampling_temp, batch_size=args.batch_size,
+        hot_spot_thr=args.hot_spot_thr
+    )
+    runner_mpnn.run()
+
+
+def protein_mpnn_wrapper(output_pdbs_dict, args, mode='parallel'):
+    """Main function that runs in either 'parallel' or 'single' mode."""
+    if mode == 'parallel':
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = []
+            for id_m, path_list in output_pdbs_dict.items():
+                directory = os.path.join(args.output_dir, 'protienmpnn', id_m)
+                os.makedirs(directory, exist_ok=True)  # Ensure main directory exists
+
+                for path in path_list:
+                    futures.append(executor.submit(run_single_proteinmpnn, path, directory, args))
+
+            # Wait for all processes to finish
+            for future in futures:
+                future.result()  # This will re-raise any exceptions if they occur
+
+    elif mode == 'single':
+        for id_m, path_list in output_pdbs_dict.items():
+            directory = os.path.join(args.output_dir, 'protienmpnn', id_m)
+            os.makedirs(directory, exist_ok=True)  # Ensure main directory exists
+
+            for path in path_list:
+                run_single_proteinmpnn(path, directory, args)  # Run sequentially
+
+    else:
+        raise ValueError("Invalid mode! Choose 'parallel' or 'single'.")
