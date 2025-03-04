@@ -702,10 +702,10 @@ def run_single_proteinmpnn(path, directory, args):
     runner_mpnn.run()
 
 
-def protein_mpnn_wrapper(output_pdbs_dict, args, mode='parallel'):
+def protein_mpnn_wrapper(output_pdbs_dict, args, max_jobs, mode='parallel'):
     """Main function that runs in either 'parallel' or 'single' mode."""
     if mode == 'parallel':
-        with concurrent.futures.ProcessPoolExecutor() as executor:
+        with concurrent.futures.ProcessPoolExecutor(max_workers=max_jobs) as executor:
             futures = []
             for id_m, path_list in output_pdbs_dict.items():
                 directory = os.path.join(args.output_dir, 'protienmpnn', id_m)

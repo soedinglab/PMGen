@@ -150,7 +150,7 @@ def main():
     if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design:
         print("### Start ProteinMPNN runs ###")
         print('files:\n', output_pdbs_dict)
-        protein_mpnn_wrapper(output_pdbs_dict, args, mode=args.run)
+        protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, mode=args.run)
         '''for id_m, path_list in output_pdbs_dict.items():
             directory = os.path.join(args.output_dir, 'protienmpnn', id_m)
             os.makedirs(directory, exist_ok=True)
