@@ -2,7 +2,7 @@ name: Mirror to SoedingLab
 on:
   push:
     branches:
-      - master  # Adjust to your default branch, e.g., main
+      - master
 
 jobs:
   mirror:
@@ -11,7 +11,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Ensures full history for mirroring
+          fetch-depth: 0
 
       - name: Setup SSH
         run: |
@@ -21,8 +21,10 @@ jobs:
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/github-mirror-key
+          # Debug: Test SSH connection
+          ssh -vT git@github.com
 
       - name: Push to SoedingLab
         run: |
           git remote add mirror git@github.com:soedinglab/ParseFold-MHC.git
-          git push mirror master  # Push only master, or use --mirror for full sync
+          git push mirror master
