@@ -1,6 +1,6 @@
 # ParseFold-MHC
 
-**ParseFold-MHC** is a powerful and flexible framework for Peptide-MHC (pMHC) complex modeling, binding prediction, and protein design. It integrates cutting-edge tools such as **PANDORA** for template generation, **AlphaFold (via AFfine)** for structural prediction, and **ProteinMPNN** for sequence design, enabling researchers to model pMHC complexes, predict binding interactions, and engineer new peptide or MHC sequences.
+**ParseFold-MHC** is a powerful and flexible framework for Peptide-MHC (pMHC) complex modeling, binding prediction, and protein design. It integrates cutting-edge tools such as **PANDORA** for template generation, **AlphaFold (via AFfine)** for structural prediction, and **ProteinMPNN** for sequence design, enabling researchers to model pMHC complexes, predict binding interactions, and engineer novel peptide or MHC sequences.
 
 ## Features
 
