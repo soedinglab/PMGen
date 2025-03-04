@@ -16,11 +16,11 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-mirror-key
-          chmod 600 ~/.ssh/github-mirror-key
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/github-mirror-key
+          ssh-add ~/.ssh/id_ed25519
 
       - name: Push to SoedingLab
         run: |
