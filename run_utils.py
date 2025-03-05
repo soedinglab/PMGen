@@ -699,7 +699,7 @@ def run_single_proteinmpnn(path, directory, args):
         sampling_temp=args.sampling_temp, batch_size=args.batch_size,
         hot_spot_thr=args.hot_spot_thr
     )
-    runner_mpnn.run()
+    runner_mpnn.run() #
 
 
 def protein_mpnn_wrapper(output_pdbs_dict, args, max_jobs, mode='parallel'):

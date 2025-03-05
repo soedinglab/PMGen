@@ -1,6 +1,4 @@
 import argparse
-import shutil
-
 import pandas as pd
 from run_utils import run_PMGen_wrapper, run_PMGen_modeling, run_proteinmpnn, run_single_proteinmpnn, protein_mpnn_wrapper
 from Bio import SeqIO
