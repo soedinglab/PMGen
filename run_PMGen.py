@@ -71,6 +71,7 @@ def main():
     # Setting to Run only a part:
     parser.add_argument('--no_alphafold', action='store_false', help='does not run alphafold.')
     parser.add_argument('--only_protein_mpnn', action='store_true', help='Skips PANDORA and AF modeling, and runs ProteinMPNN for already available predictions.')
+    parser.add_argument('--no_pandora', action='store_false', help='does not run pandora')
 
     args = parser.parse_args()
 
@@ -97,7 +98,7 @@ def main():
                                        alphafold_param_folder=args.alphafold_param_folder,
                                        fine_tuned_model_path=args.fine_tuned_model_path,
                                        benchmark=args.benchmark, best_n_templates=args.best_n_templates,
-                                       n_homology_models=args.n_homology_models)
+                                       n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora)
         if args.run == 'parallel' and not args.only_protein_mpnn:
             runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
         elif args.run == 'single' and not args.only_protein_mpnn:
@@ -128,7 +129,7 @@ def main():
                                         models=args.models, alphafold_param_folder=args.alphafold_param_folder,
                                         fine_tuned_model_path=args.fine_tuned_model_path,
                                         benchmark=args.benchmark, best_n_templates=args.best_n_templates,
-                                        n_homology_models=args.n_homology_models)
+                                        n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora)
         if not args.only_protein_mpnn:
             runner.run_PMGen(run_alphafold=args.no_alphafold)
         else:
