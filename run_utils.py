@@ -134,7 +134,7 @@ class run_PMGen_modeling():
                     template_id = files[0].split("/")[-1]
                 models = [file for file in glob.glob(os.path.join(self.pandora_output, self.id, '????.pdb')) if
                          "mod" in file.split("/")[-1]]
-                if len(models) >= len(self.num_templates):
+                if len(models) >= self.num_templates:
                     shoud_I_run = 'No'
                 print(f'Mode force_run == {force_run}, and PANDORA has already finished for {self.id}, no need to run it!')
             except:
