@@ -75,8 +75,8 @@ def plot_and_save_heatmap(input_data, output_path, npz_key=None, batch=None, cma
 
     print(f"Heatmap saved to {output_path}")
 
-input_data = '/home/amir/amir/ParseFold/ParseFold-MHC/ProteinMPNN/outputs/default_example_no_fixed/scores/3HTN.npz'
-output_path = '/home/amir/amir/ParseFold/ParseFold-MHC/ProteinMPNN/outputs/default_example_no_fixed/heatmap_scores_all.png'
+input_data = '/home/amir/amir/ParseFold/PMGen/ProteinMPNN/outputs/default_example_no_fixed/scores/3HTN.npz'
+output_path = '//ProteinMPNN/outputs/default_example_no_fixed/heatmap_scores_all.png'
 plot_and_save_heatmap(input_data, output_path, npz_key='global_score', batch=None, cmap='viridis', figsize=(10, 8), dpi=600, log_prob=True)
 
 '''
