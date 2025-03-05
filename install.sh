@@ -17,8 +17,8 @@ error_handler() {
 trap 'error_handler' ERR
 
 CURRENT_DIR=$(pwd)
-ENV_NAME="PMGen_mhc"
-ENV_FILE="PMGen_mhc.yml"
+ENV_NAME="PMGen"
+ENV_FILE="PMGen.yml"
 AFFINE_ZIP_URL="https://zenodo.org/records/14961621/files/AFfine.zip?download=1"
 AFFINE_ZIP_NAME="AFfine.zip"
 AFFINE_FOLDER="AFfine"
@@ -26,7 +26,7 @@ PANDORA_MODIF_PATH="$CURRENT_DIR/PANDORA/PANDORA/Pandora/Modelling_functions.py"
 PANDORA_PMHC_PATH="$CURRENT_DIR/PANDORA/PANDORA/PMHC/PMHC.py"
 
 echo "========================================="
-echo " Starting Installation: PMGen-MHC"
+echo " Starting Installation: PMGen"
 echo " Thank you for using our tool!"
 echo "========================================="
 
@@ -129,6 +129,6 @@ cd "$CURRENT_DIR"
 echo "✔ Installation completed successfully!"
 echo "Please check and modify 'user_setting.py' file to customize for your usage"
 echo "If you want to use NetMHCpan predictions for Anchor, please make sure to install it and provide its path to 'user_setting.py'"
-echo "To use PMGen, run: 'conda activate PMGen_mhc' "
+echo "To use PMGen, run: 'conda activate PMGen' "
 echo "========================================="
 echo "✅ PMGen-MHC is ready to use!"
