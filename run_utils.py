@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 
-class run_parsefold_modeling():
+class run_PMGen_modeling():
     def __init__(self, peptide, mhc_seq, mhc_type, id, output_dir='output',
                   anchors=None, mhc_allele=None, predict_anchor=True,
                  num_templates=4, num_recycles=3, models=['model_2_ptm'],
@@ -27,7 +27,7 @@ class run_parsefold_modeling():
                  benchmark=False, n_homology_models=1, best_n_templates=1
                  ):
         """
-        Initializes the ParseFold modeling pipeline.
+        Initializes the PMGen modeling pipeline.
 
         Args:
             peptide (str): Peptide sequence.
@@ -81,9 +81,9 @@ class run_parsefold_modeling():
         # vars defined later
         self.template_id = None
 
-    def run_parsefold(self, test_mode=False, run_alphafold=True):
+    def run_PMGen(self, test_mode=False, run_alphafold=True):
         """
-        Runs the full ParseFold pipeline, including Pandora alignment and AlphaFold prediction.
+        Runs the full PMGen pipeline, including Pandora alignment and AlphaFold prediction.
         Args:
             test_mode (bool): If True, runs in test mode without full execution.
         """
@@ -309,13 +309,13 @@ class run_parsefold_modeling():
         assert isinstance(self.alphafold_param_folder, str), f'alphafold_param_folder must be a string, found {self.alphafold_param_folder}'
 
 
-class run_parsefold_wrapper():
+class run_PMGen_wrapper():
     def __init__(self, df, output_dir, num_templates=4, num_recycles=3, models=['model_2_ptm'],
                  alphafold_param_folder='AFfine/af_params/params_original/',
                  fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                  max_ram_per_job=3, num_cpu=1, benchmark=False, best_n_templates=1, n_homology_models=1):
         """
-        Initializes the run_parsefold_wrapper class.
+        Initializes the run_PMGen_wrapper class.
         :param df: pandas DataFrame containing input data. Required columns:
             - 'peptide' (str): Peptide sequence.
             - 'mhc_seq' (str): MHC sequence (one chain for MHC-I, two for MHC-II).
@@ -362,14 +362,14 @@ class run_parsefold_wrapper():
             except:
                 mhc_allele = None
             predict_anchor = False if anchors else True
-            runner = run_parsefold_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
+            runner = run_PMGen_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
                                            mhc_type=row['mhc_type'], id=f"{row['id']}", output_dir=self.output_dir,
                                             anchors=anchors, mhc_allele=mhc_allele, predict_anchor=predict_anchor,
                                             num_templates=self.num_templates, num_recycles=self.num_recycles,
                                             models=self.models, alphafold_param_folder=self.alphafold_param_folder,
                                             fine_tuned_model_path=self.fine_tuned_model_path, benchmark=self.benchmark,
                                             n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates)
-            runner.run_parsefold(run_alphafold=False)
+            runner.run_PMGen(run_alphafold=False)
             input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
             input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])] # id/id
             INPUT_DF.append(input_df)
@@ -394,14 +394,14 @@ class run_parsefold_wrapper():
         except:
             mhc_allele = None
         predict_anchor = False if anchors else True
-        runner = run_parsefold_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
+        runner = run_PMGen_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
                                         mhc_type=row['mhc_type'], id=f"{row['id']}", output_dir=self.output_dir,
                                         anchors=anchors, mhc_allele=mhc_allele, predict_anchor=predict_anchor,
                                         num_templates=self.num_templates, num_recycles=self.num_recycles,
                                         models=self.models, alphafold_param_folder=self.alphafold_param_folder,
                                         fine_tuned_model_path=self.fine_tuned_model_path, benchmark=self.benchmark,
                                         n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates)
-        runner.run_parsefold(run_alphafold=False)
+        runner.run_PMGen(run_alphafold=False)
         input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
         input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])]  # id/id
         return input_df
@@ -450,7 +450,7 @@ class run_parsefold_wrapper():
         except:
             mhc_allele = None
         predict_anchor = False if anchors else True
-        runner = run_parsefold_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
+        runner = run_PMGen_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
                                             mhc_type=row['mhc_type'], id=f"{row['id']}", output_dir=self.output_dir,
                                             anchors=anchors, mhc_allele=mhc_allele, predict_anchor=predict_anchor,
                                             num_templates=self.num_templates, num_recycles=self.num_recycles,
@@ -503,12 +503,12 @@ class run_parsefold_wrapper():
 
 
 class run_proteinmpnn():
-    def __init__(self, parsefold_pdb, output_dir,
+    def __init__(self, PMGen_pdb, output_dir,
                  num_sequences_peptide=10, num_sequences_mhc=3,
                 peptide_chain='P', mhc_design=True, peptide_design=True,
                  only_pseudo_sequence_design=True, anchor_pred=True,
                  sampling_temp=0.05, batch_size=1, hot_spot_thr=6.0):
-        self.pdb = parsefold_pdb
+        self.pdb = PMGen_pdb
         self.output_dir = output_dir
         self.peptide_chain = peptide_chain
         self.num_sequences_peptide = num_sequences_peptide
@@ -665,7 +665,7 @@ class run_proteinmpnn():
 
 
     def input_assertion(self):
-        assert isinstance(self.pdb, str), f'parsefold_pdb should be a string, found {self.pdb}'
+        assert isinstance(self.pdb, str), f'PMGen_pdb should be a string, found {self.pdb}'
         assert isinstance(self.output_dir, str), f'output_dir should be a string, found {self.output_dir}'
         assert isinstance(self.peptide_chain, str), f'peptide_chain should be a string, found {self.peptide_chain}'
         assert isinstance(self.peptide_design, bool), f'peptide_design should be boolean, found {self.peptide_design}'
@@ -685,12 +685,12 @@ def run_single_proteinmpnn(path, directory, args):
 
     # Copy PDB file to the new directory
     shutil.copy(path, os.path.join(model_dir, path.split('/')[-1]))
-    parsefold_pdb = os.path.join(model_dir, path.split('/')[-1])
-    print('#########', parsefold_pdb)
+    PMGen_pdb = os.path.join(model_dir, path.split('/')[-1])
+    print('#########', PMGen_pdb)
 
     # Run ProteinMPNN
     runner_mpnn = run_proteinmpnn(
-        parsefold_pdb=parsefold_pdb, output_dir=model_dir,
+        PMGen_pdb=PMGen_pdb, output_dir=model_dir,
         num_sequences_peptide=args.num_sequences_peptide,
         num_sequences_mhc=args.num_sequences_mhc,
         peptide_chain='P', mhc_design=args.mhc_design, peptide_design=args.peptide_design,

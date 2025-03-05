@@ -1,6 +1,6 @@
-# ParseFold-MHC
+# PMGen
 
-**ParseFold-MHC** is a powerful and flexible framework for Peptide-MHC (pMHC) complex modeling, binding prediction, and protein design. It integrates cutting-edge tools such as **PANDORA** for template generation, **AlphaFold (via AFfine)** for structural prediction, and **ProteinMPNN** for sequence design, enabling researchers to model pMHC complexes, predict binding interactions, and engineer novel peptide or MHC sequences.
+**PMGen** is a powerful and flexible framework for Peptide-MHC (pMHC) complex modeling, binding prediction, and protein design. It integrates cutting-edge tools such as **PANDORA** for template generation, **AlphaFold (via AFfine)** for structural prediction, and **ProteinMPNN** for sequence design, enabling researchers to model pMHC complexes, predict binding interactions, and engineer novel peptide or MHC sequences.
 
 ## Features
 
@@ -21,17 +21,17 @@
     Git
 ```
 
-Follow these steps to set up ParseFold-MHC on your system:
+Follow these steps to set up PMGen on your system:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/AmirAsgary/ParseFold-MHC.git
-   cd ParseFold-MHC
+   git clone https://github.com/AmirAsgary/PMGen.git
+   cd PMGen
    bash -l install.sh
-   conda activate parsefold_mhc
+   conda activate PMGen
    ```
  You will be prompted to enter your Modeller license key (required for PANDORA).
- The script creates a Conda environment (parsefold_mhc), installs dependencies, clones PANDORA and ProteinMPNN, and sets up necessary configurations.
+ The script creates a Conda environment (PMGen), installs dependencies, clones PANDORA and ProteinMPNN, and sets up necessary configurations.
 
     
 1. **Customize setting file (Optional but Recommended)**:
@@ -42,14 +42,14 @@ Edit `user_setting.py` to adjust netMHCpan and netMHCIIpan installation paths.
 
 ## Usage
 
-ParseFold-MHC operates in two primary modes:
+PMGen operates in two primary modes:
 
     modeling: For modeling a single pMHC complex.
     wrapper: For batch processing multiple complexes from a TSV file.
 
 Run the tool with the main script:
 bash
-python parsefold_mhc.py [options]
+python PMGen.py [options]
 Command-Line Options
 General Options
 
@@ -97,7 +97,7 @@ Advanced Options
 
 ## Examples
 
-Here are several practical examples to demonstrate how to use ParseFold-MHC:
+Here are several practical examples to demonstrate how to use PMGen:
 
 Start by setting up your variables:
 ```
@@ -113,12 +113,12 @@ HLAALLEL_II='HLA-DRA*01/HLA-DRB1*0101'
 ```
 
 #### Modelling Runs for Single Predictions:
-This mode is used when you want to run ParseFold for a single model. We recommend to use `Wrapper` run.
+This mode is used when you want to run PMGen for a single model. We recommend to use `Wrapper` run.
 1. Running for a Single Model
 
 Model a single pMHC complex with anchor prediction:
 ```bash
-python run_parsefold.py \
+python run_PMGen.py \
   --mode modeling \
   --peptide "$PEPTIDE" \
   --mhc_seq "$MHC_SEQ" \
@@ -133,7 +133,7 @@ python run_parsefold.py \
 
 We do not recommend to set `--anchors` and it is better to predict them.
 ```bash
-python run_parsefold.py \
+python run_PMGen.py \
   --mode modeling \
   --peptide "$PEPTIDE" \
   --mhc_seq "MHC_ALPHA_CHAIN_SEQ/MHC_BETA_CHAIN_SEQ" \
@@ -145,7 +145,7 @@ python run_parsefold.py \
 
 3. Using FASTA input with allele name
 ```
-python run_parsefold.py \
+python run_PMGen.py \
   --mode modeling \
   --peptide "$PEPTIDE" \
   --mhc_fasta mhc_sequence.fasta \
@@ -175,7 +175,7 @@ Empty anchors rows will be predicted.
 4. Basic wrapper mode (serial execution)
 
 ```
-python run_parsefold.py \
+python run_PMGen.py \
   --mode wrapper \
   --run single \
   --df "$DF" \
@@ -192,7 +192,7 @@ want to try a fine-tuned model, you could provide its path e.g
 and its name `--models model_2_ptm_ft`. Make sure the name contains `_ft` so it is
 interpreted as fine-tuned model.
 ```
-python run_parsefold.py \
+python run_PMGen.py \
   --mode wrapper \
   --run parallel \
   --df "$DF" \
@@ -206,7 +206,7 @@ python run_parsefold.py \
 6. Memory-intensive parallel run
 
 ```
-python run_parsefold.py \
+python run_PMGen.py \
   --mode wrapper \
   --run parallel \
   --df "$DF" \
@@ -225,7 +225,7 @@ You can run protein design in both wrapper and single modes.
 Enable peptide, MHC, and pseudo-sequence design:
 ```bash
 bash
-python parsefold_mhc.py \
+python PMGen.py \
  --mode modeling \
  --peptide "SIINFEKL" \
  --mhc_seq "MHC_ALPHA_CHAIN_SEQ/MHC_BETA_CHAIN_SEQ" \
@@ -244,7 +244,7 @@ This generates 20 peptide sequences and 10 MHC sequences (full and pseudo).
 8. Protein Design using TSV file - Large number of sequences:
 
 ```bash
-python run_parsefold.py \
+python run_PMGen.py \
    --mode wrapper \
    --run single   \
    --df "data/example/wrapper_input_example.tsv"   \

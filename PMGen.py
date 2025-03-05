@@ -2,7 +2,7 @@ import argparse
 import shutil
 
 import pandas as pd
-from run_utils import run_parsefold_wrapper, run_parsefold_modeling, run_proteinmpnn, run_single_proteinmpnn, protein_mpnn_wrapper
+from run_utils import run_PMGen_wrapper, run_PMGen_modeling, run_proteinmpnn, run_single_proteinmpnn, protein_mpnn_wrapper
 from Bio import SeqIO
 import warnings
 import os
@@ -18,7 +18,7 @@ def remove_files_in_directory(directory):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Run ParseFold wrapper or modeling.")
+    parser = argparse.ArgumentParser(description="Run PMGen wrapper or modeling.")
 
     # Default settings
     parser.add_argument('--run', choices=['parallel', 'single'], required=False, default='parallel',
@@ -94,7 +94,7 @@ def main():
             out_alphafold = os.path.join(args.output_dir, 'alphafold', row['id'])
             tmp_pdb_dict[row['id']] = out_alphafold
 
-        runner = run_parsefold_wrapper(df=df, output_dir=args.output_dir, num_templates=args.num_templates,
+        runner = run_PMGen_wrapper(df=df, output_dir=args.output_dir, num_templates=args.num_templates,
                                        num_recycles=args.num_recycles, models=args.models,
                                        alphafold_param_folder=args.alphafold_param_folder,
                                        fine_tuned_model_path=args.fine_tuned_model_path,
@@ -123,7 +123,7 @@ def main():
             elif args.mhc_type == 2: sequence = sequences[0] + "/" + sequences[1]
         else:
             sequence = args.mhc_seq
-        runner = run_parsefold_modeling(peptide=args.peptide, mhc_seq=sequence, mhc_type=args.mhc_type,
+        runner = run_PMGen_modeling(peptide=args.peptide, mhc_seq=sequence, mhc_type=args.mhc_type,
                                         id=args.id, output_dir=args.output_dir, anchors=args.anchors,
                                         mhc_allele=args.mhc_allele, predict_anchor=args.predict_anchor,
                                         num_templates=args.num_templates, num_recycles=args.num_recycles,
@@ -132,7 +132,7 @@ def main():
                                         benchmark=args.benchmark, best_n_templates=args.best_n_templates,
                                         n_homology_models=args.n_homology_models)
         if not args.only_protein_mpnn:
-            runner.run_parsefold(run_alphafold=args.no_alphafold)
+            runner.run_PMGen(run_alphafold=args.no_alphafold)
         else:
             print('--Warning!-- Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
         output_pdbs_dict = {}
@@ -159,9 +159,9 @@ def main():
                 model_dir = os.path.join(directory, path.split('/')[-1].strip('.pdb')) # for each alphafold model, one path inside id created
                 os.makedirs(model_dir, exist_ok=True)
                 shutil.copy(path, os.path.join(model_dir, path.split('/')[-1])) #af/model --> outdir/proteinmpnn/id/model_i/model.pdb
-                parsefold_pdb = os.path.join(model_dir, path.split('/')[-1])
-                print('#########',parsefold_pdb)
-                runner_mpnn = run_proteinmpnn(parsefold_pdb=parsefold_pdb, output_dir=model_dir,
+                PMGen_pdb = os.path.join(model_dir, path.split('/')[-1])
+                print('#########',PMGen_pdb)
+                runner_mpnn = run_proteinmpnn(PMGen_pdb=PMGen_pdb, output_dir=model_dir,
                                          num_sequences_peptide=args.num_sequences_peptide,
                                          num_sequences_mhc=args.num_sequences_mhc,
                                          peptide_chain='P', mhc_design=args.mhc_design, peptide_design=args.peptide_design,
