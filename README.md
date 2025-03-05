@@ -54,7 +54,7 @@ PMGen operates in two primary modes:
 
 Run the tool with the main script:
 bash
-python PMGen.py [options]
+`python run_PMGen.py [options]`
 Command-Line Options
 General Options
 
@@ -230,7 +230,7 @@ You can run protein design in both wrapper and single modes.
 Enable peptide, MHC, and pseudo-sequence design:
 ```bash
 bash
-python PMGen.py \
+python run_PMGen.py \
  --mode modeling \
  --peptide "SIINFEKL" \
  --mhc_seq "MHC_ALPHA_CHAIN_SEQ/MHC_BETA_CHAIN_SEQ" \
