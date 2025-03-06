@@ -736,7 +736,7 @@ def split_and_renumber_pdb(input_pdb, output_dir, n=100, mhc_type=None):
     return output_pdb
 
 
-def get_coords_from_res(residue, atom='CB'):
+'''def get_coords_from_res(residue, atom='CB'):
     if atom in residue:
         return residue[atom].coord
 
@@ -752,14 +752,39 @@ def get_coords_from_res(residue, atom='CB'):
         if 'N' in residue:
             return residue['N'].coord
     print('no atom for residue found, skiping it with unreasonable coords')
+    return np.array([1e+9, 1e+9, 1e+9])'''
+
+import numpy as np
+
+def get_coords_from_res(residue):
+    """Compute the average coordinates of side-chain atoms.
+    If side-chain atoms are missing, fall back to backbone atoms."""
+    # Define backbone atoms to exclude
+    backbone_atoms = {'CA', 'N', 'C', 'O'}
+    # Extract side-chain atom coordinates
+    side_chain_coords = [
+        atom.coord for atom in residue.get_atoms() if atom.get_name() not in backbone_atoms
+    ]
+    if side_chain_coords:
+        return np.mean(side_chain_coords, axis=0)  # Average side-chain coordinates
+    # Fallback mechanism if no side-chain atoms exist (e.g., Glycine)
+    if residue.get_resname() != 'GLY':
+        print(f"No side-chain atoms for {residue.get_resname()}, using backbone.")
+    # Try accessing backbone atoms in a priority order
+    for atom_name in ['CA', 'C', 'O', 'N']:
+        try:
+            return residue[atom_name].coord
+        except KeyError:
+            continue  # If atom is missing, try the next one
     return np.array([1e+9, 1e+9, 1e+9])
+
 
 
 def get_distance_matrices(input_pdb, target_chain, atom='CB'):
     parser = PDB.PDBParser(QUIET=True)
     structure = parser.get_structure("protein", input_pdb)
     target_residues = structure[0][target_chain].get_residues()
-    target_coordinates = [get_coords_from_res(residue, atom) for residue in target_residues]
+    target_coordinates = [get_coords_from_res(residue) for residue in target_residues]
     target_coordinates = np.array(target_coordinates)  # (N, 3)
 
     other_chains = [chain for chain in structure.get_chains() if chain.id != target_chain]
@@ -768,7 +793,7 @@ def get_distance_matrices(input_pdb, target_chain, atom='CB'):
         chain_residues = list(chain.get_residues())  # Convert generator to list
         if chain_residues:  # Ensure the list is not empty
             chain_id = chain_residues[0].get_parent().id
-            coordinates = np.array([get_coords_from_res(residue, atom) for residue in chain_residues])
+            coordinates = np.array([get_coords_from_res(residue) for residue in chain_residues])
             dist_matrix = cdist(target_coordinates, coordinates)
             #dist_masked = np.where(dist_matrix <= thr, 1., 0.)
             final_dict[chain_id] = dist_matrix  # Dict of coordinates (N_peptide, N_chain)
