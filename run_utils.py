@@ -582,9 +582,8 @@ class run_proteinmpnn():
         if self.anchor_pred:
             pass
         if self.save_hotspots:
-            output_dir = os.path.join(self.output_dir, 'hotspots.json')
-            with open(output_dir, 'w') as f:
-                json.dump(self.hot_spots, f, indent=4)
+            output_dir = os.path.join(self.output_dir, 'hotspots.npz')
+            np.savez(output_dir, **self.hot_spots)
 
     def __mhc_design(self):
         output_dir = os.path.join(self.output_dir, 'mhc_design')
