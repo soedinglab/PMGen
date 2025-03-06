@@ -72,6 +72,7 @@ def main():
     parser.add_argument('--no_alphafold', action='store_false', help='does not run alphafold.')
     parser.add_argument('--only_protein_mpnn', action='store_true', help='Skips PANDORA and AF modeling, and runs ProteinMPNN for already available predictions.')
     parser.add_argument('--no_pandora', action='store_false', help='does not run pandora')
+    parser.add_argument('--protein_mpnn_dryrun', action='store_true', help='Overwrites all proteinMPNN flags and just dry run. hotspots are saved.')
 
     args = parser.parse_args()
 
@@ -146,30 +147,15 @@ def main():
     # get the pdb outputs for listing them and protmpnn
 
 
-    if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design:
+    if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design or args.protein_mpnn_dryrun:
+        if args.protein_mpnn_dryrun:
+            args.peptide_design = False
+            args.only_pseudo_sequence_design = False
+            args.mhc_design = False
+            print("Running ProteinMPNN Dry-Run")
         print("### Start ProteinMPNN runs ###")
         print('files:\n', output_pdbs_dict)
         protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, mode=args.run)
-        '''for id_m, path_list in output_pdbs_dict.items():
-            directory = os.path.join(args.output_dir, 'protienmpnn', id_m)
-            os.makedirs(directory, exist_ok=True)
-            for path in path_list:
-                #outdir/proteinmpnn/id/model_i/
-                model_dir = os.path.join(directory, path.split('/')[-1].strip('.pdb')) # for each alphafold model, one path inside id created
-                os.makedirs(model_dir, exist_ok=True)
-                shutil.copy(path, os.path.join(model_dir, path.split('/')[-1])) #af/model --> outdir/proteinmpnn/id/model_i/model.pdb
-                PMGen_pdb = os.path.join(model_dir, path.split('/')[-1])
-                print('#########',PMGen_pdb)
-                runner_mpnn = run_proteinmpnn(PMGen_pdb=PMGen_pdb, output_dir=model_dir,
-                                         num_sequences_peptide=args.num_sequences_peptide,
-                                         num_sequences_mhc=args.num_sequences_mhc,
-                                         peptide_chain='P', mhc_design=args.mhc_design, peptide_design=args.peptide_design,
-                                         only_pseudo_sequence_design=args.only_pseudo_sequence_design,
-                                         anchor_pred=True,
-                                         sampling_temp=args.sampling_temp, batch_size=args.batch_size,
-                                         hot_spot_thr=args.hot_spot_thr)
-                runner_mpnn.run()'''
-
 
 if __name__ == "__main__":
     main()
