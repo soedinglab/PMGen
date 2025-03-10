@@ -774,3 +774,5 @@ def protein_mpnn_wrapper(output_pdbs_dict, args, max_jobs, mode='parallel'):
 
     else:
         raise ValueError("Invalid mode! Choose 'parallel' or 'single'.")
+
+
