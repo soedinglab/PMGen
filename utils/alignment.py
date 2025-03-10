@@ -2,9 +2,31 @@ from Bio import SeqIO, AlignIO
 import os
 import subprocess
 import pandas as pd
-import shutil
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import numpy as np
+import re
+
+
+def debug_prompt(step_name, **kwargs):
+    """
+    Prints debugging information and waits for user confirmation to proceed.
+    Parameters:
+    - step_name (str): A label for the debugging step.
+    - kwargs: Key-value pairs of variables to print for monitoring.
+    """
+    print(f"\n=== Debug: {step_name} ===")
+    for key, value in kwargs.items():
+        print(f"{key}: {value}")
+    while True:
+        user_input = input("Continue? (yes/no): ").strip().lower()
+        if user_input == "yes":
+            break
+        elif user_input == "no":
+            print("Exiting debugging mode.")
+            exit()
+        else:
+            print("Invalid input. Please enter 'yes' or 'no'.")
 
 
 def find_longest_sequence(fasta_file):
@@ -292,10 +314,163 @@ def create_parsefold_input_from_representatives(fasta_dir, peptides=[], mhc_type
     return DF
 
 
+def extract_fasta_sequences(input_fasta, output_fasta, headers_to_keep):
+    """
+    Extract sequences from a large FASTA file based on a given list of headers
+    and remove any entries with empty sequences.
+
+    Args:
+        input_fasta (str): Path to the large FASTA file.
+        output_fasta (str): Path to the output FASTA file.
+        headers_to_keep (set): Set of headers to retain.
+    """
+    with open(output_fasta, "w") as out_f:
+        for record in SeqIO.parse(input_fasta, "fasta"):
+            if record.id in headers_to_keep and len(record.seq) > 0:  # Check non-empty sequence
+                SeqIO.write(record, out_f, "fasta")
+
+
+def match_pseudoseq(clip_dataframe='data/CLIP_example.tsv',
+                    input_folder='outputs_representatives',
+                    path_to_mmseq_clust_folder='data/HLA_alleles/processed/mmseq_clust',
+                    model='model_2_ptm',
+                    tmp_dir='tmpmmseq',
+                    continue_from_index=None):
+    df = pd.read_csv(clip_dataframe, sep='\t', header=0)
+    if continue_from_index:
+        assert isinstance(continue_from_index, int)
+        df = df.iloc[continue_from_index: ,:]
+    os.makedirs(tmp_dir, exist_ok=True)
+    #debug_prompt("Loaded DataFrame", dataframe=df, length=len(df), iden=df.iden)  # Print first few rows
+    DF = []
+    FAILED = []
+    for num, row in df.iterrows():
+        #number = num + continue_from_index if continue_from_index else num
+        number = num
+        chunk = int(row['chunk_id'])
+        Files = str(row['file'])
+        id = str(row['id'])
+        mhc_type = int(row['mhc_type'])
+        path = os.path.join(input_folder, str(chunk), 'protienmpnn', id, f'{id}_model_1_{model}')
+        npzpath = os.path.join(path, 'hotspots.npz')
+        arr = np.load(npzpath)
+        #debug_prompt("Processing row", chunk=chunk, id=id, mhc_type=mhc_type, npzpath=npzpath, Files=Files)
+        for enum, f in enumerate(Files.split(';;')):
+            mmseq_file = str(f)
+            input_fasta = os.path.join(path_to_mmseq_clust_folder, mmseq_file)
+            output_fasta = os.path.join(tmp_dir, f'{number}_{mmseq_file}')
+            iden = '_'.join(str(row['iden']).split('_')[:-1]).split(';;')
+            #debug_prompt("Processing sequence file", mmseq_file=mmseq_file, input_fasta=input_fasta, output_fasta=output_fasta, iden=iden)
+            if not 'mice' in f:
+                try:
+                    if mhc_type == 2:
+                        assert len(iden) == 2
+                        assert len(Files.split(';;')) == 2
+                    else:
+                        assert len(iden) == 1
+                        assert len(Files.split(';;')) == 1
+                    tsvfile = mmseq_file.replace('clust_all_seqs.fasta', 'clust_cluster.tsv')
+                    tsv = pd.read_csv(os.path.join(path_to_mmseq_clust_folder, tsvfile), header=None, sep='\t')
+                    tsv.columns = ['rep', 'member']
+                    sub_tsv = tsv[tsv['rep'] == iden[enum]]
+                    headers_to_keep = sub_tsv.member.tolist()
+                    #debug_prompt("Filtering FASTA", tsvfile=tsvfile, headers_to_keep=headers_to_keep, tsv=tsv, sub_tsv=sub_tsv)
+                    extract_fasta_sequences(input_fasta, output_fasta, headers_to_keep)
+                    mafft_cmd = f"mafft {output_fasta} > {output_fasta}_aln.fasta"
+                    subprocess.run(mafft_cmd, shell=True, check=True)
+                    #debug_prompt("Performed MAFFT alignment", mafft_cmd=mafft_cmd, output_fasta_aligned=f"{output_fasta}_aln.fasta")
+                    key = list(arr.keys())[enum]
+                    mhc_position = np.unique(arr[key][:, 1])
+                    #debug_prompt("Extracting MHC positions", key=key, mhc_position=mhc_position)
+                    # Extract Pseudoseq
+                    mhc_id = []  # List to store headers
+                    sequence = []  # List to store full sequences
+                    pseudo_sequence = []  # List to store filtered sequences
+                    species = [] # List to store species
+                    representative_id = [] # List to store representative id
+                    mhc_types = []
+                    repres_pseudo_positions = []
+                    for record in SeqIO.parse(f"{output_fasta}_aln.fasta", "fasta"):
+                        if record.seq:  # Ensure non-empty sequence
+                            filtered_seq = "".join(record.seq[i] for i in mhc_position if i < len(record.seq))
+                            if filtered_seq:
+                                mhc_id.append(record.id)  # Store the header
+                                sequence.append(str(record.seq))  # Store the full sequence
+                                pseudo_sequence.append(filtered_seq)  # Store the filtered sequence
+                                species.append(f.split('-')[1].split('_')[0])  # I-SLA_clust... --> SLA
+                                representative_id.append(iden[enum])
+                                mhc_types.append(mhc_type)
+                                repres_pseudo_positions.append(";".join(map(str, mhc_position)))
+                    if len(pseudo_sequence) != 0:
+                        dataframe = pd.DataFrame({'mhc_id':mhc_id,
+                                                  'species':species,
+                                                  'mhc_types':mhc_types,
+                                                  'pseudo_sequence':pseudo_sequence,
+                                                  'representative_id':representative_id,
+                                                  'sequence':sequence,
+                                                  'repres_pseudo_positions':repres_pseudo_positions})
+                        DF.append(dataframe)
+                    else:
+                        FAILED.append(pd.DataFrame({'iden':[iden[enum]]}))
+                    #debug_prompt("Filtered and wrote new FASTA", output_fasta=output_fasta, dataframe=dataframe)
+                    #os.remove(f'{output_fasta}')
+                    #os.remove(f"{output_fasta}_aln.fasta")
+                except:
+                    FAILED.append(pd.DataFrame({'iden':[iden[enum]]}))
+
+    print("Processing completed successfully.")
+    DF = pd.concat(DF)
+    DF.to_csv('DF.tsv', sep='\t', index=False)
+    DF = DF.drop_duplicates(subset=['mhc_id', 'species', 'mhc_types', 'representative_id', 'pseudo_sequence'])
+    DF.to_csv('DF_noduplicate.tsv', sep='\t', index=False)
+    FAILED = pd.concat(FAILED)
+    FAILED.to_csv('FAILED.tsv', sep='\t', index=False)
+    FAILED.drop_duplicates(subset=['iden'])
+    FAILED.to_csv('FAILED_noduplicate.tsv', sep='\t', index=False)
+    return None
+
+
+def parse_netmhcpan_file(file_path):
+    # Read the entire file
+    with open(file_path, 'r') as f:
+        content = f.read()
+    # Split into sections using dashed lines (flexible length)
+    sections = re.split(r'-{50,}', content)
+    tables = []
+    itis_header = False
+    for section in sections:
+        lines = section.strip().split('\n')
+        if not lines:
+            continue
+        # Look for header starting with "Pos"
+        data = []
+        for i, line in enumerate(lines):
+            if itis_header: # if previous one was header, no add data until reach end of table
+                if re.match(r'^\s*\d+\s+', line):  # Collect data rows (lines starting with a number)
+                    data.append(re.split(r'\s+', line.strip()))
+            if line.strip().startswith("Pos"):
+                header_line = line
+                itis_header = True
+                # Extract column names from header (split on 2+ spaces) and remove "BinderLevel" in the end which is empty usually
+                columns = re.split(r'\s+', header_line.strip())
+                columns = columns[:-1] if columns[-1] == 'BindLevel' else columns
+                break
+        if itis_header and len(data) != 0: # if header found and data is loaded, write the table
+            df = pd.DataFrame(data=data, columns=columns)
+            try:# most likely works for mhc1
+                df = df.astype({'Score_EL':'float', 'Aff(nM)':'float'})
+                df = df.sort_values(["Aff(nM)", "Score_EL"], ascending=[True, False])
+            except:# for mhc2
+                df = df.astype({'Score_EL':'float', 'Affinity(nM)':'float'})
+                df = df.sort_values(["Affinity(nM)", "Score_EL"], ascending=[True, False])
+            itis_header = False # after data, again refresh the header and search for next table
+            tables.append(df)
+    return pd.concat(tables)
 
 
 
 
+'''
 #df = filter_longest_seq_to_df()
 #df_to_fasta('../data/HLA_alleles/longest_allels.csv',
 #            'proceesed_seq',
@@ -318,4 +493,4 @@ df1 = create_parsefold_input_from_representatives(fasta_dir='../data/HLA_alleles
 df2 = create_parsefold_input_from_representatives(fasta_dir='../data/HLA_alleles/processed/mmseq_clust/mhc2_rep_combinations', peptides=[], mhc_type=2,
                                                   num = len(df1), iden='_D')
 DF = pd.concat([df1, df2])
-DF.to_csv('CLIP_example.tsv', sep='\t', index=False)
+DF.to_csv('CLIP_example.tsv', sep='\t', index=False)'''

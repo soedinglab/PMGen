@@ -754,7 +754,6 @@ def split_and_renumber_pdb(input_pdb, output_dir, n=100, mhc_type=None):
     print('no atom for residue found, skiping it with unreasonable coords')
     return np.array([1e+9, 1e+9, 1e+9])'''
 
-import numpy as np
 
 def get_coords_from_res(residue):
     """Compute the average coordinates of side-chain atoms.
@@ -807,7 +806,11 @@ def get_hotspots(distance_matrix_dict, thr=6.0):
         final_dict[key] = positions
     return final_dict
 
-
+def extract_hotspot_sequence(hotspot_dict, input_pdb):
+    parser = PDB.PDBParser(QUIET=True)
+    structure = parser.get_structure("protein", input_pdb)
+    for chain, pairs in hotspot_dict.items():
+        target_residues = structure[0][chain].get_residues()
 
 
 def correct_residue_indexes(input_pdb, output_pdb):
