@@ -430,42 +430,7 @@ def match_pseudoseq(clip_dataframe='data/CLIP_example.tsv',
     return None
 
 
-def parse_netmhcpan_file(file_path):
-    # Read the entire file
-    with open(file_path, 'r') as f:
-        content = f.read()
-    # Split into sections using dashed lines (flexible length)
-    sections = re.split(r'-{50,}', content)
-    tables = []
-    itis_header = False
-    for section in sections:
-        lines = section.strip().split('\n')
-        if not lines:
-            continue
-        # Look for header starting with "Pos"
-        data = []
-        for i, line in enumerate(lines):
-            if itis_header: # if previous one was header, no add data until reach end of table
-                if re.match(r'^\s*\d+\s+', line):  # Collect data rows (lines starting with a number)
-                    data.append(re.split(r'\s+', line.strip()))
-            if line.strip().startswith("Pos"):
-                header_line = line
-                itis_header = True
-                # Extract column names from header (split on 2+ spaces) and remove "BinderLevel" in the end which is empty usually
-                columns = re.split(r'\s+', header_line.strip())
-                columns = columns[:-1] if columns[-1] == 'BindLevel' else columns
-                break
-        if itis_header and len(data) != 0: # if header found and data is loaded, write the table
-            df = pd.DataFrame(data=data, columns=columns)
-            try:# most likely works for mhc1
-                df = df.astype({'Score_EL':'float', 'Aff(nM)':'float'})
-                df = df.sort_values(["Aff(nM)", "Score_EL"], ascending=[True, False])
-            except:# for mhc2
-                df = df.astype({'Score_EL':'float', 'Affinity(nM)':'float'})
-                df = df.sort_values(["Affinity(nM)", "Score_EL"], ascending=[True, False])
-            itis_header = False # after data, again refresh the header and search for next table
-            tables.append(df)
-    return pd.concat(tables)
+
 
 
 
