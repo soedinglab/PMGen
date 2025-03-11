@@ -2,25 +2,20 @@ import pandas as pd
 import os
 import re
 import numpy as np
-from Bio import SeqIO
-#from Bio.Seq import Seq
-#from Bio.SeqRecord import SeqRecord
-from Bio.PDB import PDBParser
-#from Bio.SeqUtils import seq3
-from Bio import pairwise2
-from Bio import PDB
-#from Bio.SubsMat import MatrixInfo
+import subprocess
+from Bio.PDB import PDBParser, PPBuilder, PDBIO
+from Bio import pairwise2, PDB, SeqIO
 from Bio.Align import substitution_matrices
 from scipy.spatial.distance import cdist
-from Bio.PDB import PDBIO
 import shutil
 import random
-
+import sys
+import Levenshtein
 import warnings
 # Suppress the specific warning
 warnings.filterwarnings("ignore")
-# Your code here
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from user_setting import netmhcipan_path, netmhciipan_path, pmgen_abs_dir
 
 def process_dataframe(df):
     # Step 1: Sort IDs with 2 or 5 parts
@@ -907,7 +902,7 @@ def parse_netmhcpan_file(file_path):
         for i, line in enumerate(lines):
             if itis_header: # if previous one was header, no add data until reach end of table
                 if re.match(r'^\s*\d+\s+', line):  # Collect data rows (lines starting with a number)
-                    data.append(re.split(r'\s+', line.strip()))
+                    data.append(re.split(r'\s+', line.strip())[:len(columns)])
             if line.strip().startswith("Pos"):
                 header_line = line
                 itis_header = True
@@ -927,5 +922,139 @@ def parse_netmhcpan_file(file_path):
             tables.append(df)
     return pd.concat(tables)
     
-    
-    
+
+def find_similar_strings(a: str, file_path: str, num_matches=100):
+    # Read the file and store each line as a vocab
+    assert a.split('-')[0] in ['HLA', 'DLA', 'SLA', 'Mamu', 'Patr', 'Bola', 'BOLA', 'BoLA', 'MICA', 'MICB', 'mice'], (f''
+                                f'Input allele not found, Please provide full alleles, e.g "HLA-D*A", "SLA-*"'
+                                f'\n Found {a} ')
+    allele = a.split('-')[0]
+    not_allele = [i for i in ['HLA', 'DLA', 'SLA', 'Mamu', 'Patr', 'BoLA', 'BOLA', 'MICA', 'MICB', 'mice'] if i!= allele]
+    complex_alleles = ['DQA', 'DQB', 'DPA', 'DPB'] # need to be splited further e.g. HLA-DQA01-DQB01
+    patterns = [r'D.B', r'D.A', r'-A\d{1,2}', r'-B\d{1,2}', r'-C\d{1,2}', r'-\d{1,2}', r'DPA\d{1,2}', r'DPB\d{1,2}',
+                r'DQA\d{1,2}', r'DQB\d{1,2}', r'DRB\d{1,2}']
+    pattern = []
+    for p in patterns:
+        match = re.search(p, a)
+        if match: pattern.append(match.group(0))
+    vocabs = []
+    with open(file_path, 'r') as f:
+        for line in f:
+            if line.strip():
+                v = line.strip()
+                if any(x in v for x in complex_alleles):
+                    splitted = v.split('-')
+                    if len(splitted) == 3: #[HLA, DPA01, DPB01]
+                        vocabs.append('HLA' + '-' + splitted[1])
+                        vocabs.append('HLA' + '-' + splitted[2])
+                else: vocabs.append(v)
+    similarity_scores = [(vocab.split(' ')[0], Levenshtein.ratio(a, vocab.split(' ')[0])) for vocab in vocabs]
+    if len(similarity_scores) == 0:
+        return None
+    sorted_vocabs = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
+    smaller_final_vocab = sorted_vocabs
+    if pattern:
+        for p in pattern:
+            much_smaller_final_vocab = [i for i in smaller_final_vocab if p in i[0]]
+            if len(much_smaller_final_vocab)!= 0:
+                smaller_final_vocab = much_smaller_final_vocab
+    final_vocab1 = []
+    for voc in smaller_final_vocab:
+        if not any(no_al in voc[0] for no_al in not_allele):
+            final_vocab1.append(voc)
+    if len(final_vocab1) != 0: smaller_final_vocab = final_vocab1
+    final_vocab2 = [i for i in smaller_final_vocab if allele in i[0]]  # based on allele ('SLA' 'DLA' 'HLA' are very similar in Levenshtein)
+    if len(final_vocab2) != 0:
+        return [i[0] for i in final_vocab2[0:num_matches]]
+    elif len(smaller_final_vocab) != 0:
+        return [i[0] for i in smaller_final_vocab[0:num_matches]]
+    elif len(sorted_vocabs) != 0:
+        return [i[0] for i in sorted_vocabs[0:num_matches]]
+    else:
+        return None
+
+def match_inputseq_to_netmhcpan_allele(sequence, mhc_type, mhc_allele=None,
+                                       netmhcpan_data_path=None,
+                                       pseudoseq_path=None):
+    '''
+        finds the match in netMHCpan Alleles. Works only for one allele (MHC-2 A and B) should be separately
+        ran by this code mhc_allele overwrites sequence
+    '''
+    if not netmhcpan_data_path: netmhcpan_data_path = os.path.join(pmgen_abs_dir, 'data/HLA_alleles/netmhcpan_alleles')
+    if not pseudoseq_path: pseudoseq_path= os.path.join(pmgen_abs_dir, 'data/HLA_alleles/pseudoseqs/PMGen_pseudoseq.csv')
+    if not mhc_allele: assert isinstance(sequence, str)
+    assert mhc_type in [1,2]
+    df = pd.read_csv(pseudoseq_path)
+    df = df[df['mhc_types']==mhc_type]
+    netmhcpan_data_path = os.path.join(netmhcpan_data_path, f'mhc{mhc_type}')
+    if not mhc_allele: # find with alignment
+        sequences = df.sequence.tolist()
+        simple_alleles = df.simple_allele.tolist()
+        # run alignment
+        scores = [
+            pairwise2.align.globalxx(sequence, seq.replace('-', ''), score_only=True)
+            for seq in sequences ]
+        sorted_data = sorted(zip(simple_alleles, sequences, scores),
+                             key=lambda x: x[2],  # Sort by score (third element)
+                             reverse=True)
+        alleles = [i[0] for i in sorted_data]
+        # for each found allele in our db, search in netmhcpan db:
+    else:
+        alleles = [mhc_allele]
+    matched_allele = None
+    for a in alleles:
+        matched_allele = find_similar_strings(a, netmhcpan_data_path)
+        if matched_allele: break
+    return matched_allele[0]
+
+
+
+def run_netmhcpan(peptide_fasta, allele_list, output, mhc_type,
+                  netmhcipan_path=netmhcipan_path, netmhciipan_path=netmhciipan_path):
+    assert mhc_type in [1, 2]
+
+    if mhc_type == 1:
+        cmd = [str(netmhcipan_path), '-f', str(peptide_fasta),
+               '-BA', '-a', str(allele_list[0])]
+
+    elif mhc_type == 2:
+        final_allele = ""
+        for allele in allele_list:
+            if 'H-2' in allele or 'DRB' in allele:
+                final_allele = allele
+            else:
+                if 'DQA' in allele or 'DPA' in allele:
+                    final_allele += allele
+                if 'DQB' in allele or 'DPB' in allele:
+                    final_allele += f'-{allele.replace("HLA-", "")}'
+        print(allele)
+        cmd = [str(netmhciipan_path), '-f', str(peptide_fasta),
+               '-BA', '-u', '-s', '-length', '9,10,11,12,13,14,15,16,17,18',
+               '-inptype', '0', '-a', str(final_allele)]
+    # Open the output file and redirect stdout to it
+    with open(output, 'w') as f:
+        subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, check=True)
+
+
+def fetch_polypeptide_sequences(pdb_path):
+    """
+    Fetches the polypeptide sequences from a PDB file.
+    Args:
+        pdb_path (str): Path to the PDB file.
+    Returns:
+        dict: A dictionary where keys are chain IDs and values are polypeptide sequences.
+    """
+    parser = PDBParser(QUIET=True)
+    structure = parser.get_structure('structure', pdb_path)
+    ppb = PPBuilder()
+    sequences = {}
+    for model in structure:
+        for chain in model:
+            chain_id = chain.id
+            polypeptides = ppb.build_peptides(chain)
+            if polypeptides:
+                sequence = ''.join([str(pp.get_sequence()) for pp in polypeptides])  # Convert Seq to str
+                sequences[chain_id] = sequence
+    return sequences
+
+
