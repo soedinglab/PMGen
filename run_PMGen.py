@@ -88,6 +88,7 @@ def main():
         if not args.df:
             raise ValueError("--df is required for wrapper mode")
         df = pd.read_csv(args.df, sep='\t')
+        df['mhc_seq'] = [i.replace('-', '') for i in df.mhc_seq.tolist()]  # remove gaps from df:
         # outputs for proteinmpnn later
         tmp_pdb_dict = {}
         for i, row in df.iterrows():
