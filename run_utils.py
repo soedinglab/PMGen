@@ -1,7 +1,9 @@
 import psutil
 import numpy as np
 import concurrent.futures
+import glob
 import sys
+from multiprocessing import Pool, cpu_count
 import contextlib
 sys.path.append("PANDORA")
 import os
@@ -791,13 +793,13 @@ def protein_mpnn_wrapper(output_pdbs_dict, args, max_jobs, mode='parallel'):
 
 
 def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_list=[], mhc_allele=None,
-                            dirty_mode=False):
+                            dirty_mode=False, verbose=True, outfilename='netmhcpan_out'):
     assert mhc_type in [1,2]
     if not mhc_allele and len(mhc_seq_list) == 0:
         raise ValueError(f'at least one of mhc_seq_list or mhc_allele should be provided')
     os.makedirs(output_dir, exist_ok=True)
-    outfile = os.path.join(output_dir, 'netmhcpan_out.txt')
-    outfile_csv = os.path.join(output_dir, 'netmhcpan_out.csv')
+    outfile = os.path.join(output_dir, f'{outfilename}.txt')
+    outfile_csv = os.path.join(output_dir, f'{outfilename}.csv')
 
     if mhc_type == 1: # only one sequence in mhc_seq_list
         if not mhc_allele:
@@ -820,13 +822,116 @@ def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_li
         a = processing_functions.match_inputseq_to_netmhcpan_allele(mhc_seq_list[i], mhc_type, allele)
         matched_allele.append(a)
         if mhc_type == 1: break
-    print("Matched Alleles", matched_allele)
+    if verbose: print("Matched Alleles", matched_allele)
     processing_functions.run_netmhcpan(peptide_fasta_file, matched_allele, outfile, mhc_type)
     df = processing_functions.parse_netmhcpan_file(outfile)
     df.to_csv(outfile_csv, index=False)
-    if dirty_mode:
+    if not dirty_mode:
         os.remove(outfile)
     return df
+
+
+
+class MultipleAnchors:
+    def __init__(self, args, dirty_mode=False):
+        """
+        Initialize the MultipleAnchors class
+
+        Args:
+            args: input arguments for run_PMGen.py
+            dirty_mode: boolean flag for file handling
+        """
+        assert args.mode == 'wrapper', f'multiple anchors option only works with wrapper mode'
+        self.args = args
+        self.dirty_mode = dirty_mode
+        self.tmp = os.path.join(args.output_dir, 'tmp')
+        os.makedirs(self.tmp, exist_ok=True)
+        assert args.top_k >= 2
+
+    def _process_row(self, row):
+        """Process a single row and return results"""
+        peptide_fasta_file = os.path.join(self.tmp, f'{str(row.id)}.fasta')
+        with open(peptide_fasta_file, 'w') as f:
+            f.write(f'>{str(row.id)}\n{str(row.peptide)}')
+        mhc_type = int(row.mhc_type)
+        assert mhc_type in [1, 2], f'mhc_type in dataframe should be either 1 or 2, found {mhc_type}'
+        mhc_seq_list = str(row.mhc_seq).split('/')
+        if mhc_type == 2:
+            assert len(mhc_seq_list) == 2, (f'mhc_seq for mhc_type==2, should be "Alpha/Beta" separated by "/", '
+                                            f'found: \n {str(row.mhc_seq)}')
+        elif mhc_type == 1:
+            assert len(mhc_seq_list) == 1, (f'mhc_seq for mhc_type==1, should be string with no "/", '
+                                            f'found: \n {str(row.mhc_seq)}')
+        netmhc_df = run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, self.tmp, mhc_seq_list, verbose=False, outfilename=str(row.id))
+        seen_cores = []
+        results = {'anchors': [], 'mhc_seqs': [], 'ids': [], 'peptides': [], 'mhc_types': []}
+        counter = 0
+        for j, net_row in netmhc_df.iterrows():
+            peptide2 = str(net_row['Core'])
+            peptide1 = str(row.peptide)
+            predicted_anchors, pept1, pept2 = processing_functions.align_and_find_anchors_mhc(peptide1, peptide2,
+                                                                                              mhc_type)
+            if not predicted_anchors in seen_cores:
+                seen_cores.append(predicted_anchors)
+                results['anchors'].append(";".join([str(pp) for pp in predicted_anchors]))
+                results['mhc_seqs'].append(str(row['mhc_seq']))
+                results['ids'].append(str(row['id']) + '_' + str(counter))
+                results['peptides'].append(str(row['peptide']))
+                results['mhc_types'].append(int(row['mhc_type']))
+                counter += 1
+            if counter == self.args.top_k: break
+        return results
+
+    def process(self):
+        """
+        Process the dataframe in parallel using multiprocessing and return results
+
+        Returns:
+            DataFrame with processed results
+        """
+        df = pd.read_csv(self.args.df, sep='\t')
+        print(f" Starting Multiple Anchor Mode on {self.args.max_cores} cores. Make Sure NetMHCpan is installed")
+        # Determine number of processes
+        num_processes = min(cpu_count(), int(self.args.max_cores))
+        # Create multiprocessing pool
+        with Pool(processes=num_processes) as pool:
+            # Process rows in parallel
+            results = pool.map(self._process_row, [row for _, row in df.iterrows()])
+        # Combine results
+        all_anchors = []
+        all_mhc_seqs = []
+        all_ids = []
+        all_peptides = []
+        all_mhc_types = []
+
+        for result in results:
+            all_anchors.extend(result['anchors'])
+            all_mhc_seqs.extend(result['mhc_seqs'])
+            all_ids.extend(result['ids'])
+            all_peptides.extend(result['peptides'])
+            all_mhc_types.extend(result['mhc_types'])
+
+        # Create final DataFrame
+        DF = pd.DataFrame({
+            'peptide': all_peptides,
+            'mhc_seq': all_mhc_seqs,
+            'anchors': all_anchors,
+            'mhc_type': all_mhc_types,
+            'id': all_ids
+        })
+        output_file = os.path.join(self.args.output_dir, 'Multiple_Anchors_input.tsv')
+        DF.to_csv(output_file, sep='\t', index=False)
+        if not self.dirty_mode:
+            txt_files = glob.glob(os.path.join(self.tmp, "*"))
+            for file in txt_files:
+                try:
+                    os.remove(file)
+                except:
+                    pass
+        return DF
+
+
+
 
 
 

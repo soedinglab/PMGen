@@ -1,6 +1,6 @@
 import argparse
 import pandas as pd
-from run_utils import run_PMGen_wrapper, run_PMGen_modeling, run_proteinmpnn, run_single_proteinmpnn, protein_mpnn_wrapper
+from run_utils import run_PMGen_wrapper, run_PMGen_modeling, run_proteinmpnn, run_single_proteinmpnn, protein_mpnn_wrapper, MultipleAnchors
 from Bio import SeqIO
 import warnings
 import os
@@ -53,11 +53,14 @@ def main():
     parser.add_argument('--n_homology_models', type=int, default=1, help='Number of homology models')
     parser.add_argument('--max_ram', type=int, default=3, help='Maximum RAM GB per job (only for parallel mode)')
     parser.add_argument('--max_cores', type=int, default=4, help='Maximum number of CPU cores (only for parallel mode)')
+    parser.add_argument('--dirty_mode', action='store_true')
 
     # Wrapper mode argument
     parser.add_argument('--df', type=str, help='Recommended. Path to input TSV file (required for wrapper mode)'
                                                'check the github documentation for more information.')
-
+    parser.add_argument('--multiple_anchors', action='store_true', help='If enabled, not the best anchor, but all predicted anchors will '
+                                                                      'be used for separate predictions and the best ones will be reported. default False.')
+    parser.add_argument('--top_k', type=int, default=3, help='if --multiple_anchors is True, number of top anchors to predict the structures for.')
     # ProteinMPNN Arguments
     parser.add_argument('--peptide_design', action='store_true', help='Enables peptide design.')
     parser.add_argument('--only_pseudo_sequence_design', action='store_true', help='Enables MHC pseudo-sequence design.')
@@ -89,6 +92,14 @@ def main():
             raise ValueError("--df is required for wrapper mode")
         df = pd.read_csv(args.df, sep='\t')
         df['mhc_seq'] = [i.replace('-', '') for i in df.mhc_seq.tolist()]  # remove gaps from df:
+        if args.multiple_anchors:
+            L1 = len(df)
+            ma = MultipleAnchors(args, args.dirty_mode)
+            df = ma.process()
+            L2 = len(df)
+            print(f'New DataFrame has {L2} rows, {L2 - L1} difference with original df')
+
+
         # outputs for proteinmpnn later
         tmp_pdb_dict = {}
         for i, row in df.iterrows():

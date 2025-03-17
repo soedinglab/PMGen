@@ -1130,9 +1130,9 @@ def split_pdb_chains(input_pdb, output_dir):
     return output_files
 
 
-def align_and_find_anchors_mhc1(peptide1, peptide2, mhc_type):
+def align_and_find_anchors_mhc(peptide1, peptide2, mhc_type):
     """
-    Aligns two peptide sequences and identifies anchor positions for mhc1.
+    Aligns two peptide sequences and identifies anchor positions for mhcs.
     Parameters:
         peptide1 (str): The first peptide sequence (query peptide).
         peptide2 (str): The second peptide sequence (predicted core).
@@ -1189,6 +1189,9 @@ def align_and_find_anchors_mhc1(peptide1, peptide2, mhc_type):
             if i == 1 and pept2[i] != '-' and pept1[i] != '-':
                 predicted_anchors[0] = p1 + 1
                 break
+            elif i == 0 and pept2[i] != '-' and pept1[i] != '-':
+                predicted_anchors[0] = p1 + 1
+                break
             elif i > 1 and pept2[i] != '-':
                 predicted_anchors[0] = p1 + 1
                 break
@@ -1201,4 +1204,4 @@ def align_and_find_anchors_mhc1(peptide1, peptide2, mhc_type):
             if pept2[::-1][i] != '-':
                 predicted_anchors[1] = len([j for j in pept1[:len(pept1) - i] if j != '-'])
                 break
-    return predicted_anchors
+    return predicted_anchors, pept1, pept2
