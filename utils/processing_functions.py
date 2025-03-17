@@ -11,6 +11,7 @@ import shutil
 import random
 import sys
 import Levenshtein
+from typing import List
 import warnings
 # Suppress the specific warning
 warnings.filterwarnings("ignore")
@@ -1058,3 +1059,146 @@ def fetch_polypeptide_sequences(pdb_path):
     return sequences
 
 
+def extract_scores_from_proteinmpnn_fasta(fasta_file: str) -> List[float]:
+    """
+    Reads a FASTA file and extracts score values from headers.
+
+    Args:
+        fasta_file (str): Path to the FASTA file
+
+    Returns:
+        List[float]: List of score values extracted from headers
+    """
+    scores = []
+    try:
+        with open(fasta_file, 'r') as f:
+            for line in f:
+                # Check if line is a header (starts with '>')
+                if line.startswith('>'):
+                    # Extract score using regex
+                    # Looking for 'score=' followed by a number (including decimals)
+                    score_match = re.search(r'score=([\d.]+)', line)
+                    if score_match:
+                        # Convert the matched score string to float
+                        score = float(score_match.group(1))
+                        scores.append(score)
+                    else:
+                        print(f"Warning: No score found in header: {line.strip()}")
+        return scores
+    except FileNotFoundError:
+        print(f"Error: File '{fasta_file}' not found")
+        return []
+    except Exception as e:
+        print(f"Error processing file: {str(e)}")
+        return []
+
+
+def split_pdb_chains(input_pdb, output_dir):
+    """
+    Splits a PDB file into separate files for each chain.
+    Args:
+    input_pdb (str): Path to the input PDB file.
+    output_dir (str): Directory to save the output PDB files.
+    Returns:
+    list: List of paths to the created chain PDB files.
+    """
+    # Create output directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    # Set up the PDB parser
+    parser = PDB.PDBParser(QUIET=True)
+    # Parse the PDB file
+    structure = parser.get_structure("protein", input_pdb)
+    # Get the base name of the input file (without extension)
+    base_name = os.path.splitext(os.path.basename(input_pdb))[0]
+    output_files = []
+    # Iterate through each chain in the structure
+    for chain in structure.get_chains():
+        chain_id = chain.id
+        # Create a new structure with only this chain
+        new_structure = PDB.Structure.Structure(chain_id)
+        new_model = PDB.Model.Model(0)
+        new_structure.add(new_model)
+        new_model.add(chain)
+        # Set the output file name
+        output_file = os.path.join(output_dir, f"{base_name}_chain_{chain_id}.pdb")
+        # Save the chain as a new PDB file
+        io = PDB.PDBIO()
+        io.set_structure(new_structure)
+        io.save(output_file)
+        output_files.append(output_file)
+        print(f"Saved chain {chain_id} to {output_file}")
+    return output_files
+
+
+def align_and_find_anchors_mhc1(peptide1, peptide2, mhc_type):
+    """
+    Aligns two peptide sequences and identifies anchor positions for mhc1.
+    Parameters:
+        peptide1 (str): The first peptide sequence (query peptide).
+        peptide2 (str): The second peptide sequence (predicted core).
+        mhc_type (int): The mhc type as 1 or 2.
+    Returns:
+        tuple: (aligned_pept1, aligned_pept2, predicted_anchors)
+            - aligned_pept1 (str): Aligned sequence for peptide1.
+            - aligned_pept2 (str): Aligned sequence for peptide2.
+            - predicted_anchors (list): List of two integers representing the anchor positions in peptide1.
+    """
+    # Perform global alignment
+    assert mhc_type in [1,2]
+    alignment = pairwise2.align.globalxx(peptide1, peptide2)
+    # If multiple alignments exist, prefer one with no gap at the second position
+    if len(alignment) > 1:
+        flag = False
+        for prediction in alignment:
+            if prediction[1][1] != '-' and prediction[0][1] != '-':
+                pept1 = prediction[0]
+                pept2 = prediction[1]
+                flag = True
+                break
+        if not flag:
+            pept1 = alignment[0][0]
+            pept2 = alignment[0][1]
+    else:
+        pept1 = alignment[0][0]
+        pept2 = alignment[0][1]
+    # Remove gaps if they appear in the same position in both sequences (except at start)
+    to_remove = []
+    for i, (aa1, aa2) in enumerate(zip(pept1, pept2)):
+        if aa1 == aa2 == '-' and i != 0:
+            to_remove.append(i)
+    for x in reversed(to_remove):
+        pept1 = pept1[:x] + pept1[x + 1:]
+        pept2 = pept2[:x] + pept2[x + 1:]
+    # pept1 and pept2 are aligned: e.g AGHKMILEP and -GH-MI---
+    if mhc_type == 2:
+        if len(peptide1) >= 11:
+            predicted_anchors = [3, 6, 8, 11]
+        else:
+            predicted_anchors = [2, 5, 7, 10]
+        for i, p1, p2 in zip(range(len(pept1)), pept1, pept2):
+            if p1 == p2 != '-':
+                predicted_anchors = [i+1, i+3, i+5, i+8]
+                break
+    if mhc_type == 1:
+        # Initialize predicted anchors (default: position 2 and length of peptide1)
+        predicted_anchors = [2, len(peptide1)]
+        # Find the first anchor
+        p1 = 0
+        p2 = 0
+        for i in range(len(pept2)):
+            if i == 1 and pept2[i] != '-' and pept1[i] != '-':
+                predicted_anchors[0] = p1 + 1
+                break
+            elif i > 1 and pept2[i] != '-':
+                predicted_anchors[0] = p1 + 1
+                break
+            if pept1[i] != '-':
+                p1 += 1
+            if pept2[i] != '-':
+                p2 += 1
+        # Find the second anchor
+        for i in range(len(pept2)):
+            if pept2[::-1][i] != '-':
+                predicted_anchors[1] = len([j for j in pept1[:len(pept1) - i] if j != '-'])
+                break
+    return predicted_anchors

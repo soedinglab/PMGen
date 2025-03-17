@@ -141,7 +141,7 @@ We do not recommend to set `--anchors` and it is better to predict them.
 python run_PMGen.py \
   --mode modeling \
   --peptide "$PEPTIDE" \
-  --mhc_seq "MHC_ALPHA_CHAIN_SEQ/MHC_BETA_CHAIN_SEQ" \
+  --mhc_seq "$MHC_ALPHA_CHAIN_SEQ/$MHC_BETA_CHAIN_SEQ" \
   --mhc_type 2 \
   --output_dir outputs/mhcii_manual \
   --anchors [2,5,7,9] \
