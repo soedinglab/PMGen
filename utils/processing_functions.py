@@ -1027,7 +1027,7 @@ def run_netmhcpan(peptide_fasta, allele_list, output, mhc_type,
                     final_allele += allele
                 if 'DQB' in allele or 'DPB' in allele:
                     final_allele += f'-{allele.replace("HLA-", "")}'
-        print(allele)
+        # print(allele)
         cmd = [str(netmhciipan_path), '-f', str(peptide_fasta),
                '-BA', '-u', '-s', '-length', '9,10,11,12,13,14,15,16,17,18',
                '-inptype', '0', '-a', str(final_allele)]

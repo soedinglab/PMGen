@@ -15,6 +15,7 @@ from utils import processing_functions
 import pandas as pd
 import subprocess
 import warnings
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 
@@ -790,8 +791,27 @@ def protein_mpnn_wrapper(output_pdbs_dict, args, max_jobs, mode='parallel'):
         raise ValueError("Invalid mode! Choose 'parallel' or 'single'.")
 
 
-def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_list=[], mhc_allele=None,
+def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_list=None, mhc_allele=None,
                             dirty_mode=False):
+    """
+        Runs the NetMHCpan tool and parses its output.
+
+        Args:
+            peptide_fasta_file (str): Path to the FASTA file containing peptide sequences.
+            mhc_type (int): Type of MHC (1 for MHC-I, 2 for MHC-II).
+            output_dir (str): Directory to save the output files.
+            mhc_seq_list (list, optional): List of MHC sequences. Default is an empty list.
+            mhc_allele (str, optional): Specific MHC allele name. Default is None.
+            dirty_mode (bool, optional): If True, removes the raw output file after parsing. Default is False.
+
+        Returns:
+            pd.DataFrame: DataFrame containing the parsed NetMHCpan output.
+
+        Raises:
+            ValueError: If neither `mhc_seq_list` nor `mhc_allele` is provided.
+    """
+    if mhc_seq_list is None:
+        mhc_seq_list = []
     assert mhc_type in [1,2]
     if not mhc_allele and len(mhc_seq_list) == 0:
         raise ValueError(f'at least one of mhc_seq_list or mhc_allele should be provided')
@@ -810,7 +830,7 @@ def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_li
                                             f'with the Alpha/Beta order '
                                             f'found {len(mhc_seq_list)}: {mhc_seq_list}')
         else:
-            assert len(mhc_allele.split('/'))==2, (f'mhc_allele for mhc class 2, should contant both alpha and beta alleles seperated by "/"'
+            assert len(mhc_allele.split('/'))==2, (f'mhc_allele for mhc class 2, should contain both alpha and beta alleles seperated by "/"'
                                                    f'\n example: DRA/DRB*01. found {mhc_allele}')
             mhc_seq_list = ['', '']
 
@@ -820,7 +840,7 @@ def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_li
         a = processing_functions.match_inputseq_to_netmhcpan_allele(mhc_seq_list[i], mhc_type, allele)
         matched_allele.append(a)
         if mhc_type == 1: break
-    print("Matched Alleles", matched_allele)
+    # print("Matched Alleles", matched_allele)
     processing_functions.run_netmhcpan(peptide_fasta_file, matched_allele, outfile, mhc_type)
     df = processing_functions.parse_netmhcpan_file(outfile)
     df.to_csv(outfile_csv, index=False)

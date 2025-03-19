@@ -81,7 +81,8 @@ else
 fi
 
 # Activate the environment
-$ACTIVATE_CMD "$ENV_NAME"
+source "$(conda info --base)/etc/profile.d/conda.sh"
+conda activate "$ENV_NAME"
 
 # Step 5: Clone and Install PANDORA
 echo "✔ Cloning and installing PANDORA..."

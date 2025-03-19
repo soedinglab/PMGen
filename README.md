@@ -32,6 +32,8 @@ Follow these steps to set up PMGen on your system:
    ```bash
    git clone https://github.com/AmirAsgary/PMGen.git
    cd PMGen
+   conda init bash
+   source ~/.bashrc
    bash -l install.sh
    conda activate PMGen
    ```
@@ -43,7 +45,9 @@ Follow these steps to set up PMGen on your system:
 
 Edit `user_setting.py` to adjust netMHCpan and netMHCIIpan installation paths.
 
-
+2. **Tip for installing NetMHCpan**: 
+    - NetMHCpan requires tcsh to be installed. You can install it using `sudo apt-get install tcsh`.
+    - read the readme file in `netMHCpan` folder and follow instructions.
 
 ## Usage
 
