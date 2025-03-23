@@ -125,9 +125,15 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
     empty_alleles = el_data[el_data["allele"].apply(lambda x: len(x) == 0)].shape[0]
     print(f"Rows with empty allele mappings: {empty_alleles}")
 
+    # add the identifiers
+    el_data['cell_line_id'] = el_data.index
+
     # decouple rows with multiple alleles, if the row['allele'] has multiple alleles, then create a new row for each allele
     el_data = el_data.explode("allele")
     print(f"After exploding alleles: {el_data.shape}")
+
+    # reset index for unique identifier
+    el_data = el_data.reset_index(drop=True)
 
     # First add DRA/ before the allele names for alleles with DRB
     el_data["allele"] = el_data["allele"].apply(lambda x: "HLA-DRA/HLA-" + x if "DRB" in x else x)
@@ -148,7 +154,7 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
     el_data_1 = el_data[el_data["label"] == 1]
 
     # drop the labels column from el_data_1
-    el_data_1 = el_data_1.drop(columns=["label"])
+    # el_data_1 = el_data_1.drop(columns=["label"])
     print(f"Data with label 0: {el_data_0.shape}")
 
     # Print some sample data for debugging
@@ -196,6 +202,9 @@ def run_netmhcpan(el_data_1, unique_alleles, tmp_path, results_dir):
                 if processed:
                     continue
 
+            # get the cell_line_id
+            cell_line_id = allele_data[allele_data["peptide"] == peptide]["cell_line_id"].iloc[0]
+
             # Use a timestamp to ensure unique filenames across processes
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")
             unique_id = f"{peptide_idx}_{timestamp}"
@@ -221,10 +230,13 @@ def run_netmhcpan(el_data_1, unique_alleles, tmp_path, results_dir):
 
                 # Save results to disk immediately
                 if allele_result is not None:
-                    # take the top 1 results
-                    allele_result = allele_result.head(1)  # TODO check later
+                    # take the top 1 result
+                    allele_result = allele_result.head(1)  # taking the first row, because the output is sorted by BF score and we take the best score
                     result_path = os.path.join(results_dir, f"{allele_filename}.parquet")
                     new_table = pa.Table.from_pandas(allele_result)
+                    # add long_mer
+                    new_table['long_mer'] = peptide
+                    new_table['cell_line_id'] = cell_line_id
                     if os.path.exists(result_path):
                         existing_table = pq.read_table(result_path)
                         combined_table = pa.concat_tables([existing_table, new_table])
@@ -280,9 +292,28 @@ def combine_results(results_dir, final_output_path):
                 # Calculate label from Score_EL if label is empty or doesn't exist
                 if 'label' not in df.columns:
                     if 'Score_EL' in df.columns:
-                        df['label'] = df['Score_EL'].apply(lambda x: 1 if x > 0.428 else 0)  # TODO Threshold can be adjusted
+                        df['label'] = df['Score_EL'].apply(lambda x: 1 if x > 0.426 else 0)  # Threshold can be adjusted
                     else:
                         df['label'] = None
+
+                # for each unique df["cell_line_id"], if at least one row has label == 1 continue, else drop them and save them in a seperate file
+                if 'cell_line_id' in df.columns and 'label' in df.columns:
+                    # Create a mask for cell lines with at least one positive label
+                    positive_cell_lines = df.groupby('cell_line_id')['label'].max() == 1
+                    positive_cell_lines = positive_cell_lines[positive_cell_lines].index.tolist()
+
+                    # Filter rows
+                    mask = df['cell_line_id'].isin(positive_cell_lines)
+                    dropped_df = df[~mask].copy()
+                    df = df[mask].copy()
+
+                    # Save dropped rows to separate file if there are any
+                    if not dropped_df.empty:
+                        dropped_output_path = final_output_path.replace('.parquet', '_dropped.parquet')
+                        pq.write_table(pa.Table.from_pandas(dropped_df), dropped_output_path)
+                        print(
+                            f"Dropped {dropped_df.shape[0]} rows from {len(set(dropped_df['cell_line_id']))} cell lines with no positive labels")
+                        print(f"Dropped rows saved to: {dropped_output_path}")
 
                 # Keep only required columns
                 keep_cols = ["allele", "peptide", "label"]
@@ -300,15 +331,6 @@ def combine_results(results_dir, final_output_path):
     except Exception as e:
         print(f"Error combining parquet files: {str(e)}")
         df = pd.DataFrame(columns=["allele", "peptide", "label"])
-
-    # Remove the results directory is commented out
-    # try:
-    #     import shutil
-    #     if os.path.exists(results_dir) and os.path.isdir(results_dir):
-    #         shutil.rmtree(results_dir)
-    #         print(f"Removed results directory: {results_dir}")
-    # except Exception as e:
-    #     print(f"Error removing results directory: {str(e)}")
 
     return df
 
