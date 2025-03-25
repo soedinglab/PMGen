@@ -212,7 +212,7 @@ def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number):
             unique_id = f"{peptide}_{allele}"
 
             # define path
-            peptide_fasta_path = os.path.join(tmp_path, f"results/el{true_label}_peptide_{unique_id}.fasta")
+            peptide_fasta_path = os.path.join(tmp_path, f"fasta/el{true_label}_peptide_{unique_id}.fasta")
             peptide_fasta_dir = os.path.dirname(peptide_fasta_path)
 
             # Ensure the directory exists
@@ -224,7 +224,9 @@ def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number):
                 f.write(f">peptide\n{peptide}\n")
 
             # Output directory for this specific cell_line_id
-            output_dir = os.path.join(tmp_path, f"results/el{true_label}_output_{unique_id}")
+            output_dir = os.path.join(tmp_path, f"output/")
+            if not os.path.exists(output_dir):
+                os.makedirs(output_dir)
 
             try:
                 # Run NetMHCpan for this specific peptide
@@ -251,17 +253,15 @@ def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number):
 
             # Get the actual directory path
             peptide_fasta_dir = os.path.dirname(peptide_fasta_path)
-            if os.path.exists(peptide_fasta_dir) and os.path.isdir(peptide_fasta_dir):
-                try:
-                    shutil.rmtree(peptide_fasta_dir)
-                except PermissionError:
-                    print(f"Warning: Could not remove directory {peptide_fasta_dir} due to permission error")
+            try:
+                shutil.rmtree(peptide_fasta_dir)
+            except PermissionError:
+                print(f"Warning: Could not remove directory {peptide_fasta_dir} due to permission error")
 
-            if os.path.exists(output_dir) and os.path.isdir(output_dir):
-                try:
-                    shutil.rmtree(output_dir)
-                except PermissionError:
-                    print(f"Warning: Could not remove directory {output_dir} due to permission error")
+            try:
+                shutil.rmtree(output_dir)
+            except PermissionError:
+                print(f"Warning: Could not remove directory {output_dir} due to permission error")
 
         # save the results to disk
         if not result_data.empty:
@@ -559,7 +559,7 @@ def run_(arg1, arg2):
         print(f"Length of el_data_1: {len(el_data_1)}")
 
         # subset 1000 random samples from the data for testing
-        el_data_1 = el_data_1.sample(n=1000, random_state=42)
+        # el_data_1 = el_data_1.sample(n=1000, random_state=42)
         # unique_cell_lines = el_data_1["cell_line_id"].unique()
 
         # Run NetMHCpan in parallel
