@@ -792,7 +792,7 @@ def protein_mpnn_wrapper(output_pdbs_dict, args, max_jobs, mode='parallel'):
 
 
 def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_list=None, mhc_allele=None,
-                            dirty_mode=False):
+                            dirty_mode=False, save_csv=True):
     """
         Runs the NetMHCpan tool and parses its output.
 
@@ -803,6 +803,7 @@ def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_li
             mhc_seq_list (list, optional): List of MHC sequences. Default is an empty list.
             mhc_allele (str, optional): Specific MHC allele name. Default is None.
             dirty_mode (bool, optional): If True, removes the raw output file after parsing. Default is False.
+            save_csv (bool, optional): If True, saves the parsed output as a CSV file. Default is True.
 
         Returns:
             pd.DataFrame: DataFrame containing the parsed NetMHCpan output.
@@ -843,7 +844,8 @@ def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_li
     # print("Matched Alleles", matched_allele)
     processing_functions.run_netmhcpan(peptide_fasta_file, matched_allele, outfile, mhc_type)
     df = processing_functions.parse_netmhcpan_file(outfile)
-    df.to_csv(outfile_csv, index=False)
+    if save_csv:
+        df.to_csv(outfile_csv, index=False)
     if dirty_mode:
         os.remove(outfile)
     return df
