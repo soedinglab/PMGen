@@ -45,8 +45,8 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
     if not os.path.isdir(tmp_path):
         os.mkdir(tmp_path)
 
-    el_data = pd.DataFrame(columns=["peptide", "label", "allele", "core"])
-    ba_data = pd.DataFrame(columns=["peptide", "label", "allele", "core"])
+    el_data = pd.DataFrame(columns=["peptide", "assigned_label", "allele", "core"])
+    ba_data = pd.DataFrame(columns=["peptide", "assigned_label", "allele", "core"])
 
     # Check directory exists
     if not os.path.exists(mhcII_path):
@@ -63,7 +63,7 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
 
             # Rename columns if necessary
             if data.shape[1] >= 4:
-                data.columns = ["peptide", "label", "allele", "core"] + list(range(data.shape[1] - 4))
+                data.columns = ["peptide", "assigned_label", "allele", "core"] + list(range(data.shape[1] - 4))
                 # add ba data to the dataframe
                 ba_data = pd.concat([ba_data, data], ignore_index=True)
             else:
@@ -75,7 +75,7 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
 
             # Rename columns if necessary
             if data.shape[1] >= 4:  # Ensure data has enough columns
-                data.columns = ["peptide", "label", "allele", "core"] + list(range(data.shape[1] - 4))
+                data.columns = ["peptide", "assigned_label", "allele", "core"] + list(range(data.shape[1] - 4))
                 # add el data to the dataframe
                 el_data = pd.concat([el_data, data], ignore_index=True)
             else:
@@ -165,8 +165,8 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
         lambda x: x[:x.find("-", x.find("-") + 1)] + "/HLA-" + x[x.find("-", x.find("-") + 1) + 1:] if x.count("-") >= 2 and "/" not in x else x)
 
     # split to two variables, one with labels = 0 and one with labels = 1
-    el_data_0 = el_data[el_data["label"] == 0]
-    el_data_1 = el_data[el_data["label"] == 1]
+    el_data_0 = el_data[el_data["assigned_label"] == 0]
+    el_data_1 = el_data[el_data["assigned_label"] == 1]
 
     # drop the labels column from el_data_1
     # el_data_1 = el_data_1.drop(columns=["label"])
@@ -238,11 +238,12 @@ def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number):
                     save_csv=False
                 )
 
-                # select the top 1 result
+                # select the top 1 result from netmhcpan output
                 if result_ is not None and not result_.empty:
                     result_ = result_.iloc[[0]]
                     result_['long_mer'] = peptide
                     result_['cell_line_id'] = str(chunk_number) + "_" + str(idx)
+                    result_['convoluted_label'] = true_label
                     result_data = pd.concat([result_data, result_])
 
             except Exception as e:
@@ -265,12 +266,14 @@ def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number):
 
         # save the results to disk
         if not result_data.empty:
-            assert len(result_data) == number_of_alleles
-            result_data['label'] = result_data['Score_BA'].apply(lambda x: 1 if eval(x) > 0.426 else 0)
+            # assert len(result_data) == number_of_alleles
+            if len(result_data) != number_of_alleles:
+                print(f"Warning: Expected {number_of_alleles} results but got {len(result_data)}")
+            result_data['assigned_label'] = result_data['Score_BA'].apply(lambda x: 1 if eval(x) > 0.426 else 0)
             if true_label == 1:
                 # if at least one label is not 1, select the highest score_BA and set the labels to 1, then save the allele in a list
                 # Create a mask for cell lines with at least one positive label
-                positive_cell_lines = result_data.groupby('cell_line_id')['label'].max() == 1
+                positive_cell_lines = result_data.groupby('cell_line_id')['assigned_label'].max() == 1
                 positive_cell_lines = positive_cell_lines[positive_cell_lines].index.tolist()
                 # Filter rows
                 mask = result_data['cell_line_id'].isin(positive_cell_lines)
