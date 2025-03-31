@@ -27,8 +27,8 @@ class run_PMGen_modeling():
                  num_templates=4, num_recycles=3, models=['model_2_ptm'],
                  alphafold_param_folder = 'AFfine/af_params/params_original/',
                  fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
-                 benchmark=False, n_homology_models=1, best_n_templates=1,
-                 pandora_force_run=True):
+                 benchmark=False, n_homology_models=1, best_n_templates=4,
+                 pandora_force_run=True, no_modelling=False):
         """
         Initializes the PMGen modeling pipeline.
 
@@ -48,8 +48,9 @@ class run_PMGen_modeling():
             fine_tuned_model_path (str): Path to fine-tuned AlphaFold model.
             benchmark (bool): Use different allele compared to the actual allele. make sure the id shouldbe pdb id.
             n_homology_models (int): number of initial peptide homology models to generate by modeller, default=1.
-            best_n_templates (int): number of found templates used for homology modeling via modeler, default=1.
+            best_n_templates (int): number of found templates used for homology modeling via modeler, default=4.
             pandora_force_run (bool): Weather to force run pandora or not, default=True.
+            no_modelling (bool): If active, no modeller homology modeling happens and only PANDORA is used for template search and alignment.
         """
         super().__init__()
         self.peptide = peptide
@@ -69,6 +70,7 @@ class run_PMGen_modeling():
         self.n_homology_models = n_homology_models
         self.best_n_templates = best_n_templates
         self.pandora_force_run = pandora_force_run
+        self.no_modelling = no_modelling
         self.input_assertion()
         if len(self.models) > 1:
             print(f'\n #### Warning! You are running for multiple models {self.models}'
@@ -85,6 +87,7 @@ class run_PMGen_modeling():
         self.alphafold_input_file = os.path.join(self.alphafold_out, self.id, f'alphafold_input_file.tsv')
         # vars defined later
         self.template_id = None
+        self.no_modelling_output_dict = None
 
     def run_PMGen(self, test_mode=False, run_alphafold=True):
         """
@@ -103,7 +106,11 @@ class run_PMGen_modeling():
         pdb_files = processing_functions.rename_files(os.path.join(self.pandora_output, self.id), self.num_templates)
         mhc_pep_seq = self.mhc_seq + '/' + self.peptide
         aln_output_file = os.path.join(self.alignment_output, self.id + '_with_pep.tsv')
-        _ = self.alignment_with_peptide(pdb_files, mhc_pep_seq, output_path=aln_output_file)
+        if not self.no_modelling:
+            _ = self.alignment_with_peptide(pdb_files, mhc_pep_seq, output_path=aln_output_file)
+        else:
+            os.makedirs(self.alignment_output, exist_ok=True)
+            processing_functions.alignment_to_df(self.no_modelling_output_dict, output_dir=aln_output_file)
         ## Prepare Alphafold Fine Input files
         os.makedirs(self.alphafold_out + f'/{self.id}', exist_ok=True)
         self.alphafold_preparation(template_aln_file=aln_output_file, mhc_pep_seq=mhc_pep_seq, output=self.alphafold_input_file)
@@ -151,7 +158,7 @@ class run_PMGen_modeling():
                                     MHC_class=self.mhc_type_greek, M_chain_seq=self.m_chain,
                                     N_chain_seq=self.n_chain, output_dir=self.pandora_output,
                                     use_netmhcpan=self.predict_anchor, anchors=anchor)
-                    case = Pandora.Pandora(target, self.db)
+                    case = Pandora.Pandora(target, self.db, no_modelling=self.no_modelling)
                     case.model(n_loop_models=self.num_templates, benchmark=self.benchmark,
                                n_homology_models=self.n_homology_models,
                                best_n_templates=self.best_n_templates)
@@ -160,16 +167,27 @@ class run_PMGen_modeling():
                     print(f"❌ An error occurred during template engineering {self.id}: {str(e)}", file=sys.stderr)
                     raise
         print("✔Pandora run completed. Check log file for details:", log_file)
+        if self.no_modelling:
+            if shoud_I_run == 'Yes':
+                self.no_modelling_output_dict = case.no_modelling_output_dict
+
+            else:
+                with open(os.path.join(self.pandora_output, self.id, 'no_modelling_output_dict.json'), 'r') as f:
+                    self.no_modelling_output_dict = json.load(f)
+            self.no_modelling_assertion()
+
         # get template id used in pandora
-        files = [file for file in glob.glob(os.path.join(self.pandora_output, self.id, '????.pdb')) if
-                 "mod" not in file.split("/")[-1]]
-        if files:
-            template_id = files[0].split("/")[-1]
-            print(f"✔ {self.id} log: Template ID used for homology modeling: {template_id}")
-            return template_id
-        else:
-            print(f"❌ {self.id} log: No template ID found.")
-            return None
+        if not self.no_modelling:
+            files = [file for file in glob.glob(os.path.join(self.pandora_output, self.id, '????.pdb')) if
+                     "mod" not in file.split("/")[-1]]
+            if files:
+                template_id = files[0].split("/")[-1]
+                print(f"✔ {self.id} log: Template ID used for homology modeling: {template_id}")
+                return template_id
+            else:
+                print(f"❌ {self.id} log: No template ID found.")
+                return None
+        else: print(f"No modelling mode is done, files generated in: {self.pandora_output + '/' + self.id}")
 
     def alignment_without_peptide(self, template_id, output_path, template_path,
                                        template_csv_path="data/all_templates.csv"):
@@ -300,6 +318,17 @@ class run_PMGen_modeling():
                   'export PATH=/usr/local/cuda/bin:$PATH\n'
                   'export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH')
 
+    def no_modelling_assertion(self):
+
+        required_keys = [
+            'template_anchors', 'target_anchors', 'template_id', 'aln_M',
+            'aln_B_N', 'aln_P', 'aln_template', 'aln_target', 'template_path'
+        ]
+        missing_keys = [key for key in required_keys if key not in self.no_modelling_output_dict]
+        assert not missing_keys, f"Missing keys in no_modelling_output_dict: {missing_keys}"
+        empty_keys = [key for key in required_keys if not self.no_modelling_output_dict[key]]
+        assert not empty_keys, f"Empty values found for keys: {empty_keys}"
+
     def input_assertion(self):
         assert isinstance(self.peptide, str), f"peptide must be a string, found: {self.peptide}"
         assert self.mhc_type in [1, 2], f"mhc_type must be an integer value of 1 or 2, found: {self.peptide}"
@@ -336,7 +365,7 @@ class run_PMGen_wrapper():
                  alphafold_param_folder='AFfine/af_params/params_original/',
                  fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                  max_ram_per_job=3, num_cpu=1, benchmark=False, best_n_templates=1, n_homology_models=1,
-                 pandora_force_run=True):
+                 pandora_force_run=True, no_modelling=False):
         """
         Initializes the run_PMGen_wrapper class.
         :param df: pandas DataFrame containing input data. Required columns:
@@ -358,6 +387,7 @@ class run_PMGen_wrapper():
         :param benchmark: bool, to do becnhmarking.
         :param best_n_templates: int, how many models to used for homology modeling after sequence aln search, default=1.
         :param n_homology_models: int, number of initial models to be done with modeller homology modelling, default=1.
+        :param no_modelling (bool): If active, no modeller homology modeling happens and only PANDORA is used for template search and alignment.
         The function `input_assertion()` checks if all inputs are correctly formatted and whether required files and directories exist.
         Raises:
             - AssertionError if any input is invalid.
@@ -375,6 +405,7 @@ class run_PMGen_wrapper():
         self.best_n_templates = best_n_templates
         self.n_homology_models = n_homology_models
         self.pandora_force_run = pandora_force_run
+        self.no_modelling = no_modelling
         self.input_assertion()
 
     def run_wrapper(self, run_alphafold=True):
@@ -393,7 +424,7 @@ class run_PMGen_wrapper():
                                             models=self.models, alphafold_param_folder=self.alphafold_param_folder,
                                             fine_tuned_model_path=self.fine_tuned_model_path, benchmark=self.benchmark,
                                             n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates,
-                                            pandora_force_run=self.pandora_force_run)
+                                            pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling)
             runner.run_PMGen(run_alphafold=False)
             input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
             input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])] # id/id
@@ -426,7 +457,7 @@ class run_PMGen_wrapper():
                                         models=self.models, alphafold_param_folder=self.alphafold_param_folder,
                                         fine_tuned_model_path=self.fine_tuned_model_path, benchmark=self.benchmark,
                                         n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates,
-                                        pandora_force_run=self.pandora_force_run)
+                                        pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling)
         runner.run_PMGen(run_alphafold=False)
         input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
         input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])]  # id/id
@@ -481,7 +512,7 @@ class run_PMGen_wrapper():
                                             anchors=anchors, mhc_allele=mhc_allele, predict_anchor=predict_anchor,
                                             num_templates=self.num_templates, num_recycles=self.num_recycles,
                                             models=self.models, alphafold_param_folder=self.alphafold_param_folder,
-                                            fine_tuned_model_path=self.fine_tuned_model_path)
+                                            fine_tuned_model_path=self.fine_tuned_model_path, no_modelling=self.no_modelling)
         if run_alphafold:
             runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
 
@@ -932,8 +963,12 @@ class MultipleAnchors:
 
 
 
-
-
+def get_best_structres(output_dir, df, multiple_anchors):
+    final_df = processing_functions.read_and_extract_core_plddt_from_df_with_anchor(df = df,
+                                                                         output_folder = output_dir,
+                                                                         path_to_af = 'alphafold',
+                                                                         multiple_anchors = multiple_anchors)
+    return final_df
 
 
 

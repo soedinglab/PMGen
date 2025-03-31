@@ -1028,7 +1028,6 @@ def run_netmhcpan(peptide_fasta, allele_list, output, mhc_type,
                     final_allele += allele
                 if 'DQB' in allele or 'DPB' in allele:
                     final_allele += f'-{allele.replace("HLA-", "")}'
-        print(allele)
         cmd = [str(netmhciipan_path), '-f', str(peptide_fasta),
                '-BA', '-u', '-s', '-length', '9,10,11,12,13,14,15,16,17,18',
                '-inptype', '0', '-a', str(final_allele)]
@@ -1205,3 +1204,129 @@ def align_and_find_anchors_mhc(peptide1, peptide2, mhc_type):
                 predicted_anchors[1] = len([j for j in pept1[:len(pept1) - i] if j != '-'])
                 break
     return predicted_anchors, pept1, pept2
+
+
+def read_and_extract_core_plddt_from_df_with_anchor(df, output_folder, path_to_af='alphafold', multiple_anchors=False):
+    cols = list(df.columns)
+    for col in cols: assert col in ['peptide', 'mhc_seq', 'anchors', 'mhc_type', 'id']
+    BEST_LDDTs = []
+    BEST_STRUCTURES = {}
+    for num, row in df.iterrows():
+        anchors = row['anchors']
+        peptide = row['peptide']
+        mhc_seq = row['mhc_seq']
+        id = str(row['id'])
+        mhc_type = row['mhc_type']
+        # extract first and last anchors to define the core
+        if int(mhc_type) == 2: assert len(anchors.split(';')) == 4, f'anchors for mhc2 incorrect, found {anchors}'
+        if int(mhc_type) == 1: assert len(anchors.split(';')) == 2, f'anchors for mhc1 incorrect, found {anchors}'
+        anchor1 = int(anchors.split(';')[0]) - 1
+        anchor2 = int(anchors.split(';')[-1]) - 1
+        mhc_len = len(mhc_seq.replace('/', ''))
+        # check if the numbers are correct
+        combined_seq = mhc_seq.replace('/', '') + peptide
+        after = mhc_len + anchor2
+        if anchor1 > 0:
+            before = anchor1 - 1 + mhc_len # start from one aa before first anchor
+            assert combined_seq[before:after] == peptide[anchor1-1:anchor2], (f'peptide lddt incorrectly chosen: core supposed'
+                                                                            f'to be {peptide[anchor1-1:anchor2]}, found: {combined_seq[before:after]}'
+                                                                            f'\n before:{before}, after:{before}')
+        else:
+            before = anchor1 + mhc_len # if first anchor is already the first amino acid
+            assert combined_seq[before:after] == peptide[anchor1:anchor2], (f'peptide lddt incorrectly chosen: core supposed'
+                                                                            f'to be {peptide[anchor1:anchor2]}, found: {combined_seq[before:after]}'
+                                                                            f'\n before:{before}, after:{before}')
+
+        # find the folder that alphafold outputs are in
+        alphafold_folder = os.path.join(output_folder, path_to_af, id)
+        arrays = os.listdir(alphafold_folder)
+        arrays = [i for i in arrays if id in i and '_plddt.npy' in i]
+        assert len(arrays) > 0, f'No array files found in {alphafold_folder}'
+        best_plddt_incore = 0
+        tmp_df = {}
+        for arr in arrays: #inside each anchor, if we have multiple models, choose the best
+            arr_path = os.path.join(alphafold_folder, arr)
+            plddt = np.load(arr_path)
+            core_plddt = np.mean(plddt[before:after])
+            if core_plddt > best_plddt_incore:
+                best_plddt_incore = core_plddt
+                assert '_plddt.npy' in arr, f'_plddt.npy not in {arr}'
+                BEST_STRUCTURES[id] = arr.replace('_plddt.npy', '.pdb')
+            tmp_df[arr] = [core_plddt]
+        pd.DataFrame(tmp_df).to_csv(os.path.join(alphafold_folder, f'{id}_core_lddt.csv'))
+        # get the final best plddt among models
+        BEST_LDDTs.append(best_plddt_incore)
+    # add  core plddts to df and find the best out of different anchors
+    df['core_plddt'] = BEST_LDDTs
+    if multiple_anchors:
+        df['unique_ids'] = ['_'.join(i.split('_')[:-1]) for i in df['id'].tolist()] # 6OKJ_0 --> 6OKJ
+    else:
+        df['unique_ids'] = df['id'].tolist()
+    best_structures = os.path.join(output_folder, 'best_structures')
+    os.makedirs(best_structures, exist_ok=True)
+    BEST_DF = []
+    for unq in pd.unique(df['unique_ids']).tolist():
+        subset_df = df[df['unique_ids']==unq]
+        best_plddt_row = subset_df[subset_df['core_plddt'] == subset_df['core_plddt'].max()].head(1) # first row with best core plddt
+        assert len(best_plddt_row) == 1, f'Len should be 1, found: {len(best_plddt_row)}\n{best_plddt_row}'
+        id = str(pd.DataFrame(best_plddt_row)['id'].tolist()[0])
+        BEST_DF.append(best_plddt_row)
+        best_structure_input = os.path.join(output_folder, path_to_af, id, BEST_STRUCTURES[id])
+        assert os.path.exists(best_structure_input), f'does not exists: {best_structure_input}'
+        shutil.copy(best_structure_input, os.path.join(best_structures, f'{id}_PMGen.pdb'))
+    final_df = pd.concat(BEST_DF)
+    final_df.to_csv(os.path.join(output_folder, 'final_df.tsv'), sep='\t', index=False)
+    print(f'## All best structures saved in {best_structures} ##')
+    print(f'## final_df is saved in {os.path.join(output_folder, "final_df.tsv")} ##')
+    return final_df
+
+
+def alignment_to_string(alignment):
+    """
+    Converts an alignment into a string format where ';' separates pairs
+    and ':' denotes the index mapping (query:target).
+    :param alignment: A tuple or list of two aligned sequences (query, target)
+    :return: A formatted string showing index mappings
+    """
+    query, target = alignment
+    mapping = []
+    q_idx, t_idx = 0, 0  # Track original indices
+    for q_res, t_res in zip(query, target):
+        if q_res != "-" and t_res != "-":  # Both residues align
+            mapping.append(f"{q_idx}:{t_idx}")
+        if q_res != "-":  # Move query index if not a gap
+            q_idx += 1
+        if t_res != "-":  # Move target index if not a gap
+            t_idx += 1
+    return ";".join(mapping), q_idx, t_idx
+
+def alignment_to_df(no_modelling_output_dict, output_dir):
+    template_pdbfile = []
+    target_to_template_alignstring = []
+    identities = []
+    target_len = []
+    template_len = []
+    for i in range(len(no_modelling_output_dict['template_id'])):
+        tp = no_modelling_output_dict['template_path'][i]
+        aln, q_idx, t_idx = alignment_to_string([no_modelling_output_dict['aln_target'][i], no_modelling_output_dict['aln_template'][i]])
+        template_pdbfile.append(tp)
+        target_to_template_alignstring.append(aln)
+        identities.append(len(aln.split(';')))
+        target_len.append(q_idx)
+        template_len.append(t_idx)
+    df = pd.DataFrame({
+        "template_pdbfile": template_pdbfile,
+        "target_to_template_alignstring": target_to_template_alignstring,
+        "identities": identities,
+        "target_len": target_len,
+        "template_len": template_len})
+    print('DEBUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUG', df, output_dir, 'DEBUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUG')
+    df.to_csv(output_dir, sep='\t', index=False)
+
+
+
+
+
+
+
+

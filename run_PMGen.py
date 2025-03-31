@@ -1,6 +1,6 @@
 import argparse
 import pandas as pd
-from run_utils import run_PMGen_wrapper, run_PMGen_modeling, run_proteinmpnn, run_single_proteinmpnn, protein_mpnn_wrapper, MultipleAnchors
+from run_utils import run_PMGen_wrapper, run_PMGen_modeling, run_proteinmpnn, run_single_proteinmpnn, protein_mpnn_wrapper, MultipleAnchors, get_best_structres
 from Bio import SeqIO
 import warnings
 import os
@@ -49,11 +49,12 @@ def main():
                         default='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                         help='Path to fine-tuned model')
     parser.add_argument('--benchmark', action='store_true', help='Enable benchmarking')
-    parser.add_argument('--best_n_templates', type=int, default=1, help='Best N templates')
+    parser.add_argument('--best_n_templates', type=int, default=4, help='Best N templates')
     parser.add_argument('--n_homology_models', type=int, default=1, help='Number of homology models')
     parser.add_argument('--max_ram', type=int, default=3, help='Maximum RAM GB per job (only for parallel mode)')
     parser.add_argument('--max_cores', type=int, default=4, help='Maximum number of CPU cores (only for parallel mode)')
     parser.add_argument('--dirty_mode', action='store_true')
+    parser.add_argument('--initial_guess', action='store_true', help='Activates Faster AF initial Guess mode instead of Homology modelling mode')
 
     # Wrapper mode argument
     parser.add_argument('--df', type=str, help='Recommended. Path to input TSV file (required for wrapper mode)'
@@ -61,6 +62,11 @@ def main():
     parser.add_argument('--multiple_anchors', action='store_true', help='If enabled, not the best anchor, but all predicted anchors will '
                                                                       'be used for separate predictions and the best ones will be reported. default False.')
     parser.add_argument('--top_k', type=int, default=3, help='if --multiple_anchors is True, number of top anchors to predict the structures for.')
+    parser.add_argument('--best_structures', action='store_true', help='If multiple anchors or multiple models are being used'
+                                                                       'Activating this flag will find the best structures from their core'
+                                                                       'predicted lddt and saves them in a --output_dir/best_structures'
+                                                                       'directory.')
+
     # ProteinMPNN Arguments
     parser.add_argument('--peptide_design', action='store_true', help='Enables peptide design.')
     parser.add_argument('--only_pseudo_sequence_design', action='store_true', help='Enables MHC pseudo-sequence design.')
@@ -111,7 +117,8 @@ def main():
                                        alphafold_param_folder=args.alphafold_param_folder,
                                        fine_tuned_model_path=args.fine_tuned_model_path,
                                        benchmark=args.benchmark, best_n_templates=args.best_n_templates,
-                                       n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora)
+                                       n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora,
+                                        no_modelling=args.initial_guess)
         if args.run == 'parallel' and not args.only_protein_mpnn:
             runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
         elif args.run == 'single' and not args.only_protein_mpnn:
@@ -123,7 +130,8 @@ def main():
         for key, value in tmp_pdb_dict.items():
             # {'id':[out1, out2], 'id2':[out1, out2], ...}
             output_pdbs_dict[key] = [os.path.join(value, i) for i in os.listdir(value) if i.endswith('.pdb') and 'model_' in i and not i.endswith('.npy')]
-
+        if args.best_structures: # get best structure out of multiple models and multiple predicted anchors:
+            _ = get_best_structres(args.output_dir, df, args.multiple_anchors)
     # Run modeling mode
     elif args.mode == 'modeling':
         sequences = []
