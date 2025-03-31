@@ -29,13 +29,13 @@ def load_data(path):
     return data
 
 
-def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
-    tmp_path = "data/NetMHCpan_dataset/tmp/"):
+def process_data(mhc_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
+    tmp_path = "data/NetMHCpan_dataset/tmp/", mhc_type=2):
     """
     Load and process MHCII data for NetMHCpan
     This function works for only HLA inputs
     Args:
-        mhcII_path:
+        mhc_path:
         tmp_path:
 
     Returns:
@@ -45,44 +45,69 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
     if not os.path.isdir(tmp_path):
         os.mkdir(tmp_path)
 
-    el_data = pd.DataFrame(columns=["peptide", "assigned_label", "allele", "core"])
-    ba_data = pd.DataFrame(columns=["peptide", "assigned_label", "allele", "core"])
+    if mhc_type == 1:
+        el_data = pd.DataFrame(columns=["peptide", "label", "allele"])
+        ba_data = pd.DataFrame(columns=["peptide", "label", "allele"])
+    else:
+        el_data = pd.DataFrame(columns=["peptide", "label", "allele", "core"])
+        ba_data = pd.DataFrame(columns=["peptide", "label", "allele", "core"])
 
     # Check directory exists
-    if not os.path.exists(mhcII_path):
-        print(f"Directory not found: {mhcII_path}")
+    if not os.path.exists(mhc_path):
+        print(f"Directory not found: {mhc_path}")
         return
 
-    train_files = [f for f in os.listdir(mhcII_path) if "train" in f]
+    if mhc_type == 1:
+        train_files = [f for f in os.listdir(mhc_path) if "_ba" in f or "_el" in f]
+    else:
+        train_files = [f for f in os.listdir(mhc_path) if "train" in f]
     print(f"Found {len(train_files)} train files")
 
     for file in tqdm(train_files):
         if "BA" in file or "ba" in file:
-            data = load_data(mhcII_path + file)
+            data = load_data(mhc_path + file)
             print(f"Loaded BA data from {file}: {ba_data.shape}")
 
-            # Rename columns if necessary
-            if data.shape[1] >= 4:
-                data.columns = ["peptide", "assigned_label", "allele", "core"] + list(range(data.shape[1] - 4))
-                # add ba data to the dataframe
-                ba_data = pd.concat([ba_data, data], ignore_index=True)
-            else:
-                print(f"Warning: File {file} has insufficient columns: {data.shape[1]}")
+            if mhc_type == 2:
+                # Rename columns if necessary
+                if data.shape[1] >= 4:
+                    data.columns = ["peptide", "label", "allele", "core"] + list(range(data.shape[1] - 4))
+                    # add ba data to the dataframe
+                    ba_data = pd.concat([ba_data, data], ignore_index=True)
+                else:
+                    print(f"Warning: File {file} has insufficient columns: {data.shape[1]}")
+            if mhc_type == 1:
+                # Rename columns if necessary
+                if data.shape[1] >= 3:
+                    data.columns = ["peptide", "label", "allele"] + list(range(data.shape[1] - 3))
+                    # add ba data to the dataframe
+                    ba_data = pd.concat([ba_data, data], ignore_index=True)
+                else:
+                    print(f"Warning: File {file} has insufficient columns: {data.shape[1]}")
 
         elif "EL" in file or "el" in file:
-            data = load_data(mhcII_path + file)
+            data = load_data(mhc_path + file)
             print(f"Loaded EL data from {file}: {data.shape}")
 
-            # Rename columns if necessary
-            if data.shape[1] >= 4:  # Ensure data has enough columns
-                data.columns = ["peptide", "assigned_label", "allele", "core"] + list(range(data.shape[1] - 4))
-                # add el data to the dataframe
-                el_data = pd.concat([el_data, data], ignore_index=True)
+            if mhc_type == 2:
+                # Rename columns if necessary
+                if data.shape[1] >= 4:  # Ensure data has enough columns
+                    data.columns = ["peptide", "label", "allele", "core"] + list(range(data.shape[1] - 4))
+                    # add el data to the dataframe
+                    el_data = pd.concat([el_data, data], ignore_index=True)
+                else:
+                    print(f"Warning: File {file} has insufficient columns: {data.shape[1]}")
             else:
-                print(f"Warning: File {file} has insufficient columns: {data.shape[1]}")
-        else:
-            # skip the file and print a warning
-            print(f"Skipping file: {file}")
+                # skip the file and print a warning
+                print(f"Skipping file: {file}")
+            if mhc_type == 1:
+                # Rename columns if necessary
+                if data.shape[1] >= 3:
+                    data.columns = ["peptide", "label", "allele"] + list(range(data.shape[1] - 3))
+                    # add el data to the dataframe
+                    el_data = pd.concat([el_data, data], ignore_index=True)
+                else:
+                    print(f"Warning: File {file} has insufficient columns: {data.shape[1]}")
 
     print(f"After loading data: {el_data.shape}")
     if el_data.empty:
@@ -98,7 +123,10 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
     print(f"After removing duplicates: {el_data.shape}")
 
     ## get allele names of cell lines
-    allelelist = mhcII_path + "allelelist.txt"  # change to allelelist for MHCI
+    if mhc_type == 1:
+        allelelist = mhc_path + "allelelist"
+    else:
+        allelelist = mhc_path + "allelelist.txt"  # change to allelelist for MHCI
 
     # Check if allele list file exists
     if not os.path.exists(allelelist):
@@ -165,8 +193,8 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
         lambda x: x[:x.find("-", x.find("-") + 1)] + "/HLA-" + x[x.find("-", x.find("-") + 1) + 1:] if x.count("-") >= 2 and "/" not in x else x)
 
     # split to two variables, one with labels = 0 and one with labels = 1
-    el_data_0 = el_data[el_data["assigned_label"] == 0]
-    el_data_1 = el_data[el_data["assigned_label"] == 1]
+    el_data_0 = el_data[el_data["label"] == 0]
+    el_data_1 = el_data[el_data["label"] == 1]
 
     # drop the labels column from el_data_1
     # el_data_1 = el_data_1.drop(columns=["label"])
@@ -180,9 +208,9 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
     # print(f"After removing duplicates: {el_data_1.shape}")
 
     # Verify that "/" is present in all allele names
-    invalid_alleles = el_data_0[el_data_0["allele"].apply(lambda x: "/" not in x)]
+    invalid_alleles = el_data_0[el_data_0["allele"].apply(lambda x: "/" in x)]
     if not invalid_alleles.empty:
-        print("Alleles without '/' separator:")
+        print("Alleles with '/' separator:")
         print(invalid_alleles)
 
     # # Get unique alleles and run NetMHCpan for each
@@ -198,12 +226,12 @@ def process_data(mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
     return el_data_0, el_data_1, ba_data
 
 
-def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number):
+def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number, mhc_class):
     # chunk_dataframe = pd.DataFrame(columns=["MHC", "Peptide", "Of", "Core", "Core_Rel", "Inverted", "Identity", "Score_EL", "%Rank_EL", "Exp_Bind", "Score_BA", "%Rank_BA", "Affinity(nM)", "long_mer", "cell_line_id"])
     chunk_df_path = os.path.join(results_dir, f"el{true_label}_chunk_{chunk_number}.csv")
     dropped_rows = pd.DataFrame()
     dropped_rows_path = os.path.join(results_dir, f"el{true_label}_dropped_rows_{chunk_number}.csv")
-    for idx, cell_row in tqdm(el_data.iterrows(), total=el_data.shape[0]):
+    for idx, cell_row in tqdm(el_data.iterrows(), total=el_data.shape[0], desc=f"Processing chunk {chunk_number}"):
         number_of_alleles = len(eval(cell_row["allele"]))
         result_data = pd.DataFrame(columns=["MHC", "Peptide", "Of", "Core", "Core_Rel", "Inverted", "Identity", "Score_EL", "%Rank_EL", "Exp_Bind", "Score_BA", "%Rank_BA", "Affinity(nM)", "long_mer", "cell_line_id"])
         peptide = cell_row["peptide"]
@@ -224,7 +252,7 @@ def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number):
                 f.write(f">peptide\n{peptide}\n")
 
             # Output directory for this specific cell_line_id
-            output_dir = os.path.join(tmp_path, f"output/")
+            output_dir = os.path.join(tmp_path, f"output/{true_label}_output_{unique_id}")
             if not os.path.exists(output_dir):
                 os.makedirs(output_dir)
 
@@ -232,7 +260,7 @@ def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number):
                 # Run NetMHCpan for this specific peptide
                 result_ = run_and_parse_netmhcpan(
                     peptide_fasta_file=peptide_fasta_path,
-                    mhc_type=2,
+                    mhc_type=mhc_class,
                     output_dir=output_dir,
                     mhc_allele=allele,
                     save_csv=False
@@ -506,10 +534,13 @@ def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number):
 #     #         task.result()
 
 def run_(arg1, arg2):
-    mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/"
-    tmp_path = "data/NetMHCpan_dataset/tmp/"
+    # mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/"
+    mhcI_path = "data/NetMHCpan_dataset/NetMHCpan_train/"
+    # tmp_path = "data/NetMHCpan_dataset/tmp/"
+    tmp_path = "data/NetMHCpan_dataset/tmp_I/"
     results_dir = "data/NetMHCpan_dataset/results/"
-    final_output_path = "data/NetMHCpan_dataset/combined_results.parquet"
+
+    mhc_class = 1
 
     # make tmp directory
     if not os.path.isdir(tmp_path):
@@ -523,31 +554,32 @@ def run_(arg1, arg2):
         ########################
         # Load data
         el_data_0, el_data_1, ba_data = process_data(
-            mhcII_path=mhcII_path,
-            tmp_path=tmp_path)
+            mhc_path=mhcI_path,
+            tmp_path=tmp_path,
+            mhc_type=mhc_class)
 
         # save the variables
-        el_data_0.to_csv("data/NetMHCpan_dataset/tmp/el_data_0.csv", index=False)
-        el_data_1.to_csv("data/NetMHCpan_dataset/tmp/el_data_1.csv", index=False)
-        ba_data.to_csv("data/NetMHCpan_dataset/tmp/ba_data.csv", index=False)
+        el_data_0.to_csv(f"{tmp_path}/el_data_0.csv", index=False)
+        el_data_1.to_csv(f"{tmp_path}/el_data_1.csv", index=False)
+        ba_data.to_csv(f"{tmp_path}/ba_data.csv", index=False)
         params = {
             # "unique_cell_lines": unique_cell_lines.tolist() if hasattr(unique_cell_lines, "tolist") else unique_cell_lines,
             "tmp_path": tmp_path,
             "results_dir": results_dir
         }
-        with open("data/NetMHCpan_dataset/tmp/params.json", "w") as f:
+        with open(f"{tmp_path}/params.json", "w") as f:
             json.dump(params, f)
 
         # split el_data to 10 chunks and save separately
         chunk_size = len(el_data_1) // 256
         for i in range(256):
             el_data_1_chunk = el_data_1.iloc[i * chunk_size: (i + 1) * chunk_size]
-            el_data_1_chunk.to_csv(f"data/NetMHCpan_dataset/tmp/el_data_1_chunk_{i}.csv", index=False)
+            el_data_1_chunk.to_csv(f"{tmp_path}/el_data_1_chunk_{i}.csv", index=False)
         ########################
 
     if arg1 == "run_netmhcpan":
         # load the variables and parameters from JSON files
-        with open("data/NetMHCpan_dataset/tmp/params.json", "r") as f:
+        with open(f"{tmp_path}/params.json", "r") as f:
             params = json.load(f)
         # unique_alleles = np.array(params["unique_alleles"])
         tmp_path = params["tmp_path"]
@@ -555,8 +587,8 @@ def run_(arg1, arg2):
 
         # load the variables
         el_data_1 = pd.read_csv(
-            f"data/NetMHCpan_dataset/tmp/el_data_1_chunk_{arg2}.csv")
-        el_data_0 = pd.read_csv("data/NetMHCpan_dataset/tmp/el_data_0.csv")
+            f"{tmp_path}/el_data_1_chunk_{arg2}.csv")
+        el_data_0 = pd.read_csv(f"{tmp_path}/el_data_0.csv")
 
         # print the len of el_data_1
         print(f"Length of el_data_1: {len(el_data_1)}")
@@ -569,7 +601,7 @@ def run_(arg1, arg2):
         # parallelize_netmhcpan(el_data_1, tmp_path, results_dir)
 
         # run the netmhcpan for the el_data_1
-        run_netmhcpan_(el_data_1, 1, tmp_path, results_dir, arg2)
+        run_netmhcpan_(el_data_1, 1, tmp_path, results_dir, arg2, mhc_class=mhc_class)
 
         # run the netmhcpan for the el_data_0
         # run_netmhcpan_(el_data_0, 0, tmp_path, results_dir, arg2)
