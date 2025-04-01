@@ -1320,7 +1320,6 @@ def alignment_to_df(no_modelling_output_dict, output_dir):
         "identities": identities,
         "target_len": target_len,
         "template_len": template_len})
-    print('DEBUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUG', df, output_dir, 'DEBUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUG')
     df.to_csv(output_dir, sep='\t', index=False)
 
 

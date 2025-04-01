@@ -77,11 +77,13 @@ def main():
     parser.add_argument('--batch_size', type=int, default=1, help='ProteinMPNN batch size.')
     parser.add_argument('--hot_spot_thr', type=float, default=6.0, help='Distance threshold to peptide, to define hot-spots on mhc.')
     parser.add_argument('--binder_pred', action='store_true', help='Enables binder prediction from ProteinMPNN generated peptides.')
+
     # Setting to Run only a part:
     parser.add_argument('--no_alphafold', action='store_false', help='does not run alphafold.')
     parser.add_argument('--only_protein_mpnn', action='store_true', help='Skips PANDORA and AF modeling, and runs ProteinMPNN for already available predictions.')
     parser.add_argument('--no_pandora', action='store_false', help='does not run pandora')
     parser.add_argument('--protein_mpnn_dryrun', action='store_true', help='Overwrites all proteinMPNN flags and just dry run. hotspots are saved.')
+    parser.add_argument('--return_all_outputs', action='store_true', help='If active, returns all alphafold outputs')
 
     args = parser.parse_args()
 

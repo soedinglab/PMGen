@@ -28,7 +28,8 @@ class run_PMGen_modeling():
                  alphafold_param_folder = 'AFfine/af_params/params_original/',
                  fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                  benchmark=False, n_homology_models=1, best_n_templates=4,
-                 pandora_force_run=True, no_modelling=False):
+                 pandora_force_run=True, no_modelling=False,
+                 return_all_outputs=False):
         """
         Initializes the PMGen modeling pipeline.
 
@@ -51,6 +52,7 @@ class run_PMGen_modeling():
             best_n_templates (int): number of found templates used for homology modeling via modeler, default=4.
             pandora_force_run (bool): Weather to force run pandora or not, default=True.
             no_modelling (bool): If active, no modeller homology modeling happens and only PANDORA is used for template search and alignment.
+            return_all_outputs (bool): If active, all alphafold outputs are saved.
         """
         super().__init__()
         self.peptide = peptide
@@ -71,6 +73,7 @@ class run_PMGen_modeling():
         self.best_n_templates = best_n_templates
         self.pandora_force_run = pandora_force_run
         self.no_modelling = no_modelling
+        self.return_all_outputs = return_all_outputs
         self.input_assertion()
         if len(self.models) > 1:
             print(f'\n #### Warning! You are running for multiple models {self.models}'
@@ -244,9 +247,11 @@ class run_PMGen_modeling():
             mhc_pep_seq (str): Full MHC-peptide sequence.
             output (str): Path to save the prepared input file.
         """
+        template_pdb_dict_path = os.path.join(self.pandora_output, self.id, "no_modelling_output_dict.json")
         df = pd.DataFrame({"target_chainseq": [mhc_pep_seq],
                            "templates_alignfile": [template_aln_file],
-                           "targetid": [self.id]})
+                           "targetid": [self.id],
+                           "template_pdb_dict": [template_pdb_dict_path]})
         df.to_csv(output, sep='\t', index=False)
 
     def run_alphafold(self, input_file, output_prefix):
@@ -276,8 +281,13 @@ class run_PMGen_modeling():
             "--ignore_identities",
             "--num_recycles", f"{self.num_recycles}"
         ]
-
-        print(command)
+        if not self.no_modelling:
+            command += ['--no_initial_guess']
+        if self.return_all_outputs:
+            command += ['--return_all_outputs']
+        else:
+            print(' -- Alphafold Initial Guess Mode, No homology models will be used --')
+        print('AFfine Command: \n',command)
         try:
             # Run the command with unbuffered output
             process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
@@ -292,7 +302,7 @@ class run_PMGen_modeling():
                 elif process.poll() is not None:
                     break  # Process has finished
 
-            # Capture remaining stderr output
+            # Capture remaining stderr outputHi, y
             for err_line in process.stderr:
                 print(err_line, end="", flush=True)
 
@@ -969,8 +979,6 @@ def get_best_structres(output_dir, df, multiple_anchors):
                                                                          path_to_af = 'alphafold',
                                                                          multiple_anchors = multiple_anchors)
     return final_df
-
-
 
 
 
