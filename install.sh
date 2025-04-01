@@ -19,9 +19,9 @@ trap 'error_handler' ERR
 CURRENT_DIR=$(pwd)
 ENV_NAME="PMGen"
 ENV_FILE="PMGen.yml"
-AFFINE_ZIP_URL="https://zenodo.org/records/14961621/files/AFfine.zip?download=1"
-AFFINE_ZIP_NAME="AFfine.zip"
+AFFINE_ZIP_URL="https://owncloud.gwdg.de/index.php/s/M1YQOgKxLbVjO0G/download"
 AFFINE_FOLDER="AFfine"
+AFFINE_ZIP_NAME="$AFFINE_FOLDER/AFfine.zip"
 PANDORA_MODIF_PATH="$CURRENT_DIR/PANDORA/PANDORA/Pandora/Modelling_functions.py"
 PANDORA_PMHC_PATH="$CURRENT_DIR/PANDORA/PANDORA/PMHC/PMHC.py"
 
@@ -84,10 +84,10 @@ fi
 $ACTIVATE_CMD "$ENV_NAME"
 
 # Step 5: Clone and Install PANDORA
-echo "✔ Cloning and installing PANDORA..."
-if [ ! -d "PANDORA" ]; then
-    git clone https://github.com/X-lab-3D/PANDORA.git
-fi
+#echo "✔ Cloning and installing PANDORA..."
+#if [ ! -d "PANDORA" ]; then
+#    git clone https://github.com/X-lab-3D/PANDORA.git
+#fi
 cd PANDORA
 pip install -e .
 cd ..
@@ -100,7 +100,7 @@ echo "✔ Fetching PANDORA data..."
 pandora-fetch
 
 # Step 8: Download and Extract AFfine Data
-echo "✔ Downloading AFfine data..."
+echo "✔ Downloading AFfine data ..."
 cd "$CURRENT_DIR"
 
 if [ ! -d "$AFFINE_FOLDER" ]; then
@@ -114,11 +114,11 @@ else
 fi
 
 # Step 10: Dowlnload modified files for PANDORA
-echo "Change modified scripts in PANDORA"
-rm "$PANDORA_MODIF_PATH"
-rm "$PANDORA_PMHC_PATH"
-mv "data/modified_files/Modelling_functions.py" "$PANDORA_MODIF_PATH"
-mv "data/modified_files/PMHC.py" "$PANDORA_PMHC_PATH"
+#echo "Change modified scripts in PANDORA"
+#rm "$PANDORA_MODIF_PATH"
+#rm "$PANDORA_PMHC_PATH"
+#mv "data/modified_files/Modelling_functions.py" "$PANDORA_MODIF_PATH"
+#mv "data/modified_files/PMHC.py" "$PANDORA_PMHC_PATH"
 
 # Step 11: Install ProteinMPNN
 echo "ProteinMPNN installation"
