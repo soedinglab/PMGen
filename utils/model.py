@@ -322,7 +322,7 @@ class Decoder(layers.Layer):
 class SCQ_model(tf.keras.models.Model):
     def __init__(self, general_embed_dim=128, codebook_dim=16, codebook_num=64,
                  descrete_loss=False, heads=4, names='SCQ_model',
-                 weight_recon=1, weight_vq=1, **kwargs):
+                 weight_recon=1, weight_vq=1, input_dim=1024, **kwargs):
         super().__init__()
         self.general_embed_dim = general_embed_dim
         self.codebook_dim = codebook_dim
@@ -333,13 +333,13 @@ class SCQ_model(tf.keras.models.Model):
         self.weight_recon = tf.cast(weight_recon, tf.float32)
         self.weight_vq = tf.cast(weight_vq, tf.float32)
         # define model
-        self.encoder = Encoder(dim_input=21, dim_embed=self.general_embed_dim, heads=self.heads)
+        self.encoder = Encoder(dim_input=input_dim, dim_embed=self.general_embed_dim, heads=self.heads)
 
         self.scq = SCQ(dim_input=self.general_embed_dim, dim_embed=self.codebook_dim,
                        num_embed=self.codebook_num, descrete_loss=self.descrete_loss)
 
         self.decoder = Decoder(dim_input=self.codebook_dim, dim_embed=self.general_embed_dim,
-                               dim_output=21, heads=self.heads)
+                               dim_output=input_dim, heads=self.heads)
 
         # Loss trackers
         self.total_loss_tracker = tf.keras.metrics.Mean(name='total_loss')
@@ -362,22 +362,53 @@ class SCQ_model(tf.keras.models.Model):
             Zq, out_P_proj, vq_loss = self.scq(encoded)  # (B,N,E),(B,N,K),(1,)
             decoded = self.decoder(Zq)
 
-            y = tf.clip_by_value(decoded, 1e-10, 1 - (1e-10))
-            recon_loss = -tf.reduce_sum(x * tf.math.log(y), axis=-1)
-            recon_loss = tf.reduce_mean(recon_loss)
+            # Calculate losses using the new method
+            losses = self.compute_losses(x, decoded, vq_loss, out_P_proj)
 
-            final_loss = self.weight_recon * recon_loss + self.weight_vq * vq_loss
-
-        vars = self.encoder.trainable_weights + self.scq.trainable_weights + self.decoder.trainable_weights
-        grads = tape.gradient(final_loss, vars)
+        # Update weights
+        vars = self.trainable_weights
+        grads = tape.gradient(losses['total_loss'], vars)
         self.optimizer.apply_gradients(zip(grads, vars))
-        self.perplexity = self.compute_perplexity(out_P_proj)
-        # Loss Tracking
+
+        # Update metrics
+        self.total_loss_tracker.update_state(losses['total_loss'])
+        self.recon_loss_tracker.update_state(losses['recon_loss'])
+        self.vq_loss_tracker.update_state(losses['vq_loss'])
+        self.perplexity_tracker.update_state(losses['perplexity'])
+
+        return {
+            'loss': self.total_loss_tracker.result(),
+            'recon': self.recon_loss_tracker.result(),
+            'vq': self.vq_loss_tracker.result(),
+            'perplexity': self.perplexity_tracker.result()
+        }
+
+    def test_step(self, data):
+        # Get inputs from data
+        x = data
+
+        # Forward pass
+        encoded = self.encoder(x)
+        Zq, out_P_proj, vq_loss = self.scq(encoded)
+        decoded = self.decoder(Zq)
+
+        # Compute losses
+        y = tf.clip_by_value(decoded, 1e-10, 1 - (1e-10))
+        recon_loss = -tf.reduce_sum(x * tf.math.log(y), axis=-1)
+        recon_loss = tf.reduce_mean(recon_loss)
+
+        final_loss = self.weight_recon * recon_loss + self.weight_vq * vq_loss
+
+        # Compute perplexity
+        perplexity = self.compute_perplexity(out_P_proj)
+
+        # Update metrics
         self.total_loss_tracker.update_state(final_loss)
         self.recon_loss_tracker.update_state(self.weight_recon * recon_loss)
         self.vq_loss_tracker.update_state(self.weight_vq * vq_loss)
-        self.perplexity_tracker.update_state(self.perplexity)
+        self.perplexity_tracker.update_state(perplexity)
 
+        # Return metrics
         return {
             'loss': tf.convert_to_tensor(self.total_loss_tracker.result()),
             'recon': tf.convert_to_tensor(self.recon_loss_tracker.result()),
@@ -398,6 +429,51 @@ class SCQ_model(tf.keras.models.Model):
         entropy = -tf.reduce_sum(p_j * tf.math.log(p_j) / tf.math.log(2.0))  # Entropy: -sum(p_j * log2(p_j))
         perplexity = tf.pow(2.0, entropy)  # Perplexity: 2^entropy
         return perplexity
+
+    def compute_losses(self, x, decoded, vq_loss, out_P_proj):
+        """Compute all losses with improved numerical stability."""
+        # Clip to avoid numerical issues
+        decoded_clipped = tf.clip_by_value(decoded, 1e-10, 1.0 - 1e-10)
+
+        # Ensure tensors have compatible shapes
+        # Get input shapes for debugging
+        x_shape = tf.shape(x)
+        decoded_shape = tf.shape(decoded_clipped)
+
+        # Reshape if necessary to ensure compatibility
+        if len(x.shape) != len(decoded_clipped.shape):
+            # Make sure both tensors are 3D (batch, seq_len, features)
+            if len(x.shape) == 2:
+                x = tf.expand_dims(x, axis=1)
+            if len(decoded_clipped.shape) == 2:
+                decoded_clipped = tf.expand_dims(decoded_clipped, axis=1)
+
+        # Calculate reconstruction loss - element-wise cross-entropy
+        # We'll use the manual formula for more control over dimensions
+        epsilon = 1e-10
+        recon_loss = -tf.reduce_sum(x * tf.math.log(decoded_clipped + epsilon), axis=-1)
+        recon_loss = tf.reduce_mean(recon_loss)
+
+        # Compute perplexity (codebook usage metric)
+        perplexity = self.compute_perplexity(out_P_proj)
+
+        # Add KL regularization to encourage more uniform codebook usage
+        p_j = tf.reduce_mean(out_P_proj, axis=[0, 1])
+        p_uniform = tf.ones_like(p_j) / tf.cast(tf.shape(p_j)[0], tf.float32)
+        kl_loss = tf.reduce_sum(p_j * tf.math.log(p_j / p_uniform + epsilon))
+
+        # Combine losses with weights
+        total_loss = (self.weight_recon * recon_loss +
+                      self.weight_vq * vq_loss +
+                      0.1 * kl_loss)
+
+        return {
+            'total_loss': total_loss,
+            'recon_loss': recon_loss,
+            'vq_loss': vq_loss,
+            'kl_loss': kl_loss,
+            'perplexity': perplexity
+        }
 
 
 '''import tensorflow as tf
