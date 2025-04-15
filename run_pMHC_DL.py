@@ -97,6 +97,7 @@ def main():
 
     # Define parameter search space - simplified to just one configuration for testing
     param_grid = [
+        # Explore different codebook_num
         {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 8, 'heads': 4},
         {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
         {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 32, 'heads': 4},
@@ -105,6 +106,19 @@ def main():
         {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 256, 'heads': 4},
         {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 512, 'heads': 4},
         {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 1024, 'heads': 4},
+        # Explore codebook_dim
+        {'general_embed_dim': 128, 'codebook_dim': 32, 'codebook_num': 16, 'heads': 4},
+        {'general_embed_dim': 128, 'codebook_dim': 64, 'codebook_num': 16, 'heads': 4},
+        {'general_embed_dim': 128, 'codebook_dim': 128, 'codebook_num': 16, 'heads': 4},
+        # Explore heads
+        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 2},
+        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 8},
+        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 16},
+        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 32},
+        # Explore general_embed_dim
+        {'general_embed_dim': 64, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
+        {'general_embed_dim': 256, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
+        {'general_embed_dim': 512, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
     ]
 
     # Common parameters for all configurations
@@ -127,7 +141,8 @@ def main():
     # Run parameter search for each dataset
     # Just use MHC1 for testing
     for dataset_name, X, latent_columns in [
-        ("MHC1", X_mhc1, mhc1_latent_columns)
+        ("MHC1", X_mhc1, mhc1_latent_columns),
+        ("MHC2", X_mhc2, mhc2_latent_columns)
     ]:
         print(f"\n{'=' * 50}")
         print(f"Processing {dataset_name} dataset")
@@ -219,7 +234,7 @@ def main():
                 try:
                     history = model.fit(
                         train_dataset,
-                        epochs=10,  # Reduced for testing
+                        epochs=30,  # Reduced for testing
                         validation_data=val_dataset,
                         callbacks=callbacks,
                         verbose=1

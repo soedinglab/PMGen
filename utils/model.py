@@ -384,37 +384,31 @@ class SCQ_model(tf.keras.models.Model):
         }
 
     def test_step(self, data):
-        # Get inputs from data
-        x = data
+            # Get inputs from data
+            x = data
 
-        # Forward pass
-        encoded = self.encoder(x)
-        Zq, out_P_proj, vq_loss = self.scq(encoded)
-        decoded = self.decoder(Zq)
+            # Forward pass
+            encoded = self.encoder(x)
+            Zq, out_P_proj, vq_loss = self.scq(encoded)
+            decoded = self.decoder(Zq)
 
-        # Compute losses
-        y = tf.clip_by_value(decoded, 1e-10, 1 - (1e-10))
-        recon_loss = -tf.reduce_sum(x * tf.math.log(y), axis=-1)
-        recon_loss = tf.reduce_mean(recon_loss)
+            # Calculate losses using the new method
+            losses = self.compute_losses(x, decoded, vq_loss, out_P_proj)
 
-        final_loss = self.weight_recon * recon_loss + self.weight_vq * vq_loss
+            # Update metrics
+            self.total_loss_tracker.update_state(losses['total_loss'])
+            self.recon_loss_tracker.update_state(losses['recon_loss'])
+            self.vq_loss_tracker.update_state(losses['vq_loss'])
+            self.perplexity_tracker.update_state(losses['perplexity'])
 
-        # Compute perplexity
-        perplexity = self.compute_perplexity(out_P_proj)
+            return {
+                'loss': self.total_loss_tracker.result(),
+                'recon': self.recon_loss_tracker.result(),
+                'vq': self.vq_loss_tracker.result(),
+                'perplexity': self.perplexity_tracker.result()
+            }
 
-        # Update metrics
-        self.total_loss_tracker.update_state(final_loss)
-        self.recon_loss_tracker.update_state(self.weight_recon * recon_loss)
-        self.vq_loss_tracker.update_state(self.weight_vq * vq_loss)
-        self.perplexity_tracker.update_state(perplexity)
 
-        # Return metrics
-        return {
-            'loss': tf.convert_to_tensor(self.total_loss_tracker.result()),
-            'recon': tf.convert_to_tensor(self.recon_loss_tracker.result()),
-            'vq': tf.convert_to_tensor(self.vq_loss_tracker.result()),
-            'perplexity': tf.convert_to_tensor(self.perplexity_tracker.result())
-        }
 
     def call(self, inputs, training=False):
         encoded = self.encoder(inputs)
