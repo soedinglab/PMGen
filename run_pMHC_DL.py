@@ -6,41 +6,137 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold
 from utils.model import SCQ_model
+import keras
 
 # Set TensorFlow logging level for more information
 tf.get_logger().setLevel('INFO')
 
 
+# def create_dataset(X, batch_size=1, is_training=True):
+#     """Create TensorFlow dataset with consistent approach for both training and validation."""
+#     # Debug info
+#     print(f"Creating {'training' if is_training else 'validation'} dataset")
+#     print(f"Data shape: {X.shape}")
+#     print(f"Data dtype: {X.dtype}")
+#     print(f"Data range: min={np.min(X):.4f}, max={np.max(X):.4f}, mean={np.mean(X):.4f}")
+#
+#     # Ensure data is float32 (TensorFlow works best with float32)
+#     X = X.astype(np.float32)
+#
+#     dataset = tf.data.Dataset.from_tensor_slices(X)
+#
+#     # Apply shuffling only for training data
+#     if is_training:
+#         dataset = dataset.shuffle(buffer_size=1000)
+#
+#     # Apply batching with drop_remainder=False to handle all data
+#     dataset = dataset.batch(batch_size)
+#
+#     # Prefetch for better performance
+#     dataset = dataset.prefetch(tf.data.AUTOTUNE)
+#
+#     # Debug dataset
+#     for batch in dataset.take(1):
+#         print(f"Sample batch shape: {batch.shape}")
+#         print(f"Sample batch dtype: {batch.dtype}")
+#         print(f"Sample batch range: min={tf.reduce_min(batch):.4f}, max={tf.reduce_max(batch):.4f}")
+#
+#     return dataset
+
 def create_dataset(X, batch_size=1, is_training=True):
-    """Create TensorFlow dataset with consistent approach for both training and validation."""
-    # Debug info
-    print(f"Creating {'training' if is_training else 'validation'} dataset")
-    print(f"Data shape: {X.shape}")
-    print(f"Data dtype: {X.dtype}")
-    print(f"Data range: min={np.min(X):.4f}, max={np.max(X):.4f}, mean={np.mean(X):.4f}")
+    """
+    simple function to create a TensorFlow dataset.
+    Args:
+        X:
+        batch_size:
+        is_training:
 
-    # Ensure data is float32 (TensorFlow works best with float32)
-    X = X.astype(np.float32)
+    Returns:
 
+    """
+    X = tf.convert_to_tensor(X, dtype=tf.float32)
+
+    # Create dataset from tensor slices
     dataset = tf.data.Dataset.from_tensor_slices(X)
 
     # Apply shuffling only for training data
     if is_training:
-        dataset = dataset.shuffle(buffer_size=1000)
+        dataset = dataset.shuffle(buffer_size=min(1000, len(X)))
 
-    # Apply batching with drop_remainder=False to handle all data
+    # Apply batching (drop_remainder=False to handle all data)
     dataset = dataset.batch(batch_size)
 
     # Prefetch for better performance
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
-    # Debug dataset
-    for batch in dataset.take(1):
-        print(f"Sample batch shape: {batch.shape}")
-        print(f"Sample batch dtype: {batch.dtype}")
-        print(f"Sample batch range: min={tf.reduce_min(batch):.4f}, max={tf.reduce_max(batch):.4f}")
-
     return dataset
+
+def plot_metrics(history, save_path='training_metrics.png'):
+            """
+            Visualize training metrics over epochs.
+
+            Args:
+                history: A Keras History object or dictionary containing training history
+                save_path: Path to save the plot image
+            """
+            # Handle both Keras History objects and dictionaries
+            history_dict = history.history if hasattr(history, 'history') else history
+
+            # Print available keys to debug
+            print(f"Available keys in history: {list(history_dict.keys())}")
+
+            metrics = ['loss', 'recon', 'vq', 'perplexity']
+            # Check for standard Keras naming (total_loss instead of loss, etc.)
+            metric_mapping = {
+                'loss': ['loss', 'total_loss'],
+                'recon': ['recon', 'recon_loss'],
+                'vq': ['vq', 'vq_loss'],
+                'perplexity': ['perplexity']
+            }
+
+            fig, axes = plt.subplots(len(metrics), 1, figsize=(12, 3*len(metrics)), sharex=True)
+
+            # Handle case with only one metric
+            if len(metrics) == 1:
+                axes = [axes]
+
+            for i, metric_base in enumerate(metrics):
+                ax = axes[i]
+
+                # Try different possible metric names
+                for metric in metric_mapping[metric_base]:
+                    # Plot training metric
+                    if metric in history_dict:
+                        ax.plot(history_dict[metric], 'b-', label=f'Train {metric}')
+                        print(f"Plotting {metric} with {len(history_dict[metric])} points")
+                        break
+
+                # Try different possible validation metric names
+                for metric in metric_mapping[metric_base]:
+                    val_metric = f'val_{metric}'
+                    if val_metric in history_dict:
+                        ax.plot(history_dict[val_metric], 'r-', label=f'Validation {metric}')
+                        print(f"Plotting {val_metric} with {len(history_dict[val_metric])} points")
+                        break
+
+                ax.set_title(f'{metric_base.capitalize()} over epochs')
+                ax.set_ylabel('Value')
+                ax.grid(True)
+                ax.legend(loc='best')
+
+            plt.xlabel('Epochs')
+            plt.tight_layout()
+
+            # Save the figure in case display doesn't work
+            plt.savefig(save_path)
+            print(f"Plot saved to {save_path}")
+
+            # Try to display
+            try:
+                plt.show()
+            except Exception as e:
+                print(f"Could not display plot: {e}")
+
 
 def main():
     print("Starting SCQ parameter search...")
@@ -98,32 +194,32 @@ def main():
     # Define parameter search space - simplified to just one configuration for testing
     param_grid = [
         # Explore different codebook_num
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 8, 'heads': 4},
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 32, 'heads': 4},
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 64, 'heads': 4},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 8, 'heads': 4},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 32, 'heads': 4},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 64, 'heads': 4},
         {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 128, 'heads': 4},
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 256, 'heads': 4},
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 512, 'heads': 4},
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 1024, 'heads': 4},
-        # Explore codebook_dim
-        {'general_embed_dim': 128, 'codebook_dim': 32, 'codebook_num': 16, 'heads': 4},
-        {'general_embed_dim': 128, 'codebook_dim': 64, 'codebook_num': 16, 'heads': 4},
-        {'general_embed_dim': 128, 'codebook_dim': 128, 'codebook_num': 16, 'heads': 4},
-        # Explore heads
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 2},
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 8},
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 16},
-        {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 32},
-        # Explore general_embed_dim
-        {'general_embed_dim': 64, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
-        {'general_embed_dim': 256, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
-        {'general_embed_dim': 512, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 256, 'heads': 4},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 512, 'heads': 4},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 1024, 'heads': 4},
+        # # Explore codebook_dim
+        # {'general_embed_dim': 128, 'codebook_dim': 32, 'codebook_num': 16, 'heads': 4},
+        # {'general_embed_dim': 128, 'codebook_dim': 64, 'codebook_num': 16, 'heads': 4},
+        # {'general_embed_dim': 128, 'codebook_dim': 128, 'codebook_num': 16, 'heads': 4},
+        # # Explore heads
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 2},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 8},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 16},
+        # {'general_embed_dim': 128, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 32},
+        # # Explore general_embed_dim
+        # {'general_embed_dim': 64, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
+        # {'general_embed_dim': 256, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
+        # {'general_embed_dim': 512, 'codebook_dim': 16, 'codebook_num': 16, 'heads': 4},
     ]
 
     # Common parameters for all configurations
     common_params = {
-        'descrete_loss': False,
+        'descrete_loss': True,
         'weight_recon': 1.0,
         'weight_vq': 1.0,
     }
@@ -244,6 +340,10 @@ def main():
                     print("\nHistory keys:", history.history.keys())
                     for key, values in history.history.items():
                         print(f"{key}: {values}")
+
+                    # plot
+                    plot_metrics(history)
+
                 except Exception as e:
                     print(f"Error during training: {e}")
                     continue
@@ -324,12 +424,121 @@ def main():
     print("\nParameter search complete!")
     print(f"Results saved to {output_dir}")
 
+import os
+import traceback
+
+def simple_run(batch_size=1):
+    """A simplified run using the MHC dataset instead of random data."""
+    print("Starting simplified SCQ model run on MHC data...")
+
+    try:
+        # Create output directory for results
+        output_dir = "output/scq_simple_run"
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Load MHC data
+        print("Loading peptide embeddings...")
+        mhc1_pep2vec_embeddings = pd.read_parquet("data/Pep2Vec/wrapper_mhc1.parquet")
+
+        # Select the latent columns
+        latent_columns = [col for col in mhc1_pep2vec_embeddings.columns if 'latent' in col]
+        print(f"Found {len(latent_columns)} latent columns for MHC1")
+
+        # Extract latent features
+        X = mhc1_pep2vec_embeddings[latent_columns].values
+        print(f"MHC1 data shape: {X.shape}")
+
+        # Data sanity check
+        print("Data overview:")
+        print(f"MHC1 - min: {np.min(X):.4f}, max: {np.max(X):.4f}, mean: {np.mean(X):.4f}, std: {np.std(X):.4f}")
+
+        # Replace any NaN values with zeros
+        if np.isnan(X).any():
+            print("Replacing NaN values in MHC1 with zeros")
+            X = np.nan_to_num(X)
+
+        # Split data into train and test sets (80/20 split)
+        from sklearn.model_selection import train_test_split
+        X_train, X_test = train_test_split(X, test_size=0.2, random_state=42)
+
+        # Create datasets
+        train_dataset = create_dataset(X_train, batch_size=batch_size, is_training=True)
+        test_dataset = create_dataset(X_test, batch_size=batch_size, is_training=False)
+
+        # Initialize model with dimensions matching the input data
+        model = SCQ_model(
+            general_embed_dim=128,
+            codebook_dim=32,
+            codebook_num=16,
+            descrete_loss=True,
+            heads=4,
+            input_dim=X_train.shape[1]
+        )
+
+        # Print model summary
+        model.build(input_shape=(None, X_train.shape[1]))
+        print("Model summary:")
+        model.summary()
+
+        # Compile model
+        model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001))
+
+        # Train with early stopping
+        callbacks = [
+            tf.keras.callbacks.EarlyStopping(monitor='loss', patience=5),
+            tf.keras.callbacks.ModelCheckpoint(
+                filepath=os.path.join(output_dir, 'model_checkpoint.weights.h5'),
+                save_best_only=True,
+                save_weights_only=True,  # Only save weights, not the full model
+                monitor='loss'
+            )
+        ]
+
+        # Train model and capture history
+        history = model.fit(
+            train_dataset,
+            epochs=1000,  # Reduced from 1000 for quicker testing
+            callbacks=callbacks,
+            verbose=1
+        )
+
+        # Plot training metrics
+        plot_metrics(history, save_path=os.path.join(output_dir, 'training_metrics.png'))
+
+        # Save training history
+        pd.DataFrame(history.history).to_csv(os.path.join(output_dir, "model_history.csv"), index=False)
+
+        # Test model on test data
+        print("Evaluating model on test data...")
+        evaluation = model.evaluate(test_dataset, return_dict=True)
+        print("Test metrics:", evaluation)
+
+        # Generate and save example outputs
+        for batch in test_dataset.take(1):
+            output = model(batch)
+            # Save sample input and output
+            np.save(os.path.join(output_dir, "sample_input.npy"), batch.numpy())
+            np.savez(
+                os.path.join(output_dir, "sample_output.npz"),
+                decoded=output[0].numpy(),
+                zq=output[1].numpy(),
+                pj=output[2].numpy()
+            )
+
+        print(f"Training complete. Results saved to {output_dir}")
+
+    except Exception as e:
+        print(f"Error in simple_run: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"Error in main function: {e}")
-        import traceback
-
-        traceback.print_exc()
+    # try:
+    #     main()
+    # except Exception as e:
+    #     print(f"Error in main function: {e}")
+    #     import traceback
+    #
+    #     traceback.print_exc()
+    # simple run
+    simple_run()

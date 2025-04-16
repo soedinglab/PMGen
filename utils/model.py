@@ -306,7 +306,8 @@ class Decoder(layers.Layer):
         b, h, n, o = tf.shape(out)[0], tf.shape(out)[-1], tf.shape(out)[1], tf.shape(out)[2]
         out = tf.reshape(out, [b, n, h * o])  # (B, N, H * E)
         out = tf.matmul(out, self.w_out) + self.b_out  # (B,N,H*E)@(H*E,O)->(B,N,O)
-        out = tf.nn.softmax(out)
+        # out = tf.nn.softmax(out) # Disable softmax for regression tasks
+        out = tf.nn.sigmoid(out)
         return out
 
     def layernorm(self, inputs):
@@ -320,9 +321,9 @@ class Decoder(layers.Layer):
 
 
 class SCQ_model(tf.keras.models.Model):
-    def __init__(self, general_embed_dim=128, codebook_dim=16, codebook_num=64,
+    def __init__(self, input_dim,  general_embed_dim=128, codebook_dim=16, codebook_num=64,
                  descrete_loss=False, heads=4, names='SCQ_model',
-                 weight_recon=1, weight_vq=1, input_dim=1024, **kwargs):
+                 weight_recon=1, weight_vq=1, **kwargs):
         super().__init__()
         self.general_embed_dim = general_embed_dim
         self.codebook_dim = codebook_dim
@@ -445,17 +446,22 @@ class SCQ_model(tf.keras.models.Model):
         # Calculate reconstruction loss - element-wise cross-entropy
         # We'll use the manual formula for more control over dimensions
         epsilon = 1e-10
-        recon_loss = -tf.reduce_sum(x * tf.math.log(decoded_clipped + epsilon), axis=-1)
-        recon_loss = tf.reduce_mean(recon_loss)
+        # recon_loss = -tf.reduce_sum(x * tf.math.log(decoded_clipped + epsilon), axis=-1)
+        # recon_loss = tf.reduce_mean(tf.square(x - decoded))
+        # for sigmoid
+        recon_loss = tf.reduce_mean(tf.keras.losses.binary_crossentropy(x, tf.nn.sigmoid(decoded)))
 
         # Compute perplexity (codebook usage metric)
         perplexity = self.compute_perplexity(out_P_proj)
 
         # Add KL regularization to encourage more uniform codebook usage
         p_j = tf.reduce_mean(out_P_proj, axis=[0, 1])
+        print("p_j:", p_j)
         p_uniform = tf.ones_like(p_j) / tf.cast(tf.shape(p_j)[0], tf.float32)
-        kl_loss = tf.reduce_sum(p_j * tf.math.log(p_j / p_uniform + epsilon))
-
+        # Use tf.clip_by_value to prevent log(0) issues
+        p_j_safe = tf.clip_by_value(p_j, epsilon, 1.0)
+        p_uniform_safe = tf.clip_by_value(p_uniform, epsilon, 1.0)
+        kl_loss = tf.reduce_sum(p_j_safe * tf.math.log(p_j_safe / p_uniform_safe))
         # Combine losses with weights
         total_loss = (self.weight_recon * recon_loss +
                       self.weight_vq * vq_loss +
@@ -508,7 +514,36 @@ def random_one_hot_sequence(batch, seq_len, num_classes=21, class_probs=None):
     # Apply one-hot encoding
     one_hot_encoded = tf.one_hot(random_indices, depth=num_classes)
 
-    return one_hot_encoded
+    return one_hot_encoded'''
+
+
+def create_dataset(X, batch_size=1, is_training=True):
+    """
+    simple function to create a TensorFlow dataset.
+    Args:
+        X:
+        batch_size:
+        is_training:
+
+    Returns:
+
+    """
+    X = tf.convert_to_tensor(X, dtype=tf.float32)
+
+    # Create dataset from tensor slices
+    dataset = tf.data.Dataset.from_tensor_slices(X)
+
+    # Apply shuffling only for training data
+    if is_training:
+        dataset = dataset.shuffle(buffer_size=min(1000, len(X)))
+
+    # Apply batching (drop_remainder=False to handle all data)
+    dataset = dataset.batch(batch_size)
+
+    # Prefetch for better performance
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+
+    return dataset
 
 
 import tensorflow as tf
@@ -516,34 +551,445 @@ import numpy as np
 import pandas as pd
 import os
 
-# Set parameters
-os.makedirs('test_tmp', exist_ok=True)
-batch_size = 600
-seq_length = 20  # Example sequence length
-feature_dim = 21  # Must match encoder input dim
-# Generate random input data (batch_size, seq_length, feature_dim)
-x_train = random_one_hot_sequence(batch_size, seq_length, feature_dim)
-# Initialize SCQ model
-model = SCQ_model(general_embed_dim=128, codebook_dim=32, codebook_num=5, descrete_loss=False, heads=8)
-# Compile model
-model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001))
-# Train model and capture history
-history = model.fit(x_train, epochs=1000, batch_size=batch_size)
-# Convert history to DataFrame and save as CSV
-history_df = pd.DataFrame(history.history)
-history_df.to_csv("test_tmp/model_history.csv", index=False)
-# Test model on new data
-x_test = random_one_hot_sequence(batch_size, seq_length, feature_dim)
-output = model(x_test)
-# Save input and output arrays as .npy files
+# # Set parameters
+# os.makedirs('test_tmp', exist_ok=True)
+# batch_size = 600
+# seq_length = 20  # Example sequence length
+# feature_dim = 21  # Must match encoder input dim
+# # Generate random input data (batch_size, seq_length, feature_dim)
+# x_train = random_one_hot_sequence(batch_size, seq_length, feature_dim)
+# # Initialize SCQ model
+# model = SCQ_model(input_dim=feature_dim, general_embed_dim=128, codebook_dim=32, codebook_num=5, descrete_loss=False, heads=8)
+# # Compile model
+# model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001))
+# # Train model and capture history
+# history = model.fit(x_train, epochs=1000, batch_size=batch_size)
+# # Convert history to DataFrame and save as CSV
+# history_df = pd.DataFrame(history.history)
+# history_df.to_csv("test_tmp/model_history.csv", index=False)
+# # Test model on new data
+# x_test = random_one_hot_sequence(batch_size, seq_length, feature_dim)
+# output = model(x_test)
+# # Save input and output arrays as .npy files
+#
+# os.makedirs
+# np.save("test_tmp/input_data.npy", x_test)
+# np.savez("test_tmp/output_data.npz", decoded=output[0].numpy(), zq=output[1].numpy(), pj=output[2].numpy())
+# print("Training complete. Model history saved as 'model_history.csv'.")
+# print("Input and output arrays saved as 'input_data.npy' and 'output_data.npy'.")
+# print((output[2]))
+# print(x_train[0])
 
-os.makedirs
-np.save("test_tmp/input_data.npy", x_test)
-np.savez("test_tmp/output_data.npz", decoded=output[0].numpy(), zq=output[1].numpy(), pj=output[2].numpy())
-print("Training complete. Model history saved as 'model_history.csv'.")
-print("Input and output arrays saved as 'input_data.npy' and 'output_data.npy'.")
-print((output[2]))
-print(x_train[0])'''
+# # Set parameters
+# os.makedirs('test_tmp', exist_ok=True)
+# batch_size = 4
+# seq_length = 1024  # this is the length of the latent from pep2vec
+# feature_dim = 1  # we have the latent representation
+# mhc1_pep2vec_embeddings = pd.read_parquet("../data/Pep2Vec/wrapper_mhc1.parquet")
+# # Select the latent columns (the columns that has latent in their name)
+# mhc1_latent_columns = [col for col in mhc1_pep2vec_embeddings.columns if 'latent' in col]
+# print(f"Found {len(mhc1_latent_columns)} latent columns for MHC1")
+# X_mhc1 = mhc1_pep2vec_embeddings[mhc1_latent_columns].values
+# X = X_mhc1.reshape(-1, seq_length, feature_dim)
+# from sklearn.model_selection import train_test_split
+# X_train, X_test = train_test_split(X, test_size=0.2, random_state=42)
+#
+# # Create datasets
+# train_dataset = create_dataset(X_train, batch_size=batch_size, is_training=True)
+# test_dataset = create_dataset(X_test, batch_size=batch_size, is_training=False)
+#
+# # Initialize SCQ model
+# model = SCQ_model(input_dim=feature_dim, general_embed_dim=128, codebook_dim=32, codebook_num=5, descrete_loss=False, heads=8)
+# # Compile model
+# model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001))
+# # Train model and capture history
+# history = model.fit(train_dataset, epochs=20, batch_size=batch_size)
+# # Convert history to DataFrame and save as CSV
+# history_df = pd.DataFrame(history.history)
+# history_df.to_csv("test_tmp/model_history.csv", index=False)
+#
+# # Test model on new data correctly by iterating through batches
+# decoded_outputs = []
+# zq_outputs = []
+# pj_outputs = []
+#
+# for batch in test_dataset:
+#     output = model(batch)
+#     decoded_outputs.append(output[0].numpy())
+#     zq_outputs.append(output[1].numpy())
+#     pj_outputs.append(output[2].numpy())
+#
+# # Save input and output arrays as .npy files
+# os.makedirs('test_tmp', exist_ok=True)
+# np.save("test_tmp/input_data.npy", X_test)  # Save the actual test data
+# np.savez("test_tmp/output_data.npz",
+#          decoded=np.vstack(decoded_outputs),
+#          zq=np.vstack(zq_outputs),
+#          pj=np.vstack(pj_outputs))
+#
+# print("Training complete. Model history saved as 'model_history.csv'.")
+# print("Input and output arrays saved as 'input_data.npy' and 'output_data.npz'.")
+# print("Shape of model outputs:", np.vstack(pj_outputs).shape)
 
 
+import os
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+from tensorflow import keras
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+import itertools
 
+
+def create_dataset(X, batch_size=4, is_training=True):
+    """Create a TensorFlow dataset from input array X."""
+    dataset = tf.data.Dataset.from_tensor_slices(X)
+    if is_training:
+        dataset = dataset.shuffle(buffer_size=len(X))
+    dataset = dataset.batch(batch_size)
+    return dataset
+
+
+def load_data(data_path, test_size=0.2, random_state=42):
+    """Load and prepare data for training."""
+    # Load data
+    embeddings = pd.read_parquet(data_path)
+
+    # Select the latent columns
+    latent_columns = [col for col in embeddings.columns if 'latent' in col]
+    print(f"Found {len(latent_columns)} latent columns")
+
+    # Extract values and reshape
+    X = embeddings[latent_columns].values
+    seq_length = len(latent_columns)
+    feature_dim = 1
+    X = X.reshape(-1, seq_length, feature_dim)
+
+    # Split into train and test sets
+    X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
+
+    return X_train, X_test, seq_length, feature_dim
+
+
+def train_scq_model(X_train, X_test, feature_dim, general_embed_dim, codebook_dim,
+                    codebook_num, batch_size=4, epochs=20, learning_rate=0.001,
+                    heads=8, descrete_loss=False, output_dir="test_tmp"):
+    """Train an SCQ model with the given parameters."""
+    # Create directories if they don't exist
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Create datasets
+    train_dataset = create_dataset(X_train, batch_size=batch_size, is_training=True)
+    test_dataset = create_dataset(X_test, batch_size=batch_size, is_training=False)
+
+    # Initialize SCQ model
+    model = SCQ_model(input_dim=int(feature_dim),
+                      general_embed_dim=int(general_embed_dim),
+                      codebook_dim=int(codebook_dim),
+                      codebook_num=int(codebook_num),
+                      descrete_loss=descrete_loss,
+                      heads=int(heads))
+
+    # Compile model
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=learning_rate))
+
+    # Train model and capture history
+    history = model.fit(train_dataset, epochs=epochs, batch_size=batch_size)
+
+    # Save training history
+    history_df = pd.DataFrame(history.history)
+    history_path = os.path.join(output_dir, f"model_history_cb{codebook_num}_emb{general_embed_dim}.csv")
+    history_df.to_csv(history_path, index=False)
+
+    # Evaluate model on test data
+    decoded_outputs, zq_outputs, pj_outputs = evaluate_model(model, test_dataset)
+
+    # Save outputs
+    output_path = os.path.join(output_dir, f"output_data_cb{codebook_num}_emb{general_embed_dim}.npz")
+    np.savez(output_path,
+             decoded=np.vstack(decoded_outputs),
+             zq=np.vstack(zq_outputs),
+             pj=np.vstack(pj_outputs))
+
+    # Calculate metrics
+    mse = calculate_reconstruction_mse(X_test, np.vstack(decoded_outputs))
+
+    return model, history, mse
+
+
+def evaluate_model(model, test_dataset):
+    """Evaluate the model on test data."""
+    decoded_outputs = []
+    zq_outputs = []
+    pj_outputs = []
+
+    for batch in test_dataset:
+        output = model(batch)
+        decoded_outputs.append(output[0].numpy())
+        zq_outputs.append(output[1].numpy())
+        pj_outputs.append(output[2].numpy())
+
+    return decoded_outputs, zq_outputs, pj_outputs
+
+
+def calculate_reconstruction_mse(X_test, decoded_output):
+    """Calculate mean squared error between input and reconstructed output."""
+    # Reshape if necessary to match dimensions
+    if X_test.shape != decoded_output.shape:
+        # Adjust shapes as needed based on your model's output
+        pass
+
+    return mean_squared_error(X_test.reshape(-1), decoded_output.reshape(-1))
+
+
+def plot_training_history(history_df, title="Training History", output_path=None):
+    """Plot training metrics from history dataframe."""
+    plt.figure(figsize=(12, 6))
+
+    # Plot all metrics in the history
+    for column in history_df.columns:
+        plt.plot(history_df[column], label=column)
+
+    plt.title(title)
+    plt.xlabel('Epoch')
+    plt.ylabel('Value')
+    plt.legend()
+    plt.grid(True)
+
+    if output_path:
+        plt.savefig(output_path)
+        plt.close()
+    else:
+        plt.show()
+
+
+def plot_reconstruction_comparison(original, reconstructed, n_samples=5, output_path=None):
+    """Plot comparison between original and reconstructed sequences."""
+    # Randomly select n_samples sequences to visualize
+    indices = np.random.choice(len(original), size=min(n_samples, len(original)), replace=False)
+
+    plt.figure(figsize=(15, 3 * n_samples))
+
+    for i, idx in enumerate(indices):
+        # Plot original sequence
+        plt.subplot(n_samples, 2, 2 * i + 1)
+        plt.plot(original[idx].flatten())
+        plt.title(f"Original Sequence {idx}")
+        plt.grid(True)
+
+        # Plot reconstructed sequence
+        plt.subplot(n_samples, 2, 2 * i + 2)
+        plt.plot(reconstructed[idx].flatten())
+        plt.title(f"Reconstructed Sequence {idx}")
+        plt.grid(True)
+
+    plt.tight_layout()
+
+    if output_path:
+        plt.savefig(output_path)
+        plt.close()
+    else:
+        plt.show()
+
+
+def parameter_search(X_train, X_test, feature_dim, batch_size=4, epochs=20, learning_rate=0.001,
+                     codebook_nums=[3, 5, 7], embed_dims=[64, 128, 256],
+                     codebook_dim=32, heads=8, output_dir="parameter_search"):
+    """
+    Perform grid search over codebook_num and general_embed_dim parameters.
+    Returns the best parameters based on reconstruction MSE.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    results = []
+
+    # Create all combinations of parameters
+    param_combinations = list(itertools.product(codebook_nums, embed_dims))
+    total_combinations = len(param_combinations)
+
+    print(f"Starting parameter search with {total_combinations} combinations...")
+
+    for i, (codebook_num, embed_dim) in enumerate(param_combinations):
+        print(f"Training combination {i + 1}/{total_combinations}: codebook_num={codebook_num}, embed_dim={embed_dim}")
+
+        try:
+            # Train the model with this parameter combination
+            model, history, mse = train_scq_model(
+                X_train, X_test, feature_dim,
+                general_embed_dim=embed_dim,
+                codebook_dim=codebook_dim,
+                codebook_num=codebook_num,
+                batch_size=batch_size,
+                epochs=epochs,
+                learning_rate=learning_rate,
+                heads=heads,
+                output_dir=output_dir
+            )
+
+            # Store results
+            results.append({
+                'codebook_num': codebook_num,
+                'general_embed_dim': embed_dim,
+                'mse': mse,
+                'history': history
+            })
+
+            # Plot training history
+            history_df = pd.DataFrame(history.history)
+            plot_training_history(
+                history_df,
+                title=f"Training History (codebook_num={codebook_num}, embed_dim={embed_dim})",
+                output_path=os.path.join(output_dir, f"history_plot_cb{codebook_num}_emb{embed_dim}.png")
+            )
+
+        except Exception as e:
+            print(f"Error training with codebook_num={codebook_num}, embed_dim={embed_dim}: {e}")
+
+    # Create results dataframe
+    results_df = pd.DataFrame([(r['codebook_num'], r['general_embed_dim'], r['mse'])
+                               for r in results],
+                              columns=['codebook_num', 'general_embed_dim', 'mse'])
+
+    # Save results
+    results_df.to_csv(os.path.join(output_dir, "parameter_search_results.csv"), index=False)
+
+    # Find best parameters
+    best_idx = results_df['mse'].idxmin()
+    best_params = results_df.loc[best_idx]
+
+    print(f"Parameter search complete. Best parameters:")
+    print(f"  codebook_num: {best_params['codebook_num']}")
+    print(f"  general_embed_dim: {best_params['general_embed_dim']}")
+    print(f"  MSE: {best_params['mse']}")
+
+    # Plot results heatmap
+    plot_parameter_search_results(results_df, output_dir)
+
+    return best_params, results_df
+
+
+def plot_parameter_search_results(results_df, output_dir):
+    """Plot heatmap of parameter search results."""
+    # Create pivot table for heatmap
+    pivot_df = results_df.pivot(index='codebook_num', columns='general_embed_dim', values='mse')
+
+    plt.figure(figsize=(10, 8))
+    plt.imshow(pivot_df, cmap='viridis_r')  # Reverse colormap so darker is better (lower MSE)
+
+    # Set labels
+    plt.colorbar(label='MSE (lower is better)')
+    plt.title('Parameter Search Results')
+    plt.xlabel('General Embedding Dimension')
+    plt.ylabel('Codebook Number')
+
+    # Set tick labels
+    plt.xticks(range(len(pivot_df.columns)), pivot_df.columns)
+    plt.yticks(range(len(pivot_df.index)), pivot_df.index)
+
+    # Add text annotations
+    for i in range(len(pivot_df.index)):
+        for j in range(len(pivot_df.columns)):
+            value = pivot_df.iloc[i, j]
+            if not np.isnan(value):
+                plt.text(j, i, f'{value:.4f}', ha='center', va='center',
+                         color='white' if value > pivot_df.values.mean() else 'black')
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_dir, "parameter_search_heatmap.png"))
+    plt.close()
+
+
+def run_scq_pipeline(data_path, output_dir="test_tmp", run_param_search=True,
+                     batch_size=4, epochs=20, learning_rate=0.001,
+                     codebook_num=5, general_embed_dim=128, codebook_dim=32, heads=8):
+    """
+    Main function to run the complete SCQ pipeline with optional parameter search.
+    """
+    # Load and prepare data
+    X_train, X_test, seq_length, feature_dim = load_data(data_path)
+
+    # Create output directory
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Save input data
+    np.save(os.path.join(output_dir, "input_data.npy"), X_test)
+
+    if run_param_search:
+        # Run parameter search to find optimal values
+        best_params, results_df = parameter_search(
+            X_train, X_test, feature_dim,
+            batch_size=batch_size,
+            epochs=epochs,
+            learning_rate=learning_rate,
+            output_dir=os.path.join(output_dir, "param_search")
+        )
+
+        # Use best parameters for final model - ensure they are integers
+        codebook_num = int(best_params['codebook_num'])
+        general_embed_dim = int(best_params['general_embed_dim'])
+
+    # Train final model with selected/best parameters
+    print(f"Training final model with codebook_num={codebook_num}, general_embed_dim={general_embed_dim}")
+    final_model, final_history, final_mse = train_scq_model(
+        X_train, X_test, feature_dim,
+        general_embed_dim=general_embed_dim,
+        codebook_dim=codebook_dim,
+        codebook_num=codebook_num,
+        batch_size=batch_size,
+        epochs=epochs,
+        learning_rate=learning_rate,
+        heads=heads,
+        output_dir=output_dir
+    )
+
+    # Evaluate the final model
+    test_dataset = create_dataset(X_test, batch_size=batch_size, is_training=False)
+    decoded_outputs, zq_outputs, pj_outputs = evaluate_model(final_model, test_dataset)
+
+    # Create visualizations
+    history_df = pd.DataFrame(final_history.history)
+    plot_training_history(
+        history_df,
+        title=f"Final Model Training History (codebook_num={codebook_num}, embed_dim={general_embed_dim})",
+        output_path=os.path.join(output_dir, "final_model_history_plot.png")
+    )
+
+    plot_reconstruction_comparison(
+        X_test,
+        np.vstack(decoded_outputs),
+        n_samples=5,
+        output_path=os.path.join(output_dir, "reconstruction_comparison.png")
+    )
+
+    print(f"Pipeline completed successfully.")
+    print(f"Final model MSE: {final_mse}")
+    print(f"Final model parameters: codebook_num={codebook_num}, general_embed_dim={general_embed_dim}")
+    print(f"Results saved to {output_dir}")
+
+    return final_model, final_mse, (codebook_num, general_embed_dim)
+
+
+# Example usage:
+if __name__ == "__main__":
+    # Example usage of the pipeline
+    data_path = "../data/Pep2Vec/wrapper_mhc1.parquet"
+
+    # # Run full pipeline with parameter search
+    # model, mse, best_params = run_scq_pipeline(
+    #     data_path=data_path,
+    #     output_dir="scq_results",
+    #     run_param_search=True,
+    #     batch_size=4,
+    #     epochs=20
+    # )
+
+    # Alternatively, run with specific parameters (no search)
+    model, mse, params = run_scq_pipeline(
+        data_path=data_path,
+        output_dir="scq_results_fixed",
+        run_param_search=False,
+        codebook_num=7,
+        general_embed_dim=256
+    )
