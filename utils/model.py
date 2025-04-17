@@ -491,6 +491,49 @@ class SCQ_model(tf.keras.models.Model):
         }
 
 
+class UNet(tf.keras.models.Model):
+    def __init__(self, input_dim=1024, base_filters=64):
+        super().__init__()
+        self.input_dim = input_dim
+
+        # Encoder layers
+        self.enc1 = layers.Dense(base_filters, activation='relu')
+        self.enc2 = layers.Dense(base_filters * 2, activation='relu')
+        self.enc3 = layers.Dense(base_filters * 4, activation='relu')
+        self.enc4 = layers.Dense(base_filters * 8, activation='relu')
+
+        # Bottleneck
+        self.bottleneck = layers.Dense(base_filters * 16, activation='relu')
+
+        # Decoder layers
+        self.dec4 = layers.Dense(base_filters * 8, activation='relu')
+        self.dec3 = layers.Dense(base_filters * 4, activation='relu')
+        self.dec2 = layers.Dense(base_filters * 2, activation='relu')
+        self.dec1 = layers.Dense(base_filters, activation='relu')
+
+        # Output layer
+        self.output_layer = layers.Dense(input_dim, activation='sigmoid')
+
+    def call(self, x):
+        # Encoder path
+        e1 = self.enc1(x)
+        e2 = self.enc2(e1)
+        e3 = self.enc3(e2)
+        e4 = self.enc4(e3)
+
+        # Bottleneck
+        b = self.bottleneck(e4)
+
+        # Decoder path with skip connections
+        d4 = self.dec4(b) + e4
+        d3 = self.dec3(d4) + e3
+        d2 = self.dec2(d3) + e2
+        d1 = self.dec1(d2) + e1
+
+        # Output
+        return self.output_layer(d1)
+
+
 '''import tensorflow as tf
 
 import tensorflow as tf
@@ -529,7 +572,7 @@ def random_one_hot_sequence(batch, seq_len, num_classes=21, class_probs=None):
     # Apply one-hot encoding
     one_hot_encoded = tf.one_hot(random_indices, depth=num_classes)
 
-    return one_hot_encoded'''
+    return one_hot_encoded
 
 
 def create_dataset(X, batch_size=1, is_training=True):
@@ -645,5 +688,241 @@ import os
 # print("Training complete. Model history saved as 'model_history.csv'.")
 # print("Input and output arrays saved as 'input_data.npy' and 'output_data.npz'.")
 # print("Shape of model outputs:", np.vstack(pj_outputs).shape)
+'''
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+
+class VQ_Layer(tf.keras.layers.Layer):
+    def __init__(self, embedding_dim, num_embeddings, beta, **kwargs):
+        super().__init__(**kwargs)
+        self.embedding_dim = embedding_dim
+        self.num_embeddings = num_embeddings
+        self.beta = beta
+
+        w_init = tf.random_uniform_initializer()
+        self.embeddings = tf.Variable(
+            initial_value=w_init(shape=(self.num_embeddings, self.embedding_dim), dtype="float32"),
+            trainable=True,
+            name="embeddings_vq"
+        )
+
+    def call(self, inputs):
+        input_shape = tf.shape(inputs)
+        flat_inputs = tf.reshape(inputs, [-1, self.embedding_dim])  # (B*T, emb_dim)
+
+        # Compute squared L2 distances
+        a_sq = tf.reduce_sum(flat_inputs ** 2, axis=1, keepdims=True)  # (B*T, 1)
+        ab = 2 * tf.matmul(flat_inputs, tf.transpose(self.embeddings))  # (B*T, num_embeddings)
+        b_sq = tf.reduce_sum(self.embeddings ** 2, axis=1)  # (num_embeddings,)
+        b_sq = tf.reshape(b_sq, [1, -1])  # (1, num_embeddings)
+
+        distances = a_sq - ab + b_sq  # (B*T, num_embeddings)
+
+        # Find closest embeddings and proceed as before
+        encoding_indices = tf.argmin(distances, axis=1)
+        encodings = tf.one_hot(encoding_indices, self.num_embeddings)
+        quantized = tf.matmul(encodings, self.embeddings)
+        quantized = tf.reshape(quantized, input_shape)
+
+        # Optionally compute perplexity
+        avg_probs = tf.reduce_mean(encodings, axis=0)
+        perplexity = tf.exp(-tf.reduce_sum(avg_probs * tf.math.log(avg_probs + 1e-10)))
+
+        indices_reshaped = tf.reshape(encoding_indices, input_shape[:-1])
+        return quantized, indices_reshaped, perplexity
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "embedding_dim": self.embedding_dim,
+            "num_embeddings": self.num_embeddings,
+            "beta": self.beta
+        })
+        return config
 
 
+# Helper function for convolutional blocks
+def conv_block(filters, kernel_size=3, activation='relu', padding='same', batch_norm=True, input_shape=None, name=None):
+    layers_list = []
+    conv_kwargs = dict(
+        filters=filters,
+        kernel_size=kernel_size,
+        padding=padding,
+        kernel_initializer='he_normal'
+    )
+    if input_shape:
+        conv_kwargs['input_shape'] = input_shape
+    layers_list.append(layers.Conv1D(**conv_kwargs))
+
+    if batch_norm:
+        layers_list.append(layers.BatchNormalization())
+    layers_list.append(layers.Activation(activation))
+
+    # 2nd Conv Layer
+    layers_list.append(layers.Conv1D(
+        filters=filters,
+        kernel_size=kernel_size,
+        padding=padding,
+        kernel_initializer='he_normal'
+    ))
+    if batch_norm:
+        layers_list.append(layers.BatchNormalization())
+    layers_list.append(layers.Activation(activation))
+
+    return keras.Sequential(layers_list, name=name)
+
+def upconv_block(filters, kernel_size=3, activation='relu', padding='same', batch_norm=True, name_prefix=None):
+    transpose_conv_name = f"{name_prefix}_transpose" if name_prefix else None
+    conv_block_name = f"{name_prefix}_conv" if name_prefix else None
+
+    upconv = layers.Conv1DTranspose(
+        filters=filters,
+        kernel_size=2,
+        strides=2,
+        padding=padding,
+        name=transpose_conv_name
+    )
+    conv = conv_block(
+        filters=filters,
+        kernel_size=kernel_size,
+        activation=activation,
+        padding=padding,
+        batch_norm=batch_norm,
+        name=conv_block_name
+    )
+    return upconv, conv
+
+
+class VQ1DUnet(keras.Model):
+    def __init__(self, input_dim, num_embeddings, embedding_dim, commitment_beta, **kwargs):
+        super().__init__(**kwargs)
+        self.input_channels = input_dim[-1]
+        self.seq_length = input_dim[0]
+        self.embedding_dim = embedding_dim
+        self.num_embeddings = num_embeddings
+        self.commitment_beta = commitment_beta
+
+        # Encoder
+        self.enc1 = conv_block(64, name='enc1')
+        self.pool1 = layers.MaxPooling1D(2, name='pool1')
+        self.enc2 = conv_block(128, name='enc2')
+        self.pool2 = layers.MaxPooling1D(2, name='pool2')
+        self.enc3 = conv_block(256, name='enc3')
+        self.pool3 = layers.MaxPooling1D(2, name='pool3')
+        self.enc4 = conv_block(512, name='enc4')
+        self.pool4 = layers.MaxPooling1D(2, name='pool4')
+
+        self.bottleneck = conv_block(self.embedding_dim, kernel_size=1, activation='linear', name='bottleneck')
+
+        # VQ Layer
+        self.vq_layer = VQ_Layer(self.embedding_dim, self.num_embeddings, self.commitment_beta, name="vq_layer")
+
+        # Decoder
+        self.up4_trans, self.dec4_conv = upconv_block(512, name_prefix='dec4')
+        self.up3_trans, self.dec3_conv = upconv_block(256, name_prefix='dec3')
+        self.up2_trans, self.dec2_conv = upconv_block(128, name_prefix='dec2')
+        self.up1_trans, self.dec1_conv = upconv_block(64, name_prefix='dec1')
+
+        self.output_layer = layers.Conv1D(self.input_channels, 1, activation='linear', padding='same', name='output')
+
+        # Loss trackers
+        self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
+        self.recon_loss_tracker = keras.metrics.Mean(name="recon_loss")
+        self.vq_loss_tracker = keras.metrics.Mean(name="vq_loss")
+
+    def call(self, inputs, training=False):
+        # --- Encoding ---
+        x1 = self.enc1(inputs)
+        x2 = self.enc2(self.pool1(x1))
+        x3 = self.enc3(self.pool2(x2))
+        x4 = self.enc4(self.pool3(x3))
+        x_bottleneck = self.bottleneck(self.pool4(x4))
+
+        # --- Vector Quantization ---
+        quantized, indices, perplexity = self.vq_layer(x_bottleneck)
+
+        # --- Decoding ---
+        y = self.up4_trans(quantized)
+        y = tf.concat([y, x4], axis=-1)
+        y = self.dec4_conv(y)
+
+        y = self.up3_trans(y)
+        y = tf.concat([y, x3], axis=-1)
+        y = self.dec3_conv(y)
+
+        y = self.up2_trans(y)
+        y = tf.concat([y, x2], axis=-1)
+        y = self.dec2_conv(y)
+
+        y = self.up1_trans(y)
+        y = tf.concat([y, x1], axis=-1)
+        y = self.dec1_conv(y)
+
+        output = self.output_layer(y)
+        vq_loss = tf.add_n(self.vq_layer.losses) if self.vq_layer.losses else tf.constant(0.0)
+
+        return output, quantized, indices, vq_loss
+
+    @property
+    def metrics(self):
+        return [self.total_loss_tracker, self.recon_loss_tracker, self.vq_loss_tracker]
+
+    def train_step(self, data):
+        if isinstance(data, tuple):
+            x = data[0]
+            y = data[1] if len(data) > 1 else data[0]
+        else:
+            x = y = data
+
+        with tf.GradientTape() as tape:
+            reconstruction, _, _, vq_loss = self(x, training=True)
+            recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
+            total_loss = recon_loss + vq_loss
+
+        grads = tape.gradient(total_loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
+        self.total_loss_tracker.update_state(total_loss)
+        self.recon_loss_tracker.update_state(recon_loss)
+        self.vq_loss_tracker.update_state(vq_loss)
+
+        return {m.name: m.result() for m in self.metrics}
+
+    def test_step(self, data):
+        if isinstance(data, tuple):
+            x = data[0]
+            y = data[1] if len(data) > 1 else data[0]
+        else:
+            x = y = data
+
+        reconstruction, _, _, vq_loss = self(x, training=False)
+        recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
+        total_loss = recon_loss + vq_loss
+
+        self.total_loss_tracker.update_state(total_loss)
+        self.recon_loss_tracker.update_state(recon_loss)
+        self.vq_loss_tracker.update_state(vq_loss)
+
+        return {m.name: m.result() for m in self.metrics}
+
+
+# Example Usage:
+# Assuming input images are 128x128 pixels with 3 channels
+# input_shape = (128, 128, 3)
+# num_clusters = 512  # Number of desired clusters (codebook size)
+# latent_dim = 64     # Dimension of each vector in the codebook and bottleneck
+
+# model = VQUnet(input_shape=input_shape, num_embeddings=num_clusters, embedding_dim=latent_dim)
+# model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4))
+
+# # Prepare your dataset (e.g., tf.data.Dataset)
+# # train_dataset = ...
+# # test_dataset = ...
+
+# # Train the model
+# # model.fit(train_dataset, epochs=10, validation_data=test_dataset)
+
+# # After training, you can get outputs:
+# # test_images, _ = next(iter(test_dataset.batch(4)))
+# # reconstruction, quantized_latent, cluster_map = model.predict(test_images)

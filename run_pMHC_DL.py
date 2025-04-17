@@ -542,9 +542,9 @@ if __name__ == "__main__":
     #     traceback.print_exc()
     # simple run
     simple_run()'''
+from sklearn.model_selection import train_test_split
 
-
-import os
+'''import os
 import numpy as np
 import pandas as pd
 import tensorflow as tf
@@ -562,6 +562,7 @@ def create_dataset(X, batch_size=4, is_training=True):
     if is_training:
         dataset = dataset.shuffle(buffer_size=len(X))
     dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset
 
 
@@ -909,4 +910,260 @@ if __name__ == "__main__":
         batch_size=1,
         general_embed_dim=256,
         epochs=20
-    )
+    )'''
+
+# example of running VQUnet
+from utils.model import VQ1DUnet
+
+# TODO implement a simple training pipeline for VQUnet
+import tensorflow as tf
+import numpy as np
+import time # To time training
+import pandas as pd
+
+# Assume VectorQuantizer and VQUnet classes are defined above this code
+# Or import them:
+# from your_module import VectorQuantizer, VQUnet
+
+# --- Configuration ---
+INPUT_SHAPE = (64, 64, 1) # IMPORTANT: Adjust to your MHC1 data's shape (height, width, channels)
+NUM_EMBEDDINGS = 128       # Number of clusters/codes in the codebook
+EMBEDDING_DIM = 32         # Dimension of each codebook vector (latent dim in bottleneck)
+BATCH_SIZE = 32
+EPOCHS = 10                # Number of training epochs
+LEARNING_RATE = 1e-4
+NUM_TRAIN_SAMPLES = 1000   # Replace with actual number
+NUM_VAL_SAMPLES = 200      # Replace with actual number (optional)
+
+# --- Data Loading and Preparation ---
+# TODO: Replace this section with your actual MHC1 data loading
+# def load_mhc1_placeholder_data(num_samples, shape):
+#     """Generates random placeholder data."""
+#     print(f"Generating {num_samples} placeholder samples with shape {shape}...")
+#     # Generate random data (e.g., pixel values between 0 and 1)
+#     data = np.random.rand(num_samples, *shape).astype(np.float32)
+#     print("Placeholder data generated.")
+#     return data
+
+def create_dataset(X, batch_size=4, is_training=True):
+    """Create a TensorFlow dataset from input array X."""
+    dataset = tf.data.Dataset.from_tensor_slices(X)
+    if is_training:
+        dataset = dataset.shuffle(buffer_size=len(X))
+    dataset = dataset.batch(batch_size)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    return dataset
+
+
+def load_data(data_path, test_size=0.2, random_state=42):
+    """Load and prepare data for training."""
+    # Load data
+    embeddings = pd.read_parquet(data_path)
+
+    # Select the latent columns
+    latent_columns = [col for col in embeddings.columns if 'latent' in col]
+    print(f"Found {len(latent_columns)} latent columns")
+
+    # Extract values and reshape
+    X = embeddings[latent_columns].values
+    seq_length = len(latent_columns)
+    feature_dim = 1
+    X = X.reshape(-1, seq_length, feature_dim)
+
+    # Split into train and test sets
+    X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
+
+    return X_train, X_test, seq_length, feature_dim
+    
+data_path = "data/Pep2Vec/wrapper_mhc1.parquet"
+# Load or generate data
+print("Loading/Generating Training Data...")
+train_data, test_data, seq_length, feature_dim = load_data(data_path, test_size=0.2, random_state=42) # Load training data
+
+# Create tf.data Datasets for efficient training
+# For reconstruction, input and target are the same (x, x)
+print("Creating TensorFlow Datasets...")
+train_dataset = create_dataset(train_data, batch_size=BATCH_SIZE, is_training=True)
+val_dataset = create_dataset(test_data, batch_size=BATCH_SIZE, is_training=False)
+print("Datasets created.")
+
+
+
+# --- Model Instantiation ---
+print("Building the VQ-UNet model...")
+input_shape = (seq_length, feature_dim)
+
+model = VQ1DUnet(
+    input_dim=input_shape,
+    num_embeddings=NUM_EMBEDDINGS,
+    embedding_dim=EMBEDDING_DIM,
+    commitment_beta=0.25,
+)
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE))
+history = model.fit(train_dataset, epochs=EPOCHS, validation_data=val_dataset)
+
+print("Model built.")
+
+# --- Compile the Model ---
+# The loss calculation is handled within the train_step,
+# but we still need to provide an optimizer.
+print("Compiling the model...")
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE))
+print("Model compiled.")
+
+# --- Training ---
+print(f"Starting training for {EPOCHS} epochs...")
+start_time = time.time()
+
+history = model.fit(
+    train_dataset,
+    epochs=EPOCHS,
+    validation_data=val_dataset # Pass validation data here
+)
+
+end_time = time.time()
+print(f"\nTraining finished in {end_time - start_time:.2f} seconds.")
+
+# --- (Optional) Post-Training ---
+print("\nTraining History:")
+print(history.history)
+
+# Example: Get reconstruction and latent codes for a batch from validation set
+print("\nExample inference on validation data:")
+example_batch = next(iter(val_dataset))  # Get one batch
+output = model.predict(example_batch)
+if isinstance(output, (list, tuple)) and len(output) == 3:
+    reconstruction, quantized_latent, cluster_indices = output
+else:
+    reconstruction = output
+
+# Visualize or save the reconstruction
+# TODO: Implement visualization or saving of the reconstruction
+end_time = time.time()
+print(f"\nTraining finished in {end_time - start_time:.2f} seconds.")
+
+# --- Visualize Training Metrics ---
+import matplotlib.pyplot as plt
+
+
+def plot_training_metrics(history):
+    """Plot the training metrics over epochs."""
+    fig, axes = plt.subplots(3, 1, figsize=(12, 15), sharex=True)
+
+    # Plot total loss
+    axes[0].plot(history.history['total_loss'], 'b-', label='Train')
+    if 'val_total_loss' in history.history:
+        axes[0].plot(history.history['val_total_loss'], 'r-', label='Validation')
+    axes[0].set_title('Total Loss')
+    axes[0].set_ylabel('Loss')
+    axes[0].grid(True)
+    axes[0].legend()
+
+    # Plot reconstruction loss
+    axes[1].plot(history.history['recon_loss'], 'b-', label='Train')
+    if 'val_recon_loss' in history.history:
+        axes[1].plot(history.history['val_recon_loss'], 'r-', label='Validation')
+    axes[1].set_title('Reconstruction Loss')
+    axes[1].set_ylabel('Loss')
+    axes[1].grid(True)
+    axes[1].legend()
+
+    # Plot VQ loss
+    axes[2].plot(history.history['vq_loss'], 'b-', label='Train')
+    if 'val_vq_loss' in history.history:
+        axes[2].plot(history.history['val_vq_loss'], 'r-', label='Validation')
+    axes[2].set_title('VQ Loss')
+    axes[2].set_xlabel('Epochs')
+    axes[2].set_ylabel('Loss')
+    axes[2].grid(True)
+    axes[2].legend()
+
+    plt.tight_layout()
+    plt.savefig('vqvae_training_metrics.png')
+    plt.show()
+
+
+# Plot the training metrics
+print("\nPlotting training history...")
+plot_training_metrics(history)
+
+# --- Example Inference and Visualization ---
+print("\nPerforming example inference on validation data...")
+example_batch = next(iter(val_dataset))  # Get one batch
+output = model(example_batch, training=False)
+
+# Unpack the output
+reconstruction, quantized_latent, cluster_indices, _ = output
+
+
+# Visualize reconstructions
+def plot_reconstructions(original, reconstructed, n_samples=5):
+    """Plot comparison between original and reconstructed sequences."""
+    n_samples = min(n_samples, len(original))
+    plt.figure(figsize=(15, 3 * n_samples))
+
+    for i in range(n_samples):
+        # Plot original sequence
+        plt.subplot(n_samples, 2, 2 * i + 1)
+        plt.plot(original[i, :, 0])  # Assuming last dim is feature dim with size 1
+        plt.title(f"Original Sequence {i + 1}")
+        plt.grid(True)
+
+        # Plot reconstructed sequence
+        plt.subplot(n_samples, 2, 2 * i + 2)
+        plt.plot(reconstructed[i, :, 0])  # Assuming same shape as original
+        plt.title(f"Reconstructed Sequence {i + 1}")
+        plt.grid(True)
+
+    plt.tight_layout()
+    plt.savefig('vqvae_reconstructions.png')
+    plt.show()
+
+
+print("\nVisualizing reconstructions...")
+plot_reconstructions(example_batch.numpy(), reconstruction.numpy())
+
+
+# Visualize codebook usage distribution
+def plot_codebook_usage(indices, num_embeddings):
+    """Visualize the usage distribution of codebook vectors."""
+    # Flatten all indices
+    flat_indices = tf.reshape(indices, [-1]).numpy()
+
+    # Count occurrences of each index
+    unique_indices, counts = np.unique(flat_indices, return_counts=True)
+
+    # Create a histogram for all possible indices (including unused ones)
+    full_histogram = np.zeros(num_embeddings)
+    for idx, count in zip(unique_indices, counts):
+        full_histogram[idx] = count
+
+    # Plot the histogram
+    plt.figure(figsize=(12, 6))
+    plt.bar(range(num_embeddings), full_histogram)
+    plt.xlabel('Codebook Index')
+    plt.ylabel('Usage Count')
+    plt.title('Codebook Vector Usage Distribution')
+    plt.grid(True, axis='y')
+
+    # Calculate and display codebook utilization
+    utilization = len(unique_indices) / num_embeddings * 100
+    plt.text(0.5, 0.9, f'Codebook Utilization: {utilization:.1f}% ({len(unique_indices)}/{num_embeddings})',
+             transform=plt.gca().transAxes, ha='center', fontsize=12,
+             bbox=dict(facecolor='white', alpha=0.8))
+
+    plt.tight_layout()
+    plt.savefig('vqvae_codebook_usage.png')
+    plt.show()
+
+
+print("\nAnalyzing codebook usage...")
+plot_codebook_usage(cluster_indices, NUM_EMBEDDINGS)
+
+# Save the model
+model.save_weights('vqvae_model_weights.h5')
+print("\nModel weights saved to 'vqvae_model_weights.h5'")
+
+# You can now save the model weights if needed
+# model.save_weights('vq_unet_mhc1_weights.h5')
+# print("Model weights saved.")
