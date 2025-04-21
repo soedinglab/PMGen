@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 import keras
 from keras import layers
@@ -8,7 +9,7 @@ from keras import layers
 # ------------------------------
 class SCQ(layers.Layer):
     def __init__(self, num_embed=64, dim_embed=32, dim_input=128, lambda_reg=0.1, proj_iter=10,
-                 descrete_loss=False, beta_loss=0.25, **kwargs):
+                 discrete_loss=False, beta_loss=0.25, **kwargs):
         """
         Soft Convex Quantization (SCQ) layer.
 
@@ -18,10 +19,10 @@ class SCQ(layers.Layer):
             dim_input: Dimension of input features (projected to dim_embed).
             lambda_reg: Regularization parameter in the SCQ objective.
             proj_iter: Number of iterations for the iterative simplex projection.
-            descrete_loss: if True, commitment and codebook loss are calculated similar
+            discrete_loss: if True, commitment and codebook loss are calculated similar
                 to VQ-VAE loss, with stop-gradient operation. If False, only quantization error
                 is calculated as loss |Z_q - Z_e|**2
-            beta_loss: A float to be used in VQ loss. Only used if descrete_loss==True.
+            beta_loss: A float to be used in VQ loss. Only used if discrete_loss==True.
                 multiplied to (1-b)*commitment_loss + b*codebook_loss
         """
         super().__init__(**kwargs)
@@ -30,7 +31,7 @@ class SCQ(layers.Layer):
         self.dim_input = dim_input
         self.lambda_reg = lambda_reg
         self.proj_iter = proj_iter
-        self.descrete_loss = descrete_loss
+        self.discrete_loss = discrete_loss
         self.beta_loss = beta_loss
         self.epsilon = 1e-5
 
@@ -112,7 +113,7 @@ class SCQ(layers.Layer):
         Zq = tf.transpose(Zq_flat)  # (B*N, dim_embed)
 
         # 6. calculate quantization loss, combined commitment and codebook losses
-        if not self.descrete_loss:
+        if not self.discrete_loss:
             loss = tf.reduce_mean((Zq - flat_inputs) ** 2)  # (B*N, dim_embed)
         else:
             commitment_loss = tf.reduce_mean((tf.stop_gradient(Zq) - flat_inputs) ** 2)
@@ -328,14 +329,14 @@ class Decoder(layers.Layer):
 
 class SCQ_model(tf.keras.models.Model):
     def __init__(self, input_dim=1024,  general_embed_dim=128, codebook_dim=16, codebook_num=64,
-                 descrete_loss=False, heads=4, names='SCQ_model',
+                 discrete_loss=False, heads=4, names='SCQ_model',
                  weight_recon=1, weight_vq=0.2, **kwargs):
         super().__init__()
         self.input_dim = input_dim
         self.general_embed_dim = general_embed_dim
         self.codebook_dim = codebook_dim
         self.codebook_num = codebook_num
-        self.descrete_loss = descrete_loss
+        self.discrete_loss = discrete_loss
         self.heads = heads
         self.names = names
         self.weight_recon = tf.cast(weight_recon, tf.float32)
@@ -345,7 +346,7 @@ class SCQ_model(tf.keras.models.Model):
         self.encoder = Encoder(dim_input=self.input_dim, dim_embed=self.general_embed_dim, heads=self.heads)
 
         self.scq = SCQ(dim_input=self.general_embed_dim, dim_embed=self.codebook_dim,
-                       num_embed=self.codebook_num, descrete_loss=self.descrete_loss)
+                       num_embed=self.codebook_num, discrete_loss=self.discrete_loss)
 
         self.decoder = Decoder(dim_input=self.codebook_dim, dim_embed=self.general_embed_dim,
                                dim_output=self.input_dim, heads=self.heads)
@@ -617,7 +618,7 @@ import os
 # # Generate random input data (batch_size, seq_length, feature_dim)
 # x_train = random_one_hot_sequence(batch_size, seq_length, feature_dim)
 # # Initialize SCQ model
-# model = SCQ_model(input_dim=feature_dim, general_embed_dim=128, codebook_dim=32, codebook_num=5, descrete_loss=False, heads=8)
+# model = SCQ_model(input_dim=feature_dim, general_embed_dim=128, codebook_dim=32, codebook_num=5, discrete_loss=False, heads=8)
 # # Compile model
 # model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001))
 # # Train model and capture history
@@ -657,7 +658,7 @@ import os
 # test_dataset = create_dataset(X_test, batch_size=batch_size, is_training=False)
 #
 # # Initialize SCQ model
-# model = SCQ_model(input_dim=feature_dim, general_embed_dim=128, codebook_dim=32, codebook_num=5, descrete_loss=False, heads=8)
+# model = SCQ_model(input_dim=feature_dim, general_embed_dim=128, codebook_dim=32, codebook_num=5, discrete_loss=False, heads=8)
 # # Compile model
 # model.compile(optimizer=keras.optimizers.Adam(learning_rate=0.001))
 # # Train model and capture history
@@ -693,6 +694,266 @@ import os
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
+
+# original SCQ
+class SCQ_layer(layers.Layer):
+    def __init__(self, num_embed=64, dim_embed=32, lambda_reg=0.5, proj_iter=10,
+                 discrete_loss=False, beta_loss=0.25, reset_dead_codes=True,
+                 usage_threshold=1e-5, reset_interval=100, **kwargs):
+        """
+        Soft Convex Quantization (SCQ) layer.
+
+        Args:
+            num_embed: Number of codebook vectors.
+            dim_embed: Embedding dimension (for both encoder and codebook).
+            lambda_reg: Regularization parameter in the SCQ objective.
+            proj_iter: Number of iterations for the iterative simplex projection.
+            discrete_loss: if True, commitment and codebook loss are calculated similar
+                to VQ-VAE loss, with stop-gradient operation. If False, only quantization error
+                is calculated as loss |Z_q - Z_e|**2
+            beta_loss: A float to be used in VQ loss. Only used if discrete_loss==True.
+                multiplied to (1-b)*commitment_loss + b*codebook_loss
+            reset_dead_codes: Whether to reset dead codebook vectors
+            usage_threshold: Threshold below which a codebook vector is considered "dead"
+            reset_interval: Reset dead codes every this many calls to the layer
+        """
+        super().__init__(**kwargs)
+        self.num_embed = num_embed
+        self.dim_embed = dim_embed
+        self.lambda_reg = lambda_reg
+        self.proj_iter = proj_iter
+        self.discrete_loss = discrete_loss
+        self.beta_loss = beta_loss
+        self.epsilon = 1e-5
+
+        # Codebook reset parameters
+        self.call_count = 0
+        self.reset_dead_codes = True
+        self.usage_threshold = 1e-4
+        self.reset_interval = 50
+
+    def build(self, input_shape):
+        # Learnable scale and bias for layer normalization.
+        self.gamma = self.add_weight(
+            shape=(self.dim_embed,),
+            initializer="ones",
+            trainable=True,
+            name="ln_gamma")
+        self.beta = self.add_weight(
+            shape=(self.dim_embed,),
+            initializer="zeros",
+            trainable=True,
+            name="ln_beta")
+        # Codebook: each column is one codebook vector.
+        self.embed_w = self.add_weight(
+            shape=(self.dim_embed, self.num_embed),
+            initializer='uniform',
+            trainable=True,
+            name='scq_embedding')
+        # Projection weights to map input features into the embedding space.
+        self.d_w = self.add_weight(
+            shape=(self.dim_embed, self.dim_embed),
+            initializer='random_normal',
+            trainable=True,
+            name='scq_w')
+        self.d_b = self.add_weight(
+            shape=(self.dim_embed,),
+            initializer='zeros',
+            trainable=True,
+            name='scq_b')
+
+        # Usage tracking for codebook vectors
+        self.code_usage = self.add_weight(
+            shape=(self.num_embed,),
+            initializer='zeros',
+            trainable=False,
+            name='code_usage',
+            dtype=tf.float32
+        )
+
+    def call(self, inputs):
+        """
+        Forward pass for SCQ.
+        Args:
+            inputs: Tensor of shape (B, N, dim_input)
+        Returns:
+            Quantized output: Tensor of shape (B, N, dim_embed)
+        """
+        # 1. Project inputs to the embedding space and apply layer normalization.
+        x = tf.matmul(inputs, self.d_w) + self.d_b  # (B, N, dim_embed)
+        x = self.layernorm(x)
+
+        input_shape = tf.shape(x)  # (B, N, dim_embed)
+        flat_inputs = tf.reshape(x, [-1, self.dim_embed])  # (B*N, dim_embed)
+
+        # 2. Compute hard VQ assignments as initialization.
+        flat_detached = tf.stop_gradient(flat_inputs)
+        x_norm_sq = tf.reduce_sum(flat_detached ** 2, axis=1, keepdims=True)  # (B*N, 1)
+        codebook_norm_sq = tf.reduce_sum(self.embed_w ** 2, axis=0, keepdims=True)  # (1, num_embed)
+        dot_product = tf.matmul(flat_detached, self.embed_w)  # (B*N, num_embed)
+        distances = x_norm_sq + codebook_norm_sq - 2 * dot_product  # (B*N, num_embed)
+
+        assign_indices = tf.argmin(distances, axis=1)  # (B*N,)
+        P_tilde = tf.one_hot(assign_indices, depth=self.num_embed, dtype=tf.float32)  # (B*N, num_embed)
+        P_tilde = tf.transpose(P_tilde)  # (num_embed, B*N)
+
+        # Track codebook usage
+        if self.reset_dead_codes:
+            # Update usage counts (moving average)
+            batch_usage = tf.reduce_mean(tf.transpose(P_tilde), axis=0)  # (num_embed,)
+            decay = 0.99  # Exponential moving average decay factor
+            self.code_usage.assign(decay * self.code_usage + (1 - decay) * batch_usage)
+
+            # Periodically check for dead codes and reset them
+            self.call_count += 1
+            if self.call_count % self.reset_interval == 0:
+                self._reset_dead_codes(flat_inputs)
+
+        # 3. Solve the SCQ optimization via a linear system.
+        C = self.embed_w  # (dim_embed, num_embed)
+        Z = tf.transpose(flat_inputs)  # (dim_embed, B*N)
+        CtC = tf.matmul(C, C, transpose_a=True)  # (num_embed, num_embed)
+        I = tf.eye(self.num_embed, dtype=tf.float32)
+        A = CtC + self.lambda_reg * I  # (num_embed, num_embed)
+        CtZ = tf.matmul(C, Z, transpose_a=True)  # (num_embed, B*N)
+        b = CtZ + self.lambda_reg * P_tilde  # (num_embed, B*N)
+        P_sol = tf.linalg.solve(A, b)  # Unconstrained solution: (num_embed, B*N)
+
+        # 4. Project each column of P_sol onto the probability simplex.
+        P_proj = self.project_columns_to_simplex(P_sol)  # (num_embed, B*N)
+        # P_proj = tf.nn.softmax(P_sol, axis=0)
+        out_P_proj = tf.transpose(P_proj)  # (B*N, num_embed)
+        out_P_proj = tf.reshape(out_P_proj, (input_shape[0], input_shape[1], -1))  # (B,N,num_embed)
+        # out_P_proj = tf.reduce_mean(out_P_proj, axis=-1, keepdims=True) #(B,N,1)
+
+        # 5. Reconstruct quantized output: Z_q = C * P_proj.
+        Zq_flat = tf.matmul(C, P_proj)  # (dim_embed, B*N)
+        Zq = tf.transpose(Zq_flat)  # (B*N, dim_embed)
+
+        # 6. calculate quantization loss, combined commitment and codebook losses
+        if not self.discrete_loss:
+            # Add regularization to encourage more uniform codebook usage
+            p_uniform = tf.ones([self.num_embed], dtype=tf.float32) / tf.cast(self.num_embed, tf.float32)
+            p_mean = tf.reduce_mean(out_P_proj, axis=[0, 1])  # Average usage across batch
+            entropy_reg = -tf.reduce_sum(p_mean * tf.math.log(p_mean + 1e-10))  # Maximize entropy
+
+            # Calculate cosine similarities between codebook vectors
+            norm_codebook = tf.nn.l2_normalize(self.embed_w, axis=0)  # (dim_embed, num_embed)
+            similarities = tf.matmul(tf.transpose(norm_codebook), norm_codebook)  # (num_embed, num_embed)
+
+            # Create a mask to ignore self-similarities
+            mask = tf.ones_like(similarities) - tf.eye(self.num_embed)
+            masked_similarities = similarities * mask
+
+            # Penalize high similarities between different codebook vectors
+            diversity_loss = tf.reduce_mean(tf.nn.relu(masked_similarities - 0.1))  # Penalize similarities > 0.1
+
+            # Combine with existing loss
+            loss = tf.reduce_mean((Zq - flat_inputs) ** 2) + 0.5 * entropy_reg + 0.2 * diversity_loss
+
+        else:
+            commitment_loss = tf.reduce_mean((tf.stop_gradient(Zq) - flat_inputs) ** 2)
+            codebook_loss = tf.reduce_mean((Zq - flat_detached) ** 2)
+            loss = (
+                    (tf.cast(1 - self.beta_loss, tf.float32) * commitment_loss) +
+                    (tf.cast(self.beta_loss, tf.float32) * codebook_loss)
+            )
+
+        Zq = tf.reshape(Zq, input_shape)  # (B, N, dim_embed)
+        self.add_loss(loss)  # Register the loss with the layer
+
+        # 7. Calculate perplexity (similar to VQ layer)
+        # Reshape out_P_proj to simplify calculations
+        flat_P_proj = tf.reshape(out_P_proj, [-1, self.num_embed])  # (B*N, num_embed)
+
+        # Calculate average probability per codebook vector across batch
+        avg_probs = tf.reduce_mean(flat_P_proj, axis=0)  # (num_embed,)
+
+        # Calculate perplexity: 2^(entropy)
+        # Higher perplexity means more uniform codebook usage
+        perplexity = tf.exp(-tf.reduce_sum(avg_probs * tf.math.log(avg_probs + 1e-10)))
+
+        return Zq, out_P_proj, loss, perplexity  # (B,N,embed_dim), #(B,N,num_embed), (1,), (1,)
+
+    def project_columns_to_simplex(self, P_sol):
+        """Projects columns of a matrix to the probability simplex."""
+        # Transpose to work with rows instead of columns
+        P_t = tf.transpose(P_sol)  # (B*N, num_embed)
+        # Sort rows in descending order
+        sorted_P = tf.sort(P_t, axis=1, direction='DESCENDING')
+        # Compute cumulative sums and thresholds
+        cumsum = tf.cumsum(sorted_P, axis=1)
+        k = tf.range(1, tf.shape(sorted_P)[1] + 1, dtype=tf.float32)
+        thresholds = (cumsum - 1.0) / k
+        # Find maximum valid index per row (cast to int32 explicitly)
+        valid_mask = sorted_P > thresholds
+        max_indices = tf.argmax(
+            tf.cast(valid_mask, tf.int32) *
+            tf.range(tf.shape(sorted_P)[1], dtype=tf.int32),
+            axis=1
+        )
+        max_indices = tf.cast(max_indices, tf.int32)  # Explicit cast to int32
+        # Gather required cumulative sums
+        batch_indices = tf.range(tf.shape(P_t)[0], dtype=tf.int32)
+        gather_indices = tf.stack([batch_indices, max_indices], axis=1)
+        # Rest of the code remains the same...
+        selected_cumsum = tf.gather_nd(cumsum, gather_indices)
+        theta = (selected_cumsum - 1.0) / tf.cast(max_indices + 1, tf.float32)
+        # Apply projection and transpose back
+        P_projected = tf.nn.relu(P_t - theta[:, tf.newaxis])
+        return tf.transpose(P_projected)
+
+    def layernorm(self, inputs):
+        """
+        Custom layer normalization over the last dimension.
+        """
+        mean = tf.reduce_mean(inputs, axis=-1, keepdims=True)
+        variance = tf.math.reduce_variance(inputs, axis=-1, keepdims=True)
+        normed = (inputs - mean) / tf.sqrt(variance + self.epsilon)
+        return self.gamma * normed + self.beta
+
+    def _reset_dead_codes(self, encoder_outputs):
+        """
+        Reset dead (unused) codebook vectors with improved strategy.
+
+        Args:
+            encoder_outputs: Tensor of encoder outputs (B*N, dim_embed)
+        """
+        # Find dead codes (those with usage below threshold)
+        dead_codes = tf.where(self.code_usage < self.usage_threshold)
+        num_dead = tf.shape(dead_codes)[0]
+
+        if num_dead > 0:
+            tf.print(f"Resetting {num_dead} dead codebook vectors")
+
+            # Identify most used codes
+            most_used_idx = tf.argsort(self.code_usage, direction='DESCENDING')[:tf.maximum(3, num_dead)]
+            most_used = tf.gather(tf.transpose(self.embed_w), most_used_idx)
+
+            # Strategy: Use a mix of random encoder outputs and perturbations of most used vectors
+            batch_size = tf.shape(encoder_outputs)[0]
+
+            for i in range(num_dead):
+                dead_idx = tf.cast(dead_codes[i][0], tf.int32)
+
+                if i % 2 == 0 and batch_size > 0:  # Even indices: use encoder outputs
+                    random_idx = tf.random.uniform(shape=[], minval=0, maxval=batch_size, dtype=tf.int32)
+                    new_vector = encoder_outputs[random_idx]
+                else:  # Odd indices: perturb most used vectors
+                    source_idx = i % tf.shape(most_used)[0]
+                    source_vector = most_used[source_idx]
+                    # Add significant noise to create meaningful variation
+                    noise = tf.random.normal(shape=tf.shape(source_vector), stddev=0.3)
+                    new_vector = source_vector + noise
+                    # Normalize to maintain scale
+                    new_vector = new_vector / (tf.norm(new_vector) + 1e-8) * tf.norm(source_vector)
+
+                # Update the embeddings at the dead code position
+                self.embed_w[:, dead_idx].assign(tf.reshape(new_vector, [self.dim_embed]))
+                # Reset usage counter for the revived code
+                self.code_usage[dead_idx].assign(
+                    tf.ones_like(self.code_usage[dead_idx]) * 0.2)  # Start with higher usage
+
 
 class VQ_Layer(tf.keras.layers.Layer):
     def __init__(self, embedding_dim, num_embeddings, beta, **kwargs):
@@ -786,6 +1047,7 @@ def conv_block(filters, kernel_size=3, activation='relu', padding='same', batch_
 
     return keras.Sequential(layers_list, name=name)
 
+
 def upconv_block(filters, kernel_size=3, activation='relu', padding='same', batch_norm=True, name_prefix=None):
     transpose_conv_name = f"{name_prefix}_transpose" if name_prefix else None
     conv_block_name = f"{name_prefix}_conv" if name_prefix else None
@@ -808,7 +1070,7 @@ def upconv_block(filters, kernel_size=3, activation='relu', padding='same', batc
     return upconv, conv
 
 
-class VQ1DUnet(keras.Model):
+class SCQ1DAutoEncoder(keras.Model):
     def __init__(self, input_dim, num_embeddings, embedding_dim, commitment_beta, **kwargs):
         super().__init__(**kwargs)
         self.input_channels = input_dim[-1]
@@ -830,7 +1092,9 @@ class VQ1DUnet(keras.Model):
         self.bottleneck = conv_block(self.embedding_dim, kernel_size=1, activation='linear', name='bottleneck')
 
         # VQ Layer
-        self.vq_layer = VQ_Layer(self.embedding_dim, self.num_embeddings, self.commitment_beta, name="vq_layer")
+        # self.vq_layer = VQ_Layer(self.embedding_dim, self.num_embeddings, self.commitment_beta, name="vq_layer")
+        self.vq_layer = SCQ_layer(num_embed=self.num_embeddings, dim_embed=self.embedding_dim,
+                                  beta_loss=self.commitment_beta, discrete_loss=False)
 
         # Decoder
         self.up4_trans, self.dec4_conv = upconv_block(512, name_prefix='dec4')
@@ -844,6 +1108,7 @@ class VQ1DUnet(keras.Model):
         self.total_loss_tracker = keras.metrics.Mean(name="total_loss")
         self.recon_loss_tracker = keras.metrics.Mean(name="recon_loss")
         self.vq_loss_tracker = keras.metrics.Mean(name="vq_loss")
+        self.perplexity_tracker = keras.metrics.Mean(name="perplexity")
 
     def call(self, inputs, training=False):
         # --- Encoding ---
@@ -854,33 +1119,34 @@ class VQ1DUnet(keras.Model):
         x_bottleneck = self.bottleneck(self.pool4(x4))
 
         # --- Vector Quantization ---
-        quantized, indices, perplexity = self.vq_layer(x_bottleneck)
+        quantized, indices, vq_loss, perplexity = self.vq_layer(x_bottleneck)
 
         # --- Decoding ---
         y = self.up4_trans(quantized)
-        # y = tf.concat([y, x4], axis=-1)
         y = self.dec4_conv(y)
 
         y = self.up3_trans(y)
-        # y = tf.concat([y, x3], axis=-1)
         y = self.dec3_conv(y)
 
         y = self.up2_trans(y)
-        # y = tf.concat([y, x2], axis=-1)
         y = self.dec2_conv(y)
 
         y = self.up1_trans(y)
-        # y = tf.concat([y, x1], axis=-1)
         y = self.dec1_conv(y)
 
         output = self.output_layer(y)
         vq_loss = tf.add_n(self.vq_layer.losses) if self.vq_layer.losses else tf.constant(0.0)
 
-        return output, quantized, indices, vq_loss
+        return output, quantized, indices, vq_loss, perplexity
 
     @property
     def metrics(self):
-        return [self.total_loss_tracker, self.recon_loss_tracker, self.vq_loss_tracker]
+        return [
+            self.total_loss_tracker,
+            self.recon_loss_tracker,
+            self.vq_loss_tracker,
+            self.perplexity_tracker
+        ]
 
     def train_step(self, data):
         if isinstance(data, tuple):
@@ -890,16 +1156,50 @@ class VQ1DUnet(keras.Model):
             x = y = data
 
         with tf.GradientTape() as tape:
-            reconstruction, _, _, vq_loss = self(x, training=True)
+            reconstruction, quantized, indices, vq_loss, perplexity = self(x, training=True)
+
+            # Basic reconstruction loss
             recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
-            total_loss = recon_loss + vq_loss + self.commitment_beta * tf.reduce_mean(tf.math.squared_difference(x, reconstruction))
-            vq_loss = tf.add_n(self.vq_layer.losses) if self.vq_layer.losses else tf.constant(0.0)
+
+            # Add feature matching loss by comparing intermediate features
+            with tape.stop_recording():
+                _, mid_features, _, _, _ = self(reconstruction, training=False)
+                orig_mid_features = quantized
+
+            # Feature matching loss to maintain semantic information
+            feature_loss = tf.reduce_mean(tf.math.squared_difference(orig_mid_features, mid_features))
+
+            # Combine losses with adjusted weights
+            total_loss = recon_loss + vq_loss + 0.1 * feature_loss
+
+            # Add codebook usage penalty if perplexity is too low
+            usage_penalty = tf.cond(
+                perplexity < self.num_embeddings * 0.5,
+                lambda: 0.1 * (self.num_embeddings * 0.5 - perplexity),
+                lambda: 0.0
+            )
+            total_loss += usage_penalty
 
         grads = tape.gradient(total_loss, self.trainable_variables)
+
+        # Clip gradients to prevent instability
+        grads, _ = tf.clip_by_global_norm(grads, 5.0)
+
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
+
+        # Update all the trackers
         self.total_loss_tracker.update_state(total_loss)
         self.recon_loss_tracker.update_state(recon_loss)
         self.vq_loss_tracker.update_state(vq_loss)
+        self.perplexity_tracker.update_state(perplexity)
+
+        # Print the perplexity every 100 steps
+        step = self.optimizer.iterations
+        tf.cond(
+            tf.equal(tf.math.floormod(step, 100), 0),
+            lambda: tf.print("Step:", step, "Perplexity:", perplexity, "Target:", self.num_embeddings * 0.5),
+            lambda: tf.no_op()
+        )
 
         return {m.name: m.result() for m in self.metrics}
 
@@ -910,15 +1210,101 @@ class VQ1DUnet(keras.Model):
         else:
             x = y = data
 
-        reconstruction, _, _, vq_loss = self(x, training=False)
+        reconstruction, _, _, vq_loss, perplexity = self(x, training=False)
         recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
-        total_loss = recon_loss + vq_loss
+        total_loss = recon_loss + vq_loss + self.commitment_beta * tf.reduce_mean(
+            tf.math.squared_difference(x, reconstruction))
 
         self.total_loss_tracker.update_state(total_loss)
         self.recon_loss_tracker.update_state(recon_loss)
         self.vq_loss_tracker.update_state(vq_loss)
+        self.perplexity_tracker.update_state(perplexity)  # Now actually updating the perplexity tracker
+
+        # tf.print("Perplexity:", perplexity)  # Print the actual perplexity value  # Print the actual perplexity value
 
         return {m.name: m.result() for m in self.metrics}
+
+
+class CodebookUsageCallback(tf.keras.callbacks.Callback):
+    """
+    Callback to monitor and adjust codebook usage during training.
+    """
+
+    def __init__(self, test_input, plot_freq=5, min_perplexity_ratio=0.5):
+        """
+        Args:
+            test_input: A small batch of test data to monitor codebook usage
+            plot_freq: How often to check usage (in epochs)
+            min_perplexity_ratio: Minimum ratio of perplexity to num_embeddings
+        """
+        super().__init__()
+        self.test_input = test_input
+        self.plot_freq = plot_freq
+        self.min_perplexity_ratio = min_perplexity_ratio
+        self.usage_history = []
+        self.perplexity_history = []
+
+    def on_epoch_end(self, epoch, logs=None):
+        # Get the current model outputs for test data
+        outputs = self.model(self.test_input, training=False)
+        _, _, indices, _, perplexity = outputs
+
+        # Convert indices to flat array if using VQ
+        if isinstance(indices, tf.Tensor) and len(indices.shape) > 1:
+            indices = tf.reshape(indices, [-1])
+
+        # Compute usage statistics
+        if hasattr(self.model, 'vq_layer') and hasattr(self.model.vq_layer, 'code_usage'):
+            # If using SCQ with explicit usage tracking
+            usage = self.model.vq_layer.code_usage.numpy()
+        elif isinstance(indices, tf.Tensor):
+            # For VQ, compute usage from indices
+            unique_indices, counts = tf.unique_with_counts(indices)
+            usage = np.zeros(self.model.num_embeddings)
+            for idx, count in zip(unique_indices.numpy(), counts.numpy()):
+                usage[idx] = count / tf.size(indices).numpy()
+
+        # Record history
+        self.usage_history.append(usage)
+        self.perplexity_history.append(perplexity.numpy())
+
+        # Print status
+        if epoch % self.plot_freq == 0:
+            perplexity_ratio = perplexity.numpy() / self.model.num_embeddings
+            num_used = np.sum(usage > 0.001)  # Codes with >0.1% usage
+
+            print(f"\nEpoch {epoch} - Codebook stats:")
+            print(f"  Perplexity: {perplexity.numpy():.2f} / {self.model.num_embeddings} = {perplexity_ratio:.2%}")
+            print(
+                f"  Active codes: {num_used} / {self.model.num_embeddings} = {num_used / self.model.num_embeddings:.2%}")
+
+            # Take corrective action if usage is too low
+            if perplexity_ratio < self.min_perplexity_ratio:
+                print("  WARNING: Low codebook usage detected!")
+
+                # If we have SCQ layer, modify parameters
+                if hasattr(self.model, 'vq_layer') and hasattr(self.model.vq_layer, 'lambda_reg'):
+                    # Decrease regularization to allow more code usage
+                    old_lambda = self.model.vq_layer.lambda_reg
+                    new_lambda = max(old_lambda * 0.8, 0.05)  # Decrease by 20% with a minimum
+                    print(f"  Adjusting lambda_reg: {old_lambda:.4f} -> {new_lambda:.4f}")
+                    self.model.vq_layer.lambda_reg = new_lambda
+
+                    # Force code reset
+                    if hasattr(self.model.vq_layer, '_reset_dead_codes'):
+                        # Get encoder outputs from test data
+                        # This assumes encoder output is the input to vq_layer
+                        # You may need to adjust based on your actual architecture
+                        encoder_output = self.test_input
+                        for layer in self.model.layers:
+                            if layer == self.model.vq_layer:
+                                break
+                            encoder_output = layer(encoder_output)
+
+                        # Force reset of dead codes
+                        flat_encoder_output = tf.reshape(encoder_output, [-1, self.model.embedding_dim])
+                        self.model.vq_layer._reset_dead_codes(flat_encoder_output)
+                        print("  Forced reset of dead codebook vectors")
 
 
 # Example Usage:

@@ -913,7 +913,7 @@ if __name__ == "__main__":
     )'''
 
 # example of running VQUnet
-from utils.model import VQ1DUnet
+from utils.model import SCQ1DAutoEncoder
 
 # TODO implement a simple training pipeline for VQUnet
 import tensorflow as tf
@@ -921,20 +921,16 @@ import numpy as np
 import time # To time training
 import pandas as pd
 
-# Assume VectorQuantizer and VQUnet classes are defined above this code
-# Or import them:
-# from your_module import VectorQuantizer, VQUnet
 
 # --- Configuration ---
 # INPUT_SHAPE = (64, 64, 1) # IMPORTANT: Adjust to your MHC1 data's shape (height, width, channels)
-NUM_EMBEDDINGS = 64       # Number of clusters/codes in the codebook
-EMBEDDING_DIM = 16         # Dimension of each codebook vector (latent dim in bottleneck)
-BATCH_SIZE = 8
-EPOCHS = 1000                # Number of training epochs
-LEARNING_RATE = 1e-5
+NUM_EMBEDDINGS = 16       # Number of clusters/codes in the codebook
+EMBEDDING_DIM = 64         # Dimension of each codebook vector (latent dim in bottleneck)
+BATCH_SIZE = 4
+EPOCHS = 10               # Number of training epochs
+LEARNING_RATE = 1e-3
 
 # --- Data Loading and Preparation ---
-# TODO: Replace this section with your actual MHC1 data loading
 # def load_mhc1_placeholder_data(num_samples, shape):
 #     """Generates random placeholder data."""
 #     print(f"Generating {num_samples} placeholder samples with shape {shape}...")
@@ -972,7 +968,7 @@ def load_data(data_path, test_size=0.2, random_state=42):
     X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
 
     return X_train, X_test, seq_length, feature_dim
-    
+
 data_path = "data/Pep2Vec/wrapper_mhc1.parquet"
 # Load or generate data
 print("Loading/Generating Training Data...")
@@ -986,12 +982,11 @@ val_dataset = create_dataset(test_data, batch_size=BATCH_SIZE, is_training=False
 print("Datasets created.")
 
 
-
 # --- Model Instantiation ---
-print("Building the VQ-UNet model...")
+print("Building the SCQ1DAutoEncoder model...")
 input_shape = (seq_length, feature_dim)
 
-model = VQ1DUnet(
+model = SCQ1DAutoEncoder(
     input_dim=input_shape,
     num_embeddings=NUM_EMBEDDINGS,
     embedding_dim=EMBEDDING_DIM,
@@ -1036,7 +1031,6 @@ else:
     reconstruction = output
 
 # Visualize or save the reconstruction
-# TODO: Implement visualization or saving of the reconstruction
 end_time = time.time()
 print(f"\nTraining finished in {end_time - start_time:.2f} seconds.")
 
@@ -1045,40 +1039,49 @@ import matplotlib.pyplot as plt
 
 
 def plot_training_metrics(history):
-    """Plot the training metrics over epochs."""
-    fig, axes = plt.subplots(3, 1, figsize=(12, 15), sharex=True)
+        """Plot the training metrics over epochs."""
+        fig, axes = plt.subplots(4, 1, figsize=(12, 20), sharex=True)
 
-    # Plot total loss
-    axes[0].plot(history.history['total_loss'], 'b-', label='Train')
-    if 'val_total_loss' in history.history:
-        axes[0].plot(history.history['val_total_loss'], 'r-', label='Validation')
-    axes[0].set_title('Total Loss')
-    axes[0].set_ylabel('Loss')
-    axes[0].grid(True)
-    axes[0].legend()
+        # Plot total loss
+        axes[0].plot(history.history['total_loss'], 'b-', label='Train')
+        if 'val_total_loss' in history.history:
+            axes[0].plot(history.history['val_total_loss'], 'r-', label='Validation')
+        axes[0].set_title('Total Loss')
+        axes[0].set_ylabel('Loss')
+        axes[0].grid(True)
+        axes[0].legend()
 
-    # Plot reconstruction loss
-    axes[1].plot(history.history['recon_loss'], 'b-', label='Train')
-    if 'val_recon_loss' in history.history:
-        axes[1].plot(history.history['val_recon_loss'], 'r-', label='Validation')
-    axes[1].set_title('Reconstruction Loss')
-    axes[1].set_ylabel('Loss')
-    axes[1].grid(True)
-    axes[1].legend()
+        # Plot reconstruction loss
+        axes[1].plot(history.history['recon_loss'], 'b-', label='Train')
+        if 'val_recon_loss' in history.history:
+            axes[1].plot(history.history['val_recon_loss'], 'r-', label='Validation')
+        axes[1].set_title('Reconstruction Loss')
+        axes[1].set_ylabel('Loss')
+        axes[1].grid(True)
+        axes[1].legend()
 
-    # Plot VQ loss
-    axes[2].plot(history.history['vq_loss'], 'b-', label='Train')
-    if 'val_vq_loss' in history.history:
-        axes[2].plot(history.history['val_vq_loss'], 'r-', label='Validation')
-    axes[2].set_title('VQ Loss')
-    axes[2].set_xlabel('Epochs')
-    axes[2].set_ylabel('Loss')
-    axes[2].grid(True)
-    axes[2].legend()
+        # Plot VQ loss
+        axes[2].plot(history.history['vq_loss'], 'b-', label='Train')
+        if 'val_vq_loss' in history.history:
+            axes[2].plot(history.history['val_vq_loss'], 'r-', label='Validation')
+        axes[2].set_title('VQ Loss')
+        axes[2].set_ylabel('Loss')
+        axes[2].grid(True)
+        axes[2].legend()
 
-    plt.tight_layout()
-    plt.savefig('vqvae_training_metrics.png')
-    plt.show()
+        # Plot perplexity
+        axes[3].plot(history.history['perplexity'], 'b-', label='Train')
+        if 'val_perplexity' in history.history:
+            axes[3].plot(history.history['val_perplexity'], 'r-', label='Validation')
+        axes[3].set_title('Perplexity')
+        axes[3].set_xlabel('Epochs')
+        axes[3].set_ylabel('Perplexity')
+        axes[3].grid(True)
+        axes[3].legend()
+
+        plt.tight_layout()
+        plt.savefig('vqvae_training_metrics.png')
+        plt.show()
 
 
 # Plot the training metrics
@@ -1091,7 +1094,7 @@ example_batch = next(iter(val_dataset))  # Get one batch
 output = model(example_batch, training=False)
 
 # Unpack the output
-reconstruction, quantized_latent, cluster_indices, _ = output
+reconstruction, quantized_latent, cluster_indices, vq_loss, perplexity= output
 
 
 # Visualize reconstructions
@@ -1123,45 +1126,116 @@ plot_reconstructions(example_batch.numpy(), reconstruction.numpy())
 
 
 # Visualize codebook usage distribution
-def plot_codebook_usage(indices, num_embeddings):
-    """Visualize the usage distribution of codebook vectors."""
-    # Flatten all indices
-    flat_indices = tf.reshape(indices, [-1]).numpy()
+def plot_codebook_usage(indices, num_embeddings, save_path='codebook_usage.png'):
+        """
+        Visualize the usage distribution of codebook vectors.
+        # we have a list of float values around 100 unique values, but we only have 32 codebook vectors
+        # we need to assign the float values to the codebook vectors with a deviation threshold based on num_embeddings
+        # define N ranges between 0 to 1 such that N == num_embeddings
+        # assign the float values to the ranges and replace the float values with the index of the range
 
-    # Count occurrences of each index
-    unique_indices, counts = np.unique(flat_indices, return_counts=True)
+        Args:
+            indices: Tensor containing the indices of the codebook vectors used
+            num_embeddings: Total number of vectors in the codebook
+            save_path: Path to save the visualization
+        """
 
-    # Create a histogram for all possible indices (including unused ones)
-    full_histogram = np.zeros(num_embeddings)
-    for idx, count in zip(unique_indices, counts):
-        full_histogram[idx] = count
+        # Convert to numpy if it's a tensor
+        if isinstance(indices, tf.Tensor):
+            indices = indices.numpy()
 
-    # Plot the histogram
-    plt.figure(figsize=(12, 6))
-    plt.bar(range(num_embeddings), full_histogram)
-    plt.xlabel('Codebook Index')
-    plt.ylabel('Usage Count')
-    plt.title('Codebook Vector Usage Distribution')
-    plt.grid(True, axis='y')
+        # Flatten the indices if they're not already flattened
+        flat_indices = indices.flatten()
 
-    # Calculate and display codebook utilization
-    utilization = len(unique_indices) / num_embeddings * 100
-    plt.text(0.5, 0.9, f'Codebook Utilization: {utilization:.1f}% ({len(unique_indices)}/{num_embeddings})',
-             transform=plt.gca().transAxes, ha='center', fontsize=12,
-             bbox=dict(facecolor='white', alpha=0.8))
+        # Check if we need to quantize float values to discrete indices
+        if np.issubdtype(flat_indices.dtype, np.floating):
+            print(f"Detected floating point indices, quantizing to {num_embeddings} discrete values")
+            min_val = np.min(flat_indices)
+            max_val = np.max(flat_indices)
+            print(f"Index range: {min_val} to {max_val}")
 
-    plt.tight_layout()
-    plt.savefig('vqvae_codebook_usage.png')
-    plt.show()
+            # Create quantization bins
+            bins = np.linspace(min_val, max_val, num_embeddings + 1)
+
+            # Digitize the indices (assign each to a bin)
+            discrete_indices = np.digitize(flat_indices, bins) - 1
+
+            # Clip to ensure valid range
+            discrete_indices = np.clip(discrete_indices, 0, num_embeddings - 1)
+            flat_indices = discrete_indices
+
+        # Count occurrences of each codebook vector
+        unique, counts = np.unique(flat_indices, return_counts=True)
+
+        # Create a complete distribution including zeros for unused vectors
+        full_distribution = np.zeros(num_embeddings)
+        for idx, count in zip(unique, counts):
+            if 0 <= idx < num_embeddings:
+                full_distribution[int(idx)] = count
+
+        # Calculate usage statistics
+        used_vectors = np.sum(full_distribution > 0)
+        usage_percentage = (used_vectors / num_embeddings) * 100
+
+        # Create the figure
+        plt.figure(figsize=(12, 6))
+
+        # Create bar plot
+        bar_positions = np.arange(num_embeddings)
+        bars = plt.bar(bar_positions, full_distribution)
+
+        # Add a color gradient based on frequency
+        max_count = np.max(full_distribution)
+        if max_count > 0:  # Avoid division by zero
+            for i, bar in enumerate(bars):
+                intensity = full_distribution[i] / max_count
+                bar.set_color(plt.cm.viridis(intensity))
+
+        # Add labels and title
+        plt.xlabel('Codebook Vector Index')
+        plt.ylabel('Usage Count')
+        plt.title(f'Codebook Vector Usage Distribution\n{used_vectors}/{num_embeddings} vectors used ({usage_percentage:.1f}%)')
+
+        # Add grid for better readability
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+        # Add a colorbar as a usage intensity reference
+        sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(0, max_count))
+        sm.set_array([])
+        cbar = plt.colorbar(sm)
+        cbar.set_label('Frequency')
+
+        # Improve layout
+        plt.tight_layout()
+
+        # Save the plot
+        plt.savefig(save_path)
+
+        # Display statistics
+        print(f"Codebook usage statistics:")
+        print(f"- Total vectors in codebook: {num_embeddings}")
+        print(f"- Number of vectors used: {used_vectors} ({usage_percentage:.1f}%)")
+        if used_vectors > 0:
+            print(f"- Most used vector: {np.argmax(full_distribution)} (used {np.max(full_distribution)} times)")
+            used_indices = np.where(full_distribution > 0)[0]
+            min_used_idx = used_indices[np.argmin(full_distribution[used_indices])]
+            print(f"- Least used vector: {min_used_idx} (used {full_distribution[min_used_idx]} times)")
+
+        plt.show()
+
+        return used_vectors, usage_percentage
+
 
 
 print("\nAnalyzing codebook usage...")
 plot_codebook_usage(cluster_indices, NUM_EMBEDDINGS)
 
 # Save the model
-model.save_weights('vqvae_model_weights.h5')
+model.save_weights('tmp_directory/vqvae_model_weights.h5')
 print("\nModel weights saved to 'vqvae_model_weights.h5'")
 
 # You can now save the model weights if needed
 # model.save_weights('vq_unet_mhc1_weights.h5')
 # print("Model weights saved.")
+
+# TODO draw a U-MAP plot of the latent space
