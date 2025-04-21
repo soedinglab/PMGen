@@ -845,19 +845,19 @@ class VQ1DUnet(keras.Model):
 
         # --- Decoding ---
         y = self.up4_trans(quantized)
-        y = tf.concat([y, x4], axis=-1)
+        # y = tf.concat([y, x4], axis=-1)
         y = self.dec4_conv(y)
 
         y = self.up3_trans(y)
-        y = tf.concat([y, x3], axis=-1)
+        # y = tf.concat([y, x3], axis=-1)
         y = self.dec3_conv(y)
 
         y = self.up2_trans(y)
-        y = tf.concat([y, x2], axis=-1)
+        # y = tf.concat([y, x2], axis=-1)
         y = self.dec2_conv(y)
 
         y = self.up1_trans(y)
-        y = tf.concat([y, x1], axis=-1)
+        # y = tf.concat([y, x1], axis=-1)
         y = self.dec1_conv(y)
 
         output = self.output_layer(y)
@@ -879,7 +879,7 @@ class VQ1DUnet(keras.Model):
         with tf.GradientTape() as tape:
             reconstruction, _, _, vq_loss = self(x, training=True)
             recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
-            total_loss = recon_loss + vq_loss
+            total_loss = recon_loss + vq_loss + self.commitment_beta * tf.reduce_mean(tf.math.squared_difference(x, reconstruction))
 
         grads = tape.gradient(total_loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))

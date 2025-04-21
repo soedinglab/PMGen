@@ -926,14 +926,12 @@ import pandas as pd
 # from your_module import VectorQuantizer, VQUnet
 
 # --- Configuration ---
-INPUT_SHAPE = (64, 64, 1) # IMPORTANT: Adjust to your MHC1 data's shape (height, width, channels)
-NUM_EMBEDDINGS = 128       # Number of clusters/codes in the codebook
-EMBEDDING_DIM = 32         # Dimension of each codebook vector (latent dim in bottleneck)
-BATCH_SIZE = 32
-EPOCHS = 10                # Number of training epochs
-LEARNING_RATE = 1e-4
-NUM_TRAIN_SAMPLES = 1000   # Replace with actual number
-NUM_VAL_SAMPLES = 200      # Replace with actual number (optional)
+# INPUT_SHAPE = (64, 64, 1) # IMPORTANT: Adjust to your MHC1 data's shape (height, width, channels)
+NUM_EMBEDDINGS = 64       # Number of clusters/codes in the codebook
+EMBEDDING_DIM = 16         # Dimension of each codebook vector (latent dim in bottleneck)
+BATCH_SIZE = 8
+EPOCHS = 1000                # Number of training epochs
+LEARNING_RATE = 1e-5
 
 # --- Data Loading and Preparation ---
 # TODO: Replace this section with your actual MHC1 data loading
