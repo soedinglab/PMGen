@@ -720,11 +720,24 @@ class VQ_Layer(tf.keras.layers.Layer):
 
         distances = a_sq - ab + b_sq  # (B*T, num_embeddings)
 
-        # Find closest embeddings and proceed as before
+        # Find closest embeddings
         encoding_indices = tf.argmin(distances, axis=1)
         encodings = tf.one_hot(encoding_indices, self.num_embeddings)
         quantized = tf.matmul(encodings, self.embeddings)
+
+        # Reshape quantized values to match input shape
         quantized = tf.reshape(quantized, input_shape)
+
+        # Calculate VQ losses - straight-through estimator
+        commitment_loss = tf.reduce_mean(tf.square(tf.stop_gradient(quantized) - inputs))
+        codebook_loss = tf.reduce_mean(tf.square(quantized - tf.stop_gradient(inputs)))
+        vq_loss = commitment_loss + self.beta * codebook_loss
+
+        # Add loss to layer's loss collection
+        self.add_loss(vq_loss)
+
+        # Straight-through estimator (copy gradients from quantized to inputs)
+        quantized = inputs + tf.stop_gradient(quantized - inputs)
 
         # Optionally compute perplexity
         avg_probs = tf.reduce_mean(encodings, axis=0)
@@ -880,6 +893,7 @@ class VQ1DUnet(keras.Model):
             reconstruction, _, _, vq_loss = self(x, training=True)
             recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
             total_loss = recon_loss + vq_loss + self.commitment_beta * tf.reduce_mean(tf.math.squared_difference(x, reconstruction))
+            vq_loss = tf.add_n(self.vq_layer.losses) if self.vq_layer.losses else tf.constant(0.0)
 
         grads = tape.gradient(total_loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))

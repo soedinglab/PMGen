@@ -226,14 +226,35 @@ def process_data(mhc_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
     return el_data_0, el_data_1, ba_data
 
 
-def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number, mhc_class):
+def safe_remove(path, is_dir=False):
+    try:
+        if is_dir:
+            shutil.rmtree(path)
+        else:
+            os.remove(path)
+        print(f"Successfully removed: {path}")
+    except PermissionError:
+        print(f"Permission denied: {path}")
+    except FileNotFoundError:
+        print(f"File/Directory not found: {path}")
+    except OSError as e:
+        print(f"Error removing {path}: {str(e)}")
+    except Exception as e:
+        print(f"Unexpected error with {path}: {str(e)}")
+
+
+def run_netmhcpan_(el_data, true_label, tmp_path, results_dir, chunk_number, mhc_class):
     # chunk_dataframe = pd.DataFrame(columns=["MHC", "Peptide", "Of", "Core", "Core_Rel", "Inverted", "Identity", "Score_EL", "%Rank_EL", "Exp_Bind", "Score_BA", "%Rank_BA", "Affinity(nM)", "long_mer", "cell_line_id"])
     chunk_df_path = os.path.join(results_dir, f"el{true_label}_chunk_{chunk_number}.csv")
-    dropped_rows = pd.DataFrame()
     dropped_rows_path = os.path.join(results_dir, f"el{true_label}_dropped_rows_{chunk_number}.csv")
     for idx, cell_row in tqdm(el_data.iterrows(), total=el_data.shape[0], desc=f"Processing chunk {chunk_number}"):
+        dropped_rows = pd.DataFrame(
+            columns=["MHC", "Peptide", "Of", "Core", "Core_Rel", "Inverted", "Identity", "Score_EL", "%Rank_EL",
+                     "Exp_Bind", "Score_BA", "%Rank_BA", "Affinity(nM)", "long_mer", "cell_line_id"])
         number_of_alleles = len(eval(cell_row["allele"]))
-        result_data = pd.DataFrame(columns=["MHC", "Peptide", "Of", "Core", "Core_Rel", "Inverted", "Identity", "Score_EL", "%Rank_EL", "Exp_Bind", "Score_BA", "%Rank_BA", "Affinity(nM)", "long_mer", "cell_line_id"])
+        result_data = pd.DataFrame(
+            columns=["MHC", "Peptide", "Of", "Core", "Core_Rel", "Inverted", "Identity", "Score_EL", "%Rank_EL",
+                     "Exp_Bind", "Score_BA", "%Rank_BA", "Affinity(nM)", "long_mer", "cell_line_id"])
         peptide = cell_row["peptide"]
         for allele in eval(cell_row["allele"]):
             # get the unique id for peptide
@@ -277,43 +298,41 @@ def run_netmhcpan_(el_data,  true_label ,tmp_path, results_dir, chunk_number, mh
             except Exception as e:
                 print(f"Error processing peptide {peptide} with allele {allele}: {str(e)}")
             # Clean up temporary files
-            if os.path.exists(peptide_fasta_path):
-                os.remove(peptide_fasta_path)
+            safe_remove(peptide_fasta_path)
 
-            # Get the actual directory path
+            # Clean up peptide_fasta directory
             peptide_fasta_dir = os.path.dirname(peptide_fasta_path)
-            try:
-                shutil.rmtree(peptide_fasta_dir)
-            except PermissionError:
-                print(f"Warning: Could not remove directory {peptide_fasta_dir} due to permission error")
+            if peptide_fasta_dir:  # Prevent removing root/current directory
+                safe_remove(peptide_fasta_dir, is_dir=True)
 
-            try:
-                shutil.rmtree(output_dir)
-            except PermissionError:
-                print(f"Warning: Could not remove directory {output_dir} due to permission error")
+            # Clean up output directory
+            safe_remove(output_dir, is_dir=True)
 
         # save the results to disk
         if not result_data.empty:
             # assert len(result_data) == number_of_alleles
             if len(result_data) != number_of_alleles:
                 print(f"Warning: Expected {number_of_alleles} results but got {len(result_data)}")
-            result_data['assigned_label'] = result_data['Score_BA'].apply(lambda x: 1 if eval(x) > 0.426 else 0)
+            result_data['assigned_label'] = result_data['Score_BA'].apply(lambda x: 1 if eval(x) >= 0.426 else 0)
             if true_label == 1:
-                # if at least one label is not 1, select the highest score_BA and set the labels to 1, then save the allele in a list
-                # Create a mask for cell lines with at least one positive label
-                positive_cell_lines = result_data.groupby('cell_line_id')['assigned_label'].max() == 1
-                positive_cell_lines = positive_cell_lines[positive_cell_lines].index.tolist()
-                # Filter rows
-                mask = result_data['cell_line_id'].isin(positive_cell_lines)
-                dropped_df = result_data[~mask].copy()
-                result_data = result_data[mask].copy()
-                # Save dropped rows to separate file if there are any
-                if not dropped_df.empty:
-                    dropped_rows = pd.concat([dropped_rows, dropped_df])
+                # Identify cell lines with at least one positive label
+                positive_cell_lines = result_data.groupby('cell_line_id')['assigned_label'].transform('max') == 1
+
+                # Separate dropped and kept rows without creating full copies
+                mask = result_data['cell_line_id'].isin(
+                    result_data.loc[positive_cell_lines, 'cell_line_id'].unique()
+                )
+                dropped_rows = pd.concat([dropped_rows, result_data[~mask]])
+                result_data = result_data[mask]
+
+            if true_label == 0:
+                # Directly concat and filter rows with label == 1
+                dropped_rows = pd.concat([dropped_rows, result_data[result_data['assigned_label'] == 1]])
+                result_data = result_data[result_data['assigned_label'] == 0]
 
             # save the results to the chunk_dataframe directly to the disk using append method
             result_data.to_csv(chunk_df_path, mode="a", header=not os.path.exists(chunk_df_path), index=False)
-            dropped_rows.to_csv(dropped_rows_path, index=False)
+            dropped_rows.to_csv(dropped_rows_path, mode="a", header=not os.path.exists(dropped_rows_path), index=False)
 
 
 
