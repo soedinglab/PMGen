@@ -50,9 +50,10 @@ class SCQ(layers.Layer):
         # Codebook: each column is one codebook vector.
         self.embed_w = self.add_weight(
             shape=(self.dim_embed, self.num_embed),
-            initializer='uniform',
+            initializer='glorot_normal',
             trainable=True,
-            name='scq_embedding')
+            name='scq_embedding'
+        )
         # Projection weights to map input features into the embedding space.
         self.d_w = self.add_weight(
             shape=(self.dim_input, self.dim_embed),
@@ -697,9 +698,9 @@ from tensorflow.keras import layers
 
 # original SCQ
 class SCQ_layer(layers.Layer):
-    def __init__(self, num_embed=64, dim_embed=32, lambda_reg=0.5, proj_iter=10,
+    def __init__(self, num_embed, dim_embed, lambda_reg=0.5, proj_iter=10,
                  discrete_loss=False, beta_loss=0.25, reset_dead_codes=True,
-                 usage_threshold=1e-5, reset_interval=100, **kwargs):
+                 usage_threshold=1e-3, reset_interval=10, **kwargs):
         """
         Soft Convex Quantization (SCQ) layer.
 
@@ -728,9 +729,9 @@ class SCQ_layer(layers.Layer):
 
         # Codebook reset parameters
         self.call_count = 0
-        self.reset_dead_codes = True
-        self.usage_threshold = 1e-4
-        self.reset_interval = 50
+        self.reset_dead_codes = reset_dead_codes
+        self.usage_threshold = usage_threshold
+        self.reset_interval = reset_interval
 
     def build(self, input_shape):
         # Learnable scale and bias for layer normalization.
@@ -753,7 +754,7 @@ class SCQ_layer(layers.Layer):
         # Projection weights to map input features into the embedding space.
         self.d_w = self.add_weight(
             shape=(self.dim_embed, self.dim_embed),
-            initializer='random_normal',
+            initializer='glorot_uniform',
             trainable=True,
             name='scq_w')
         self.d_b = self.add_weight(
@@ -785,6 +786,9 @@ class SCQ_layer(layers.Layer):
 
         input_shape = tf.shape(x)  # (B, N, dim_embed)
         flat_inputs = tf.reshape(x, [-1, self.dim_embed])  # (B*N, dim_embed)
+
+        # add a small epsilon to avoid numerical issues
+        flat_inputs = flat_inputs + tf.random.normal(tf.shape(flat_inputs), stddev=0.01)
 
         # 2. Compute hard VQ assignments as initialization.
         flat_detached = tf.stop_gradient(flat_inputs)
@@ -846,10 +850,10 @@ class SCQ_layer(layers.Layer):
             masked_similarities = similarities * mask
 
             # Penalize high similarities between different codebook vectors
-            diversity_loss = tf.reduce_mean(tf.nn.relu(masked_similarities - 0.1))  # Penalize similarities > 0.1
+            diversity_loss = tf.reduce_mean(tf.nn.relu(masked_similarities - 0.05))  # Penalize similarities > 0.05
 
             # Combine with existing loss
-            loss = tf.reduce_mean((Zq - flat_inputs) ** 2) + 0.5 * entropy_reg + 0.2 * diversity_loss
+            loss = tf.reduce_mean((Zq - flat_inputs) ** 2) + 1.0 * entropy_reg + 0.5 * diversity_loss
 
         else:
             commitment_loss = tf.reduce_mean((tf.stop_gradient(Zq) - flat_inputs) ** 2)
@@ -862,6 +866,8 @@ class SCQ_layer(layers.Layer):
         Zq = tf.reshape(Zq, input_shape)  # (B, N, dim_embed)
         self.add_loss(loss)  # Register the loss with the layer
 
+        hard_indices = tf.argmax(out_P_proj, axis=-1)  # (B,N)
+
         # 7. Calculate perplexity (similar to VQ layer)
         # Reshape out_P_proj to simplify calculations
         flat_P_proj = tf.reshape(out_P_proj, [-1, self.num_embed])  # (B*N, num_embed)
@@ -873,7 +879,7 @@ class SCQ_layer(layers.Layer):
         # Higher perplexity means more uniform codebook usage
         perplexity = tf.exp(-tf.reduce_sum(avg_probs * tf.math.log(avg_probs + 1e-10)))
 
-        return Zq, out_P_proj, loss, perplexity  # (B,N,embed_dim), #(B,N,num_embed), (1,), (1,)
+        return Zq, hard_indices, loss, perplexity  # (B,N,embed_dim), #(B,N,num_embed), (1,), (1,)
 
     def project_columns_to_simplex(self, P_sol):
         """Projects columns of a matrix to the probability simplex."""
@@ -943,7 +949,7 @@ class SCQ_layer(layers.Layer):
                     source_idx = i % tf.shape(most_used)[0]
                     source_vector = most_used[source_idx]
                     # Add significant noise to create meaningful variation
-                    noise = tf.random.normal(shape=tf.shape(source_vector), stddev=0.3)
+                    noise = tf.random.normal(shape=tf.shape(source_vector), stddev=0.5)
                     new_vector = source_vector + noise
                     # Normalize to maintain scale
                     new_vector = new_vector / (tf.norm(new_vector) + 1e-8) * tf.norm(source_vector)
@@ -1175,7 +1181,7 @@ class SCQ1DAutoEncoder(keras.Model):
             # Add codebook usage penalty if perplexity is too low
             usage_penalty = tf.cond(
                 perplexity < self.num_embeddings * 0.5,
-                lambda: 0.1 * (self.num_embeddings * 0.5 - perplexity),
+                lambda: 0.5 * (self.num_embeddings * 0.5 - perplexity),
                 lambda: 0.0
             )
             total_loss += usage_penalty
