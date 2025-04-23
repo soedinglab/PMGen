@@ -24,6 +24,7 @@ sequences.
     CUDA-enabled GPU (required for AlphaFold)
     Modeller (requires a license key)
     Git
+    git-lfs (for large files)
 ```
 
 Follow these steps to set up PMGen on your system:

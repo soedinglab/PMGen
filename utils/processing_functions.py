@@ -16,6 +16,7 @@ import warnings
 warnings.filterwarnings("ignore")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from user_setting import netmhcipan_path, netmhciipan_path, pmgen_abs_dir
+from sklearn.model_selection import train_test_split
 
 def process_dataframe(df):
     # Step 1: Sort IDs with 2 or 5 parts
@@ -1058,3 +1059,59 @@ def fetch_polypeptide_sequences(pdb_path):
     return sequences
 
 
+# write a function that produces 5 fold cross validation from the df, each fold must have one allele to be left out completely and produce a stratified train and validation based on the label.
+# take into account the subset proportion.
+def create_k_fold_leave_one_out_stratified_cross_validation(df, k=5, target_col="label", id_col="allele",
+                                                        subset_prop=1.0, train_size=0.8, random_state=42):
+    """
+    Creates k folds for cross-validation where each fold leaves one unique ID out
+    and splits the remaining data into stratified train/validation sets.
+
+    Args:
+        df (pd.DataFrame): The input dataframe.
+        k (int): The number of folds.
+        target_col (str): The name of the column containing the target labels for stratification.
+        id_col (str): The name of the column containing the IDs (alleles) to leave out.
+        subset_prop (float): The proportion of the remaining data to use for the training set.
+        train_size (float): The proportion of the non-held-out data to use for training.
+        random_state (int): Random state for reproducibility of the stratified split.
+
+    Returns:
+        list: A list of tuples, where each tuple contains (train_df, val_df, left_out_id) for a fold.
+              The left_out_id is the ID that was completely held out for that fold.
+    """
+    # take a subset of the dataframe
+    df = df.sample(frac=subset_prop, random_state=random_state)
+
+    # Get unique IDs (alleles)
+    unique_ids = df[id_col].unique()
+
+    # Check if k is larger than the number of unique IDs
+    if k > len(unique_ids):
+        raise ValueError(f"k must be less than or equal to the number of unique IDs ({len(unique_ids)}).")
+
+    # Select k IDs to leave out (one per fold)
+    np.random.seed(random_state)
+    selected_ids = np.random.choice(unique_ids, k, replace=False)
+
+    folds = []
+    for leave_out_id in selected_ids:
+        print("leave out ID:", leave_out_id)
+        # Create a mask for the ID to leave out
+        leave_out_mask = df[id_col] == leave_out_id
+
+        # Get remaining data (exclude the left out ID)
+        remaining_df = df[~leave_out_mask].copy()
+
+        # Create stratified train/validation split on the remaining data
+        train_df, val_df = train_test_split(
+            remaining_df,
+            train_size=train_size,
+            stratify=remaining_df[target_col],
+            random_state=random_state
+        )
+
+        # Include the left_out_id in the tuple
+        folds.append((train_df, val_df, leave_out_id))
+
+    return folds

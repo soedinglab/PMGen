@@ -42,6 +42,8 @@ echo "4. AlphaFold - GitHub: https://github.com/google-deepmind/alphafold"
 echo "   Paper: https://www.nature.com/articles/s41586-021-03819-2"
 echo "5. ProteinMPNN - Github https://github.com/dauparas/ProteinMPNN"
 echo "   Paper: https://www.science.org/doi/10.1126/science.add2187"
+echo "6. Pep2Vec - GitHub: https://github.com/Genentech/Pep2Vec"
+echo "   Paper: https://www.biorxiv.org/content/10.1101/2024.10.14.618255v1"
 echo "########################################################"
 
 # Step 1: Ask for Modeller License Key
@@ -125,7 +127,21 @@ mv "data/modified_files/PMHC.py" "$PANDORA_PMHC_PATH"
 echo "ProteinMPNN installation"
 git clone https://github.com/dauparas/ProteinMPNN.git
 echo "✔ ProteinMPNN setup is done. "
-# Step 12: Cleanup and Completion
+
+# Step 11: Install Pep2Vec
+echo "Pep2Vec installation"
+git lfs install
+git clone https://github.com/Genentech/Pep2Vec
+git lfs pull
+# verify pep2vec.bin is downloaded
+if [ ! -f "Pep2Vec/pep2vec.bin" ]; then
+    echo "⚠ pep2vec.bin not found. Please check the Pep2Vec repository."
+    exit 1
+fi
+echo "✔ Pep2Vec setup is done. "
+
+
+# Step 13: Cleanup and Completion
 cd "$CURRENT_DIR"
 echo "✔ Installation completed successfully!"
 echo "Please check and modify 'user_setting.py' file to customize for your usage"
