@@ -912,122 +912,87 @@ if __name__ == "__main__":
         epochs=20
     )'''
 
-# example of running VQUnet
-from utils.model import SCQ1DAutoEncoder
 
 # TODO implement a simple training pipeline for VQUnet
-import tensorflow as tf
-import numpy as np
-import time # To time training
-import pandas as pd
-
-
-# --- Configuration ---
-# INPUT_SHAPE = (64, 64, 1) # IMPORTANT: Adjust to your MHC1 data's shape (height, width, channels)
-NUM_EMBEDDINGS = 32       # Number of clusters/codes in the codebook
-EMBEDDING_DIM = 32         # Dimension of each codebook vector (latent dim in bottleneck)
-BATCH_SIZE = 1
-EPOCHS = 100               # Number of training epochs
-LEARNING_RATE = 1e-5
-
-# --- Data Loading and Preparation ---
-def create_dataset(X, batch_size=4, is_training=True):
-    """Create a TensorFlow dataset from input array X."""
-    dataset = tf.data.Dataset.from_tensor_slices(X)
-    if is_training:
-        dataset = dataset.shuffle(buffer_size=len(X))
-    dataset = dataset.batch(batch_size)
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
-    return dataset
-
-
-def load_data(data_path, test_size=0.2, random_state=42):
-    """Load and prepare data for training."""
-    # Load data
-    embeddings = pd.read_parquet(data_path)
-
-    # Select the latent columns
-    latent_columns = [col for col in embeddings.columns if 'latent' in col]
-    print(f"Found {len(latent_columns)} latent columns")
-
-    # Extract values and reshape
-    X = embeddings[latent_columns].values
-    seq_length = len(latent_columns)
-    feature_dim = 1
-    X = X.reshape(-1, seq_length, feature_dim)
-
-    # Split into train and test sets
-    X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
-
-    return X_train, X_test, seq_length, feature_dim
-
-data_path = "data/Pep2Vec/wrapper_mhc1.parquet"
-# Load or generate data
-print("Loading/Generating Training Data...")
-train_data, test_data, seq_length, feature_dim = load_data(data_path, test_size=0.2, random_state=42) # Load training data
-
-# Create tf.data Datasets for efficient training
-# For reconstruction, input and target are the same (x, x)
-print("Creating TensorFlow Datasets...")
-train_dataset = create_dataset(train_data, batch_size=BATCH_SIZE, is_training=True)
-val_dataset = create_dataset(test_data, batch_size=BATCH_SIZE, is_training=False)
-print("Datasets created.")
-
-
-# --- Model Instantiation ---
-print("Building the SCQ1DAutoEncoder model...")
-input_shape = (seq_length, feature_dim)
-
-model = SCQ1DAutoEncoder(
-    input_dim=input_shape,
-    num_embeddings=NUM_EMBEDDINGS,
-    embedding_dim=EMBEDDING_DIM,
+def train_and_evaluate_scqvae(
+    data_path,
+    num_embeddings=32,
+    embedding_dim=32,
+    batch_size=1,
+    epochs=10,
+    learning_rate=1e-4,
     commitment_beta=0.25,
-)
-print("Model built.")
+    output_dir='vqvae_output',
+    visualize=True,
+    save_model=True,
+    random_state=42,
+    test_size=0.2
+):
+    """
+    Train and evaluate a VQ-VAE model on peptide embedding data.
 
-# --- Compile the Model ---
-# The loss calculation is handled within the train_step,
-# but we still need to provide an optimizer.
-print("Compiling the model...")
-model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=LEARNING_RATE))
-print("Model compiled.")
+    Args:
+        data_path: Path to the parquet file containing peptide embeddings
+        num_embeddings: Number of clusters/codes in the codebook
+        embedding_dim: Dimension of each codebook vector
+        batch_size: Batch size for training
+        epochs: Number of training epochs
+        learning_rate: Learning rate for the optimizer
+        commitment_beta: Beta parameter for commitment loss
+        output_dir: Directory to save outputs
+        visualize: Whether to generate visualizations
+        save_model: Whether to save model weights
+        random_state: Random seed for reproducibility
+        test_size: Fraction of data to use for validation
 
-# --- Training ---
-print(f"Starting training for {EPOCHS} epochs...")
-start_time = time.time()
+    Returns:
+        model: Trained model
+        history: Training history
+        latent_data: Dictionary containing latent representations and indices
+    """
+    import os
+    import tensorflow as tf
+    import numpy as np
+    import pandas as pd
+    import time
+    import matplotlib.pyplot as plt
+    from sklearn.model_selection import train_test_split
+    from utils.model import SCQ1DAutoEncoder
 
-history = model.fit(
-    train_dataset,
-    epochs=EPOCHS,
-    validation_data=val_dataset # Pass validation data here
-)
+    # Create output directory
+    os.makedirs(output_dir, exist_ok=True)
 
-end_time = time.time()
-print(f"\nTraining finished in {end_time - start_time:.2f} seconds.")
+    # --- Helper Functions ---
+    def create_dataset(X, batch_size=4, is_training=True):
+        """Create a TensorFlow dataset from input array X."""
+        dataset = tf.data.Dataset.from_tensor_slices(X)
+        if is_training:
+            dataset = dataset.shuffle(buffer_size=len(X))
+        dataset = dataset.batch(batch_size)
+        dataset = dataset.prefetch(tf.data.AUTOTUNE)
+        return dataset
 
-# --- (Optional) Post-Training ---
-print("\nTraining History:")
-print(history.history)
+    def load_data(data_path, test_size=0.2, random_state=42):
+        """Load and prepare data for training."""
+        # Load data
+        embeddings = pd.read_parquet(data_path)
 
-# Example: Get reconstruction and latent codes for a batch from validation set
-print("\nExample inference on validation data:")
-example_batch = next(iter(val_dataset))  # Get one batch
-output = model.predict(example_batch)
-if isinstance(output, (list, tuple)) and len(output) == 3:
-    reconstruction, quantized_latent, cluster_indices = output
-else:
-    reconstruction = output
+        # Select the latent columns
+        latent_columns = [col for col in embeddings.columns if 'latent' in col]
+        print(f"Found {len(latent_columns)} latent columns")
 
-# Visualize or save the reconstruction
-end_time = time.time()
-print(f"\nTraining finished in {end_time - start_time:.2f} seconds.")
+        # Extract values and reshape
+        X = embeddings[latent_columns].values
+        seq_length = len(latent_columns)
+        feature_dim = 1
+        X = X.reshape(-1, seq_length, feature_dim)
 
-# --- Visualize Training Metrics ---
-import matplotlib.pyplot as plt
+        # Split into train and test sets
+        X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
 
+        return X_train, X_test, seq_length, feature_dim
 
-def plot_training_metrics(history):
+    def plot_training_metrics(history, save_path=None):
         """Plot the training metrics over epochs."""
         fig, axes = plt.subplots(4, 1, figsize=(12, 20), sharex=True)
 
@@ -1069,67 +1034,43 @@ def plot_training_metrics(history):
         axes[3].legend()
 
         plt.tight_layout()
-        plt.savefig('vqvae_training_metrics.png')
-        plt.show()
+        if save_path:
+            plt.savefig(save_path)
+        if visualize:
+            plt.show()
+        else:
+            plt.close()
 
+    def plot_reconstructions(original, reconstructed, n_samples=5, save_path=None):
+        """Plot comparison between original and reconstructed sequences."""
+        n_samples = min(n_samples, len(original))
+        plt.figure(figsize=(15, 3 * n_samples))
 
-# Plot the training metrics
-print("\nPlotting training history...")
-plot_training_metrics(history)
+        for i in range(n_samples):
+            # Plot original sequence
+            plt.subplot(n_samples, 2, 2 * i + 1)
+            plt.plot(original[i, :, 0])  # Assuming last dim is feature dim with size 1
+            plt.title(f"Original Sequence {i + 1}")
+            plt.grid(True)
 
-# --- Example Inference and Visualization ---
-print("\nPerforming example inference on validation data...")
-example_batch = next(iter(val_dataset))  # Get one batch
-output = model(example_batch, training=False)
+            # Plot reconstructed sequence
+            plt.subplot(n_samples, 2, 2 * i + 2)
+            plt.plot(reconstructed[i, :, 0])  # Assuming same shape as original
+            plt.title(f"Reconstructed Sequence {i + 1}")
+            plt.grid(True)
 
-# Unpack the output
-reconstruction, quantized_latent, cluster_indices, vq_loss, perplexity= output
+        plt.tight_layout()
+        if save_path:
+            plt.savefig(save_path)
+        if visualize:
+            plt.show()
+        else:
+            plt.close()
 
-
-# Visualize reconstructions
-def plot_reconstructions(original, reconstructed, n_samples=5):
-    """Plot comparison between original and reconstructed sequences."""
-    n_samples = min(n_samples, len(original))
-    plt.figure(figsize=(15, 3 * n_samples))
-
-    for i in range(n_samples):
-        # Plot original sequence
-        plt.subplot(n_samples, 2, 2 * i + 1)
-        plt.plot(original[i, :, 0])  # Assuming last dim is feature dim with size 1
-        plt.title(f"Original Sequence {i + 1}")
-        plt.grid(True)
-
-        # Plot reconstructed sequence
-        plt.subplot(n_samples, 2, 2 * i + 2)
-        plt.plot(reconstructed[i, :, 0])  # Assuming same shape as original
-        plt.title(f"Reconstructed Sequence {i + 1}")
-        plt.grid(True)
-
-    plt.tight_layout()
-    plt.savefig('vqvae_reconstructions.png')
-    plt.show()
-
-
-print("\nVisualizing reconstructions...")
-plot_reconstructions(example_batch.numpy(), reconstruction.numpy())
-
-
-# Visualize codebook usage distribution
-def plot_codebook_usage(indices, num_embeddings, save_path='codebook_usage.png'):
+    def plot_codebook_usage(indices, num_embeddings, save_path=None):
         """
         Visualize the usage distribution of codebook vectors.
-        # we have a list of float values around 100 unique values, but we only have 32 codebook vectors
-        # we need to assign the float values to the codebook vectors with a deviation threshold based on num_embeddings
-        # define N ranges between 0 to 1 such that N == num_embeddings
-        # assign the float values to the ranges and replace the float values with the index of the range
-
-        Args:
-            indices: Tensor containing the indices of the codebook vectors used
-            num_embeddings: Total number of vectors in the codebook
-            save_path: Path to save the visualization
         """
-        print("Cluster indices", cluster_indices)
-
         # Convert to numpy if it's a tensor
         if isinstance(indices, tf.Tensor):
             indices = indices.numpy()
@@ -1199,7 +1140,8 @@ def plot_codebook_usage(indices, num_embeddings, save_path='codebook_usage.png')
         plt.tight_layout()
 
         # Save the plot
-        plt.savefig(save_path)
+        if save_path:
+            plt.savefig(save_path)
 
         # Display statistics
         print(f"Codebook usage statistics:")
@@ -1211,156 +1153,276 @@ def plot_codebook_usage(indices, num_embeddings, save_path='codebook_usage.png')
             min_used_idx = used_indices[np.argmin(full_distribution[used_indices])]
             print(f"- Least used vector: {min_used_idx} (used {full_distribution[min_used_idx]} times)")
 
-        plt.show()
+        if visualize:
+            plt.show()
+        else:
+            plt.close()
 
         return used_vectors, usage_percentage
 
+    # --- Main Pipeline ---
+    print("Loading/Generating Training Data...")
+    train_data, test_data, seq_length, feature_dim = load_data(
+        data_path, test_size=test_size, random_state=random_state
+    )
 
-print("\nAnalyzing codebook usage...")
-plot_codebook_usage(cluster_indices, NUM_EMBEDDINGS)
+    # Create tf.data Datasets for efficient training
+    print("Creating TensorFlow Datasets...")
+    train_dataset = create_dataset(train_data, batch_size=batch_size, is_training=True)
+    val_dataset = create_dataset(test_data, batch_size=batch_size, is_training=False)
+    print("Datasets created.")
 
-# Save the model
-model.save_weights('tmp_directory/vqvae_model_weights.h5')
-print("\nModel weights saved to 'vqvae_model_weights.h5'")
+    # --- Model Instantiation ---
+    print("Building the SCQ1DAutoEncoder model...")
+    input_shape = (seq_length, feature_dim)
 
-# You can now save the model weights if needed
-# model.save_weights('vq_unet_mhc1_weights.h5')
-# print("Model weights saved.")
+    model = SCQ1DAutoEncoder(
+        input_dim=input_shape,
+        num_embeddings=num_embeddings,
+        embedding_dim=embedding_dim,
+        commitment_beta=commitment_beta,
+    )
+    print("Model built.")
 
-# --- Get Latent Space ---
-# Get the quantized latent space of the whole dataset
-print("\nGetting quantized latent space...")
-# whole dataset from train_dataset and val_dataset
-whole_dataset = tf.data.Dataset.concatenate(train_dataset, val_dataset)
-quantized_latent = []
-cluster_indices_all = []  # To store the indices for coloring
-for batch in whole_dataset:
-    # Get the quantized latent representation
-    output, q_latent, indices, vq_loss, perplexity = model(batch, training=False)
-    quantized_latent.append(q_latent.numpy())
-    cluster_indices_all.append(indices.numpy())
-quantized_latent = np.concatenate(quantized_latent, axis=0)
-cluster_indices_all = np.concatenate(cluster_indices_all, axis=0)
-print(f"Quantized latent shape: {quantized_latent.shape}")
-# Save the quantized latent space
-np.save('quantized_latent.npy', quantized_latent)
-print("Quantized latent space saved to 'quantized_latent.npy'")
+    # --- Compile and Train the Model ---
+    print("Compiling the model...")
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
+    print("Model compiled.")
 
+    # --- Training ---
+    print(f"Starting training for {epochs} epochs...")
+    start_time = time.time()
 
-# --- U-MAP Visualization ---
-import umap
-import pandas as pd
-import numpy as np
-from sklearn.preprocessing import LabelEncoder
+    history = model.fit(
+        train_dataset,
+        epochs=epochs,
+        validation_data=val_dataset
+    )
 
-# Get the latent representations for visualization
-print("Preparing latent space visualization...")
-# Process whole dataset to get quantized latent representations and track sample identity
-quantized_latents = []
-cluster_indices = []
-sample_ids = []  # To track individual sample IDs
+    end_time = time.time()
+    print(f"\nTraining finished in {end_time - start_time:.2f} seconds.")
 
-# First process training data
-print("Extracting latent representations from training data...")
-sample_counter = 0
-for batch in train_dataset:
-    _, q_latent, indices, _, _ = model(batch, training=False)
-    quantized_latents.append(q_latent.numpy())
-    cluster_indices.append(indices.numpy())
-    # Assign a unique ID to each sample in the batch
-    for i in range(q_latent.shape[0]):
-        sample_ids.extend([sample_counter] * q_latent.shape[1])  # Repeat ID for each sequence step
-        sample_counter += 1
+    # --- Evaluation and Visualization ---
+    if visualize:
+        # Plot training metrics
+        print("\nPlotting training history...")
+        plot_training_metrics(
+            history,
+            save_path=os.path.join(output_dir, 'vqvae_training_metrics.png')
+        )
 
-# Then process validation data
-print("Extracting latent representations from validation data...")
-for batch in val_dataset:
-    _, q_latent, indices, _, _ = model(batch, training=False)
-    quantized_latents.append(q_latent.numpy())
-    cluster_indices.append(indices.numpy())
-    # Continue assigning unique IDs
-    for i in range(q_latent.shape[0]):
-        sample_ids.extend([sample_counter] * q_latent.shape[1])  # Repeat ID for each sequence step
-        sample_counter += 1
+        # Example inference
+        print("\nPerforming example inference on validation data...")
+        example_batch = next(iter(val_dataset))
+        output = model(example_batch, training=False)
+        reconstruction, quantized_latent, cluster_indices, vq_loss, perplexity, hard_indices = output
 
-# Combine all latent vectors and indices
-quantized_latent = np.concatenate(quantized_latents, axis=0)
-cluster_indices = np.concatenate(cluster_indices, axis=0)
-sample_ids = np.array(sample_ids)
+        # Plot reconstructions
+        print("\nVisualizing reconstructions...")
+        plot_reconstructions(
+            example_batch.numpy(),
+            reconstruction.numpy(),
+            save_path=os.path.join(output_dir, 'vqvae_reconstructions.png')
+        )
 
-print(f"Combined latent shape: {quantized_latent.shape}")
-print(f"Total unique samples: {len(np.unique(sample_ids))}")
+        # Plot codebook usage
+        print("\nAnalyzing codebook usage...")
+        plot_codebook_usage(
+            hard_indices,
+            num_embeddings,
+            save_path=os.path.join(output_dir, 'codebook_usage.png')
+        )
 
-# Reshape the latent vectors properly for UMAP
-if quantized_latent.ndim > 2:
-    # Reshape from (batch_size, sequence_length, embedding_dim) to (batch_size * sequence_length, embedding_dim)
-    latent_2d = quantized_latent.reshape(-1, quantized_latent.shape[-1])
-    # Reshape the cluster indices as well
-    if cluster_indices.ndim > 1:
-        cluster_indices = cluster_indices.reshape(-1)
-else:
-    latent_2d = quantized_latent
+    # --- Save the model ---
+    if save_model:
+        model_dir = os.path.join(output_dir, 'model')
+        os.makedirs(model_dir, exist_ok=True)
+        model.save_weights(os.path.join(model_dir, 'vqvae_model_weights.h5'))
+        print(f"\nModel weights saved to '{os.path.join(model_dir, 'vqvae_model_weights.h5')}'")
 
-print(f"Reshaped latent for UMAP: {latent_2d.shape}")
+    # --- Extract and save latent space ---
+    print("\nExtracting quantized latent space...")
+    whole_dataset = tf.data.Dataset.concatenate(train_dataset, val_dataset)
+    quantized_latents = []
+    cluster_indices_all = []
+    hard_indices_all = []
 
-# Apply UMAP dimensionality reduction
-print("Computing UMAP projection...")
-mapper = umap.UMAP(n_neighbors=30, min_dist=0.1, metric='euclidean', random_state=42)
-embedding = mapper.fit_transform(latent_2d)
+    for batch in whole_dataset:
+        output, q_latent, indices, _, _, hard_indices = model(batch, training=False)
+        quantized_latents.append(q_latent.numpy())
+        cluster_indices_all.append(indices.numpy())
+        hard_indices_all.append(hard_indices.numpy())
 
-# Visualize the embedding with distinct colors for each sample
-plt.figure(figsize=(12, 10))
+    quantized_latent = np.concatenate(quantized_latents, axis=0)
+    cluster_indices = np.concatenate(cluster_indices_all, axis=0)
+    hard_indices = np.concatenate(hard_indices_all, axis=0)
 
-# Use sample IDs for coloring (each sample gets a unique color)
-scatter = plt.scatter(
-    embedding[:, 0],
-    embedding[:, 1],
-    c=sample_ids,
-    cmap='tab20',  # Colormap with distinct colors
-    s=10,
-    alpha=0.7
-)
+    # Save latent representations
+    np.save(os.path.join(output_dir, 'quantized_latent.npy'), quantized_latent)
+    np.save(os.path.join(output_dir, 'cluster_indices.npy'), cluster_indices)
+    np.save(os.path.join(output_dir, 'hard_indices.npy'), hard_indices)
+    print(f"Latent representations saved to {output_dir}")
 
-# Add legend and labels
-cbar = plt.colorbar(scatter, label='Sample ID')
-cbar.set_label('Sample ID')
-plt.title('UMAP Projection of Quantized Latent Space (colored by sample)', fontsize=14)
-plt.xlabel('UMAP Dimension 1', fontsize=12)
-plt.ylabel('UMAP Dimension 2', fontsize=12)
+    # --- Optional UMAP visualization ---
+    if visualize:
+        try:
+            import umap
+            print("\nComputing UMAP projection...")
 
-# Add a grid for better readability
-plt.grid(linestyle='--', alpha=0.6)
+            # Flatten and reshape for UMAP
+            hard_indices_flat = hard_indices.flatten().reshape(-1, 1)
 
-# Save with higher DPI for better quality
-plt.savefig('scqvae_latent_umap_by_sample.png', dpi=300, bbox_inches='tight')
-plt.show()
+            # Compute 1D UMAP projection
+            mapper_1d = umap.UMAP(n_components=1, n_neighbors=15, min_dist=0.1,
+                                 metric='euclidean', random_state=random_state)
+            embedding_1d = mapper_1d.fit_transform(hard_indices_flat)
 
-# Create a second visualization colored by cluster assignment
-plt.figure(figsize=(12, 10))
-scatter = plt.scatter(
-    embedding[:, 0],
-    embedding[:, 1],
-    c=cluster_indices,
-    cmap='viridis',
-    s=10,
-    alpha=0.7
-)
+            # Create sample IDs for visualization
+            sample_ids = []
+            sample_counter = 0
+            for batch in val_dataset:
+                batch_size = batch.shape[0]
+                for i in range(batch_size):
+                    sample_ids.extend([sample_counter] * seq_length)
+                    sample_counter += 1
+            sample_ids = np.array(sample_ids)
 
-# Add legend and labels
-cbar = plt.colorbar(scatter, label='Codebook Vector Index')
-plt.title('UMAP Projection of Quantized Latent Space (colored by codebook vector)', fontsize=14)
-plt.xlabel('UMAP Dimension 1', fontsize=12)
-plt.ylabel('UMAP Dimension 2', fontsize=12)
-plt.grid(linestyle='--', alpha=0.6)
-plt.savefig('scqvae_latent_umap_by_cluster.png', dpi=300, bbox_inches='tight')
-plt.show()
+            # Visualize 1D UMAP
+            plt.figure(figsize=(12, 4))
+            y_jitter = np.random.rand(embedding_1d.shape[0]) * 0.1
+            scatter_1d = plt.scatter(embedding_1d[:, 0], y_jitter,
+                                    c=sample_ids[:embedding_1d.shape[0]],
+                                    cmap='tab20', s=10, alpha=0.7)
+            plt.colorbar(scatter_1d, label='Sample ID')
+            plt.title('1D UMAP Projection of Latent Space', fontsize=14)
+            plt.xlabel('UMAP Dimension 1', fontsize=12)
+            plt.yticks([])
+            plt.grid(axis='x', linestyle='--', alpha=0.6)
+            plt.savefig(os.path.join(output_dir, 'umap_projection.png'))
+            if visualize:
+                plt.show()
+            else:
+                plt.close()
+        except ImportError:
+            print("UMAP not installed. Skipping UMAP visualization.")
 
-# Save the embeddings for potential further analysis
-np.savez(
-    'umap_results.npz',
-    embedding=embedding,
-    sample_ids=sample_ids,
-    cluster_indices=cluster_indices,
-    latent_vectors=latent_2d
-)
-print("UMAP visualization complete. Results saved with sample-based coloring.")
+    # Return results
+    latent_data = {
+        'quantized_latent': quantized_latent,
+        'cluster_indices': cluster_indices,
+        'hard_indices': hard_indices
+    }
+
+    return model, history, latent_data
+
+# Example usage:
+if __name__ == "__main__":
+    model, history, latent_data = train_and_evaluate_scqvae(
+        data_path="data/Pep2Vec/Conbotnet/pep2vec_output_fold_0.parquet",
+        num_embeddings=32,
+        embedding_dim=32,
+        batch_size=1,
+        epochs=10,
+        output_dir="vqvae_results"
+    )
+
+# # Create a 1D UMAP projection colored by cluster indices
+# print("Computing 1D UMAP colored by cluster indices...")
+# # Use the same 1D UMAP projection, but color by cluster indices
+# plt.figure(figsize=(12, 4))
+# cluster_indices_flat = cluster_indices.flatten().reshape(-1, 1)
+# embedding_1d = mapper_1d.fit_transform(cluster_indices_flat)
+#
+# # Regenerate y_jitter to match the new embedding size
+# y_jitter = np.random.rand(embedding_1d.shape[0]) * 0.1
+#
+# # Check shapes and ensure they match
+# print(f"embedding_1d shape: {embedding_1d.shape}")
+# print(f"cluster_indices shape: {cluster_indices.shape}")
+#
+# # Ensure cluster_indices is properly shaped for plotting
+# if cluster_indices.ndim > 1:
+#     cluster_indices_plot = cluster_indices.flatten()
+# else:
+#     cluster_indices_plot = cluster_indices
+#
+# # Make sure lengths match
+# if len(cluster_indices_plot) != len(embedding_1d):
+#     # Reshape or slice cluster_indices to match embedding_1d
+#     if len(cluster_indices_plot) > embedding_1d.shape[0]:
+#         cluster_indices_plot = cluster_indices_plot[:embedding_1d.shape[0]]
+#     else:
+#         # If you need to extend, you might repeat values or use a different strategy
+#         cluster_indices_plot = np.pad(cluster_indices_plot, (0, embedding_1d.shape[0] - len(cluster_indices_plot)), 'edge')
+#     print(f"Adjusted cluster_indices shape: {cluster_indices_plot.shape}")
+#
+# scatter_clusters = plt.scatter(embedding_1d[:, 0], y_jitter, c=cluster_indices_plot, cmap='viridis', s=10, alpha=0.7)
+# cbar = plt.colorbar(scatter_clusters, label='Cluster Index')
+# plt.title('1D UMAP Projection Colored by Cluster Indices', fontsize=14)
+# plt.xlabel('UMAP Dimension 1', fontsize=12)
+# plt.yticks([])
+# plt.grid(axis='x', linestyle='--', alpha=0.6)
+# plt.savefig('umap_clusters.png')
+# plt.show()
+
+# # Apply UMAP dimensionality reduction
+# print("Computing UMAP projection...")
+# mapper = umap.UMAP(n_neighbors=30, min_dist=0.1, metric='euclidean', random_state=42)
+# embedding = mapper.fit_transform(latent_2d)
+#
+# # Visualize the embedding with distinct colors for each sample
+# plt.figure(figsize=(12, 10))
+#
+# # Use sample IDs for coloring (each sample gets a unique color)
+# scatter = plt.scatter(
+#     embedding[:, 0],
+#     embedding[:, 1],
+#     c=sample_ids,
+#     cmap='tab20',  # Colormap with distinct colors
+#     s=10,
+#     alpha=0.7
+# )
+#
+# # Add legend and labels
+# cbar = plt.colorbar(scatter, label='Sample ID')
+# cbar.set_label('Sample ID')
+# plt.title('UMAP Projection of Quantized Latent Space (colored by sample)', fontsize=14)
+# plt.xlabel('UMAP Dimension 1', fontsize=12)
+# plt.ylabel('UMAP Dimension 2', fontsize=12)
+#
+# # Add a grid for better readability
+# plt.grid(linestyle='--', alpha=0.6)
+#
+# # Save with higher DPI for better quality
+# plt.savefig('scqvae_latent_umap_by_sample.png', dpi=300, bbox_inches='tight')
+# plt.show()
+#
+# # Create a second visualization colored by cluster assignment
+# plt.figure(figsize=(12, 10))
+# scatter = plt.scatter(
+#     embedding[:, 0],
+#     embedding[:, 1],
+#     c=cluster_indices,
+#     cmap='viridis',
+#     s=10,
+#     alpha=0.7
+# )
+#
+# # Add legend and labels
+# cbar = plt.colorbar(scatter, label='Codebook Vector Index')
+# plt.title('UMAP Projection of Quantized Latent Space (colored by codebook vector)', fontsize=14)
+# plt.xlabel('UMAP Dimension 1', fontsize=12)
+# plt.ylabel('UMAP Dimension 2', fontsize=12)
+# plt.grid(linestyle='--', alpha=0.6)
+# plt.savefig('scqvae_latent_umap_by_cluster.png', dpi=300, bbox_inches='tight')
+# plt.show()
+#
+# # Save the embeddings for potential further analysis
+# np.savez(
+#     'umap_results.npz',
+#     embedding=embedding,
+#     sample_ids=sample_ids,
+#     cluster_indices=cluster_indices,
+#     latent_vectors=latent_2d
+# )
+# print("UMAP visualization complete. Results saved with sample-based coloring.")

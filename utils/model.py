@@ -315,7 +315,7 @@ class Decoder(layers.Layer):
         # out = tf.nn.softmax(out) # Disable softmax for regression tasks
         # out = tf.nn.sigmoid(out)
         # mlp head
-        out = self.mlp_head1(out)
+        # out = self.mlp_head1(out)
         return out
 
     def layernorm(self, inputs):
@@ -879,7 +879,7 @@ class SCQ_layer(layers.Layer):
         # Higher perplexity means more uniform codebook usage
         perplexity = tf.exp(-tf.reduce_sum(avg_probs * tf.math.log(avg_probs + 1e-10)))
 
-        return Zq, hard_indices, loss, perplexity  # (B,N,embed_dim), #(B,N,num_embed), (1,), (1,)
+        return Zq, out_P_proj, loss, perplexity, hard_indices  # (B,N,embed_dim), #(B,N,num_embed), (1,), (1,)
 
     def project_columns_to_simplex(self, P_sol):
         """Projects columns of a matrix to the probability simplex."""
@@ -961,66 +961,66 @@ class SCQ_layer(layers.Layer):
                     tf.ones_like(self.code_usage[dead_idx]) * 0.2)  # Start with higher usage
 
 
-class VQ_Layer(tf.keras.layers.Layer):
-    def __init__(self, embedding_dim, num_embeddings, beta, **kwargs):
-        super().__init__(**kwargs)
-        self.embedding_dim = embedding_dim
-        self.num_embeddings = num_embeddings
-        self.beta = beta
-
-        w_init = tf.random_uniform_initializer()
-        self.embeddings = tf.Variable(
-            initial_value=w_init(shape=(self.num_embeddings, self.embedding_dim), dtype="float32"),
-            trainable=True,
-            name="embeddings_vq"
-        )
-
-    def call(self, inputs):
-        input_shape = tf.shape(inputs)
-        flat_inputs = tf.reshape(inputs, [-1, self.embedding_dim])  # (B*T, emb_dim)
-
-        # Compute squared L2 distances
-        a_sq = tf.reduce_sum(flat_inputs ** 2, axis=1, keepdims=True)  # (B*T, 1)
-        ab = 2 * tf.matmul(flat_inputs, tf.transpose(self.embeddings))  # (B*T, num_embeddings)
-        b_sq = tf.reduce_sum(self.embeddings ** 2, axis=1)  # (num_embeddings,)
-        b_sq = tf.reshape(b_sq, [1, -1])  # (1, num_embeddings)
-
-        distances = a_sq - ab + b_sq  # (B*T, num_embeddings)
-
-        # Find closest embeddings
-        encoding_indices = tf.argmin(distances, axis=1)
-        encodings = tf.one_hot(encoding_indices, self.num_embeddings)
-        quantized = tf.matmul(encodings, self.embeddings)
-
-        # Reshape quantized values to match input shape
-        quantized = tf.reshape(quantized, input_shape)
-
-        # Calculate VQ losses - straight-through estimator
-        commitment_loss = tf.reduce_mean(tf.square(tf.stop_gradient(quantized) - inputs))
-        codebook_loss = tf.reduce_mean(tf.square(quantized - tf.stop_gradient(inputs)))
-        vq_loss = commitment_loss + self.beta * codebook_loss
-
-        # Add loss to layer's loss collection
-        self.add_loss(vq_loss)
-
-        # Straight-through estimator (copy gradients from quantized to inputs)
-        quantized = inputs + tf.stop_gradient(quantized - inputs)
-
-        # Optionally compute perplexity
-        avg_probs = tf.reduce_mean(encodings, axis=0)
-        perplexity = tf.exp(-tf.reduce_sum(avg_probs * tf.math.log(avg_probs + 1e-10)))
-
-        indices_reshaped = tf.reshape(encoding_indices, input_shape[:-1])
-        return quantized, indices_reshaped, perplexity
-
-    def get_config(self):
-        config = super().get_config()
-        config.update({
-            "embedding_dim": self.embedding_dim,
-            "num_embeddings": self.num_embeddings,
-            "beta": self.beta
-        })
-        return config
+# class VQ_Layer(tf.keras.layers.Layer):
+#     def __init__(self, embedding_dim, num_embeddings, beta, **kwargs):
+#         super().__init__(**kwargs)
+#         self.embedding_dim = embedding_dim
+#         self.num_embeddings = num_embeddings
+#         self.beta = beta
+#
+#         w_init = tf.random_uniform_initializer()
+#         self.embeddings = tf.Variable(
+#             initial_value=w_init(shape=(self.num_embeddings, self.embedding_dim), dtype="float32"),
+#             trainable=True,
+#             name="embeddings_vq"
+#         )
+#
+#     def call(self, inputs):
+#         input_shape = tf.shape(inputs)
+#         flat_inputs = tf.reshape(inputs, [-1, self.embedding_dim])  # (B*T, emb_dim)
+#
+#         # Compute squared L2 distances
+#         a_sq = tf.reduce_sum(flat_inputs ** 2, axis=1, keepdims=True)  # (B*T, 1)
+#         ab = 2 * tf.matmul(flat_inputs, tf.transpose(self.embeddings))  # (B*T, num_embeddings)
+#         b_sq = tf.reduce_sum(self.embeddings ** 2, axis=1)  # (num_embeddings,)
+#         b_sq = tf.reshape(b_sq, [1, -1])  # (1, num_embeddings)
+#
+#         distances = a_sq - ab + b_sq  # (B*T, num_embeddings)
+#
+#         # Find closest embeddings
+#         encoding_indices = tf.argmin(distances, axis=1)
+#         encodings = tf.one_hot(encoding_indices, self.num_embeddings)
+#         quantized = tf.matmul(encodings, self.embeddings)
+#
+#         # Reshape quantized values to match input shape
+#         quantized = tf.reshape(quantized, input_shape)
+#
+#         # Calculate VQ losses - straight-through estimator
+#         commitment_loss = tf.reduce_mean(tf.square(tf.stop_gradient(quantized) - inputs))
+#         codebook_loss = tf.reduce_mean(tf.square(quantized - tf.stop_gradient(inputs)))
+#         vq_loss = commitment_loss + self.beta * codebook_loss
+#
+#         # Add loss to layer's loss collection
+#         self.add_loss(vq_loss)
+#
+#         # Straight-through estimator (copy gradients from quantized to inputs)
+#         quantized = inputs + tf.stop_gradient(quantized - inputs)
+#
+#         # Optionally compute perplexity
+#         avg_probs = tf.reduce_mean(encodings, axis=0)
+#         perplexity = tf.exp(-tf.reduce_sum(avg_probs * tf.math.log(avg_probs + 1e-10)))
+#
+#         indices_reshaped = tf.reshape(encoding_indices, input_shape[:-1])
+#         return quantized, indices_reshaped, perplexity
+#
+#     def get_config(self):
+#         config = super().get_config()
+#         config.update({
+#             "embedding_dim": self.embedding_dim,
+#             "num_embeddings": self.num_embeddings,
+#             "beta": self.beta
+#         })
+#         return config
 
 
 # Helper function for convolutional blocks
@@ -1125,7 +1125,7 @@ class SCQ1DAutoEncoder(keras.Model):
         x_bottleneck = self.bottleneck(self.pool4(x4))
 
         # --- Vector Quantization ---
-        quantized, indices, vq_loss, perplexity = self.vq_layer(x_bottleneck)
+        quantized, indices, vq_loss, perplexity, hard_indices = self.vq_layer(x_bottleneck)
 
         # --- Decoding ---
         y = self.up4_trans(quantized)
@@ -1143,7 +1143,7 @@ class SCQ1DAutoEncoder(keras.Model):
         output = self.output_layer(y)
         vq_loss = tf.add_n(self.vq_layer.losses) if self.vq_layer.losses else tf.constant(0.0)
 
-        return output, quantized, indices, vq_loss, perplexity
+        return output, quantized, indices, vq_loss, perplexity, hard_indices
 
     @property
     def metrics(self):
@@ -1162,14 +1162,14 @@ class SCQ1DAutoEncoder(keras.Model):
             x = y = data
 
         with tf.GradientTape() as tape:
-            reconstruction, quantized, indices, vq_loss, perplexity = self(x, training=True)
+            reconstruction, quantized, indices, vq_loss, perplexity, hard_indices = self(x, training=True)
 
             # Basic reconstruction loss
             recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
 
             # Add feature matching loss by comparing intermediate features
             with tape.stop_recording():
-                _, mid_features, _, _, _ = self(reconstruction, training=False)
+                _, mid_features, _, _, _, _ = self(reconstruction, training=False)
                 orig_mid_features = quantized
 
             # Feature matching loss to maintain semantic information
@@ -1216,7 +1216,7 @@ class SCQ1DAutoEncoder(keras.Model):
         else:
             x = y = data
 
-        reconstruction, _, _, vq_loss, perplexity = self(x, training=False)
+        reconstruction, _, _, vq_loss, perplexity, hard_indices = self(x, training=False)
         recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
         total_loss = recon_loss + vq_loss + self.commitment_beta * tf.reduce_mean(
             tf.math.squared_difference(x, reconstruction))
