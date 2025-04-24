@@ -1,13 +1,14 @@
-'''import os
-import json
+
+import os
+import tensorflow as tf
 import numpy as np
 import pandas as pd
-import tensorflow as tf
+import time
 import matplotlib.pyplot as plt
-from sklearn.model_selection import KFold
-from utils.model import SCQ_model
-import keras
-
+from sklearn.model_selection import train_test_split
+from sklearn.cluster import KMeans
+from utils.model import SCQ1DAutoEncoder
+'''
 # Set TensorFlow logging level for more information
 tf.get_logger().setLevel('INFO')
 
@@ -917,25 +918,27 @@ if __name__ == "__main__":
 def train_and_evaluate_scqvae(
     data_path,
     num_embeddings=32,
-    embedding_dim=32,
-    batch_size=1,
-    epochs=10,
-    learning_rate=1e-4,
+    embedding_dim=64,  # Increased from 32
+    batch_num=32,      # Increased from 1
+    epochs=20,         # Increased from 10
+    learning_rate=1e-3,  # Adjusted from 1e-4
     commitment_beta=0.25,
-    output_dir='vqvae_output',
+    output_dir='data/SCQvae',
     visualize=True,
     save_model=True,
     random_state=42,
-    test_size=0.2
+    test_size=0.2,
+    return_quantize_whole_dataset=False,
+    **kwargs
 ):
     """
-    Train and evaluate a VQ-VAE model on peptide embedding data.
+    Train and evaluate a VQ-VAE model on peptide embedding data with improved codebook utilization.
 
     Args:
         data_path: Path to the parquet file containing peptide embeddings
         num_embeddings: Number of clusters/codes in the codebook
         embedding_dim: Dimension of each codebook vector
-        batch_size: Batch size for training
+        batch_num: Batch size for training
         epochs: Number of training epochs
         learning_rate: Learning rate for the optimizer
         commitment_beta: Beta parameter for commitment loss
@@ -950,20 +953,11 @@ def train_and_evaluate_scqvae(
         history: Training history
         latent_data: Dictionary containing latent representations and indices
     """
-    import os
-    import tensorflow as tf
-    import numpy as np
-    import pandas as pd
-    import time
-    import matplotlib.pyplot as plt
-    from sklearn.model_selection import train_test_split
-    from utils.model import SCQ1DAutoEncoder
-
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
 
     # --- Helper Functions ---
-    def create_dataset(X, batch_size=4, is_training=True):
+    def create_dataset(X, batch_size=32, is_training=True):
         """Create a TensorFlow dataset from input array X."""
         dataset = tf.data.Dataset.from_tensor_slices(X)
         if is_training:
@@ -974,29 +968,25 @@ def train_and_evaluate_scqvae(
 
     def load_data(data_path, test_size=0.2, random_state=42):
         """Load and prepare data for training."""
-        # Load data
         embeddings = pd.read_parquet(data_path)
-
-        # Select the latent columns
         latent_columns = [col for col in embeddings.columns if 'latent' in col]
         print(f"Found {len(latent_columns)} latent columns")
-
-        # Extract values and reshape
         X = embeddings[latent_columns].values
         seq_length = len(latent_columns)
-        feature_dim = 1
-        X = X.reshape(-1, seq_length, feature_dim)
-
-        # Split into train and test sets
+        X = X.reshape(-1, seq_length)
         X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
+        return X_train, X_test, seq_length
 
-        return X_train, X_test, seq_length, feature_dim
+    def initialize_codebook_with_kmeans(X_train, num_embeddings, embedding_dim):
+        """Initialize codebook vectors using k-means clustering."""
+        kmeans = KMeans(n_clusters=num_embeddings, random_state=random_state)
+        flat_data = X_train.reshape(-1, X_train.shape[-1])
+        kmeans.fit(flat_data)
+        return kmeans.cluster_centers_.astype(np.float32)
 
     def plot_training_metrics(history, save_path=None):
         """Plot the training metrics over epochs."""
         fig, axes = plt.subplots(4, 1, figsize=(12, 20), sharex=True)
-
-        # Plot total loss
         axes[0].plot(history.history['total_loss'], 'b-', label='Train')
         if 'val_total_loss' in history.history:
             axes[0].plot(history.history['val_total_loss'], 'r-', label='Validation')
@@ -1005,7 +995,6 @@ def train_and_evaluate_scqvae(
         axes[0].grid(True)
         axes[0].legend()
 
-        # Plot reconstruction loss
         axes[1].plot(history.history['recon_loss'], 'b-', label='Train')
         if 'val_recon_loss' in history.history:
             axes[1].plot(history.history['val_recon_loss'], 'r-', label='Validation')
@@ -1014,7 +1003,6 @@ def train_and_evaluate_scqvae(
         axes[1].grid(True)
         axes[1].legend()
 
-        # Plot VQ loss
         axes[2].plot(history.history['vq_loss'], 'b-', label='Train')
         if 'val_vq_loss' in history.history:
             axes[2].plot(history.history['val_vq_loss'], 'r-', label='Validation')
@@ -1023,7 +1011,6 @@ def train_and_evaluate_scqvae(
         axes[2].grid(True)
         axes[2].legend()
 
-        # Plot perplexity
         axes[3].plot(history.history['perplexity'], 'b-', label='Train')
         if 'val_perplexity' in history.history:
             axes[3].plot(history.history['val_perplexity'], 'r-', label='Validation')
@@ -1045,20 +1032,15 @@ def train_and_evaluate_scqvae(
         """Plot comparison between original and reconstructed sequences."""
         n_samples = min(n_samples, len(original))
         plt.figure(figsize=(15, 3 * n_samples))
-
         for i in range(n_samples):
-            # Plot original sequence
             plt.subplot(n_samples, 2, 2 * i + 1)
-            plt.plot(original[i, :, 0])  # Assuming last dim is feature dim with size 1
+            plt.plot(original[i])
             plt.title(f"Original Sequence {i + 1}")
             plt.grid(True)
-
-            # Plot reconstructed sequence
             plt.subplot(n_samples, 2, 2 * i + 2)
-            plt.plot(reconstructed[i, :, 0])  # Assuming same shape as original
+            plt.plot(reconstructed[i])
             plt.title(f"Reconstructed Sequence {i + 1}")
             plt.grid(True)
-
         plt.tight_layout()
         if save_path:
             plt.savefig(save_path)
@@ -1068,262 +1050,158 @@ def train_and_evaluate_scqvae(
             plt.close()
 
     def plot_codebook_usage(indices, num_embeddings, save_path=None):
-        """
-        Visualize the usage distribution of codebook vectors.
-        """
-        # Convert to numpy if it's a tensor
+        """Visualize the usage distribution of codebook vectors."""
         if isinstance(indices, tf.Tensor):
             indices = indices.numpy()
-
-        # Flatten the indices if they're not already flattened
         flat_indices = indices.flatten()
-
-        # Check if we need to quantize float values to discrete indices
         if np.issubdtype(flat_indices.dtype, np.floating):
             print(f"Detected floating point indices, quantizing to {num_embeddings} discrete values")
-            min_val = np.min(flat_indices)
-            max_val = np.max(flat_indices)
+            min_val, max_val = np.min(flat_indices), np.max(flat_indices)
             print(f"Index range: {min_val} to {max_val}")
-
-            # Create quantization bins
             bins = np.linspace(min_val, max_val, num_embeddings + 1)
-
-            # Digitize the indices (assign each to a bin)
             discrete_indices = np.digitize(flat_indices, bins) - 1
+            flat_indices = np.clip(discrete_indices, 0, num_embeddings - 1)
 
-            # Clip to ensure valid range
-            discrete_indices = np.clip(discrete_indices, 0, num_embeddings - 1)
-            flat_indices = discrete_indices
-
-        # Count occurrences of each codebook vector
         unique, counts = np.unique(flat_indices, return_counts=True)
-
-        # Create a complete distribution including zeros for unused vectors
         full_distribution = np.zeros(num_embeddings)
         for idx, count in zip(unique, counts):
             if 0 <= idx < num_embeddings:
                 full_distribution[int(idx)] = count
 
-        # Calculate usage statistics
         used_vectors = np.sum(full_distribution > 0)
         usage_percentage = (used_vectors / num_embeddings) * 100
 
-        # Create the figure
         plt.figure(figsize=(12, 6))
-
-        # Create bar plot
         bar_positions = np.arange(num_embeddings)
         bars = plt.bar(bar_positions, full_distribution)
-
-        # Add a color gradient based on frequency
         max_count = np.max(full_distribution)
-        if max_count > 0:  # Avoid division by zero
+        if max_count > 0:
             for i, bar in enumerate(bars):
                 intensity = full_distribution[i] / max_count
                 bar.set_color(plt.cm.viridis(intensity))
 
-        # Add labels and title
         plt.xlabel('Codebook Vector Index')
         plt.ylabel('Usage Count')
         plt.title(f'Codebook Vector Usage Distribution\n{used_vectors}/{num_embeddings} vectors used ({usage_percentage:.1f}%)')
-
-        # Add grid for better readability
         plt.grid(axis='y', linestyle='--', alpha=0.7)
-
-        # Add a colorbar as a usage intensity reference
         sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(0, max_count))
         sm.set_array([])
         cbar = plt.colorbar(sm)
         cbar.set_label('Frequency')
-
-        # Improve layout
         plt.tight_layout()
 
-        # Save the plot
         if save_path:
             plt.savefig(save_path)
-
-        # Display statistics
-        print(f"Codebook usage statistics:")
-        print(f"- Total vectors in codebook: {num_embeddings}")
-        print(f"- Number of vectors used: {used_vectors} ({usage_percentage:.1f}%)")
-        if used_vectors > 0:
-            print(f"- Most used vector: {np.argmax(full_distribution)} (used {np.max(full_distribution)} times)")
-            used_indices = np.where(full_distribution > 0)[0]
-            min_used_idx = used_indices[np.argmin(full_distribution[used_indices])]
-            print(f"- Least used vector: {min_used_idx} (used {full_distribution[min_used_idx]} times)")
-
+        print(f"Codebook usage: {used_vectors}/{num_embeddings} vectors used ({usage_percentage:.1f}%)")
         if visualize:
             plt.show()
         else:
             plt.close()
-
         return used_vectors, usage_percentage
 
     # --- Main Pipeline ---
     print("Loading/Generating Training Data...")
-    train_data, test_data, seq_length, feature_dim = load_data(
-        data_path, test_size=test_size, random_state=random_state
-    )
+    train_data, test_data, seq_length = load_data(data_path, test_size=test_size, random_state=random_state)
 
-    # Create tf.data Datasets for efficient training
+    # Initialize codebook with k-means
+    print("Initializing codebook with k-means...")
+    initial_codebook = initialize_codebook_with_kmeans(train_data, num_embeddings, seq_length)
+
+    # Create datasets
     print("Creating TensorFlow Datasets...")
-    train_dataset = create_dataset(train_data, batch_size=batch_size, is_training=True)
-    val_dataset = create_dataset(test_data, batch_size=batch_size, is_training=False)
+    train_dataset = create_dataset(train_data, batch_size=batch_num, is_training=True)
+    val_dataset = create_dataset(test_data, batch_size=batch_num, is_training=False)
     print("Datasets created.")
 
     # --- Model Instantiation ---
     print("Building the SCQ1DAutoEncoder model...")
-    input_shape = (seq_length, feature_dim)
-
+    input_shape = (seq_length,)
     model = SCQ1DAutoEncoder(
         input_dim=input_shape,
         num_embeddings=num_embeddings,
         embedding_dim=embedding_dim,
         commitment_beta=commitment_beta,
+        scq_params={
+            'lambda_reg': 1.0,          # Increased regularization
+            'discrete_loss': True,      # Use discrete loss
+            'reset_dead_codes': True,   # Reset underused vectors
+            'usage_threshold': 1e-4,    # Lower threshold
+            'reset_interval': 5         # Frequent resets
+        },
+        initial_codebook=initial_codebook  # Pass k-means initialized codebook
     )
     print("Model built.")
 
-    # --- Compile and Train the Model ---
+    # --- Compile and Train ---
     print("Compiling the model...")
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
     print("Model compiled.")
 
-    # --- Training ---
     print(f"Starting training for {epochs} epochs...")
     start_time = time.time()
-
     history = model.fit(
         train_dataset,
         epochs=epochs,
         validation_data=val_dataset
     )
-
     end_time = time.time()
     print(f"\nTraining finished in {end_time - start_time:.2f} seconds.")
 
     # --- Evaluation and Visualization ---
     if visualize:
-        # Plot training metrics
         print("\nPlotting training history...")
-        plot_training_metrics(
-            history,
-            save_path=os.path.join(output_dir, 'vqvae_training_metrics.png')
-        )
-
-        # Example inference
-        print("\nPerforming example inference on validation data...")
+        plot_training_metrics(history, save_path=os.path.join(output_dir, 'vqvae_training_metrics.png'))
+        print("\nPerforming example inference...")
         example_batch = next(iter(val_dataset))
         output = model(example_batch, training=False)
         reconstruction, quantized_latent, cluster_indices, vq_loss, perplexity, hard_indices = output
-
-        # Plot reconstructions
         print("\nVisualizing reconstructions...")
-        plot_reconstructions(
-            example_batch.numpy(),
-            reconstruction.numpy(),
-            save_path=os.path.join(output_dir, 'vqvae_reconstructions.png')
-        )
-
-        # Plot codebook usage
+        plot_reconstructions(example_batch.numpy(), reconstruction.numpy(), save_path=os.path.join(output_dir, 'vqvae_reconstructions.png'))
         print("\nAnalyzing codebook usage...")
-        plot_codebook_usage(
-            hard_indices,
-            num_embeddings,
-            save_path=os.path.join(output_dir, 'codebook_usage.png')
-        )
+        plot_codebook_usage(hard_indices, num_embeddings, save_path=os.path.join(output_dir, 'codebook_usage.png'))
 
-    # --- Save the model ---
+    # --- Save Model ---
     if save_model:
         model_dir = os.path.join(output_dir, 'model')
         os.makedirs(model_dir, exist_ok=True)
         model.save_weights(os.path.join(model_dir, 'vqvae_model_weights.h5'))
         print(f"\nModel weights saved to '{os.path.join(model_dir, 'vqvae_model_weights.h5')}'")
 
-    # --- Extract and save latent space ---
+    # --- Extract Latent Space ---
     print("\nExtracting quantized latent space...")
-    whole_dataset = tf.data.Dataset.concatenate(train_dataset, val_dataset)
-    quantized_latents = []
-    cluster_indices_all = []
-    hard_indices_all = []
-
+    if return_quantize_whole_dataset:
+        whole_dataset = tf.data.Dataset.concatenate(train_dataset, val_dataset)
+    else:
+        whole_dataset = val_dataset
+    quantized_latents, cluster_indices_all, hard_indices_all = [], [], []
     for batch in whole_dataset:
         output, q_latent, indices, _, _, hard_indices = model(batch, training=False)
         quantized_latents.append(q_latent.numpy())
         cluster_indices_all.append(indices.numpy())
         hard_indices_all.append(hard_indices.numpy())
-
     quantized_latent = np.concatenate(quantized_latents, axis=0)
     cluster_indices = np.concatenate(cluster_indices_all, axis=0)
     hard_indices = np.concatenate(hard_indices_all, axis=0)
-
-    # Save latent representations
     np.save(os.path.join(output_dir, 'quantized_latent.npy'), quantized_latent)
     np.save(os.path.join(output_dir, 'cluster_indices.npy'), cluster_indices)
     np.save(os.path.join(output_dir, 'hard_indices.npy'), hard_indices)
     print(f"Latent representations saved to {output_dir}")
 
-    # --- Optional UMAP visualization ---
-    if visualize:
-        try:
-            import umap
-            print("\nComputing UMAP projection...")
-
-            # Flatten and reshape for UMAP
-            hard_indices_flat = hard_indices.flatten().reshape(-1, 1)
-
-            # Compute 1D UMAP projection
-            mapper_1d = umap.UMAP(n_components=1, n_neighbors=15, min_dist=0.1,
-                                 metric='euclidean', random_state=random_state)
-            embedding_1d = mapper_1d.fit_transform(hard_indices_flat)
-
-            # Create sample IDs for visualization
-            sample_ids = []
-            sample_counter = 0
-            for batch in val_dataset:
-                batch_size = batch.shape[0]
-                for i in range(batch_size):
-                    sample_ids.extend([sample_counter] * seq_length)
-                    sample_counter += 1
-            sample_ids = np.array(sample_ids)
-
-            # Visualize 1D UMAP
-            plt.figure(figsize=(12, 4))
-            y_jitter = np.random.rand(embedding_1d.shape[0]) * 0.1
-            scatter_1d = plt.scatter(embedding_1d[:, 0], y_jitter,
-                                    c=sample_ids[:embedding_1d.shape[0]],
-                                    cmap='tab20', s=10, alpha=0.7)
-            plt.colorbar(scatter_1d, label='Sample ID')
-            plt.title('1D UMAP Projection of Latent Space', fontsize=14)
-            plt.xlabel('UMAP Dimension 1', fontsize=12)
-            plt.yticks([])
-            plt.grid(axis='x', linestyle='--', alpha=0.6)
-            plt.savefig(os.path.join(output_dir, 'umap_projection.png'))
-            if visualize:
-                plt.show()
-            else:
-                plt.close()
-        except ImportError:
-            print("UMAP not installed. Skipping UMAP visualization.")
-
-    # Return results
     latent_data = {
         'quantized_latent': quantized_latent,
         'cluster_indices': cluster_indices,
         'hard_indices': hard_indices
     }
-
     return model, history, latent_data
 
-# Example usage:
 if __name__ == "__main__":
     model, history, latent_data = train_and_evaluate_scqvae(
         data_path="data/Pep2Vec/Conbotnet/pep2vec_output_fold_0.parquet",
-        num_embeddings=32,
+        num_embeddings=8,
         embedding_dim=32,
-        batch_size=1,
+        batch_num=8,
         epochs=10,
-        output_dir="vqvae_results"
+        output_dir="data/SCQvae/Conbotnet",
     )
 
 # # Create a 1D UMAP projection colored by cluster indices
