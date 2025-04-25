@@ -125,7 +125,112 @@ def select_columns(df, columns):
 #         return f"{locus}*{num[:2]}:{num[2:]}"
 #     return chain
 
-def main(dataset_name="Conbotnet", mhc_type="mhc2"):
+def add_binding_label(df_path, train_path, test_path, output_dir=None):
+        """
+        Add binding labels to the DataFrame based on allotype and peptide pairs.
+
+        Parameters:
+        -----------
+        df_path : DataFrame, str, or directory path
+            DataFrame, path to a file, or directory containing multiple files to add binding labels to
+        train_path : str
+            Path to training data CSV file with binding labels
+        test_path : str
+            Path to test data CSV file with binding labels
+        output_dir : str, optional
+            Directory to save labeled files, if None will overwrite original files
+
+        Returns:
+        --------
+        DataFrame or dict of DataFrames with binding labels added
+        """
+        # Load train and test binding label mappings
+        train_df = pd.read_csv(train_path)
+        test_df = pd.read_csv(test_path)
+
+        # Create binding label mappings
+        train_binding_labels = {
+            (row["allele"], row["long_mer"]): row["binding_label"]
+            for _, row in train_df.iterrows()
+        }
+
+        test_binding_labels = {
+            (row["allele"], row["long_mer"]): row["binding_label"]
+            for _, row in test_df.iterrows()
+        }
+
+        # Check if df_path is a directory
+        if isinstance(df_path, str) and os.path.isdir(df_path):
+            # Process all files in the directory
+            results = {}
+            for filename in os.listdir(df_path):
+                file_path = os.path.join(df_path, filename)
+                if os.path.isfile(file_path) and (file_path.endswith('.csv') or file_path.endswith('.parquet')):
+                    print(f"Processing file: {filename}")
+                    results[filename] = process_single_file(
+                        file_path, train_binding_labels, test_binding_labels, output_dir
+                    )
+            return results
+        else:
+            # Process a single file or DataFrame
+            return process_single_file(df_path, train_binding_labels, test_binding_labels, output_dir)
+
+
+def process_single_file(df_or_path, train_binding_labels, test_binding_labels, output_dir=None):
+    """Helper function to process a single file or DataFrame"""
+    # Process the provided dataframe or file
+    if isinstance(df_or_path, str):
+        if df_or_path.endswith('.parquet'):
+            df = pd.read_parquet(df_or_path)
+        else:
+            df = pd.read_csv(df_or_path)
+        file_path = df_or_path
+    else:
+        df = df_or_path
+        file_path = None
+
+    # Determine if this is a test file based on filename
+    is_test = file_path and "test" in os.path.basename(file_path).lower()
+    binding_labels = test_binding_labels if is_test else train_binding_labels
+
+    # Check if columns use 'allotype'/'peptide' naming convention (parquet files)
+    # or 'allele'/'long_mer' naming convention (CSV files)
+    has_allotype_col = "allotype" in df.columns
+    has_peptide_col = "peptide" in df.columns
+
+    # Assign labels based on mapping with appropriate column names
+    if has_allotype_col and has_peptide_col:
+        # Parquet file naming convention
+        df["binding_label"] = df.apply(
+            lambda row: binding_labels.get((row["allotype"], row["peptide"])),
+            axis=1
+        )
+    else:
+        # CSV file naming convention
+        df["binding_label"] = df.apply(
+            lambda row: binding_labels.get((row["allele"], row["long_mer"])),
+            axis=1
+        )
+
+    # Map string labels to integers
+    label_mapping = {
+        label: i for i, label in enumerate(sorted(df["binding_label"].dropna().unique()))
+    }
+    df["binding_label"] = df["binding_label"].map(label_mapping)
+
+    # Save the file if a path was provided and output_dir is specified
+    if file_path and output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        output_path = os.path.join(output_dir, os.path.basename(file_path))
+        if file_path.endswith('.parquet'):
+            df.to_parquet(output_path)
+        else:
+            df.to_csv(output_path, index=False)
+
+    return df
+
+
+def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0):
     # Conbotnet dataset paths
     # ConBotNet only contains mhc class II
 
@@ -181,7 +286,7 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2"):
     k = 5
     folds = create_k_fold_leave_one_out_stratified_cross_validation(
         datasets['train'], k=k, target_col="binding_label",
-        id_col="allotype", train_size=0.8, subset_prop=0.1
+        id_col="allotype", train_size=0.8, subset_prop=subset_prop
     )
 
     # Clear previous held_out_ids file if it exists
@@ -244,17 +349,29 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2"):
     for i in range(k):
         train_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", f"train_set_fold_{i}.csv")
         output_file = os.path.join(output_dir, f"pep2vec_output_fold_{i}.parquet")
-        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 20 --num_threads 10  --dataset {train_file} --output_location {output_file} --mhctype {mhc_type}")
+        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 40 --num_threads 15  --dataset {train_file} --output_location {output_file} --mhctype {mhc_type}")
         validation_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", f"val_set_fold_{i}.csv")
         output_file = os.path.join(output_dir, f"pep2vec_output_val_fold_{i}.parquet")
-        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 20 --num_threads 10  --dataset {validation_file} --output_location {output_file} --mhctype {mhc_type}")
+        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 40 --num_threads 15  --dataset {validation_file} --output_location {output_file} --mhctype {mhc_type}")
     # test set
     test_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", "test_set.csv")
     output_file = os.path.join(output_dir, f"pep2vec_output_test_fold_{i}.parquet")
-    os.system(f"./Pep2Vec/pep2vec.bin --num_processes 20 --num_threads 10  --dataset {test_file} --output_location {output_file} --mhctype {mhc_type}")
+    os.system(f"./Pep2Vec/pep2vec.bin --num_processes 40 --num_threads 15  --dataset {test_file} --output_location {output_file} --mhctype {mhc_type}")
     ###############################################
 
 
 if __name__ == "__main__":
-    main("Conbotnet", "mhc2")
-    main("ConvNeXT-MHC", "mhc1")
+    # main("Conbotnet", "mhc2")
+    # add_binding_label(
+    #     df_path=os.path.join("data", "Pep2Vec", "Conbotnet"),
+    #     train_path=os.path.join("data", "Conbotnet", "train.csv"),
+    #     test_path=os.path.join("data", "Conbotnet", "test_all.csv"),
+    #     output_dir=os.path.join("data", "Pep2Vec", "Conbotnet_new")
+    # )
+    main("ConvNeXT-MHC", "mhc1", 0.01)
+    add_binding_label(
+        df_path=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC"),
+        train_path=os.path.join("data", "ConvNeXT-MHC", "train.csv"),
+        test_path=os.path.join("data", "ConvNeXT-MHC", "test_all.csv"),
+        output_dir=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC_subset_new")
+    )
