@@ -349,14 +349,14 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0):
     for i in range(k):
         train_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", f"train_set_fold_{i}.csv")
         output_file = os.path.join(output_dir, f"pep2vec_output_fold_{i}.parquet")
-        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 40 --num_threads 15  --dataset {train_file} --output_location {output_file} --mhctype {mhc_type}")
+        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 300 --num_threads 14  --dataset {train_file} --output_location {output_file} --mhctype {mhc_type}")
         validation_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", f"val_set_fold_{i}.csv")
         output_file = os.path.join(output_dir, f"pep2vec_output_val_fold_{i}.parquet")
-        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 40 --num_threads 15  --dataset {validation_file} --output_location {output_file} --mhctype {mhc_type}")
+        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 300 --num_threads 14  --dataset {validation_file} --output_location {output_file} --mhctype {mhc_type}")
     # test set
     test_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", "test_set.csv")
     output_file = os.path.join(output_dir, f"pep2vec_output_test_fold_{i}.parquet")
-    os.system(f"./Pep2Vec/pep2vec.bin --num_processes 40 --num_threads 15  --dataset {test_file} --output_location {output_file} --mhctype {mhc_type}")
+    os.system(f"./Pep2Vec/pep2vec.bin --num_processes 300 --num_threads 14  --dataset {test_file} --output_location {output_file} --mhctype {mhc_type}")
     ###############################################
 
 

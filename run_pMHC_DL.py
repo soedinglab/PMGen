@@ -919,16 +919,16 @@ def train_and_evaluate_scqvae(
     data_path,
     num_embeddings=32,
     embedding_dim=64,  # Increased from 32
-    batch_num=32,      # Increased from 1
+    batch_size=32,      # Increased from 1
     epochs=20,         # Increased from 10
-    learning_rate=1e-3,  # Adjusted from 1e-4
+    learning_rate=1e-5,  # Adjusted from 1e-4
     commitment_beta=0.25,
     output_dir='data/SCQvae',
     visualize=True,
     save_model=True,
     random_state=42,
     test_size=0.2,
-    return_quantize_whole_dataset=False,
+    output_data="all", # Options: "val", "train", "all"
     **kwargs
 ):
     """
@@ -938,7 +938,7 @@ def train_and_evaluate_scqvae(
         data_path: Path to the parquet file containing peptide embeddings
         num_embeddings: Number of clusters/codes in the codebook
         embedding_dim: Dimension of each codebook vector
-        batch_num: Batch size for training
+        batch_size: Batch size for training
         epochs: Number of training epochs
         learning_rate: Learning rate for the optimizer
         commitment_beta: Beta parameter for commitment loss
@@ -959,11 +959,12 @@ def train_and_evaluate_scqvae(
     # --- Helper Functions ---
     def create_dataset(X, batch_size=32, is_training=True):
         """Create a TensorFlow dataset from input array X."""
+        # X shape: (num_samples, seq_length)
         dataset = tf.data.Dataset.from_tensor_slices(X)
         if is_training:
-            dataset = dataset.shuffle(buffer_size=len(X))
-        dataset = dataset.batch(batch_size)
-        dataset = dataset.prefetch(tf.data.AUTOTUNE)
+            dataset = dataset.shuffle(buffer_size=len(X))  # Shuffle all samples
+        dataset = dataset.batch(batch_size)  # Result shape: (batch_size, seq_length)
+        dataset = dataset.prefetch(tf.data.AUTOTUNE)  # Prefetch for better performance
         return dataset
 
     def load_data(data_path, test_size=0.2, random_state=42):
@@ -1050,30 +1051,63 @@ def train_and_evaluate_scqvae(
             plt.close()
 
     def plot_codebook_usage(indices, num_embeddings, save_path=None):
-        """Visualize the usage distribution of codebook vectors."""
+        """Visualize the usage distribution of codebook vectors.
+
+        Args:
+            indices: Hard indices from model output (integer indices of assigned codes)
+            num_embeddings: Total number of vectors in the codebook
+            save_path: Path to save the visualization
+
+        Returns:
+            used_vectors: Number of vectors used
+            usage_percentage: Percentage of codebook utilized
+        """
+        # Convert from tensor to numpy if needed
         if isinstance(indices, tf.Tensor):
             indices = indices.numpy()
-        flat_indices = indices.flatten()
-        if np.issubdtype(flat_indices.dtype, np.floating):
-            print(f"Detected floating point indices, quantizing to {num_embeddings} discrete values")
-            min_val, max_val = np.min(flat_indices), np.max(flat_indices)
-            print(f"Index range: {min_val} to {max_val}")
-            bins = np.linspace(min_val, max_val, num_embeddings + 1)
-            discrete_indices = np.digitize(flat_indices, bins) - 1
-            flat_indices = np.clip(discrete_indices, 0, num_embeddings - 1)
 
-        unique, counts = np.unique(flat_indices, return_counts=True)
+        # Ensure indices is a NumPy array before proceeding
+        if not isinstance(indices, np.ndarray):
+            try:
+                # Attempt conversion if it's list-like
+                indices = np.array(indices)
+            except Exception as e:
+                print(
+                    f"Error in plot_codebook_usage: Input 'indices' is not a NumPy array or convertible. Type: {type(indices)}. Error: {e}")
+                # Return default values or raise an error
+                return 0, 0.0
+
+        # Flatten indices to 1D array for counting
+        try:
+            flat_indices = indices.flatten()
+        except AttributeError:
+            print(f"Error in plot_codebook_usage: Cannot flatten 'indices'. Type: {type(indices)}")
+            return 0, 0.0  # Return default values
+
+        # Count occurrences of each codebook vector
+        try:
+            unique, counts = np.unique(flat_indices, return_counts=True)
+        except TypeError as e:
+            print(
+                f"Error in plot_codebook_usage: Cannot compute unique values for 'flat_indices'. Type: {type(flat_indices)}. Error: {e}")
+            return 0, 0.0  # Return default values
+
+        # Create full distribution including zeros for unused vectors
         full_distribution = np.zeros(num_embeddings)
         for idx, count in zip(unique, counts):
-            if 0 <= idx < num_embeddings:
+            if 0 <= idx < num_embeddings:  # Ensure index is valid
                 full_distribution[int(idx)] = count
 
+        # Calculate usage statistics
         used_vectors = np.sum(full_distribution > 0)
         usage_percentage = (used_vectors / num_embeddings) * 100
 
+        # Create the plot
         plt.figure(figsize=(12, 6))
         bar_positions = np.arange(num_embeddings)
         bars = plt.bar(bar_positions, full_distribution)
+
+        # Color bars by frequency
         max_count = np.max(full_distribution)
         if max_count > 0:
             for i, bar in enumerate(bars):
@@ -1082,8 +1116,11 @@ def train_and_evaluate_scqvae(
 
         plt.xlabel('Codebook Vector Index')
         plt.ylabel('Usage Count')
-        plt.title(f'Codebook Vector Usage Distribution\n{used_vectors}/{num_embeddings} vectors used ({usage_percentage:.1f}%)')
+        plt.title(
+            f'Codebook Vector Usage Distribution\n{used_vectors}/{num_embeddings} vectors used ({usage_percentage:.1f}%)')
         plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+        # Add colorbar
         sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(0, max_count))
         sm.set_array([])
         cbar = plt.colorbar(sm)
@@ -1099,6 +1136,191 @@ def train_and_evaluate_scqvae(
             plt.close()
         return used_vectors, usage_percentage
 
+    def plot_soft_cluster_distribution(soft_cluster_probs, num_samples=None, save_path=None):
+        """
+        Visualize the distribution of soft clustering probabilities across samples.
+
+        Args:
+            soft_cluster_probs: List of arrays or single array containing probability
+                               distributions across clusters for each sample
+            num_samples: Number of samples to visualize (default: 10)
+            save_path: Path to save the visualization (default: None)
+
+        Returns:
+            None
+        """
+        if num_samples is None:
+            num_samples = len(soft_cluster_probs)
+        # Process input to get a clean 2D array (samples x clusters)
+        if isinstance(soft_cluster_probs, list):
+            if not soft_cluster_probs:
+                print("Warning: Empty list provided to plot_soft_cluster_distribution")
+                return
+            sample_batch = soft_cluster_probs[0]
+            if isinstance(sample_batch, tf.Tensor):
+                sample_batch = sample_batch.numpy()
+            soft_cluster_probs = sample_batch
+        elif isinstance(soft_cluster_probs, tf.Tensor):
+            soft_cluster_probs = soft_cluster_probs.numpy()
+
+        # Reshape if needed
+        if soft_cluster_probs.ndim > 2:
+            print(f"Reshaping array from shape {soft_cluster_probs.shape} to 2D format")
+            if soft_cluster_probs.shape[1] == 1:
+                soft_cluster_probs = soft_cluster_probs.reshape(soft_cluster_probs.shape[0],
+                                                               soft_cluster_probs.shape[2])
+            else:
+                soft_cluster_probs = soft_cluster_probs.reshape(soft_cluster_probs.shape[0], -1)
+
+        # Verify valid data
+        if soft_cluster_probs.size == 0:
+            print("Warning: Empty array provided to plot_soft_cluster_distribution")
+            return
+
+        n_samples = min(len(soft_cluster_probs), 1000)  # Limit to prevent memory issues
+        n_clusters = soft_cluster_probs.shape[1]
+
+        # Create a figure with 2 subplots
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 12), gridspec_kw={'height_ratios': [2, 1]})
+
+        # 1. Heatmap visualization (top)
+        display_samples = min(num_samples, n_samples)
+        im = ax1.imshow(soft_cluster_probs[:display_samples], aspect='auto', cmap='viridis')
+        ax1.set_xlabel('Cluster Index')
+        ax1.set_ylabel('Sample Index')
+        ax1.set_title(f'Soft Cluster Probability Heatmap (First {display_samples} Samples)')
+        plt.colorbar(im, ax=ax1, label='Probability')
+
+        # 2. Aggregated statistics (bottom)
+        # Calculate statistics across all samples for each cluster
+        cluster_means = np.mean(soft_cluster_probs, axis=0)
+        cluster_max_counts = np.sum(np.argmax(soft_cluster_probs, axis=1)[:, np.newaxis] == np.arange(n_clusters), axis=0)
+
+        # Create a twin axis for the bar plot
+        ax2_twin = ax2.twinx()
+
+        # Plot mean probability for each cluster (line)
+        x = np.arange(n_clusters)
+        ax2.plot(x, cluster_means, 'r-', linewidth=2, label='Mean Probability')
+        ax2.set_ylabel('Mean Probability', color='r')
+        ax2.tick_params(axis='y', labelcolor='r')
+        ax2.set_ylim(0, max(cluster_means) * 1.2)
+
+        # Plot histogram of cluster assignments (bars)
+        ax2_twin.bar(x, cluster_max_counts, alpha=0.3, label='Assignment Count')
+        ax2_twin.set_ylabel('Number of Samples\nwith Highest Probability', color='b')
+        ax2_twin.tick_params(axis='y', labelcolor='b')
+
+        # Add labels and grid
+        ax2.set_xlabel('Cluster Index')
+        ax2.set_title('Cluster Usage Statistics Across All Samples')
+        ax2.set_xticks(np.arange(0, n_clusters, max(1, n_clusters // 20)))
+        ax2.grid(True, linestyle='--', alpha=0.5, axis='y')
+
+        # Create custom legend
+        lines, labels = ax2.get_legend_handles_labels()
+        lines2, labels2 = ax2_twin.get_legend_handles_labels()
+        ax2.legend(lines + lines2, labels + labels2, loc='upper right')
+
+        # Add overall statistics as text
+        active_clusters = np.sum(np.max(soft_cluster_probs, axis=0) > 0.01)
+        most_used_cluster = np.argmax(cluster_max_counts)
+        ax2.text(0.02, 0.95,
+                 f"Active clusters: {active_clusters}/{n_clusters} ({active_clusters/n_clusters:.1%})\n"
+                 f"Most used cluster: {most_used_cluster} ({cluster_max_counts[most_used_cluster]} samples)",
+                 transform=ax2.transAxes, verticalalignment='top',
+                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
+        plt.tight_layout()
+
+        # Save if path is provided
+        if save_path:
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+
+        # Show or close based on global visualize flag
+        if visualize:
+            plt.show()
+        else:
+            plt.close()
+
+
+    def plot_cluster_distribution(soft_cluster_probs, save_path=None):
+        """
+        Plot distribution of samples across clusters based on one-hot encodings.
+
+        Args:
+            soft_cluster_probs: Soft cluster probabilities
+            save_path: Path to save the plot
+
+        Returns:
+            used_clusters: Number of clusters used
+            usage_percentage: Percentage of clusters used
+        """
+        # Convert soft cluster probabilities to one-hot encodings
+        one_hot_encodings = tf.one_hot(tf.argmax(soft_cluster_probs, axis=-1), depth=soft_cluster_probs.shape[-1])
+        one_hot_encodings = tf.cast(one_hot_encodings, tf.float32)
+
+        # print(f"one_hot_encodings shape: {one_hot_encodings.shape}")
+        # print first 5 values
+        # print(f"one_hot_encodings values: {one_hot_encodings[:5]}")
+
+        # Convert one-hot to cluster indices if needed
+        if isinstance(one_hot_encodings, tf.Tensor):
+            one_hot_encodings = one_hot_encodings.numpy()
+
+        # Handle different shapes of one_hot_encodings
+        if len(one_hot_encodings.shape) == 3:  # (batch, seq_len, num_embeddings)
+            cluster_assignments = np.argmax(one_hot_encodings, axis=-1).flatten()
+        else:  # (batch, num_embeddings)
+            cluster_assignments = np.argmax(one_hot_encodings, axis=-1).flatten()
+
+        # Count occurrences of each cluster
+        unique_clusters, counts = np.unique(cluster_assignments, return_counts=True)
+
+        # Create a full distribution including zeros for unused clusters
+        num_clusters = one_hot_encodings.shape[-1]
+        full_distribution = np.zeros(num_clusters)
+        for cluster, count in zip(unique_clusters, counts):
+            full_distribution[cluster] = count
+
+        # Calculate usage statistics
+        used_clusters = np.sum(full_distribution > 0)
+        usage_percentage = (used_clusters / num_clusters) * 100
+
+        # Create the plot
+        plt.figure(figsize=(12, 6))
+        bars = plt.bar(np.arange(num_clusters), full_distribution)
+
+        # Color bars by frequency
+        max_count = np.max(full_distribution)
+        if max_count > 0:
+            for i, bar in enumerate(bars):
+                intensity = full_distribution[i] / max_count
+                bar.set_color(plt.cm.plasma(intensity))
+
+        plt.xlabel('Cluster Index')
+        plt.ylabel('Number of Samples')
+        plt.title(
+            f'Sample Distribution Across Clusters\n{used_clusters}/{num_clusters} clusters used ({usage_percentage:.1f}%)')
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+        # Add a colorbar
+        sm = plt.cm.ScalarMappable(cmap=plt.cm.plasma, norm=plt.Normalize(0, max_count))
+        sm.set_array([])
+        cbar = plt.colorbar(sm)
+        cbar.set_label('Sample Count')
+
+        plt.tight_layout()
+
+        if save_path:
+            plt.savefig(save_path)
+        print(f"Cluster usage: {used_clusters}/{num_clusters} clusters contain samples ({usage_percentage:.1f}%)")
+        if visualize:
+            plt.show()
+        else:
+            plt.close()
+        return used_clusters, usage_percentage
+
     # --- Main Pipeline ---
     print("Loading/Generating Training Data...")
     train_data, test_data, seq_length = load_data(data_path, test_size=test_size, random_state=random_state)
@@ -1109,8 +1331,8 @@ def train_and_evaluate_scqvae(
 
     # Create datasets
     print("Creating TensorFlow Datasets...")
-    train_dataset = create_dataset(train_data, batch_size=batch_num, is_training=True)
-    val_dataset = create_dataset(test_data, batch_size=batch_num, is_training=False)
+    train_dataset = create_dataset(train_data, batch_size=batch_size, is_training=True)
+    val_dataset = create_dataset(test_data, batch_size=batch_size, is_training=False)
     print("Datasets created.")
 
     # --- Model Instantiation ---
@@ -1154,11 +1376,20 @@ def train_and_evaluate_scqvae(
         print("\nPerforming example inference...")
         example_batch = next(iter(val_dataset))
         output = model(example_batch, training=False)
-        reconstruction, quantized_latent, cluster_indices, vq_loss, perplexity, hard_indices = output
+        reconstruction, quantized_latent, cluster_indices, vq_loss, perplexity = output
         print("\nVisualizing reconstructions...")
-        plot_reconstructions(example_batch.numpy(), reconstruction.numpy(), save_path=os.path.join(output_dir, 'vqvae_reconstructions.png'))
+        plot_reconstructions(example_batch.numpy(), reconstruction.numpy(),
+                             save_path=os.path.join(output_dir, 'vqvae_reconstructions.png'))
+        plot_reconstructions(example_batch.numpy(), reconstruction.numpy(),
+                             save_path=os.path.join(output_dir, 'vqvae_reconstructions.png'))
         print("\nAnalyzing codebook usage...")
-        plot_codebook_usage(hard_indices, num_embeddings, save_path=os.path.join(output_dir, 'codebook_usage.png'))
+        # # Use hard indices for codebook usage analysis (index 5 in model output)
+        # plot_codebook_usage(cluster_indices, num_embeddings, save_path=os.path.join(output_dir, 'codebook_usage.png'))
+        # print("\nAnalyzing cluster distribution from one-hot encodings...")
+        # # Use one-hot encodings for cluster distribution (index 2 in model output)
+        # # print number of samples
+        # print(f"Shape of cluster_indices: {cluster_indices.shape}")
+        # plot_cluster_distribution(cluster_indices, save_path=os.path.join(output_dir, 'cluster_distribution.png'))
 
     # --- Save Model ---
     if save_model:
@@ -1169,39 +1400,58 @@ def train_and_evaluate_scqvae(
 
     # --- Extract Latent Space ---
     print("\nExtracting quantized latent space...")
-    if return_quantize_whole_dataset:
-        whole_dataset = tf.data.Dataset.concatenate(train_dataset, val_dataset)
+    if output_data == "all":
+        out_dataset = tf.data.Dataset.concatenate(train_dataset, val_dataset)
+    elif output_data == "train":
+        out_dataset = train_dataset # using only training dataset for quantization
     else:
-        whole_dataset = val_dataset
-    quantized_latents, cluster_indices_all, hard_indices_all = [], [], []
-    for batch in whole_dataset:
-        output, q_latent, indices, _, _, hard_indices = model(batch, training=False)
-        quantized_latents.append(q_latent.numpy())
-        cluster_indices_all.append(indices.numpy())
-        hard_indices_all.append(hard_indices.numpy())
+        out_dataset = val_dataset # using only validation dataset for quantization
+    quantized_latents, cluster_indices_hard_assign, cluster_indices_soft_assign = [], [], []
+    for batch in out_dataset:
+        output, Zq, out_P_proj, _, _ = model(batch, training=False)
+        print(f"\nBatch shape: {batch.shape}")
+        print(f"\nOutput shape: {output.shape}")
+        print(f"\nZq shape: {Zq.shape}")
+        print(f"\nout_P_proj shape: {out_P_proj.shape}")
+
+        quantized_latents.append(Zq.numpy())
+        # Append soft assignments
+        cluster_indices_soft_assign.append(out_P_proj.numpy()) # shows the probability of each index
+        cluster_indices_hard_assign.append(tf.argmax(out_P_proj, axis=-1).numpy()) # shows which index has the highest probability
     quantized_latent = np.concatenate(quantized_latents, axis=0)
-    cluster_indices = np.concatenate(cluster_indices_all, axis=0)
-    hard_indices = np.concatenate(hard_indices_all, axis=0)
+    cluster_indices_soft = np.concatenate(cluster_indices_soft_assign, axis=0)
+    cluster_indices_hard = np.concatenate(cluster_indices_hard_assign, axis=0)
     np.save(os.path.join(output_dir, 'quantized_latent.npy'), quantized_latent)
-    np.save(os.path.join(output_dir, 'cluster_indices.npy'), cluster_indices)
-    np.save(os.path.join(output_dir, 'hard_indices.npy'), hard_indices)
+    # np.save(os.path.join(output_dir, 'cluster_indices_hard.npy'), cluster_indices_hard)
+
+    print(f"\n head of Cluster indices hard: {cluster_indices_hard[:5]}")
+    print(f"\n head of Cluster indices soft: {cluster_indices_soft[:5]}")
+    # print shape of soft cluster indices
+    print(f"\n softs shape: {np.array(cluster_indices_soft).shape}")
+    print(f"\n head of Quantized latents: {quantized_latent[:5]}")
+
+    # Create distribution plots for all data
+    print("\nCreating distribution plots for all processed data...")
+    plot_cluster_distribution(cluster_indices_soft, save_path=os.path.join(output_dir, 'cluster_distribution_soft.png'))
+    plot_codebook_usage(cluster_indices_hard, num_embeddings,
+                        save_path=os.path.join(output_dir, 'full_codebook_usage.png'))
+    plot_soft_cluster_distribution(np.array(cluster_indices_soft), 20, 'soft_cluster_distribution.png')
     print(f"Latent representations saved to {output_dir}")
 
-    latent_data = {
-        'quantized_latent': quantized_latent,
-        'cluster_indices': cluster_indices,
-        'hard_indices': hard_indices
-    }
-    return model, history, latent_data
-
 if __name__ == "__main__":
-    model, history, latent_data = train_and_evaluate_scqvae(
-        data_path="data/Pep2Vec/Conbotnet/pep2vec_output_fold_0.parquet",
-        num_embeddings=8,
-        embedding_dim=32,
-        batch_num=8,
-        epochs=10,
+    # Call train_and_evaluate_scqvae without trying to unpack return values
+    train_and_evaluate_scqvae(
+        data_path="data/Pep2Vec/ConvNeXT-MHC/pep2vec_output_fold_1.parquet",
+        num_embeddings=32,
+        embedding_dim=64,
+        batch_size=32,
+        epochs=20,
         output_dir="data/SCQvae/Conbotnet",
+        visualize=True,
+        save_model=True,
+        random_state=42,
+        test_size=0.2,
+        output_data="all",  # Options: "val", "train", "all"
     )
 
 # # Create a 1D UMAP projection colored by cluster indices
