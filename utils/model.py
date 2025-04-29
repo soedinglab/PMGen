@@ -447,3 +447,163 @@ class SCQ1DAutoEncoder(keras.Model):
 
         return {m.name: m.result() for m in self.metrics}
 
+
+class SparseDispatcher:
+    """Helper for dispatching inputs to experts and combining expert outputs."""
+    def __init__(self, num_experts, gates):
+        # gates: [batch, num_experts] float tensor
+        self.num_experts = num_experts
+        self.gates = gates  # shape [B, E]
+        # Find nonzero gate entries
+        indices = tf.where(gates > 0)
+        # Sort by expert_idx then batch_idx for consistency
+        sort_order = tf.argsort(indices[:,1] * tf.cast(tf.shape(gates)[0], indices.dtype) + indices[:,0])
+        sorted_indices = tf.gather(indices, sort_order)
+        self.batch_index = sorted_indices[:,0]
+        self.expert_index = sorted_indices[:,1]
+        # Count number of samples per expert
+        self.part_sizes = tf.reduce_sum(tf.cast(gates > 0, tf.int32), axis=0)
+        # Extract the nonzero gate values
+        self.nonzero_gates = tf.gather_nd(gates, sorted_indices)
+
+    def dispatch(self, inputs):
+        """inputs: [batch, ...] -> Returns list of [num_samples_i, ...]"""
+        inputs_expanded = tf.gather(inputs, self.batch_index)
+        parts = tf.split(inputs_expanded, self.part_sizes, axis=0)
+        return parts
+
+    def combine(self, expert_outputs, multiply_by_gates=True):
+        """expert_outputs: list of [num_samples_i, output_dim] -> Returns [batch, output_dim]"""
+        stitched = tf.concat(expert_outputs, axis=0)
+        if multiply_by_gates:
+            stitched = stitched * tf.expand_dims(self.nonzero_gates, axis=1)
+        batch_size = tf.shape(self.gates)[0]
+        combined = tf.math.unsorted_segment_sum(stitched, self.batch_index, batch_size)
+        return combined
+
+class Expert(layers.Layer):
+    """A binary prediction expert."""
+    def __init__(self, input_dim, hidden_dim, output_dim=1):
+        super().__init__()
+        self.fc1 = layers.Dense(hidden_dim, activation='relu')
+        self.fc2 = layers.Dense(output_dim)
+
+    def call(self, x):
+        x = self.fc1(x)
+        x = self.fc2(x)
+        return tf.nn.sigmoid(x)
+
+class MixtureOfExperts(layers.Layer):
+    """Mixture of Experts layer using provided cluster probabilities."""
+    def __init__(self, input_dim, hidden_dim, num_experts, use_provided_gates=True):
+        super().__init__()
+        self.num_experts = num_experts
+        self.use_provided_gates = use_provided_gates
+        self.experts = [Expert(input_dim, hidden_dim) for _ in range(num_experts)]
+
+    def call(self, inputs, training=False):
+        if self.use_provided_gates:
+            if isinstance(inputs, tuple) and len(inputs) == 2:
+                x, cluster_probs = inputs
+                gates = tf.nn.softmax(cluster_probs, axis=-1)
+            else:
+                raise ValueError("Inputs must be a tuple of (features, cluster_probs) when use_provided_gates=True")
+
+        experts_used = tf.reduce_sum(tf.cast(gates > 0.01, tf.float32), axis=1)
+        expert_influence = tf.reduce_sum(gates, axis=0)
+        expert_activation_count = tf.reduce_sum(tf.cast(gates > 0.01, tf.float32), axis=0)
+
+        dispatcher = SparseDispatcher(self.num_experts, gates)
+        expert_inputs = dispatcher.dispatch(x)
+
+        expert_outputs = []
+        for i in range(self.num_experts):
+            expert_output = tf.cond(
+                tf.greater(tf.shape(expert_inputs[i])[0], 0),
+                lambda: self.experts[i](expert_inputs[i]),
+                lambda: tf.zeros((0, 1), dtype=tf.float32)
+            )
+            expert_outputs.append(expert_output)
+
+        y = dispatcher.combine(expert_outputs, multiply_by_gates=True)
+
+        return {
+            'prediction': y,
+            'gates': gates,
+            'experts_used': experts_used,
+            'expert_influence': expert_influence,
+            'expert_activation_count': expert_activation_count
+        }
+
+class MoEModel(tf.keras.Model):
+    """Model wrapping the MoE layer."""
+    def __init__(self, input_dim, hidden_dim, num_experts):
+        super().__init__()
+        self.moe_layer = MixtureOfExperts(input_dim, hidden_dim, num_experts)
+
+    def call(self, inputs, training=False):
+        moe_outputs = self.moe_layer(inputs, training=training)
+        if training:
+            return moe_outputs['prediction']
+        return moe_outputs
+
+    def train_step(self, data):
+        x, y = data
+        with tf.GradientTape() as tape:
+            moe_outputs = self.moe_layer(x, training=True)
+            y_pred = moe_outputs['prediction']
+            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
+        trainable_vars = self.trainable_variables
+        gradients = tape.gradient(loss, trainable_vars)
+        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        y = tf.squeeze(y) if len(y.shape) > 1 else y
+        y_pred = tf.squeeze(y_pred) if len(y_pred.shape) > 1 else y_pred
+        self.compiled_metrics.update_state(y, y_pred)
+        return {m.name: m.result() for m in self.metrics}
+
+# Example usage
+if __name__ == "__main__":
+    # Generate dummy dataset
+    num_samples = 10000
+    feature_dim = 128
+    num_clusters = 32
+
+    features = tf.random.normal([num_samples, feature_dim])
+    labels = tf.random.uniform([num_samples, 1], minval=0, maxval=2, dtype=tf.int32)
+    random_logits = tf.random.normal([num_samples, num_clusters])
+    cluster_probs = tf.nn.softmax(random_logits, axis=-1)
+
+    # Create dataset
+    dataset = tf.data.Dataset.from_tensor_slices(((features, cluster_probs), labels))
+    dataset = dataset.batch(32)
+
+    # Split into train and test
+    train_size = int(0.8 * num_samples)
+    train_dataset = dataset.take(train_size // 32)
+    test_dataset = dataset.skip(train_size // 32)
+
+    # Create and compile model
+    model = MoEModel(input_dim=feature_dim, hidden_dim=256, num_experts=num_clusters)
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[tf.keras.metrics.BinaryAccuracy()])
+
+    # Train
+    print("Training model...")
+    model.fit(train_dataset, epochs=5, validation_data=test_dataset, verbose=1)
+
+    # Evaluate
+    print("\nEvaluating model...")
+    results = model.evaluate(test_dataset, return_dict=True)
+    print(f"Test loss: {results['loss']:.4f}, Test accuracy: {results['binary_accuracy']:.4f}")
+
+    # Predict and analyze
+    sample_features, sample_labels = next(iter(test_dataset))
+    predictions = model(sample_features, training=False)
+
+    print(f"\nSample predictions shape: {predictions['prediction'].shape}")
+    print(f"First 5 predictions:\n{predictions['prediction'][:5].numpy()}")
+    print(f"First 5 actual labels:\n{sample_labels[:5].numpy()}")
+    print(f"Average experts used per sample: {tf.reduce_mean(predictions['experts_used']):.2f}")
+    print(f"Expert influence distribution: {predictions['expert_influence'].numpy()}")
+
+    top_experts = tf.argsort(predictions['expert_influence'], direction='DESCENDING')[:5]
+    print(f"Top 5 most influential experts: {top_experts.numpy()}")
