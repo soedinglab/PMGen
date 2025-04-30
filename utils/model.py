@@ -448,6 +448,7 @@ class SCQ1DAutoEncoder(keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
 
+########### Mixture of Experts (MoE) model ###########
 class SparseDispatcher:
     """Helper for dispatching inputs to experts and combining expert outputs."""
     def __init__(self, num_experts, gates):
@@ -481,11 +482,13 @@ class SparseDispatcher:
         combined = tf.math.unsorted_segment_sum(stitched, self.batch_index, batch_size)
         return combined
 
+
 class Expert(layers.Layer):
-    """A binary prediction expert."""
+    """A binary prediction expert with added complexity using GLU."""
+
     def __init__(self, input_dim, hidden_dim, output_dim=1):
         super().__init__()
-        self.fc1 = layers.Dense(hidden_dim, activation='relu')
+        self.fc1 = layers.Dense(hidden_dim, activation='relu', input_shape=(input_dim,))
         self.fc2 = layers.Dense(output_dim)
 
     def call(self, x):
@@ -493,117 +496,447 @@ class Expert(layers.Layer):
         x = self.fc2(x)
         return tf.nn.sigmoid(x)
 
+
 class MixtureOfExperts(layers.Layer):
-    """Mixture of Experts layer using provided cluster probabilities."""
-    def __init__(self, input_dim, hidden_dim, num_experts, use_provided_gates=True):
+    """Mixture of Experts layer with optional learned gating network."""
+
+    def __init__(self, input_dim, hidden_dim, num_experts, use_provided_gates=True,
+                 gating_hidden_dim=64, top_k=None):
         super().__init__()
         self.num_experts = num_experts
         self.use_provided_gates = use_provided_gates
+        self.top_k = top_k  # If set, only route to top_k experts
         self.experts = [Expert(input_dim, hidden_dim) for _ in range(num_experts)]
 
+        # Add a learned gating network if we might use it
+        if not use_provided_gates:
+            self.gating_network = tf.keras.Sequential([
+                layers.Dense(gating_hidden_dim, activation='relu', input_shape=(input_dim,)),
+                layers.Dense(num_experts, activation='softmax')
+            ])
+
     def call(self, inputs, training=False):
-        if self.use_provided_gates:
-            if isinstance(inputs, tuple) and len(inputs) == 2:
-                x, cluster_probs = inputs
-                gates = tf.nn.softmax(cluster_probs, axis=-1)
+        if isinstance(inputs, tuple) and len(inputs) == 2:
+            x, gates = inputs
+        else:
+            x = inputs
+            gates = None
+
+        # Determine the gates to use
+        if gates is None or not self.use_provided_gates:
+            if hasattr(self, 'gating_network'):
+                # Use learned gating if available
+                gates = self.gating_network(x)
             else:
-                raise ValueError("Inputs must be a tuple of (features, cluster_probs) when use_provided_gates=True")
+                # Fall back to uniform distribution
+                batch_size = tf.shape(x)[0]
+                gates = tf.ones([batch_size, self.num_experts]) / self.num_experts
 
-        experts_used = tf.reduce_sum(tf.cast(gates > 0.01, tf.float32), axis=1)
-        expert_influence = tf.reduce_sum(gates, axis=0)
-        expert_activation_count = tf.reduce_sum(tf.cast(gates > 0.01, tf.float32), axis=0)
+        # Apply top-k gating if configured
+        if self.top_k is not None and self.top_k < self.num_experts:
+            # Get values and indices of top-k gate values
+            _, top_k_indices = tf.math.top_k(gates, k=self.top_k)
+            # Create a mask for the top_k gates (1 for top-k, 0 for others)
+            mask = tf.reduce_sum(
+                tf.one_hot(top_k_indices, depth=self.num_experts),
+                axis=1
+            )
+            # Zero out non-top-k gates and renormalize
+            gates = gates * mask
+            gates = gates / (tf.reduce_sum(gates, axis=-1, keepdims=True) + 1e-10)
 
+        # Create dispatcher with these gates
         dispatcher = SparseDispatcher(self.num_experts, gates)
+
+        # Dispatch inputs to experts
         expert_inputs = dispatcher.dispatch(x)
 
-        expert_outputs = []
-        for i in range(self.num_experts):
-            expert_output = tf.cond(
-                tf.greater(tf.shape(expert_inputs[i])[0], 0),
-                lambda: self.experts[i](expert_inputs[i]),
-                lambda: tf.zeros((0, 1), dtype=tf.float32)
-            )
-            expert_outputs.append(expert_output)
+        expert_outputs = [
+            expert(inp)
+            for expert, inp in zip(self.experts, expert_inputs)
+        ]
 
-        y = dispatcher.combine(expert_outputs, multiply_by_gates=True)
+        # Combine expert outputs
+        combined_outputs = dispatcher.combine(expert_outputs)
 
         return {
-            'prediction': y,
+            'prediction': combined_outputs,
             'gates': gates,
-            'experts_used': experts_used,
-            'expert_influence': expert_influence,
-            'expert_activation_count': expert_activation_count
+            'expert_outputs': expert_outputs if training else None
         }
 
 class MoEModel(tf.keras.Model):
-    """Model wrapping the MoE layer."""
-    def __init__(self, input_dim, hidden_dim, num_experts):
+    """Model wrapping the MoE layer with optional learned gating."""
+    def __init__(self, input_dim, hidden_dim, num_experts, use_provided_gates=True,
+                 gating_hidden_dim=64, top_k=None):
         super().__init__()
-        self.moe_layer = MixtureOfExperts(input_dim, hidden_dim, num_experts)
+        self.use_provided_gates = use_provided_gates
+        self.moe_layer = MixtureOfExperts(
+            input_dim,
+            hidden_dim,
+            num_experts,
+            use_provided_gates=use_provided_gates,
+            gating_hidden_dim=gating_hidden_dim,
+            top_k=top_k
+        )
 
     def call(self, inputs, training=False):
+        # Handle both cases: with and without provided gates
         moe_outputs = self.moe_layer(inputs, training=training)
-        if training:
-            return moe_outputs['prediction']
-        return moe_outputs
+        return moe_outputs if not training else moe_outputs['prediction']
 
     def train_step(self, data):
-        x, y = data
+        if isinstance(data, tuple):
+            x, y = data
+        else:
+            raise ValueError("Training data must include both inputs and labels")
+
         with tf.GradientTape() as tape:
-            moe_outputs = self.moe_layer(x, training=True)
-            y_pred = moe_outputs['prediction']
-            loss = self.compiled_loss(y, y_pred, regularization_losses=self.losses)
-        trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-        y = tf.squeeze(y) if len(y.shape) > 1 else y
-        y_pred = tf.squeeze(y_pred) if len(y_pred.shape) > 1 else y_pred
-        self.compiled_metrics.update_state(y, y_pred)
-        return {m.name: m.result() for m in self.metrics}
+            # Forward pass - handle both input types
+            if isinstance(x, tuple) and len(x) == 2:
+                # Input includes features and gates
+                inputs, gates = x
+                outputs = self.moe_layer((inputs, gates), training=True)
+            else:
+                # Input is just features, gates will be computed by gating network
+                outputs = self.moe_layer(x, training=True)
+
+            predictions = outputs['prediction']
+
+            # Compute loss
+            loss = self.compiled_loss(y, predictions, regularization_losses=self.losses)
+
+            # Add expert load balancing loss
+            gates = outputs['gates']
+            expert_usage = tf.reduce_mean(gates, axis=0)
+            load_balancing_loss = tf.reduce_sum(expert_usage * tf.math.log(expert_usage + 1e-10)) * 0.01
+            total_loss = loss + load_balancing_loss
+
+        # Compute gradients and update weights
+        gradients = tape.gradient(total_loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+
+        # Update metrics
+        self.compiled_metrics.update_state(y, predictions)
+
+        # Return metrics
+        results = {m.name: m.result() for m in self.metrics}
+        results.update({'loss': loss, 'load_balancing_loss': load_balancing_loss})
+        return results
+
+    def test_step(self, data):
+        if isinstance(data, tuple):
+            x, y = data
+        else:
+            raise ValueError("Test data must include both inputs and labels")
+
+        # Forward pass - handle both input types
+        if isinstance(x, tuple) and len(x) == 2:
+            # Input includes features and gates
+            inputs, gates = x
+            outputs = self.moe_layer((inputs, gates), training=False)
+        else:
+            # Input is just features, gates will be computed by gating network
+            outputs = self.moe_layer(x, training=False)
+
+        predictions = outputs['prediction']
+
+        # Compute loss
+        loss = self.compiled_loss(y, predictions, regularization_losses=self.losses)
+
+        # Update metrics
+        self.compiled_metrics.update_state(y, predictions)
+
+        # Return metrics
+        results = {m.name: m.result() for m in self.metrics}
+        results.update({'loss': loss})
+        return results
+
+
+def visualize_dataset_analysis(features, labels, cluster_probs, method='pca', raw_dot_plot=False, feature_indices=None):
+        """
+        Visualize the relationship between features, labels, and cluster probabilities.
+
+        Args:
+            features: TensorFlow tensor containing feature vectors
+            labels: TensorFlow tensor containing labels
+            cluster_probs: TensorFlow tensor containing cluster probabilities
+            method: Dimensionality reduction method ('umap', 'tsne', or 'pca')
+            raw_dot_plot: If True, plot raw feature values directly
+            feature_indices: Indices of features to plot (tuple of 2 indices)
+        """
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        # Convert tensors to numpy arrays
+        features_np = features.numpy()
+        labels_np = labels.numpy().flatten()
+        cluster_probs_np = cluster_probs.numpy()
+
+        # Compute dominant cluster for each sample
+        dominant_clusters = np.argmax(cluster_probs_np, axis=1)
+
+        if raw_dot_plot:
+            # Plot raw feature values directly without dimensionality reduction
+            feature_indices = feature_indices or (0, 1)  # Default to first two features
+
+            # Create figure with two subplots
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+
+            # Scatter by true label
+            scatter1 = ax1.scatter(
+                features_np[:, feature_indices[0]],
+                features_np[:, feature_indices[1]],
+                c=labels_np,
+                cmap='viridis',
+                s=10,
+                alpha=0.6
+            )
+            ax1.set_title(f'Raw Features: Colored by Label')
+            ax1.set_xlabel(f'Feature {feature_indices[0]}')
+            ax1.set_ylabel(f'Feature {feature_indices[1]}')
+            cbar1 = plt.colorbar(scatter1, ax=ax1)
+            cbar1.set_label('Label')
+
+            # Scatter by dominant cluster
+            n_clusters = cluster_probs_np.shape[1]
+            cmap_clusters = plt.cm.get_cmap('tab20b', n_clusters) if n_clusters <= 20 else plt.cm.get_cmap('gist_ncar', n_clusters)
+
+            scatter2 = ax2.scatter(
+                features_np[:, feature_indices[0]],
+                features_np[:, feature_indices[1]],
+                c=dominant_clusters,
+                cmap=cmap_clusters,
+                s=10,
+                alpha=0.6
+            )
+            ax2.set_title(f'Raw Features: Colored by Cluster')
+            ax2.set_xlabel(f'Feature {feature_indices[0]}')
+            ax2.set_ylabel(f'Feature {feature_indices[1]}')
+            cbar2 = plt.colorbar(scatter2, ax=ax2, ticks=range(n_clusters))
+            cbar2.set_label('Cluster ID')
+
+            plt.tight_layout()
+            plt.savefig(f'raw_feature_analysis.png', dpi=300, bbox_inches='tight')
+            plt.show()
+            return
+
+        # Original dimensionality reduction visualization
+        try:
+            if method == 'umap':
+                import umap
+                reducer = umap.UMAP(n_neighbors=30, min_dist=0.1, n_components=2, random_state=42)
+                features_2d = reducer.fit_transform(features_np)
+                method_name = "UMAP"
+            elif method == 'tsne':
+                from sklearn.manifold import TSNE
+                reducer = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
+                features_2d = reducer.fit_transform(features_np)
+                method_name = "t-SNE"
+            else:  # default to PCA
+                from sklearn.decomposition import PCA
+                reducer = PCA(n_components=2)
+                features_2d = reducer.fit_transform(features_np)
+                method_name = "PCA"
+        except ImportError:
+            # Fall back to PCA if the requested method is not available
+            from sklearn.decomposition import PCA
+            reducer = PCA(n_components=2)
+            features_2d = reducer.fit_transform(features_np)
+            method_name = "PCA"
+            print(f"Warning: {method} not available, falling back to PCA")
+
+        # Prepare subplots
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+
+        # Scatter by true label
+        scatter1 = ax1.scatter(
+            features_2d[:, 0],
+            features_2d[:, 1],
+            c=labels_np,
+            cmap='viridis',
+            s=10,
+            alpha=0.6
+        )
+        ax1.set_title(f'Samples by Label ({method_name})')
+        ax1.set_xlabel(f'{method_name} Component 1')
+        ax1.set_ylabel(f'{method_name} Component 2')
+        cbar1 = plt.colorbar(scatter1, ax=ax1)
+        cbar1.set_label('Label')
+
+        # Scatter by dominant cluster with improved discrete colormap
+        n_clusters = cluster_probs_np.shape[1]
+        # Use a better colormap for distinguishing clusters
+        cmap_clusters = plt.cm.get_cmap('tab20b', n_clusters) if n_clusters <= 20 else plt.cm.get_cmap('gist_ncar', n_clusters)
+
+        # Add confidence information - marker size based on max probability
+        max_probs = np.max(cluster_probs_np, axis=1)
+        marker_sizes = 10 + 40 * max_probs  # Scale confidence to marker size
+
+        scatter2 = ax2.scatter(
+            features_2d[:, 0],
+            features_2d[:, 1],
+            c=dominant_clusters,
+            cmap=cmap_clusters,
+            s=marker_sizes,
+            alpha=0.6,
+            edgecolors='none'
+        )
+        ax2.set_title(f'Samples by Dominant Cluster ({method_name})')
+        ax2.set_xlabel(f'{method_name} Component 1')
+        ax2.set_ylabel(f'{method_name} Component 2')
+        cbar2 = plt.colorbar(scatter2, ax=ax2, ticks=range(n_clusters))
+        cbar2.set_label('Cluster ID')
+
+        plt.tight_layout()
+        plt.savefig(f'cluster_analysis_{method}.png', dpi=300, bbox_inches='tight')
+        plt.show()
 
 # Example usage
 if __name__ == "__main__":
-    # Generate dummy dataset
-    num_samples = 10000
+    # Generate dummy dataset with clustered data and labels for training
+    num_train_samples = 8000
+    num_test_samples = 2000
     feature_dim = 128
     num_clusters = 32
 
-    features = tf.random.normal([num_samples, feature_dim])
-    labels = tf.random.uniform([num_samples, 1], minval=0, maxval=2, dtype=tf.int32)
-    random_logits = tf.random.normal([num_samples, num_clusters])
-    cluster_probs = tf.nn.softmax(random_logits, axis=-1)
+    # Function to generate dataset with specified parameters
+    def generate_dataset(num_samples, feature_dim, num_clusters, epsilon=0.1):
+        # Compute samples per cluster
+        base_count = num_samples // num_clusters
+        counts = [base_count + (1 if i < num_samples % num_clusters else 0) for i in range(num_clusters)]
 
-    # Create dataset
-    dataset = tf.data.Dataset.from_tensor_slices(((features, cluster_probs), labels))
-    dataset = dataset.batch(32)
+        features_list = []
+        labels_list = []
+        cluster_probs_list = []
+        distributions = ['normal', 'uniform', 'gamma', 'poisson']
 
-    # Split into train and test
-    train_size = int(0.8 * num_samples)
-    train_dataset = dataset.take(train_size // 32)
-    test_dataset = dataset.skip(train_size // 32)
+        for c in range(num_clusters):
+            cluster_count = counts[c]
+            n0 = cluster_count // 2
+            n1 = cluster_count - n0
+            dist = distributions[(2 * c) % len(distributions)]
+            print(f"Cluster {c}: {dist} distribution, {n0} samples 0, {n1} samples 1")
+
+            if dist == 'normal':
+                features_0 = tf.random.normal([n0, feature_dim], mean=c, stddev=1.0)
+            elif dist == 'uniform':
+                features_0 = tf.random.uniform([n0, feature_dim], minval=0, maxval=1)
+            elif dist == 'gamma':
+                features_0 = tf.random.gamma([n0, feature_dim], alpha=2.0, beta=1.0)
+            elif dist == 'poisson':
+                features_0 = tf.cast(tf.random.poisson([n0, feature_dim], lam=3), tf.float32)
+            else:
+                features_0 = tf.random.normal([n0, feature_dim], mean=c, stddev=1.0)
+
+            if dist == 'normal':
+                features_1 = tf.random.normal([n1, feature_dim], mean=c+0.5, stddev=1.5)
+            elif dist == 'uniform':
+                features_1 = tf.random.uniform([n1, feature_dim], minval=1, maxval=2)
+            elif dist == 'gamma':
+                features_1 = tf.random.gamma([n1, feature_dim], alpha=5.0, beta=2.0)
+            elif dist == 'poisson':
+                features_1 = tf.cast(tf.random.poisson([n1, feature_dim], lam=6), tf.float32)
+            else:
+                features_1 = tf.random.normal([n1, feature_dim], mean=c+0.5, stddev=1.5)
+
+            features_i = tf.concat([features_0, features_1], axis=0)
+            labels_i = tf.concat([tf.zeros([n0, 1], tf.int32), tf.ones([n1, 1], tf.int32)], axis=0)
+            features_list.append(features_i)
+            labels_list.append(labels_i)
+
+            # Generate random cluster probabilities per sample
+            cluster_indices = tf.fill([cluster_count], c)
+            lam_value = tf.maximum(tf.cast(c, tf.float32) + 1.0, 1.0)
+            noise = tf.cast(tf.random.poisson([cluster_count, num_clusters], lam=lam_value), tf.float32)
+            noise = noise + epsilon
+            probs = noise / (tf.reduce_sum(noise, axis=1, keepdims=True))
+            alpha = tf.random.uniform([cluster_count, 1], minval=0.5, maxval=0.8)
+            probs = (1 - alpha) * probs + alpha * tf.one_hot(cluster_indices, num_clusters)
+            probs = probs / tf.reduce_sum(probs, axis=1, keepdims=True)
+            cluster_probs_list.append(probs)
+
+        features = tf.concat(features_list, axis=0)
+        labels = tf.concat(labels_list, axis=0)
+        cluster_probs = tf.concat(cluster_probs_list, axis=0)
+
+        # Shuffle dataset
+        indices = tf.random.shuffle(tf.range(tf.shape(features)[0]))
+        features = tf.gather(features, indices)
+        labels = tf.gather(labels, indices)
+        cluster_probs = tf.gather(cluster_probs, indices)
+
+        return features, labels, cluster_probs
+
+    # Generate training dataset
+    print("\nGenerating training dataset...")
+    train_features, train_labels, train_cluster_probs = generate_dataset(
+        num_train_samples, feature_dim, num_clusters)
+
+    # Generate separate test dataset
+    print("\nGenerating test dataset...")
+    test_features, test_labels, test_cluster_probs = generate_dataset(
+        num_test_samples, feature_dim, num_clusters, epsilon=1)
+
+    print(f"\nTraining labels min: {tf.reduce_min(train_labels)}, max: {tf.reduce_max(train_labels)}")
+    print(f"Training labels head: {train_labels[:5]}")
+    print(f"Test labels min: {tf.reduce_min(test_labels)}, max: {tf.reduce_max(test_labels)}")
+    print(f"Test labels head: {test_labels[:5]}")
+
+    # Visualize training dataset
+    print("\nVisualizing training dataset...")
+    visualize_dataset_analysis(train_features, train_labels, train_cluster_probs,
+                              raw_dot_plot=False, method='pca', feature_indices=(0, 1))
+
+    # Create training dataset
+    train_dataset = tf.data.Dataset.from_tensor_slices(
+        ((train_features, train_cluster_probs), train_labels)
+    ).shuffle(1000).batch(64)
+
+    # Create test dataset (no need to shuffle extensively)
+    test_dataset = tf.data.Dataset.from_tensor_slices(
+        ((test_features, test_cluster_probs), test_labels)
+    ).batch(64)
+
+    # Print info about test dataset
+    for features, labels in test_dataset.take(1):
+        print(f"\nTest features shape: {features[0].shape}, Test labels shape: {labels.shape}")
+        print(f"Test features head: {features[0][:3]}")
+        print(f"Test labels head: {labels[:3]}")
 
     # Create and compile model
-    model = MoEModel(input_dim=feature_dim, hidden_dim=256, num_experts=num_clusters)
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=[tf.keras.metrics.BinaryAccuracy()])
+    model = MoEModel(feature_dim, hidden_dim=8, num_experts=num_clusters, use_provided_gates=True)
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        loss=tf.keras.losses.BinaryCrossentropy(),
+        metrics=['accuracy'],
+    )
 
-    # Train
-    print("Training model...")
-    model.fit(train_dataset, epochs=5, validation_data=test_dataset, verbose=1)
+    # Train model
+    print("\nTraining model...")
+    model.fit(train_dataset, epochs=20)
 
-    # Evaluate
-    print("\nEvaluating model...")
-    results = model.evaluate(test_dataset, return_dict=True)
-    print(f"Test loss: {results['loss']:.4f}, Test accuracy: {results['binary_accuracy']:.4f}")
+    # Evaluate on independent test set
+    print("\nEvaluating on independent test set...")
+    eval_results = model.evaluate(test_dataset)
+    print(f"Evaluation results: {eval_results}")
 
     # Predict and analyze
-    sample_features, sample_labels = next(iter(test_dataset))
-    predictions = model(sample_features, training=False)
+    # test_batch = next(iter(test_dataset.take(1)))
+    # predictions = model(test_batch[0], training=False)
+    # print(f"Sample predictions shape: {predictions['prediction'].shape}")
+    # print(f"Gate activations: {tf.reduce_mean(predictions['gates'], axis=0)}")
 
-    print(f"\nSample predictions shape: {predictions['prediction'].shape}")
-    print(f"First 5 predictions:\n{predictions['prediction'][:5].numpy()}")
-    print(f"First 5 actual labels:\n{sample_labels[:5].numpy()}")
-    print(f"Average experts used per sample: {tf.reduce_mean(predictions['experts_used']):.2f}")
-    print(f"Expert influence distribution: {predictions['expert_influence'].numpy()}")
+    # Test on a single sample
+    for (feat, cluster_prob), label in test_dataset.unbatch().take(1):
+        feat = tf.expand_dims(feat, 0)
+        cluster_prob = tf.expand_dims(cluster_prob, 0)
+        output = model((feat, cluster_prob), training=False)
+        print("Single sample prediction:", output['prediction'].numpy()[0], "True label:", label.numpy())
+        print("Gate activations:", tf.reduce_mean(output['gates'], axis=0).numpy())
 
-    top_experts = tf.argsort(predictions['expert_influence'], direction='DESCENDING')[:5]
-    print(f"Top 5 most influential experts: {top_experts.numpy()}")
+    # Optional: Visualize test dataset
+    print("\nVisualizing test dataset...")
+    visualize_dataset_analysis(test_features, test_labels, test_cluster_probs,
+                              raw_dot_plot=False, method='pca', feature_indices=(0, 1))
+
