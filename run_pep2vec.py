@@ -126,57 +126,71 @@ def select_columns(df, columns):
 #     return chain
 
 def add_binding_label(df_path, train_path, test_path, output_dir=None):
-        """
-        Add binding labels to the DataFrame based on allotype and peptide pairs.
+    """
+    Add binding labels and MHC sequences to the DataFrame based on allotype and peptide pairs.
 
-        Parameters:
-        -----------
-        df_path : DataFrame, str, or directory path
-            DataFrame, path to a file, or directory containing multiple files to add binding labels to
-        train_path : str
-            Path to training data CSV file with binding labels
-        test_path : str
-            Path to test data CSV file with binding labels
-        output_dir : str, optional
-            Directory to save labeled files, if None will overwrite original files
+    Parameters:
+    -----------
+    df_path : DataFrame, str, or directory path
+        DataFrame, path to a file, or directory containing multiple files to add binding labels to
+    train_path : str
+        Path to training data CSV file with binding labels
+    test_path : str
+        Path to test data CSV file with binding labels
+    output_dir : str, optional
+        Directory to save labeled files, if None will overwrite original files
 
-        Returns:
-        --------
-        DataFrame or dict of DataFrames with binding labels added
-        """
-        # Load train and test binding label mappings
-        train_df = pd.read_csv(train_path)
-        test_df = pd.read_csv(test_path)
+    Returns:
+    --------
+    DataFrame or dict of DataFrames with binding labels and MHC sequences added
+    """
+    # Load train and test binding label mappings
+    train_df = pd.read_csv(train_path)
+    test_df = pd.read_csv(test_path)
 
-        # Create binding label mappings
-        train_binding_labels = {
-            (row["allele"], row["long_mer"]): row["binding_label"]
-            for _, row in train_df.iterrows()
-        }
+    # Create binding label mappings
+    train_binding_labels = {
+        (row["allele"], row["long_mer"]): row["binding_label"]
+        for _, row in train_df.iterrows()
+    }
 
-        test_binding_labels = {
-            (row["allele"], row["long_mer"]): row["binding_label"]
-            for _, row in test_df.iterrows()
-        }
+    test_binding_labels = {
+        (row["allele"], row["long_mer"]): row["binding_label"]
+        for _, row in test_df.iterrows()
+    }
 
-        # Check if df_path is a directory
-        if isinstance(df_path, str) and os.path.isdir(df_path):
-            # Process all files in the directory
-            results = {}
-            for filename in os.listdir(df_path):
-                file_path = os.path.join(df_path, filename)
-                if os.path.isfile(file_path) and (file_path.endswith('.csv') or file_path.endswith('.parquet')):
-                    print(f"Processing file: {filename}")
-                    results[filename] = process_single_file(
-                        file_path, train_binding_labels, test_binding_labels, output_dir
-                    )
-            return results
-        else:
-            # Process a single file or DataFrame
-            return process_single_file(df_path, train_binding_labels, test_binding_labels, output_dir)
+    # Create MHC sequence mappings
+    train_mhc_sequences = {
+        row["allele"]: row["mhc_sequence"]
+        for _, row in train_df.iterrows()
+    }
+
+    test_mhc_sequences = {
+        row["allele"]: row["mhc_sequence"]
+        for _, row in test_df.iterrows()
+    }
+
+    # Combine MHC sequence mappings (test data takes precedence if duplicates)
+    mhc_sequences = {**train_mhc_sequences, **test_mhc_sequences}
+
+    # Check if df_path is a directory
+    if isinstance(df_path, str) and os.path.isdir(df_path):
+        # Process all files in the directory
+        results = {}
+        for filename in os.listdir(df_path):
+            file_path = os.path.join(df_path, filename)
+            if os.path.isfile(file_path) and (file_path.endswith('.csv') or file_path.endswith('.parquet')):
+                print(f"Processing file: {filename}")
+                results[filename] = process_single_file(
+                    file_path, train_binding_labels, test_binding_labels, mhc_sequences, output_dir
+                )
+        return results
+    else:
+        # Process a single file or DataFrame
+        return process_single_file(df_path, train_binding_labels, test_binding_labels, mhc_sequences, output_dir)
 
 
-def process_single_file(df_or_path, train_binding_labels, test_binding_labels, output_dir=None):
+def process_single_file(df_or_path, train_binding_labels, test_binding_labels, mhc_sequences, output_dir=None):
     """Helper function to process a single file or DataFrame"""
     # Process the provided dataframe or file
     if isinstance(df_or_path, str):
@@ -205,12 +219,16 @@ def process_single_file(df_or_path, train_binding_labels, test_binding_labels, o
             lambda row: binding_labels.get((row["allotype"], row["peptide"])),
             axis=1
         )
+        # Add MHC sequence
+        df["mhc_sequence"] = df["allotype"].map(mhc_sequences)
     else:
         # CSV file naming convention
         df["binding_label"] = df.apply(
             lambda row: binding_labels.get((row["allele"], row["long_mer"])),
             axis=1
         )
+        # Add MHC sequence
+        df["mhc_sequence"] = df["allele"].map(mhc_sequences)
 
     # Map string labels to integers
     label_mapping = {
@@ -252,8 +270,8 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0):
     }
 
     # Column configuration
-    columns = ["allele", "long_mer", "binding_label"]
-    rename_map = {"allele": "allotype", "long_mer": "peptide"}
+    columns = ["allele", "long_mer", "binding_label", "mhc_sequence"]
+    rename_map = {"allele": "allotype", "long_mer": "peptide"} # required for pep2vec
 
     # Load and process datasets
     datasets = {}
@@ -346,32 +364,34 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0):
     #             f.write(f"{allele} (Error: {str(e)})\n")
     #         print(f"Error processing allele {allele}: {str(e)}")
 
+    # automatically get the number of cores
+    num_cores = os.cpu_count()-2
     for i in range(k):
         train_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", f"train_set_fold_{i}.csv")
         output_file = os.path.join(output_dir, f"pep2vec_output_fold_{i}.parquet")
-        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 300 --num_threads 14  --dataset {train_file} --output_location {output_file} --mhctype {mhc_type}")
+        os.system(f"./Pep2Vec/pep2vec.bin --num_threads {num_cores}  --dataset {train_file} --output_location {output_file} --mhctype {mhc_type}")
         validation_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", f"val_set_fold_{i}.csv")
         output_file = os.path.join(output_dir, f"pep2vec_output_val_fold_{i}.parquet")
-        os.system(f"./Pep2Vec/pep2vec.bin --num_processes 300 --num_threads 14  --dataset {validation_file} --output_location {output_file} --mhctype {mhc_type}")
+        os.system(f"./Pep2Vec/pep2vec.bin --num_threads {num_cores}  --dataset {validation_file} --output_location {output_file} --mhctype {mhc_type}")
     # test set
     test_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", "test_set.csv")
     output_file = os.path.join(output_dir, f"pep2vec_output_test_fold_{i}.parquet")
-    os.system(f"./Pep2Vec/pep2vec.bin --num_processes 300 --num_threads 14  --dataset {test_file} --output_location {output_file} --mhctype {mhc_type}")
+    os.system(f"./Pep2Vec/pep2vec.bin --num_threads {num_cores}  --dataset {test_file} --output_location {output_file} --mhctype {mhc_type}")
     ###############################################
 
 
 if __name__ == "__main__":
-    # main("Conbotnet", "mhc2")
-    # add_binding_label(
-    #     df_path=os.path.join("data", "Pep2Vec", "Conbotnet"),
-    #     train_path=os.path.join("data", "Conbotnet", "train.csv"),
-    #     test_path=os.path.join("data", "Conbotnet", "test_all.csv"),
-    #     output_dir=os.path.join("data", "Pep2Vec", "Conbotnet_new")
-    # )
-    main("ConvNeXT-MHC", "mhc1", 0.01)
+    main("Conbotnet", "mhc2", 0.01)
     add_binding_label(
-        df_path=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC"),
-        train_path=os.path.join("data", "ConvNeXT-MHC", "train.csv"),
-        test_path=os.path.join("data", "ConvNeXT-MHC", "test_all.csv"),
-        output_dir=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC_subset_new")
+        df_path=os.path.join("data", "Pep2Vec", "Conbotnet"),
+        train_path=os.path.join("data", "Conbotnet", "train.csv"),
+        test_path=os.path.join("data", "Conbotnet", "test_all.csv"),
+        output_dir=os.path.join("data", "Pep2Vec", "Conbotnet_new")
     )
+    # main("ConvNeXT-MHC", "mhc1", 0.01)
+    # add_binding_label(
+    #     df_path=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC"),
+    #     train_path=os.path.join("data", "ConvNeXT-MHC", "train.csv"),
+    #     test_path=os.path.join("data", "ConvNeXT-MHC", "test_all.csv"),
+    #     output_dir=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC_subset_new")
+    # )
