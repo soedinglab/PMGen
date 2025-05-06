@@ -792,12 +792,47 @@ def visualize_dataset_analysis(features, labels, cluster_probs, method='pca', ra
         plt.savefig(f'cluster_analysis_{method}.png', dpi=300, bbox_inches='tight')
         plt.show()
 
+        # Plot overall label and cluster probability distributions
+        fig, ax = plt.subplots(1, 2, figsize=(12, 4))
+
+        # Label distribution
+        unique, counts = np.unique(labels_np, return_counts=True)
+        ax[0].bar(unique.astype(int), counts, color='skyblue')
+        ax[0].set_xlabel('Label')
+        ax[0].set_ylabel('Count')
+        ax[0].set_title('Label Distribution')
+
+        # Cluster probability distribution
+        cluster_prob_sums = np.sum(cluster_probs_np, axis=0)
+        ax[1].bar(np.arange(len(cluster_prob_sums)), cluster_prob_sums, color='salmon')
+        ax[1].set_xlabel('Cluster')
+        ax[1].set_ylabel('Sum of Probabilities')
+        ax[1].set_title('Cluster Probability Distribution')
+
+        plt.tight_layout()
+        plt.savefig('dataset_distributions.png', dpi=300, bbox_inches='tight')
+        plt.show()
+
+        # TODO show the whole dataset as a dot plot
+        # Plot the dataset as a dot plot of the first two features
+        plt.figure(figsize=(10, 8))
+        plt.scatter(features_np[:, 0], features_np[:, 1], c=labels_np, cmap='coolwarm',
+                    s=10, alpha=0.7, edgecolors='none')
+        plt.colorbar(label='Label')
+        plt.title('Dot Plot of First Two Features')
+        plt.xlabel('Feature 0')
+        plt.ylabel('Feature 1')
+        plt.grid(linestyle='--', alpha=0.6)
+        plt.savefig('feature_dot_plot.png', dpi=300, bbox_inches='tight')
+        plt.show()
+
+
 # Example usage
 if __name__ == "__main__":
     # Generate dummy dataset with clustered data and labels for training
     num_train_samples = 8000
     num_test_samples = 2000
-    feature_dim = 128
+    feature_dim = 64
     num_clusters = 32
 
     # Function to generate dataset with specified parameters

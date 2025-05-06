@@ -1,4 +1,4 @@
-
+import json
 import os
 import tensorflow as tf
 import numpy as np
@@ -7,7 +7,11 @@ import time
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.cluster import KMeans
-from utils.model import SCQ1DAutoEncoder
+import seaborn as sns
+from sklearn.decomposition import PCA
+
+from utils.model import SCQ1DAutoEncoder, MoEModel
+
 '''
 # Set TensorFlow logging level for more information
 tf.get_logger().setLevel('INFO')
@@ -543,7 +547,7 @@ if __name__ == "__main__":
     #     traceback.print_exc()
     # simple run
     simple_run()'''
-from sklearn.model_selection import train_test_split
+
 
 '''import os
 import numpy as np
@@ -917,6 +921,8 @@ if __name__ == "__main__":
 # TODO implement a simple training pipeline for VQUnet
 def train_and_evaluate_scqvae(
     data_path,
+    val_data_path=None,
+    input_type='latent1024', # Options: 'latent1024', 'pMHC-sequence'
     num_embeddings=32,
     embedding_dim=64,  # Increased from 32
     batch_size=32,      # Increased from 1
@@ -936,6 +942,7 @@ def train_and_evaluate_scqvae(
 
     Args:
         data_path: Path to the parquet file containing peptide embeddings
+        input_type: Type of input data ('latent1024' or 'pMHC-sequence')
         num_embeddings: Number of clusters/codes in the codebook
         embedding_dim: Dimension of each codebook vector
         batch_size: Batch size for training
@@ -957,26 +964,280 @@ def train_and_evaluate_scqvae(
     os.makedirs(output_dir, exist_ok=True)
 
     # --- Helper Functions ---
-    def create_dataset(X, batch_size=32, is_training=True):
-        """Create a TensorFlow dataset from input array X."""
+    def create_dataset(X, y=None, batch_size=32, is_training=True):
+        """Create a TensorFlow dataset from input array X and optional labels y."""
         # X shape: (num_samples, seq_length)
-        dataset = tf.data.Dataset.from_tensor_slices(X)
+        # y shape: (num_samples, ...) or None
+        if y is not None:
+            # Create dataset with both features and labels, ensuring features are float32
+            dataset = tf.data.Dataset.from_tensor_slices((tf.cast(X, tf.float32), y))
+        else:
+            # Create dataset with just features, ensuring features are float32
+            dataset = tf.data.Dataset.from_tensor_slices(tf.cast(X, tf.float32))
+
         if is_training:
-            dataset = dataset.shuffle(buffer_size=len(X))  # Shuffle all samples
-        dataset = dataset.batch(batch_size)  # Result shape: (batch_size, seq_length)
+            # dataset = dataset.shuffle(buffer_size=len(X))  # Shuffle all samples
+            pass
+        dataset = dataset.batch(batch_size)
         dataset = dataset.prefetch(tf.data.AUTOTUNE)  # Prefetch for better performance
         return dataset
 
-    def load_data(data_path, test_size=0.2, random_state=42):
-        """Load and prepare data for training."""
-        embeddings = pd.read_parquet(data_path)
-        latent_columns = [col for col in embeddings.columns if 'latent' in col]
-        print(f"Found {len(latent_columns)} latent columns")
-        X = embeddings[latent_columns].values
-        seq_length = len(latent_columns)
-        X = X.reshape(-1, seq_length)
-        X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
-        return X_train, X_test, seq_length
+    def load_data(data_path, val_data_path=None, test_size=0.2, random_state=42, input_type='latent1024'):
+        """
+        Load and prepare data for training with simplified validation.
+
+        Args:
+            data_path: Path to training data parquet file
+            val_data_path: Optional path to validation data
+            test_size: Fraction of data to use for validation if val_data_path is None
+            random_state: Random seed for reproducibility
+            input_type: Type of input data ('latent1024' or 'pMHC-sequence')
+
+        Returns:
+            X_train: Training data features with unique indices
+            X_test: Test/validation data features with unique indices
+            X_val: Validation data features with unique indices
+            y_train: Training data labels
+            y_test: Test/validation data labels
+            y_val: Validation data labels
+            seq_length: Length of each sequence including the index feature
+        """
+        print(f"Loading training data from {data_path}")
+        df = pd.read_parquet(data_path)
+
+        # Add original indices to track samples
+        df['original_idx'] = np.arange(len(df))
+
+        # Handle different input types
+        if input_type == 'latent1024':
+            columns = [col for col in df.columns if 'latent' in col]
+            if not columns:
+                raise ValueError("No latent columns found in the dataset")
+            seq_length = len(columns)
+            print(f"Found {seq_length} latent columns")
+        elif input_type == 'pMHC-sequence':
+            # Only check for peptide column as mhc_sequence is now optional
+            if 'peptide' not in df.columns:
+                raise ValueError("Required column 'peptide' not found in the dataset")
+            columns = ['peptide']
+            if 'mhc_sequence' in df.columns:
+                columns.append('mhc_sequence')
+            print(f"Using sequence columns: {columns}")
+            # Note: pMHC-sequence processing would be implemented here
+            raise NotImplementedError("pMHC-sequence input not yet implemented")
+        else:
+            raise ValueError(f"Unknown input_type: {input_type}. Expected 'latent1024' or 'pMHC-sequence'")
+
+        label_col = 'binding_label'
+        y = df[label_col].values
+
+        # Extract original indices to ensure uniqueness across splits
+        original_indices = df['original_idx'].values
+
+        # Extract features and clean data
+        X = df[columns].values
+        if np.isnan(X).any() or np.isinf(X).any():
+            print("Warning: Dataset contains NaN or Inf values. Replacing with zeros.")
+            X = np.nan_to_num(X)
+
+        # Add index as an additional feature
+        X_with_idx = np.column_stack((original_indices.reshape(-1, 1), X))
+
+        # Reshape with the added index column
+        seq_length_with_idx = seq_length + 1
+        X_with_idx = X_with_idx.reshape(-1, seq_length_with_idx)
+
+        print(f"Data shape with indices: {X_with_idx.shape}, Data range: [{np.min(X):.4f}, {np.max(X):.4f}]")
+        print(f"Label distribution: {np.bincount(y.astype(int) if y.dtype != object else [0])}")
+
+        # Initialize test variables
+        X_test = None
+        y_test = None
+
+        # Handle validation data if provided
+        if val_data_path:
+            try:
+                print(f"Loading validation data from {val_data_path}")
+                val_df = pd.read_parquet(val_data_path)
+
+                # Create unique indices for validation data by offsetting from training data
+                val_df['original_idx'] = np.arange(len(val_df)) + len(df) + 1000  # Add 1000 as buffer
+
+                val_X = val_df[columns].values
+                val_indices = val_df['original_idx'].values
+
+                if np.isnan(val_X).any() or np.isinf(val_X).any():
+                    print("Warning: Validation set contains NaN or Inf values. Replacing with zeros.")
+                    val_X = np.nan_to_num(val_X)
+
+                # Extract validation labels
+                if label_col is not None and label_col in val_df.columns:
+                    val_y = val_df[label_col].values
+                else:
+                    print("Warning: No binding label column found in validation data. Using dummy labels.")
+                    val_y = np.zeros(len(val_df))
+
+                # Add indices to validation features
+                X_test = np.column_stack((val_indices.reshape(-1, 1), val_X))
+                X_test = X_test.reshape(-1, seq_length_with_idx)
+                y_test = val_y
+
+                print(f"Validation data shape with indices: {X_test.shape}")
+                print(f"Validation label distribution: {np.bincount(y_test.astype(int) if y_test.dtype != object else [0])}")
+            except Exception as e:
+                print(f"Error loading validation data: {e}")
+                X_test = None
+                y_test = None
+
+        # Split training data for validation set (the indices will automatically be split correctly)
+        X_train, X_val, y_train, y_val = train_test_split(X_with_idx, y, test_size=test_size, random_state=random_state)
+        print(f"Training data shape with indices: {X_train.shape}, Validation data shape: {X_val.shape}")
+        print(f"Training label distribution: {np.bincount(y_train.astype(int) if y_train.dtype != object else [0])}")
+        print(f"Validation label distribution: {np.bincount(y_val.astype(int) if y_val.dtype != object else [0])}")
+
+        # Verify index uniqueness
+        all_indices = np.concatenate([
+            X_train[:, 0],
+            X_val[:, 0],
+            X_test[:, 0] if X_test is not None else np.array([])
+        ])
+        unique_indices = np.unique(all_indices)
+        if len(unique_indices) != len(all_indices):
+            print("Warning: Some indices are not unique across data splits!")
+        else:
+            print(f"Successfully created {len(unique_indices)} unique indices across all data splits")
+
+        return X_train, X_test, X_val, y_train, y_test, y_val, seq_length_with_idx
+
+    # def load_data_hash(data_path, val_data_path=None, test_size=0.2, random_state=42, input_type='latent1024', cache=True):
+    #     """
+    #     Load and prepare data for training with advanced features.
+    #
+    #     Args:
+    #         data_path: Path to training data parquet file
+    #         val_data_path: Optional path to validation data
+    #         test_size: Fraction of data to use for validation if val_data_path is None
+    #         random_state: Random seed for reproducibility
+    #         input_type: Type of input data ('latent1024' or 'pMHC-sequence')
+    #         cache: Whether to cache results to avoid reprocessing
+    #
+    #     Returns:
+    #         X_train: Training data
+    #         X_test: Test/validation data
+    #         X_val: Validation data (None if val_data_path is None and data is loaded from cache)
+    #         seq_length: Length of each sequence
+    #     """
+    #     import hashlib
+    #     import os
+    #     from functools import lru_cache
+    #
+    #     # Create a cache key based on the input parameters
+    #     cache_key = f"{os.path.basename(data_path)}_{test_size}_{random_state}_{input_type}"
+    #     if val_data_path:
+    #         cache_key += f"_{os.path.basename(val_data_path)}"
+    #     cache_file = f".cache_{hashlib.md5(cache_key.encode()).hexdigest()}.npz"
+    #
+    #     # Check if cached results exist
+    #     if cache and os.path.exists(cache_file):
+    #         print(f"Loading cached data from {cache_file}")
+    #         cached = np.load(cache_file, allow_pickle=True)
+    #         X_val = cached['X_val'] if 'X_val' in cached else None
+    #         return cached['X_train'], cached['X_test'], X_val, int(cached['seq_length'])
+    #
+    #     # Efficient ID generation with caching
+    #     @lru_cache(maxsize=10000)
+    #     def generate_id(f1, f2):
+    #         combined = f"{f1}-{f2}"
+    #         return hashlib.sha256(combined.encode('utf-8')).hexdigest()
+    #
+    #     # Load and validate training data
+    #     try:
+    #         print(f"Loading training data from {data_path}")
+    #         df = pd.read_parquet(data_path)
+    #
+    #         # Validate required columns exist
+    #         required_cols = ['mhc_sequence', 'peptide']
+    #         missing_cols = [col for col in required_cols if col not in df.columns]
+    #         if missing_cols:
+    #             raise ValueError(f"Missing required columns: {missing_cols}")
+    #
+    #         # Generate unique IDs
+    #         df['unique_id'] = df.apply(lambda row: generate_id(row['mhc_sequence'], row['peptide']), axis=1)
+    #
+    #         # Handle different input types
+    #         if input_type == 'latent1024':
+    #             columns = [col for col in df.columns if 'latent' in col]
+    #             if not columns:
+    #                 raise ValueError("No latent columns found in the dataset")
+    #             seq_length = len(columns)
+    #             print(f"Found {seq_length} latent columns")
+    #         elif input_type == 'pMHC-sequence':
+    #             columns = ['mhc_sequence', 'peptide']
+    #             print(f"Using pMHC sequence columns: {columns}")
+    #             # Note: pMHC-sequence processing would be implemented here
+    #             raise NotImplementedError("pMHC-sequence input not yet implemented")
+    #         else:
+    #             raise ValueError(f"Unknown input_type: {input_type}. Expected 'latent1024' or 'pMHC-sequence'")
+    #
+    #         # Extract features and check for invalid values
+    #         X = df[columns].values
+    #         if np.isnan(X).any() or np.isinf(X).any():
+    #             print("Warning: Dataset contains NaN or Inf values. Replacing with zeros.")
+    #             X = np.nan_to_num(X)
+    #
+    #         X = X.reshape(-1, seq_length)
+    #         print(f"Data shape: {X.shape}, Data range: [{np.min(X):.4f}, {np.max(X):.4f}]")
+    #
+    #         # Initialize X_val
+    #         X_val = None
+    #
+    #         # Handle validation data
+    #         if val_data_path:
+    #             try:
+    #                 print(f"Loading validation data from {val_data_path}")
+    #                 val_df = pd.read_parquet(val_data_path)
+    #                 val_df['unique_id'] = val_df.apply(lambda row: generate_id(row['mhc_sequence'], row['peptide']), axis=1)
+    #
+    #                 # Check for data leakage
+    #                 train_ids = set(df['unique_id'])
+    #                 val_ids = set(val_df['unique_id'])
+    #                 overlap = train_ids.intersection(val_ids)
+    #                 if overlap:
+    #                     print(f"Warning: {len(overlap)} overlapping samples between training and validation sets")
+    #
+    #                 val_X = val_df[columns].values
+    #                 if np.isnan(val_X).any() or np.isinf(val_X).any():
+    #                     print("Warning: Validation set contains NaN or Inf values. Replacing with zeros.")
+    #                     val_X = np.nan_to_num(val_X)
+    #
+    #                 X_val = val_X.reshape(-1, seq_length)
+    #                 print(f"Validation data shape: {X_val.shape}")
+    #
+    #                 # Still split training data for test set
+    #                 X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
+    #             except Exception as e:
+    #                 print(f"Error loading validation data: {e}")
+    #                 # Continue with default split if validation data loading fails
+    #                 X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
+    #         else:
+    #             print(f"Splitting data with test_size={test_size}")
+    #             X_train, X_test = train_test_split(X, test_size=test_size, random_state=random_state)
+    #
+    #         # Save to cache
+    #         if cache:
+    #             print(f"Caching results to {cache_file}")
+    #             if X_val is not None:
+    #                 np.savez(cache_file, X_train=X_train, X_test=X_test, X_val=X_val, seq_length=seq_length)
+    #             else:
+    #                 np.savez(cache_file, X_train=X_train, X_test=X_test, seq_length=seq_length)
+    #
+    #         return X_train, X_test, X_val, seq_length
+    #
+    #     except Exception as e:
+    #         print(f"Error loading data: {str(e)}")
+    #         import traceback
+    #         traceback.print_exc()
+    #         raise
 
     def initialize_codebook_with_kmeans(X_train, num_embeddings, embedding_dim):
         """Initialize codebook vectors using k-means clustering."""
@@ -1322,18 +1583,43 @@ def train_and_evaluate_scqvae(
         return used_clusters, usage_percentage
 
     # --- Main Pipeline ---
+    print("--- Main Pipeline ---")
+
     print("Loading/Generating Training Data...")
-    train_data, test_data, seq_length = load_data(data_path, test_size=test_size, random_state=random_state)
+    X_train, X_test, X_val, y_train, y_test, y_val, seq_length = load_data(data_path, val_data_path, test_size=test_size, random_state=random_state)
+
+    # Preserve original labels before dropping
+    if output_data == "all":
+        original_data = np.concatenate([X_train, X_val], axis=0)
+        original_labels = np.concatenate([y_train, y_val], axis=0)
+    elif output_data == "train":
+        original_data = X_train
+        original_labels = y_train
+    else:
+        original_data = X_val
+        original_labels = y_val
 
     # Initialize codebook with k-means
     print("Initializing codebook with k-means...")
-    initial_codebook = initialize_codebook_with_kmeans(train_data, num_embeddings, seq_length)
+    initial_codebook = initialize_codebook_with_kmeans(X_train, num_embeddings, seq_length)
 
     # Create datasets
     print("Creating TensorFlow Datasets...")
-    train_dataset = create_dataset(train_data, batch_size=batch_size, is_training=True)
-    val_dataset = create_dataset(test_data, batch_size=batch_size, is_training=False)
+    train_dataset_y = create_dataset(X_train, y_train, batch_size=batch_size, is_training=True)
+    val_dataset_y = create_dataset(X_val, y_val, batch_size=batch_size, is_training=False)
+    test_dataset_y = create_dataset(X_test, y_test, batch_size=batch_size, is_training=False)
     print("Datasets created.")
+
+    # drop labels
+    train_dataset = train_dataset_y.map(lambda x, y: x)
+    val_dataset = val_dataset_y.map(lambda x, y: x)
+    test_dataset = test_dataset_y.map(lambda x, y: x)
+
+    # drop IDs
+    train_dataset = train_dataset.map(lambda x: x[:, 1:])
+    val_dataset = val_dataset.map(lambda x: x[:, 1:])
+    test_dataset = test_dataset.map(lambda x: x[:, 1:])
+    seq_length = seq_length - 1 # Remove the index feature
 
     # --- Model Instantiation ---
     print("Building the SCQ1DAutoEncoder model...")
@@ -1370,6 +1656,8 @@ def train_and_evaluate_scqvae(
     print(f"\nTraining finished in {end_time - start_time:.2f} seconds.")
 
     # --- Evaluation and Visualization ---
+    print("\nEvaluating the model...")
+
     if visualize:
         print("\nPlotting training history...")
         plot_training_metrics(history, save_path=os.path.join(output_dir, 'vqvae_training_metrics.png'))
@@ -1421,8 +1709,67 @@ def train_and_evaluate_scqvae(
     quantized_latent = np.concatenate(quantized_latents, axis=0)
     cluster_indices_soft = np.concatenate(cluster_indices_soft_assign, axis=0)
     cluster_indices_hard = np.concatenate(cluster_indices_hard_assign, axis=0)
-    np.save(os.path.join(output_dir, 'quantized_latent.npy'), quantized_latent)
-    # np.save(os.path.join(output_dir, 'cluster_indices_hard.npy'), cluster_indices_hard)
+
+    # Compile quantized outputs into a DataFrame and include original binding labels
+    # TODO save
+    # Check dimensions of our data
+    print(f"Quantized latent shape: {quantized_latent.shape}")
+    print(f"Cluster indices soft shape: {cluster_indices_soft.shape}")
+    print(f"Cluster indices hard shape: {cluster_indices_hard.shape}")
+    print(
+        f"Original labels shape: {original_labels.shape if hasattr(original_labels, 'shape') else len(original_labels)}")
+
+    # Create a list of records instead of column-wise dictionary
+    # This avoids dimension issues when creating the DataFrame
+    records = []
+
+    for i in range(len(quantized_latent)):
+        record = {}
+
+        # Add latent features (flattened if needed)
+        if len(quantized_latent.shape) > 2:
+            flat_latent = quantized_latent[i].flatten()
+            for j in range(len(flat_latent)):
+                record[f'latent_{j}'] = float(flat_latent[j])
+        else:
+            for j in range(quantized_latent.shape[1]):
+                record[f'latent_{j}'] = float(quantized_latent[i, j])
+
+        # Add soft cluster probabilities (flattened if needed)
+        if len(cluster_indices_soft.shape) > 2:
+            flat_soft = cluster_indices_soft[i].flatten()
+            for j in range(len(flat_soft)):
+                record[f'soft_cluster_{j}'] = float(flat_soft[j])
+        else:
+            for j in range(cluster_indices_soft.shape[1]):
+                record[f'soft_cluster_{j}'] = float(cluster_indices_soft[i, j])
+
+        # Add hard cluster assignment
+        record['hard_cluster'] = int(cluster_indices_hard[i])
+
+        # Add binding label (if available)
+        if i < len(original_labels):
+            # Convert to scalar if it's an array
+            if hasattr(original_labels[i], 'shape') and original_labels[i].shape:
+                record['binding_label'] = float(original_labels[i][0])
+            else:
+                record['binding_label'] = float(original_labels[i])
+        else:
+            record['binding_label'] = np.nan
+
+        records.append(record)
+
+    # Create DataFrame from records
+    results_df = pd.DataFrame(records)
+
+    # Print head of the output
+    print("\nHead of the output DataFrame:")
+    print(results_df.head())
+
+    # Save as parquet
+    parquet_path = os.path.join(output_dir, 'quantized_outputs.parquet')
+    results_df.to_parquet(parquet_path, index=False)
+    print(f"Quantized outputs saved to: {parquet_path}")
 
     print(f"\n head of Cluster indices hard: {cluster_indices_hard[:5]}")
     print(f"\n head of Cluster indices soft: {cluster_indices_soft[:5]}")
@@ -1438,14 +1785,248 @@ def train_and_evaluate_scqvae(
     plot_soft_cluster_distribution(np.array(cluster_indices_soft), 20, 'soft_cluster_distribution.png')
     print(f"Latent representations saved to {output_dir}")
 
+
+# write a pipeline that runs the MoE model on the data.
+#
+# first load the data and if exists the val_data.
+#
+# then if set latent, load the quantized_latent.npy and load cluster_indices.npy as the cluster_indices_probs, set the number of experts as the length of on of the cluster cluster_indices_probs vector.
+#
+# then if val_data_path not set, split the data to train and validation and train the model.
+#
+# then evaluate the model and draw accuracy plots.
+
+def train_and_evaluate_moe(
+        data_path,
+        val_data_path=None,
+        latent_path=None,
+        input_type='latent',  # Options: 'latent', 'pMHC-sequence'
+        batch_size=32,
+        epochs=20,
+        learning_rate=1e-4,
+        hidden_dim=64,
+        output_dir='data/MoE',
+        visualize=True,
+        save_model=True,
+        random_state=42,
+        test_size=0.2,
+        **kwargs
+    ):
+        """
+        Load data from a parquet file, train a Mixture-of-Experts (MoE) model, and evaluate performance.
+
+        Parameters:
+            data_path (str): Path to the input parquet file containing latent representations and cluster probabilities.
+            val_data_path (str, optional): Path to a separate validation parquet file. If not provided, a train/val split is used.
+            latent_path (str, optional): Path to a pretrained encoder model for sequence input.
+            input_type (str): 'latent' to use precomputed features, 'pMHC-sequence' to encode sequences.
+            batch_size (int): Batch size for training.
+            epochs (int): Number of training epochs.
+            learning_rate (float): Learning rate for the optimizer.
+            hidden_dim (int): Size of the hidden layer in the MoE model.
+            output_dir (str): Directory to save models and figures.
+            visualize (bool): Whether to generate PCA visualizations.
+            save_model (bool): Whether to save the trained model.
+            random_state (int): Seed for reproducibility.
+            test_size (float): Fraction of data to use for validation if no val_data_path.
+            **kwargs: Additional keyword arguments forwarded to model.fit (e.g., callbacks).
+
+        Returns:
+            model (tf.keras.Model): Trained MoE model.
+            history (tf.keras.callbacks.History): Training history object.
+            eval_results (list): Evaluation results on validation data.
+        """
+        # Set random seeds for reproducibility
+        np.random.seed(random_state)
+        tf.random.set_seed(random_state)
+
+        # Create output directory if it doesn't exist
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Load the main dataset
+        print(f"Loading training data from {data_path}")
+        df = pd.read_parquet(data_path)
+
+        # Extract features from latent columns
+        if input_type == 'latent':
+            # Get all latent columns
+            latent_cols = [col for col in df.columns if col.startswith('latent_')]
+            if not latent_cols:
+                raise ValueError("No latent_* columns found in the dataset")
+            print(f"Found {len(latent_cols)} latent columns")
+            X = df[latent_cols].values
+
+        elif input_type == 'pMHC-sequence':
+            if latent_path is None:
+                raise ValueError("latent_path must be provided when input_type='pMHC-sequence'")
+            # Load sequence encoder (pretrained model)
+            encoder = tf.keras.models.load_model(latent_path)
+            if 'peptide' not in df.columns or 'mhc_sequence' not in df.columns:
+                raise ValueError("Required columns 'peptide' and 'mhc_sequence' not found")
+            sequences = df[['peptide', 'mhc_sequence']].values
+            # Encode sequences into latent vectors
+            X = encoder.predict(sequences, batch_size=batch_size)
+        else:
+            raise ValueError(f"Unsupported input_type: {input_type}")
+
+        # Extract soft cluster probabilities
+        soft_cluster_cols = [col for col in df.columns if col.startswith('soft_cluster_')]
+        if not soft_cluster_cols:
+            raise ValueError("No soft_cluster_* columns found in the dataset")
+        print(f"Found {len(soft_cluster_cols)} soft cluster probability columns")
+        soft_clusters = df[soft_cluster_cols].values
+
+        # Extract binding labels
+        if 'binding_label' not in df.columns:
+            raise ValueError("Required column 'binding_label' not found in the dataset")
+        y = df['binding_label'].values
+
+        print(f"Data loaded: X shape={X.shape}, soft_clusters shape={soft_clusters.shape}, y shape={y.shape}")
+
+        # Prepare validation data if provided
+        if val_data_path:
+            print(f"Loading validation data from {val_data_path}")
+            df_val = pd.read_parquet(val_data_path)
+            if input_type == 'latent':
+                # Use same latent columns as training
+                X_val = df_val[latent_cols].values
+            else:
+                # Encode sequence data
+                sequences_val = df_val[['peptide', 'mhc_sequence']].values
+                X_val = encoder.predict(sequences_val, batch_size=batch_size)
+
+            # Use same soft cluster columns
+            soft_clusters_val = df_val[soft_cluster_cols].values
+            y_val = df_val['binding_label'].values
+
+            print(f"Validation data loaded: X_val shape={X_val.shape}, soft_clusters_val shape={soft_clusters_val.shape}")
+        else:
+            # Split training data for validation
+            print(f"Splitting data with test_size={test_size}")
+            X, X_val, soft_clusters, soft_clusters_val, y, y_val = train_test_split(
+                X, soft_clusters, y,
+                test_size=test_size,
+                random_state=random_state,
+                stratify=y if len(np.unique(y)) > 1 else None
+            )
+            print(f"Data split: train={X.shape[0]} samples, validation={X_val.shape[0]} samples")
+
+        # Build tf.data datasets
+        train_dataset = tf.data.Dataset.from_tensor_slices(((X, soft_clusters), y))
+        train_dataset = train_dataset.shuffle(buffer_size=1000, seed=random_state).batch(batch_size)
+
+        val_dataset = tf.data.Dataset.from_tensor_slices(((X_val, soft_clusters_val), y_val))
+        val_dataset = val_dataset.batch(batch_size)
+
+        # Instantiate and compile the MoE model
+        num_experts = soft_clusters.shape[1]
+        feature_dim = X.shape[1]
+        print(f"Building MoE model with {num_experts} experts and feature_dim={feature_dim}")
+        model = MoEModel(
+            feature_dim,
+            hidden_dim=hidden_dim,
+            num_experts=num_experts,
+            use_provided_gates=True
+        )
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+            loss=tf.keras.losses.BinaryCrossentropy(),
+            metrics=['accuracy']
+        )
+
+        # Train the model
+        print(f"Training model for {epochs} epochs...")
+        history = model.fit(
+            train_dataset,
+            validation_data=val_dataset,
+            epochs=epochs,
+            **kwargs
+        )
+
+        # Evaluate on validation set
+        print("Evaluating model on validation data...")
+        eval_results = model.evaluate(val_dataset)
+        print(f"Validation loss: {eval_results[0]:.4f}, accuracy: {eval_results[1]:.4f}")
+
+        # Ensure the model is built before saving
+        print(model((X[:1], soft_clusters[:1]), training=False))
+
+        # TODO fix later
+        # Save the trained model
+        # if save_model:
+        #     save_path = os.path.join(output_dir, 'moe_model')
+        #     os.makedirs(save_path, exist_ok=True)  # Ensure the directory exists
+        #     model.save(save_path)
+        #     print(f"Model saved to {save_path}")
+
+        # Visualization using PCA
+        if visualize:
+            print("Creating PCA visualizations...")
+            pca = PCA(n_components=2, random_state=random_state)
+            X_all = np.vstack([X, X_val])
+            y_all = np.concatenate([y, y_val])
+            soft_clusters_all = np.vstack([soft_clusters, soft_clusters_val])
+            pca_proj = pca.fit_transform(X_all)
+
+            df_vis = pd.DataFrame({
+                'PC1': pca_proj[:, 0],
+                'PC2': pca_proj[:, 1],
+                'label': y_all,
+                'cluster': np.argmax(soft_clusters_all, axis=1)
+            })
+
+            # Plot by binding label
+            plt.figure(figsize=(8, 6))
+            sns.scatterplot(data=df_vis, x='PC1', y='PC2', hue='label', alpha=0.6)
+            plt.title('PCA of Dataset Colored by Binding Label')
+            plt.savefig(os.path.join(output_dir, 'pca_binding_label.png'))
+            print(f"Saved binding label PCA plot to {os.path.join(output_dir, 'pca_binding_label.png')}")
+            plt.close()
+
+            # Plot by cluster assignment
+            plt.figure(figsize=(8, 6))
+            sns.scatterplot(data=df_vis, x='PC1', y='PC2', hue='cluster', legend=False, alpha=0.6)
+            plt.title('PCA of Dataset Colored by Soft Cluster Assignment')
+            plt.savefig(os.path.join(output_dir, 'pca_cluster_assignment.png'))
+            print(f"Saved cluster assignment PCA plot to {os.path.join(output_dir, 'pca_cluster_assignment.png')}")
+            plt.close()
+
+            # Plot training history
+            plt.figure(figsize=(12, 5))
+            plt.subplot(1, 2, 1)
+            plt.plot(history.history['loss'], label='Training Loss')
+            plt.plot(history.history['val_loss'], label='Validation Loss')
+            plt.title('Model Loss')
+            plt.xlabel('Epoch')
+            plt.ylabel('Loss')
+            plt.legend()
+
+            plt.subplot(1, 2, 2)
+            plt.plot(history.history['accuracy'], label='Training Accuracy')
+            plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+            plt.title('Model Accuracy')
+            plt.xlabel('Epoch')
+            plt.ylabel('Accuracy')
+            plt.legend()
+
+            plt.tight_layout()
+            plt.savefig(os.path.join(output_dir, 'training_history.png'))
+            print(f"Saved training history plot to {os.path.join(output_dir, 'training_history.png')}")
+            plt.close()
+
+        return model, history, eval_results
+
+
 if __name__ == "__main__":
     # Call train_and_evaluate_scqvae without trying to unpack return values
     train_and_evaluate_scqvae(
-        data_path="data/Pep2Vec/ConvNeXT-MHC/pep2vec_output_fold_1.parquet",
+        data_path="data/Pep2Vec/Conbotnet_new/pep2vec_output_fold_0.parquet",
+        val_data_path="data/Pep2Vec/Conbotnet_new/pep2vec_output_val_fold_0.parquet",
+        input_type="latent1024",
         num_embeddings=32,
         embedding_dim=64,
         batch_size=32,
-        epochs=20,
+        epochs=200,
         output_dir="data/SCQvae/Conbotnet",
         visualize=True,
         save_model=True,
@@ -1453,6 +2034,22 @@ if __name__ == "__main__":
         test_size=0.2,
         output_data="all",  # Options: "val", "train", "all"
     )
+    print("Running MoE")
+    train_and_evaluate_moe(
+        data_path="data/SCQvae/Conbotnet/quantized_outputs.parquet",
+        val_data_path=None,
+        input_type="latent",
+        batch_size=32,
+        epochs=200,
+        learning_rate=1e-4,
+        hidden_dim=16,
+        output_dir="data/MoE/Conbotnet",
+        visualize=True,
+        save_model=True,
+        random_state=42,
+        test_size=0.2,
+    )
+
 
 # # Create a 1D UMAP projection colored by cluster indices
 # print("Computing 1D UMAP colored by cluster indices...")
