@@ -299,12 +299,17 @@ class SCQ_layer(layers.Layer):
 
 class SCQ1DAutoEncoder(keras.Model):
     def __init__(self, input_dim, num_embeddings, embedding_dim, commitment_beta,
-                 scq_params, initial_codebook, **kwargs):
+                 scq_params, initial_codebook, num_classes, cluster_lambda=1.0, **kwargs):
         super().__init__(**kwargs)
         self.input_dim = input_dim  # e.g., (1024,)
         self.embedding_dim = embedding_dim
         self.num_embeddings = num_embeddings
         self.commitment_beta = commitment_beta
+
+        # weight on the new cluster‐consistency loss
+        self.cluster_lambda = cluster_lambda
+        # number of distinct labels
+        self.num_classes = num_classes
 
         # Encoder: Dense layers to compress 1024 features to embedding_dim
         self.encoder = keras.Sequential([
@@ -342,54 +347,53 @@ class SCQ1DAutoEncoder(keras.Model):
         self.vq_loss_tracker = keras.metrics.Mean(name="vq_loss")
         self.perplexity_tracker = keras.metrics.Mean(name="perplexity")
 
-    def call(self, inputs, training=False):
-        # Encoder: Compress input to embedding space
-        x = self.encoder(inputs)  # (batch_size, embedding_dim)
-        x = tf.expand_dims(x, axis=1)  # (batch_size, 1, embedding_dim)
-
-        # SCQ: Quantize the embedding
-        # This now returns one-hot encodings instead of soft probabilities
-        Zq, out_P_proj, vq_loss, perplexity = self.scq_layer(x)
-
-        # Decoder: Reconstruct from quantized embedding
-        y = tf.squeeze(Zq, axis=1)  # (batch_size, embedding_dim)
-        output = self.decoder(y)  # (batch_size, 1024)
-
-        return output, Zq, out_P_proj, vq_loss, perplexity
-
-    # # Method to get just the latent sequence and one-hot encodings for inference
-    # def encode(self, inputs):
-    #     """Encode inputs to latent sequence and one-hot cluster assignments."""
-    #     x = self.encoder(inputs)  # (batch_size, embedding_dim)
-    #     x = tf.expand_dims(x, axis=1)  # (batch_size, 1, embedding_dim)
-    #
-    #     # Get quantized embedding and one-hot encodings
-    #     quantized, one_hot_encodings, _, _ = self.scq_layer(x)
-    #
-    #     # Return quantized latent sequence and one-hot encodings
-    #     return tf.squeeze(quantized, axis=1), tf.squeeze(one_hot_encodings, axis=1)
-
     @property
     def metrics(self):
         return [
             self.total_loss_tracker,
             self.recon_loss_tracker,
             self.vq_loss_tracker,
-            self.perplexity_tracker
+            self.perplexity_tracker,
         ]
 
-    def train_step(self, data):
-        if isinstance(data, tuple):
-            x = data[0]
-            y = data[1] if len(data) > 1 else data[0]
+
+    def call(self, inputs, training=False):
+        if isinstance(inputs, tuple):
+            x, labels = inputs
         else:
-            x = y = data
+            x, labels = inputs, None
+        # Encoder: Compress input to embedding space
+        x = self.encoder(x)  # (batch_size, embedding_dim)
+        x = tf.expand_dims(x, axis=1)  # (batch_size, 1, embedding_dim)
+        # SCQ: Quantize the embedding
+        Zq, out_P_proj, vq_loss, perplexity = self.scq_layer(x)
+        # Decoder: Reconstruct from quantized embedding
+        y = tf.squeeze(Zq, axis=1)  # (batch_size, embedding_dim)
+        output = self.decoder(y)  # (batch_size, 1024)
+        return output, Zq, out_P_proj, vq_loss, perplexity
+
+    # # Method to get just the latent sequence and one-hot encodings for inference
+    def encode(self, inputs):
+        """Encode inputs to latent sequence and one-hot cluster assignments."""
+        x = self.encoder(inputs)  # (batch_size, embedding_dim)
+        x = tf.expand_dims(x, axis=1)  # (batch_size, 1, embedding_dim)
+        # Get quantized embedding and one-hot encodings
+        quantized, one_hot_encodings, _, _ = self.scq_layer(x)
+        # Return quantized latent sequence and one-hot encodings
+        return tf.squeeze(quantized, axis=1), tf.squeeze(one_hot_encodings, axis=1)
+
+    def train_step(self, data):
+        # unpack features and (optional) labels
+        if isinstance(data, tuple):
+            x, labels = data
+        else:
+            x, labels = data, None
 
         with tf.GradientTape() as tape:
             reconstruction, Zq, _, vq_loss, perplexity = self(x, training=True)
 
             # Reconstruction loss
-            recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
+            recon_loss = tf.reduce_mean(tf.math.squared_difference(x, reconstruction))
 
             # Feature matching loss
             with tape.stop_recording():
@@ -436,7 +440,7 @@ class SCQ1DAutoEncoder(keras.Model):
             x = y = data
 
         reconstruction, quantized, _, vq_loss, perplexity = self(x, training=False)
-        recon_loss = tf.reduce_mean(tf.math.squared_difference(y, reconstruction))
+        recon_loss = tf.reduce_mean(tf.math.squared_difference(x, reconstruction))
         total_loss = recon_loss + vq_loss + self.commitment_beta * tf.reduce_mean(
             tf.math.squared_difference(x, reconstruction))
 
@@ -495,6 +499,24 @@ class Expert(layers.Layer):
         x = self.fc1(x)
         x = self.fc2(x)
         return tf.nn.sigmoid(x)
+
+# class Expert(layers.Layer):
+#     """Enhanced binary prediction expert with dropout and more layers."""
+#     def __init__(self, input_dim, hidden_dim, output_dim=1, dropout_rate=0.2):
+#         super().__init__()
+#         self.fc1 = layers.Dense(hidden_dim, activation='relu', input_shape=(input_dim,))
+#         self.dropout1 = layers.Dropout(dropout_rate)
+#         self.fc2 = layers.Dense(hidden_dim // 2, activation='relu')
+#         self.dropout2 = layers.Dropout(dropout_rate)
+#         self.fc3 = layers.Dense(output_dim)
+#
+#     def call(self, x, training=False):
+#         x = self.fc1(x)
+#         x = self.dropout1(x, training=training)
+#         x = self.fc2(x)
+#         x = self.dropout2(x, training=training)
+#         x = self.fc3(x)
+#         return tf.nn.sigmoid(x)
 
 
 class MixtureOfExperts(layers.Layer):
@@ -827,151 +849,416 @@ def visualize_dataset_analysis(features, labels, cluster_probs, method='pca', ra
         plt.show()
 
 
-# Example usage
-if __name__ == "__main__":
-    # Generate dummy dataset with clustered data and labels for training
-    num_train_samples = 8000
-    num_test_samples = 2000
-    feature_dim = 64
-    num_clusters = 32
+# # Example usage
+# if __name__ == "__main__":
+#     # Generate dummy dataset with clustered data and labels for training
+#     num_train_samples = 8000
+#     num_test_samples = 2000
+#     feature_dim = 64
+#     num_clusters = 32
+#
+#     # Function to generate dataset with specified parameters
+#     def generate_dataset(num_samples, feature_dim, num_clusters, epsilon=0.1):
+#         # Compute samples per cluster
+#         base_count = num_samples // num_clusters
+#         counts = [base_count + (1 if i < num_samples % num_clusters else 0) for i in range(num_clusters)]
+#
+#         features_list = []
+#         labels_list = []
+#         cluster_probs_list = []
+#         distributions = ['normal', 'uniform', 'gamma', 'poisson']
+#
+#         for c in range(num_clusters):
+#             cluster_count = counts[c]
+#             n0 = cluster_count // 2
+#             n1 = cluster_count - n0
+#             dist = distributions[(2 * c) % len(distributions)]
+#             print(f"Cluster {c}: {dist} distribution, {n0} samples 0, {n1} samples 1")
+#
+#             if dist == 'normal':
+#                 features_0 = tf.random.normal([n0, feature_dim], mean=c, stddev=1.0)
+#             elif dist == 'uniform':
+#                 features_0 = tf.random.uniform([n0, feature_dim], minval=0, maxval=1)
+#             elif dist == 'gamma':
+#                 features_0 = tf.random.gamma([n0, feature_dim], alpha=2.0, beta=1.0)
+#             elif dist == 'poisson':
+#                 features_0 = tf.cast(tf.random.poisson([n0, feature_dim], lam=3), tf.float32)
+#             else:
+#                 features_0 = tf.random.normal([n0, feature_dim], mean=c, stddev=1.0)
+#
+#             if dist == 'normal':
+#                 features_1 = tf.random.normal([n1, feature_dim], mean=c+0.5, stddev=1.5)
+#             elif dist == 'uniform':
+#                 features_1 = tf.random.uniform([n1, feature_dim], minval=1, maxval=2)
+#             elif dist == 'gamma':
+#                 features_1 = tf.random.gamma([n1, feature_dim], alpha=5.0, beta=2.0)
+#             elif dist == 'poisson':
+#                 features_1 = tf.cast(tf.random.poisson([n1, feature_dim], lam=6), tf.float32)
+#             else:
+#                 features_1 = tf.random.normal([n1, feature_dim], mean=c+0.5, stddev=1.5)
+#
+#             features_i = tf.concat([features_0, features_1], axis=0)
+#             labels_i = tf.concat([tf.zeros([n0, 1], tf.int32), tf.ones([n1, 1], tf.int32)], axis=0)
+#             features_list.append(features_i)
+#             labels_list.append(labels_i)
+#
+#             # Generate random cluster probabilities per sample
+#             cluster_indices = tf.fill([cluster_count], c)
+#             lam_value = tf.maximum(tf.cast(c, tf.float32) + 1.0, 1.0)
+#             noise = tf.cast(tf.random.poisson([cluster_count, num_clusters], lam=lam_value), tf.float32)
+#             noise = noise + epsilon
+#             probs = noise / (tf.reduce_sum(noise, axis=1, keepdims=True))
+#             alpha = tf.random.uniform([cluster_count, 1], minval=0.5, maxval=0.8)
+#             probs = (1 - alpha) * probs + alpha * tf.one_hot(cluster_indices, num_clusters)
+#             probs = probs / tf.reduce_sum(probs, axis=1, keepdims=True)
+#             cluster_probs_list.append(probs)
+#
+#         features = tf.concat(features_list, axis=0)
+#         labels = tf.concat(labels_list, axis=0)
+#         cluster_probs = tf.concat(cluster_probs_list, axis=0)
+#
+#         # Shuffle dataset
+#         indices = tf.random.shuffle(tf.range(tf.shape(features)[0]))
+#         features = tf.gather(features, indices)
+#         labels = tf.gather(labels, indices)
+#         cluster_probs = tf.gather(cluster_probs, indices)
+#
+#         return features, labels, cluster_probs
+#
+#     # Generate training dataset
+#     print("\nGenerating training dataset...")
+#     train_features, train_labels, train_cluster_probs = generate_dataset(
+#         num_train_samples, feature_dim, num_clusters)
+#
+#     # Generate separate test dataset
+#     print("\nGenerating test dataset...")
+#     test_features, test_labels, test_cluster_probs = generate_dataset(
+#         num_test_samples, feature_dim, num_clusters, epsilon=1)
+#
+#     print(f"\nTraining labels min: {tf.reduce_min(train_labels)}, max: {tf.reduce_max(train_labels)}")
+#     print(f"Training labels head: {train_labels[:5]}")
+#     print(f"Test labels min: {tf.reduce_min(test_labels)}, max: {tf.reduce_max(test_labels)}")
+#     print(f"Test labels head: {test_labels[:5]}")
+#
+#     # Visualize training dataset
+#     print("\nVisualizing training dataset...")
+#     visualize_dataset_analysis(train_features, train_labels, train_cluster_probs,
+#                               raw_dot_plot=False, method='pca', feature_indices=(0, 1))
+#
+#     # Create training dataset
+#     train_dataset = tf.data.Dataset.from_tensor_slices(
+#         ((train_features, train_cluster_probs), train_labels)
+#     ).shuffle(1000).batch(64)
+#
+#     # Create test dataset (no need to shuffle extensively)
+#     test_dataset = tf.data.Dataset.from_tensor_slices(
+#         ((test_features, test_cluster_probs), test_labels)
+#     ).batch(64)
+#
+#     # Print info about test dataset
+#     for features, labels in test_dataset.take(1):
+#         print(f"\nTest features shape: {features[0].shape}, Test labels shape: {labels.shape}")
+#         print(f"Test features head: {features[0][:3]}")
+#         print(f"Test labels head: {labels[:3]}")
+#
+#     # Create and compile model
+#     model = MoEModel(feature_dim, hidden_dim=8, num_experts=num_clusters, use_provided_gates=True)
+#     model.compile(
+#         optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+#         loss=tf.keras.losses.BinaryCrossentropy(),
+#         metrics=['accuracy'],
+#     )
+#
+#     # Train model
+#     print("\nTraining model...")
+#     model.fit(train_dataset, epochs=20)
+#
+#     # Evaluate on independent test set
+#     print("\nEvaluating on independent test set...")
+#     eval_results = model.evaluate(test_dataset)
+#     print(f"Evaluation results: {eval_results}")
+#
+#     # Predict and analyze
+#     # test_batch = next(iter(test_dataset.take(1)))
+#     # predictions = model(test_batch[0], training=False)
+#     # print(f"Sample predictions shape: {predictions['prediction'].shape}")
+#     # print(f"Gate activations: {tf.reduce_mean(predictions['gates'], axis=0)}")
+#
+#     # Test on a single sample
+#     for (feat, cluster_prob), label in test_dataset.unbatch().take(1):
+#         feat = tf.expand_dims(feat, 0)
+#         cluster_prob = tf.expand_dims(cluster_prob, 0)
+#         output = model((feat, cluster_prob), training=False)
+#         print("Single sample prediction:", output['prediction'].numpy()[0], "True label:", label.numpy())
+#         print("Gate activations:", tf.reduce_mean(output['gates'], axis=0).numpy())
+#
+#     # Optional: Visualize test dataset
+#     print("\nVisualizing test dataset...")
+#     visualize_dataset_analysis(test_features, test_labels, test_cluster_probs,
+#                               raw_dot_plot=False, method='pca', feature_indices=(0, 1))
 
-    # Function to generate dataset with specified parameters
-    def generate_dataset(num_samples, feature_dim, num_clusters, epsilon=0.1):
-        # Compute samples per cluster
-        base_count = num_samples // num_clusters
-        counts = [base_count + (1 if i < num_samples % num_clusters else 0) for i in range(num_clusters)]
+class BinaryMLP(tf.keras.Model):
+    def __init__(self, input_dim=1024):
+        super(BinaryMLP, self).__init__()
+        # First hidden layer
+        self.dense1 = tf.keras.layers.Dense(
+            units=512, activation='relu', name='dense_1'
+        )
+        self.dropout1 = tf.keras.layers.Dropout(
+            rate=0.5, name='dropout_1'
+        )
+        # Second hidden layer
+        self.dense2 = tf.keras.layers.Dense(
+            units=256, activation='relu', name='dense_2'
+        )
+        self.dropout2 = tf.keras.layers.Dropout(
+            rate=0.5, name='dropout_2'
+        )
+        # Output layer for binary classification
+        self.output_layer = tf.keras.layers.Dense(
+            units=1, activation='sigmoid', name='output_layer'
+        )
 
-        features_list = []
-        labels_list = []
-        cluster_probs_list = []
-        distributions = ['normal', 'uniform', 'gamma', 'poisson']
+    def call(self, inputs, training=False):
+        # If inputs come in as (features, labels), unpack and ignore labels
+        if isinstance(inputs, (tuple, list)):
+            x, _ = inputs
+        else:
+            x = inputs
 
-        for c in range(num_clusters):
-            cluster_count = counts[c]
-            n0 = cluster_count // 2
-            n1 = cluster_count - n0
-            dist = distributions[(2 * c) % len(distributions)]
-            print(f"Cluster {c}: {dist} distribution, {n0} samples 0, {n1} samples 1")
+        x = self.dense1(x)
+        x = self.dropout1(x, training=training)
+        x = self.dense2(x)
+        x = self.dropout2(x, training=training)
+        return self.output_layer(x)
 
-            if dist == 'normal':
-                features_0 = tf.random.normal([n0, feature_dim], mean=c, stddev=1.0)
-            elif dist == 'uniform':
-                features_0 = tf.random.uniform([n0, feature_dim], minval=0, maxval=1)
-            elif dist == 'gamma':
-                features_0 = tf.random.gamma([n0, feature_dim], alpha=2.0, beta=1.0)
-            elif dist == 'poisson':
-                features_0 = tf.cast(tf.random.poisson([n0, feature_dim], lam=3), tf.float32)
-            else:
-                features_0 = tf.random.normal([n0, feature_dim], mean=c, stddev=1.0)
+# # Example usage
+# if __name__ == "__main__":
+#     # Generate dummy dataset
+#     num_samples = 1000
+#     input_dim = 1024
+#     features = tf.random.normal((num_samples, input_dim))
+#     labels = tf.random.uniform((num_samples,), minval=0, maxval=2, dtype=tf.int32)
+#
+#     # Create and compile model
+#     model = BinaryMLP(input_dim=input_dim)
+#     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+#
+#     # Train model
+#     model.fit(features, labels, epochs=5, batch_size=32)
+#     # Evaluate model
+#     loss, accuracy = model.evaluate(features, labels)
+#     print(f"Loss: {loss}, Accuracy: {accuracy}")
+#     # Predict
+#     predictions = model.predict(features)
+#     print(f"Predictions shape: {predictions.shape}")
+#     print(f"Predictions head: {predictions[:5]}")
 
-            if dist == 'normal':
-                features_1 = tf.random.normal([n1, feature_dim], mean=c+0.5, stddev=1.5)
-            elif dist == 'uniform':
-                features_1 = tf.random.uniform([n1, feature_dim], minval=1, maxval=2)
-            elif dist == 'gamma':
-                features_1 = tf.random.gamma([n1, feature_dim], alpha=5.0, beta=2.0)
-            elif dist == 'poisson':
-                features_1 = tf.cast(tf.random.poisson([n1, feature_dim], lam=6), tf.float32)
-            else:
-                features_1 = tf.random.normal([n1, feature_dim], mean=c+0.5, stddev=1.5)
 
-            features_i = tf.concat([features_0, features_1], axis=0)
-            labels_i = tf.concat([tf.zeros([n0, 1], tf.int32), tf.ones([n1, 1], tf.int32)], axis=0)
-            features_list.append(features_i)
-            labels_list.append(labels_i)
+class TransformerBlock(layers.Layer):
+    """Single Transformer encoder block."""
 
-            # Generate random cluster probabilities per sample
-            cluster_indices = tf.fill([cluster_count], c)
-            lam_value = tf.maximum(tf.cast(c, tf.float32) + 1.0, 1.0)
-            noise = tf.cast(tf.random.poisson([cluster_count, num_clusters], lam=lam_value), tf.float32)
-            noise = noise + epsilon
-            probs = noise / (tf.reduce_sum(noise, axis=1, keepdims=True))
-            alpha = tf.random.uniform([cluster_count, 1], minval=0.5, maxval=0.8)
-            probs = (1 - alpha) * probs + alpha * tf.one_hot(cluster_indices, num_clusters)
-            probs = probs / tf.reduce_sum(probs, axis=1, keepdims=True)
-            cluster_probs_list.append(probs)
+    def __init__(self, embed_dim, num_heads, ff_dim, dropout_rate=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.attn = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
+        self.dropout1 = layers.Dropout(dropout_rate)
+        self.norm1 = layers.LayerNormalization(epsilon=1e-6)
 
-        features = tf.concat(features_list, axis=0)
-        labels = tf.concat(labels_list, axis=0)
-        cluster_probs = tf.concat(cluster_probs_list, axis=0)
+        self.ffn = tf.keras.Sequential([
+            layers.Dense(ff_dim, activation='gelu'),
+            layers.Dropout(dropout_rate),
+            layers.Dense(embed_dim),
+            layers.Dropout(dropout_rate),
+        ])
+        self.norm2 = layers.LayerNormalization(epsilon=1e-6)
 
-        # Shuffle dataset
-        indices = tf.random.shuffle(tf.range(tf.shape(features)[0]))
-        features = tf.gather(features, indices)
-        labels = tf.gather(labels, indices)
-        cluster_probs = tf.gather(cluster_probs, indices)
+    def call(self, inputs, training=False):
+        # Self-attention block
+        attn_output = self.attn(inputs, inputs)
+        attn_output = self.dropout1(attn_output, training=training)
+        out1 = self.norm1(inputs + attn_output)
 
-        return features, labels, cluster_probs
+        # Feed-forward block
+        ffn_output = self.ffn(out1, training=training)
+        return self.norm2(out1 + ffn_output)
 
-    # Generate training dataset
-    print("\nGenerating training dataset...")
-    train_features, train_labels, train_cluster_probs = generate_dataset(
-        num_train_samples, feature_dim, num_clusters)
 
-    # Generate separate test dataset
-    print("\nGenerating test dataset...")
-    test_features, test_labels, test_cluster_probs = generate_dataset(
-        num_test_samples, feature_dim, num_clusters, epsilon=1)
+import tensorflow as tf
+from tensorflow.keras import layers, Model
 
-    print(f"\nTraining labels min: {tf.reduce_min(train_labels)}, max: {tf.reduce_max(train_labels)}")
-    print(f"Training labels head: {train_labels[:5]}")
-    print(f"Test labels min: {tf.reduce_min(test_labels)}, max: {tf.reduce_max(test_labels)}")
-    print(f"Test labels head: {test_labels[:5]}")
+class TransformerBlock(layers.Layer):
+    """Single Transformer encoder block."""
+    def __init__(self, embed_dim, num_heads, ff_dim, dropout_rate=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.attn = layers.MultiHeadAttention(num_heads=num_heads, key_dim=embed_dim)
+        self.dropout1 = layers.Dropout(dropout_rate)
+        self.norm1 = layers.LayerNormalization(epsilon=1e-6)
 
-    # Visualize training dataset
-    print("\nVisualizing training dataset...")
-    visualize_dataset_analysis(train_features, train_labels, train_cluster_probs,
-                              raw_dot_plot=False, method='pca', feature_indices=(0, 1))
+        self.ffn = tf.keras.Sequential([
+            layers.Dense(ff_dim, activation='gelu'),
+            layers.Dropout(dropout_rate),
+            layers.Dense(embed_dim),
+        ])
+        self.dropout2 = layers.Dropout(dropout_rate)
+        self.norm2 = layers.LayerNormalization(epsilon=1e-6)
 
-    # Create training dataset
-    train_dataset = tf.data.Dataset.from_tensor_slices(
-        ((train_features, train_cluster_probs), train_labels)
-    ).shuffle(1000).batch(64)
+    def call(self, x, training=False):
+        # Self-attention + residual + norm
+        attn_output = self.attn(x, x, training=training)
+        attn_output = self.dropout1(attn_output, training=training)
+        x = self.norm1(x + attn_output)
 
-    # Create test dataset (no need to shuffle extensively)
-    test_dataset = tf.data.Dataset.from_tensor_slices(
-        ((test_features, test_cluster_probs), test_labels)
-    ).batch(64)
+        # Feed-forward + residual + norm
+        ffn_output = self.ffn(x, training=training)
+        ffn_output = self.dropout2(ffn_output, training=training)
+        return self.norm2(x + ffn_output)
 
-    # Print info about test dataset
-    for features, labels in test_dataset.take(1):
-        print(f"\nTest features shape: {features[0].shape}, Test labels shape: {labels.shape}")
-        print(f"Test features head: {features[0][:3]}")
-        print(f"Test labels head: {labels[:3]}")
 
-    # Create and compile model
-    model = MoEModel(feature_dim, hidden_dim=8, num_experts=num_clusters, use_provided_gates=True)
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-        loss=tf.keras.losses.BinaryCrossentropy(),
-        metrics=['accuracy'],
-    )
+class TabularTransformer(Model):
+    """
+    Transformer-based classifier for tabular data.
+    Applies a downsampling pool to reduce sequence length and avoid OOM.
+    """
+    def __init__(
+        self,
+        input_dim=1024,
+        embed_dim=64,
+        num_heads=8,
+        ff_dim=256,
+        num_layers=4,
+        dropout_rate=0.1,
+        pool_size=4,
+        **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.pool_size = pool_size
+        # Project each scalar feature to an embedding
+        self.feature_embedding = layers.Dense(embed_dim, name='feature_embedding')
+        # Downsample sequence length: 1024 -> 1024/pool_size
+        self.pool = layers.MaxPool1D(pool_size=pool_size, name='sequence_pool')
+        reduced_seq_len = input_dim // pool_size
 
-    # Train model
-    print("\nTraining model...")
-    model.fit(train_dataset, epochs=20)
+        # Positional embeddings for reduced tokens
+        self.pos_embedding = self.add_weight(
+            name='pos_embedding',
+            shape=(1, reduced_seq_len, embed_dim),
+            initializer='random_normal'
+        )
+        # Transformer encoder stack
+        self.transformer_blocks = [
+            TransformerBlock(embed_dim, num_heads, ff_dim, dropout_rate)
+            for _ in range(num_layers)
+        ]
+        # Pool & classification head
+        self.global_pool = layers.GlobalAveragePooling1D(name='global_avg_pool')
+        self.dropout = layers.Dropout(dropout_rate, name='dropout_final')
+        self.classifier = layers.Dense(1, activation='sigmoid', name='output')
 
-    # Evaluate on independent test set
-    print("\nEvaluating on independent test set...")
-    eval_results = model.evaluate(test_dataset)
-    print(f"Evaluation results: {eval_results}")
+    def call(self, inputs, training=False):
+        # Unpack if inputs come as (features, labels)
+        if isinstance(inputs, (tuple, list)):
+            x, _ = inputs
+        else:
+            x = inputs
 
-    # Predict and analyze
-    # test_batch = next(iter(test_dataset.take(1)))
-    # predictions = model(test_batch[0], training=False)
-    # print(f"Sample predictions shape: {predictions['prediction'].shape}")
-    # print(f"Gate activations: {tf.reduce_mean(predictions['gates'], axis=0)}")
+        # shape -> (batch, input_dim, 1)
+        x = tf.expand_dims(x, axis=-1)
+        # Embed features -> (batch, input_dim, embed_dim)
+        x = self.feature_embedding(x)
+        # Downsample tokens -> (batch, reduced_seq_len, embed_dim)
+        x = self.pool(x)
+        # Add positional embeddings
+        x = x + self.pos_embedding
 
-    # Test on a single sample
-    for (feat, cluster_prob), label in test_dataset.unbatch().take(1):
-        feat = tf.expand_dims(feat, 0)
-        cluster_prob = tf.expand_dims(cluster_prob, 0)
-        output = model((feat, cluster_prob), training=False)
-        print("Single sample prediction:", output['prediction'].numpy()[0], "True label:", label.numpy())
-        print("Gate activations:", tf.reduce_mean(output['gates'], axis=0).numpy())
+        # Transformer encoder stack
+        for block in self.transformer_blocks:
+            x = block(x, training=training)
 
-    # Optional: Visualize test dataset
-    print("\nVisualizing test dataset...")
-    visualize_dataset_analysis(test_features, test_labels, test_cluster_probs,
-                              raw_dot_plot=False, method='pca', feature_indices=(0, 1))
+        # Pool over tokens -> (batch, embed_dim)
+        x = self.global_pool(x)
+        x = self.dropout(x, training=training)
+        return self.classifier(x)
 
+# # Example usage
+# if __name__ == "__main__":
+#     num_samples = 1000
+#     input_dim = 1024
+#     features = tf.random.normal((num_samples, input_dim))
+#     labels = tf.random.uniform((num_samples,), maxval=2, dtype=tf.int32)
+#
+#     model = TabularTransformer(input_dim=input_dim, pool_size=4)
+#     model.build(input_shape=(None, input_dim))
+#     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+#     model.summary()
+#
+#     model.fit(features, labels, epochs=5, batch_size=32)
+#     loss, accuracy = model.evaluate(features, labels)
+#     print(f"Loss: {loss:.4f}, Accuracy: {accuracy:.4f}")
+#     # Predict
+#     predictions = model.predict(features)
+#     print(f"Predictions shape: {predictions.shape}")
+#     print(f"Predictions head: {predictions[:5]}")
+
+
+class EmbeddingCNN(Model):
+    """
+    1D-CNN + MLP head for binary classification on fixed-length embeddings.
+    """
+
+    def __init__(self, input_dim, dropout_rate=0.5):
+        super().__init__(name='Embedding_CNN')
+        self.input_dim = input_dim
+
+        # Reshape flat embedding to sequence (length=input_dim, channels=1)
+        self.reshape_layer = layers.Reshape((input_dim, 1), name='reshape')
+
+        # Convolutional blocks
+        self.conv1 = layers.Conv1D(64, 5, padding='same', activation='relu', name='conv1')
+        self.pool1 = layers.MaxPool1D(2, name='pool1')
+
+        self.conv2 = layers.Conv1D(128, 5, padding='same', activation='relu', name='conv2')
+        self.pool2 = layers.MaxPool1D(2, name='pool2')
+
+        # Flatten and MLP head
+        self.flatten = layers.Flatten(name='flatten')
+        self.dense = layers.Dense(64, activation='relu', name='dense')
+        self.dropout = layers.Dropout(dropout_rate, name='dropout')
+
+        # Final binary output
+        self.output_layer = layers.Dense(1, activation='sigmoid', name='output')
+
+    def call(self, inputs, training=False):
+        # Unpack if inputs come as (features, labels)
+        if isinstance(inputs, (tuple, list)):
+            x, _ = inputs
+        else:
+            x = inputs
+
+        # Now safe to reshape just the feature tensor
+        x = self.reshape_layer(x)
+        x = self.conv1(x)
+        x = self.pool1(x)
+        x = self.conv2(x)
+        x = self.pool2(x)
+        x = self.flatten(x)
+        x = self.dense(x)
+        x = self.dropout(x, training=training)
+        return self.output_layer(x)
+
+# # # Example usage
+# if __name__ == "__main__":
+#     num_samples = 1000
+#     input_dim = 1024
+#     features = tf.random.normal((num_samples, input_dim))
+#     labels = tf.random.uniform((num_samples,), maxval=2, dtype=tf.int32)
+#     model = EmbeddingCNN(input_dim=input_dim, dropout_rate=0.5)
+#     model.build(input_shape=(None, input_dim))
+#     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+#     model.summary()
+#     model.fit(features, labels, epochs=5, batch_size=32)
+#     loss, accuracy = model.evaluate(features, labels)
+#     print(f"Loss: {loss:.4f}, Accuracy: {accuracy:.4f}")
+#     # Predict
+#     predictions = model.predict(features)
+#     print(f"Predictions shape: {predictions.shape}")
+#     print(f"Predictions head: {predictions[:5]}")

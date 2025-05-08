@@ -10,7 +10,7 @@ from sklearn.cluster import KMeans
 import seaborn as sns
 from sklearn.decomposition import PCA
 
-from utils.model import SCQ1DAutoEncoder, MoEModel
+from utils.model import SCQ1DAutoEncoder, MoEModel, BinaryMLP, TabularTransformer, EmbeddingCNN
 
 '''
 # Set TensorFlow logging level for more information
@@ -932,9 +932,10 @@ def train_and_evaluate_scqvae(
     output_dir='data/SCQvae',
     visualize=True,
     save_model=True,
+    init_k_means=False,
     random_state=42,
     test_size=0.2,
-    output_data="all", # Options: "val", "train", "all"
+    output_data="train_val_seperate", # Options: "val", "train", "train_val_seperate"
     **kwargs
 ):
     """
@@ -942,7 +943,7 @@ def train_and_evaluate_scqvae(
 
     Args:
         data_path: Path to the parquet file containing peptide embeddings
-        input_type: Type of input data ('latent1024' or 'pMHC-sequence')
+        input_type: Type of input data ('latent1024' or 'pMHC-sequence', 'attention51')
         num_embeddings: Number of clusters/codes in the codebook
         embedding_dim: Dimension of each codebook vector
         batch_size: Batch size for training
@@ -991,7 +992,7 @@ def train_and_evaluate_scqvae(
             val_data_path: Optional path to validation data
             test_size: Fraction of data to use for validation if val_data_path is None
             random_state: Random seed for reproducibility
-            input_type: Type of input data ('latent1024' or 'pMHC-sequence')
+            input_type: Type of input data ('latent1024' or 'pMHC-sequence', 'attention51')
 
         Returns:
             X_train: Training data features with unique indices
@@ -1025,6 +1026,13 @@ def train_and_evaluate_scqvae(
             print(f"Using sequence columns: {columns}")
             # Note: pMHC-sequence processing would be implemented here
             raise NotImplementedError("pMHC-sequence input not yet implemented")
+        elif input_type == 'attention51':
+            # Check for attention columns
+            columns = [col for col in df.columns if 'attn_' in col]
+            if not columns:
+                raise ValueError("No attention columns found in the dataset")
+            seq_length = len(columns)
+            print(f"Found {seq_length} attention columns")
         else:
             raise ValueError(f"Unknown input_type: {input_type}. Expected 'latent1024' or 'pMHC-sequence'")
 
@@ -1582,6 +1590,81 @@ def train_and_evaluate_scqvae(
             plt.close()
         return used_clusters, usage_percentage
 
+    def process_and_save(dataset: tf.data.Dataset,
+                         split_name: str,
+                         model: tf.keras.Model,
+                         original_labels: np.ndarray,
+                         output_dir: str,
+                         num_embeddings: int):
+        """
+        Quantize `dataset` through `model`, assemble into a DataFrame,
+        save to parquet, and plot distributions with split-specific filenames.
+        """
+        quantized_latents = []
+        cluster_indices_soft = []
+        cluster_indices_hard = []
+
+        # Extract latent codes for every batch
+        for batch in dataset:
+            output, Zq, out_P_proj, _, _ = model(batch, training=False)
+            quantized_latents.append(Zq.numpy())
+            cluster_indices_soft.append(out_P_proj.numpy())
+            cluster_indices_hard.append(tf.argmax(out_P_proj, axis=-1).numpy())
+
+        # Concatenate across batches
+        quantized_latent = np.concatenate(quantized_latents, axis=0)
+        soft_probs = np.concatenate(cluster_indices_soft, axis=0)
+        hard_assign = np.concatenate(cluster_indices_hard, axis=0)
+
+        # Build DataFrame
+        records = []
+        for i in range(len(quantized_latent)):
+            rec = {}
+            flat_latent = quantized_latent[i].flatten()
+            for j, v in enumerate(flat_latent):
+                rec[f'latent_{j}'] = float(v)
+
+            flat_soft = soft_probs[i].flatten()
+            for j, v in enumerate(flat_soft):
+                rec[f'soft_cluster_{j}'] = float(v)
+
+            rec['hard_cluster'] = int(hard_assign[i])
+            # binding label if available
+            if i < len(original_labels):
+                lbl = original_labels[i]
+                rec['binding_label'] = float(lbl[0] if hasattr(lbl, 'shape') and lbl.shape else lbl)
+            else:
+                rec['binding_label'] = np.nan
+            records.append(rec)
+
+        df = pd.DataFrame(records)
+        # ensure output directory exists
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Save parquet
+        parquet_path = os.path.join(output_dir, f'quantized_outputs_{split_name}.parquet')
+        df.to_parquet(parquet_path, index=False)
+        print(f"[{split_name}] saved parquet → {parquet_path}")
+
+        # Plot distributions
+        plot_cluster_distribution(soft_probs,
+                                  save_path=os.path.join(output_dir, f'cluster_distribution_soft_{split_name}.png'))
+        plot_codebook_usage(hard_assign, num_embeddings,
+                            save_path=os.path.join(output_dir, f'codebook_usage_{split_name}.png'))
+        plot_soft_cluster_distribution(soft_probs, 20,
+                                       save_path=os.path.join(output_dir,
+                                                              f'soft_cluster_distribution_{split_name}.png'))
+
+    def remove_id(dataset):
+        """Remove the first column (ID) from the feature tensor, keep y if present."""
+        return dataset.map(lambda x, y=None: (x[:, 1:], y) if y is not None else x[:, 1:])
+
+    def remove_y(dataset):
+        """Remove the last column (y) from the feature tensor."""
+        return dataset.map(lambda x, y: x)
+
+    # ======================= End of Helper Functions =======================
+
     # --- Main Pipeline ---
     print("--- Main Pipeline ---")
 
@@ -1601,7 +1684,12 @@ def train_and_evaluate_scqvae(
 
     # Initialize codebook with k-means
     print("Initializing codebook with k-means...")
-    initial_codebook = initialize_codebook_with_kmeans(X_train, num_embeddings, seq_length)
+    if init_k_means:
+        print("Initializing codebook with k-means")
+        initial_codebook = initialize_codebook_with_kmeans(X_train, num_embeddings, seq_length)
+    else:
+        print("Not initializing codebook with k-means")
+        initial_codebook = None
 
     # Create datasets
     print("Creating TensorFlow Datasets...")
@@ -1610,16 +1698,17 @@ def train_and_evaluate_scqvae(
     test_dataset_y = create_dataset(X_test, y_test, batch_size=batch_size, is_training=False)
     print("Datasets created.")
 
-    # drop labels
-    train_dataset = train_dataset_y.map(lambda x, y: x)
-    val_dataset = val_dataset_y.map(lambda x, y: x)
-    test_dataset = test_dataset_y.map(lambda x, y: x)
-
     # drop IDs
-    train_dataset = train_dataset.map(lambda x: x[:, 1:])
-    val_dataset = val_dataset.map(lambda x: x[:, 1:])
-    test_dataset = test_dataset.map(lambda x: x[:, 1:])
+    train_dataset = train_dataset_y.apply(remove_id)
+    val_dataset = val_dataset_y.apply(remove_id)
+    test_dataset = test_dataset_y.apply(remove_id)
     seq_length = seq_length - 1 # Remove the index feature
+
+    # remove labels
+    # train_dataset = train_dataset.apply(remove_y)
+    # val_dataset = val_dataset.apply(remove_y)
+    # test_dataset = test_dataset.apply(remove_y)
+
 
     # --- Model Instantiation ---
     print("Building the SCQ1DAutoEncoder model...")
@@ -1636,7 +1725,9 @@ def train_and_evaluate_scqvae(
             'usage_threshold': 1e-4,    # Lower threshold
             'reset_interval': 5         # Frequent resets
         },
-        initial_codebook=initial_codebook  # Pass k-means initialized codebook
+        initial_codebook=initial_codebook,  # Pass k-means initialized codebook
+        num_classes=1, # set binary classification
+        cluster_lambda=10,  # Increased lambda for cluster loss
     )
     print("Model built.")
 
@@ -1662,7 +1753,10 @@ def train_and_evaluate_scqvae(
         print("\nPlotting training history...")
         plot_training_metrics(history, save_path=os.path.join(output_dir, 'vqvae_training_metrics.png'))
         print("\nPerforming example inference...")
-        example_batch = next(iter(val_dataset))
+        try:
+            example_batch, _ = next(iter(val_dataset))
+        except Exception:
+            example_batch = next(iter(val_dataset))
         output = model(example_batch, training=False)
         reconstruction, quantized_latent, cluster_indices, vq_loss, perplexity = output
         print("\nVisualizing reconstructions...")
@@ -1688,102 +1782,129 @@ def train_and_evaluate_scqvae(
 
     # --- Extract Latent Space ---
     print("\nExtracting quantized latent space...")
-    if output_data == "all":
-        out_dataset = tf.data.Dataset.concatenate(train_dataset, val_dataset)
-    elif output_data == "train":
-        out_dataset = train_dataset # using only training dataset for quantization
+
+    if output_data == "train_val_combined":
+        out_ds = tf.data.Dataset.concatenate(train_dataset, val_dataset)
+        process_and_save(out_ds, "combined", model, original_labels, output_dir, num_embeddings)
+
+    elif output_data in ("train", "val"):
+        ds_name = output_data
+        ds = train_dataset if ds_name == "train" else val_dataset
+        process_and_save(ds, ds_name, model, original_labels, output_dir, num_embeddings)
+
+    elif output_data == "train_val_seperate":
+        # Process train and val separately
+        process_and_save(train_dataset, "train", model,y_train , output_dir, num_embeddings)
+        process_and_save(val_dataset, "val", model,y_val , output_dir, num_embeddings)
+
     else:
-        out_dataset = val_dataset # using only validation dataset for quantization
-    quantized_latents, cluster_indices_hard_assign, cluster_indices_soft_assign = [], [], []
-    for batch in out_dataset:
-        output, Zq, out_P_proj, _, _ = model(batch, training=False)
-        print(f"\nBatch shape: {batch.shape}")
-        print(f"\nOutput shape: {output.shape}")
-        print(f"\nZq shape: {Zq.shape}")
-        print(f"\nout_P_proj shape: {out_P_proj.shape}")
+        raise ValueError("Invalid output_data. Must be 'train', 'val', 'train_val_combined', or 'train_val_seperate'.")
 
-        quantized_latents.append(Zq.numpy())
-        # Append soft assignments
-        cluster_indices_soft_assign.append(out_P_proj.numpy()) # shows the probability of each index
-        cluster_indices_hard_assign.append(tf.argmax(out_P_proj, axis=-1).numpy()) # shows which index has the highest probability
-    quantized_latent = np.concatenate(quantized_latents, axis=0)
-    cluster_indices_soft = np.concatenate(cluster_indices_soft_assign, axis=0)
-    cluster_indices_hard = np.concatenate(cluster_indices_hard_assign, axis=0)
+    print(f"\nAll requested splits processed. Outputs are in: {output_dir}")
 
-    # Compile quantized outputs into a DataFrame and include original binding labels
-    # TODO save
-    # Check dimensions of our data
-    print(f"Quantized latent shape: {quantized_latent.shape}")
-    print(f"Cluster indices soft shape: {cluster_indices_soft.shape}")
-    print(f"Cluster indices hard shape: {cluster_indices_hard.shape}")
-    print(
-        f"Original labels shape: {original_labels.shape if hasattr(original_labels, 'shape') else len(original_labels)}")
-
-    # Create a list of records instead of column-wise dictionary
-    # This avoids dimension issues when creating the DataFrame
-    records = []
-
-    for i in range(len(quantized_latent)):
-        record = {}
-
-        # Add latent features (flattened if needed)
-        if len(quantized_latent.shape) > 2:
-            flat_latent = quantized_latent[i].flatten()
-            for j in range(len(flat_latent)):
-                record[f'latent_{j}'] = float(flat_latent[j])
-        else:
-            for j in range(quantized_latent.shape[1]):
-                record[f'latent_{j}'] = float(quantized_latent[i, j])
-
-        # Add soft cluster probabilities (flattened if needed)
-        if len(cluster_indices_soft.shape) > 2:
-            flat_soft = cluster_indices_soft[i].flatten()
-            for j in range(len(flat_soft)):
-                record[f'soft_cluster_{j}'] = float(flat_soft[j])
-        else:
-            for j in range(cluster_indices_soft.shape[1]):
-                record[f'soft_cluster_{j}'] = float(cluster_indices_soft[i, j])
-
-        # Add hard cluster assignment
-        record['hard_cluster'] = int(cluster_indices_hard[i])
-
-        # Add binding label (if available)
-        if i < len(original_labels):
-            # Convert to scalar if it's an array
-            if hasattr(original_labels[i], 'shape') and original_labels[i].shape:
-                record['binding_label'] = float(original_labels[i][0])
-            else:
-                record['binding_label'] = float(original_labels[i])
-        else:
-            record['binding_label'] = np.nan
-
-        records.append(record)
-
-    # Create DataFrame from records
-    results_df = pd.DataFrame(records)
-
-    # Print head of the output
-    print("\nHead of the output DataFrame:")
-    print(results_df.head())
-
-    # Save as parquet
-    parquet_path = os.path.join(output_dir, 'quantized_outputs.parquet')
-    results_df.to_parquet(parquet_path, index=False)
-    print(f"Quantized outputs saved to: {parquet_path}")
-
-    print(f"\n head of Cluster indices hard: {cluster_indices_hard[:5]}")
-    print(f"\n head of Cluster indices soft: {cluster_indices_soft[:5]}")
-    # print shape of soft cluster indices
-    print(f"\n softs shape: {np.array(cluster_indices_soft).shape}")
-    print(f"\n head of Quantized latents: {quantized_latent[:5]}")
-
-    # Create distribution plots for all data
-    print("\nCreating distribution plots for all processed data...")
-    plot_cluster_distribution(cluster_indices_soft, save_path=os.path.join(output_dir, 'cluster_distribution_soft.png'))
-    plot_codebook_usage(cluster_indices_hard, num_embeddings,
-                        save_path=os.path.join(output_dir, 'full_codebook_usage.png'))
-    plot_soft_cluster_distribution(np.array(cluster_indices_soft), 20, 'soft_cluster_distribution.png')
-    print(f"Latent representations saved to {output_dir}")
+    # out_dataset2 = None
+    # if output_data == "train_val_combined":
+    #     out_dataset1 = tf.data.Dataset.concatenate(train_dataset, val_dataset)
+    # elif output_data == "train":
+    #     out_dataset1 = train_dataset # using only training dataset for quantization
+    # elif output_data == "val":
+    #     out_dataset1 = val_dataset # using only validation dataset for quantization
+    # elif output_data == "train_val_seperate":
+    #     out_dataset1 = train_dataset
+    #     out_dataset2 = val_dataset # TODO
+    # else:
+    #     raise ValueError("Invalid output_data option. Choose 'train', 'val', or 'train_val_combined'.")
+    #
+    # quantized_latents, cluster_indices_hard_assign, cluster_indices_soft_assign = [], [], []
+    # for batch in out_dataset1:
+    #     output, Zq, out_P_proj, _, _ = model(batch, training=False)
+    #     print(f"\nBatch shape: {batch.shape}")
+    #     print(f"\nOutput shape: {output.shape}")
+    #     print(f"\nZq shape: {Zq.shape}")
+    #     print(f"\nout_P_proj shape: {out_P_proj.shape}")
+    #
+    #     quantized_latents.append(Zq.numpy())
+    #     # Append soft assignments
+    #     cluster_indices_soft_assign.append(out_P_proj.numpy()) # shows the probability of each index
+    #     cluster_indices_hard_assign.append(tf.argmax(out_P_proj, axis=-1).numpy()) # shows which index has the highest probability
+    # quantized_latent = np.concatenate(quantized_latents, axis=0)
+    # cluster_indices_soft = np.concatenate(cluster_indices_soft_assign, axis=0)
+    # cluster_indices_hard = np.concatenate(cluster_indices_hard_assign, axis=0)
+    #
+    # # Compile quantized outputs into a DataFrame and include original binding labels
+    # # TODO save
+    # # Check dimensions of our data
+    # print(f"Quantized latent shape: {quantized_latent.shape}")
+    # print(f"Cluster indices soft shape: {cluster_indices_soft.shape}")
+    # print(f"Cluster indices hard shape: {cluster_indices_hard.shape}")
+    # print(
+    #     f"Original labels shape: {original_labels.shape if hasattr(original_labels, 'shape') else len(original_labels)}")
+    #
+    # # Create a list of records instead of column-wise dictionary
+    # # This avoids dimension issues when creating the DataFrame
+    # records = []
+    #
+    # for i in range(len(quantized_latent)):
+    #     record = {}
+    #
+    #     # Add latent features (flattened if needed)
+    #     if len(quantized_latent.shape) > 2:
+    #         flat_latent = quantized_latent[i].flatten()
+    #         for j in range(len(flat_latent)):
+    #             record[f'latent_{j}'] = float(flat_latent[j])
+    #     else:
+    #         for j in range(quantized_latent.shape[1]):
+    #             record[f'latent_{j}'] = float(quantized_latent[i, j])
+    #
+    #     # Add soft cluster probabilities (flattened if needed)
+    #     if len(cluster_indices_soft.shape) > 2:
+    #         flat_soft = cluster_indices_soft[i].flatten()
+    #         for j in range(len(flat_soft)):
+    #             record[f'soft_cluster_{j}'] = float(flat_soft[j])
+    #     else:
+    #         for j in range(cluster_indices_soft.shape[1]):
+    #             record[f'soft_cluster_{j}'] = float(cluster_indices_soft[i, j])
+    #
+    #     # Add hard cluster assignment
+    #     record['hard_cluster'] = int(cluster_indices_hard[i])
+    #
+    #     # Add binding label (if available)
+    #     if i < len(original_labels):
+    #         # Convert to scalar if it's an array
+    #         if hasattr(original_labels[i], 'shape') and original_labels[i].shape:
+    #             record['binding_label'] = float(original_labels[i][0])
+    #         else:
+    #             record['binding_label'] = float(original_labels[i])
+    #     else:
+    #         record['binding_label'] = np.nan
+    #
+    #     records.append(record)
+    #
+    # # Create DataFrame from records
+    # results_df = pd.DataFrame(records)
+    #
+    # # Print head of the output
+    # print("\nHead of the output DataFrame:")
+    # print(results_df.head())
+    #
+    # # Save as parquet
+    # parquet_path = os.path.join(output_dir, 'quantized_outputs.parquet')
+    # results_df.to_parquet(parquet_path, index=False)
+    # print(f"Quantized outputs saved to: {parquet_path}")
+    #
+    # print(f"\n head of Cluster indices hard: {cluster_indices_hard[:5]}")
+    # print(f"\n head of Cluster indices soft: {cluster_indices_soft[:5]}")
+    # # print shape of soft cluster indices
+    # print(f"\n softs shape: {np.array(cluster_indices_soft).shape}")
+    # print(f"\n head of Quantized latents: {quantized_latent[:5]}")
+    #
+    # # Create distribution plots for all data
+    # print("\nCreating distribution plots for all processed data...")
+    # plot_cluster_distribution(cluster_indices_soft, save_path=os.path.join(output_dir, 'cluster_distribution_soft.png'))
+    # plot_codebook_usage(cluster_indices_hard, num_embeddings,
+    #                     save_path=os.path.join(output_dir, 'full_codebook_usage.png'))
+    # plot_soft_cluster_distribution(np.array(cluster_indices_soft), 20, 'soft_cluster_distribution.png')
+    # print(f"Latent representations saved to {output_dir}")
 
 
 # write a pipeline that runs the MoE model on the data.
@@ -1800,7 +1921,8 @@ def train_and_evaluate_moe(
         data_path,
         val_data_path=None,
         latent_path=None,
-        input_type='latent',  # Options: 'latent', 'pMHC-sequence'
+        input_type='latent',  # Options: 'latent', 'pMHC-sequence', 'attention'
+        model_type='MoE', # Options: 'MoE', 'MLP', 'transformer', 'CNN'
         batch_size=32,
         epochs=20,
         learning_rate=1e-4,
@@ -1810,6 +1932,7 @@ def train_and_evaluate_moe(
         save_model=True,
         random_state=42,
         test_size=0.2,
+        use_soft_clusters_as_gates= True,
         **kwargs
     ):
         """
@@ -1819,7 +1942,7 @@ def train_and_evaluate_moe(
             data_path (str): Path to the input parquet file containing latent representations and cluster probabilities.
             val_data_path (str, optional): Path to a separate validation parquet file. If not provided, a train/val split is used.
             latent_path (str, optional): Path to a pretrained encoder model for sequence input.
-            input_type (str): 'latent' to use precomputed features, 'pMHC-sequence' to encode sequences.
+            input_type (str): 'latent' to use precomputed features, 'pMHC-sequence' to encode sequences, and 'attention' for attention-based features.
             batch_size (int): Batch size for training.
             epochs (int): Number of training epochs.
             learning_rate (float): Learning rate for the optimizer.
@@ -1866,15 +1989,27 @@ def train_and_evaluate_moe(
             sequences = df[['peptide', 'mhc_sequence']].values
             # Encode sequences into latent vectors
             X = encoder.predict(sequences, batch_size=batch_size)
+
+        elif input_type == 'attention':
+            # get all attention columns
+            attention_cols = [col for col in df.columns if col.startswith('attn_')]
+            if not attention_cols:
+                raise ValueError("No attention_* columns found in the dataset")
+            print(f"Found {len(attention_cols)} attention columns")
+            X = df[attention_cols].values
+
         else:
             raise ValueError(f"Unsupported input_type: {input_type}")
 
         # Extract soft cluster probabilities
-        soft_cluster_cols = [col for col in df.columns if col.startswith('soft_cluster_')]
-        if not soft_cluster_cols:
-            raise ValueError("No soft_cluster_* columns found in the dataset")
-        print(f"Found {len(soft_cluster_cols)} soft cluster probability columns")
-        soft_clusters = df[soft_cluster_cols].values
+        if use_soft_clusters_as_gates:
+            soft_cluster_cols = [col for col in df.columns if col.startswith('soft_cluster_')]
+            if not soft_cluster_cols:
+                raise ValueError("No soft_cluster_* columns found in the dataset")
+            print(f"Found {len(soft_cluster_cols)} soft cluster probability columns")
+            soft_clusters = df[soft_cluster_cols].values
+        else:
+            soft_clusters = np.zeros((X.shape[0], 32))  # Dummy soft clusters if not used
 
         # Extract binding labels
         if 'binding_label' not in df.columns:
@@ -1890,13 +2025,26 @@ def train_and_evaluate_moe(
             if input_type == 'latent':
                 # Use same latent columns as training
                 X_val = df_val[latent_cols].values
+            elif input_type == 'pMHC-sequence':
+                raise NotImplementedError("Validation data for pMHC-sequence input type is not implemented")
+            elif input_type == 'attention':
+                # Use same attention columns as training
+                attention_cols_val = [col for col in df_val.columns if col.startswith('attn_')]
+                if not attention_cols_val:
+                    raise ValueError("No attention_* columns found in the validation dataset")
+                print(f"Found {len(attention_cols_val)} attention columns in validation data")
+                X_val = df_val[attention_cols_val].values
             else:
                 # Encode sequence data
                 sequences_val = df_val[['peptide', 'mhc_sequence']].values
                 X_val = encoder.predict(sequences_val, batch_size=batch_size)
 
-            # Use same soft cluster columns
-            soft_clusters_val = df_val[soft_cluster_cols].values
+            if use_soft_clusters_as_gates:
+                # Use same soft cluster columns
+                soft_clusters_val = df_val[soft_cluster_cols].values
+            else:
+                soft_clusters_val = np.zeros((X_val.shape[0], 32))
+
             y_val = df_val['binding_label'].values
 
             print(f"Validation data loaded: X_val shape={X_val.shape}, soft_clusters_val shape={soft_clusters_val.shape}")
@@ -1922,17 +2070,48 @@ def train_and_evaluate_moe(
         num_experts = soft_clusters.shape[1]
         feature_dim = X.shape[1]
         print(f"Building MoE model with {num_experts} experts and feature_dim={feature_dim}")
-        model = MoEModel(
-            feature_dim,
-            hidden_dim=hidden_dim,
-            num_experts=num_experts,
-            use_provided_gates=True
-        )
-        model.compile(
-            optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
-            loss=tf.keras.losses.BinaryCrossentropy(),
-            metrics=['accuracy']
-        )
+
+        if model_type == 'MoE':
+            model = MoEModel(
+                feature_dim,
+                hidden_dim=hidden_dim,
+                num_experts=num_experts,
+                use_provided_gates=use_soft_clusters_as_gates,
+            )
+            model.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                loss=tf.keras.losses.BinaryCrossentropy(),
+                metrics=['accuracy'],
+            )
+        elif model_type == 'MLP':
+            model = BinaryMLP(
+                feature_dim,
+            )
+            model.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                loss=tf.keras.losses.BinaryCrossentropy(),
+                metrics=['accuracy'],
+            )
+        elif model_type == 'transformer':
+            model = TabularTransformer(
+                feature_dim,
+            )
+            model.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                loss=tf.keras.losses.BinaryCrossentropy(),
+                metrics=['accuracy'],
+            )
+        elif model_type == 'CNN':
+            model = EmbeddingCNN(
+                feature_dim,
+            )
+            model.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                loss=tf.keras.losses.BinaryCrossentropy(),
+                metrics=['accuracy'],
+            )
+        else:
+            raise ValueError(f"Unsupported model_type: {model_type}")
 
         # Train the model
         print(f"Training model for {epochs} epochs...")
@@ -1981,6 +2160,7 @@ def train_and_evaluate_moe(
             plt.title('PCA of Dataset Colored by Binding Label')
             plt.savefig(os.path.join(output_dir, 'pca_binding_label.png'))
             print(f"Saved binding label PCA plot to {os.path.join(output_dir, 'pca_binding_label.png')}")
+            plt.show()
             plt.close()
 
             # Plot by cluster assignment
@@ -1989,6 +2169,7 @@ def train_and_evaluate_moe(
             plt.title('PCA of Dataset Colored by Soft Cluster Assignment')
             plt.savefig(os.path.join(output_dir, 'pca_cluster_assignment.png'))
             print(f"Saved cluster assignment PCA plot to {os.path.join(output_dir, 'pca_cluster_assignment.png')}")
+            plt.show()
             plt.close()
 
             # Plot training history
@@ -2012,6 +2193,7 @@ def train_and_evaluate_moe(
             plt.tight_layout()
             plt.savefig(os.path.join(output_dir, 'training_history.png'))
             print(f"Saved training history plot to {os.path.join(output_dir, 'training_history.png')}")
+            plt.show()
             plt.close()
 
         return model, history, eval_results
@@ -2020,34 +2202,40 @@ def train_and_evaluate_moe(
 if __name__ == "__main__":
     # Call train_and_evaluate_scqvae without trying to unpack return values
     train_and_evaluate_scqvae(
-        data_path="data/Pep2Vec/Conbotnet_new/pep2vec_output_fold_0.parquet",
-        val_data_path="data/Pep2Vec/Conbotnet_new/pep2vec_output_val_fold_0.parquet",
+        data_path="data/Pep2Vec/ConvNeXT-MHC_subset_new/pep2vec_output_fold_0.parquet",
+        val_data_path="data/Pep2Vec/ConvNeXT-MHC_subset_new/pep2vec_output_val_fold_0.parquet",
         input_type="latent1024",
         num_embeddings=32,
         embedding_dim=64,
         batch_size=32,
-        epochs=200,
-        output_dir="data/SCQvae/Conbotnet",
+        epochs=20,
+        output_dir="data/SCQvae/ConvNeXT-MHC",
         visualize=True,
         save_model=True,
+        init_k_means=False,
         random_state=42,
         test_size=0.2,
-        output_data="all",  # Options: "val", "train", "all"
+        output_data="train_val_seperate",  # Options: "val", "train", "train_val_seperate"
     )
-    print("Running MoE")
+    m = "MoE"
+    print(f"Running {m}")
     train_and_evaluate_moe(
-        data_path="data/SCQvae/Conbotnet/quantized_outputs.parquet",
-        val_data_path=None,
+        data_path="data/SCQvae/ConvNeXT-MHC/quantized_outputs_train.parquet",
+        val_data_path="data/SCQvae/ConvNeXT-MHC/quantized_outputs_val.parquet",
+        # data_path="data/Pep2Vec/ConvNeXT-MHC_subset_new/pep2vec_output_fold_0.parquet",
+        # val_data_path="data/Pep2Vec/ConvNeXT-MHC_subset_new/pep2vec_output_val_fold_0.parquet",
         input_type="latent",
+        model_type=m, # Options: "MoE", "MLP", "transformer", "CNN"
         batch_size=32,
-        epochs=200,
+        epochs=20,
         learning_rate=1e-4,
-        hidden_dim=16,
-        output_dir="data/MoE/Conbotnet",
+        hidden_dim=4,
+        output_dir="data/MoE/ConvNeXT-MHC",
         visualize=True,
         save_model=True,
         random_state=42,
         test_size=0.2,
+        use_soft_clusters_as_gates=False,
     )
 
 
