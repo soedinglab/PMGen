@@ -140,6 +140,22 @@ if [ ! -f "Pep2Vec/pep2vec.bin" ]; then
 fi
 echo "✔ Pep2Vec setup is done. "
 
+# Step 12: Install graphviz
+echo "Graphviz installation"
+if ! command -v dot &>/dev/null; then
+    echo "⚠ Graphviz not found. Installing..."
+    if [ "$(uname)" == "Linux" ]; then
+        sudo apt-get install graphviz
+    elif [ "$(uname)" == "Darwin" ]; then
+        brew install graphviz
+    else
+        echo "⚠ Unsupported OS. Please install Graphviz manually."
+        exit 1
+    fi
+else
+    echo "✔ Graphviz is already installed."
+fi
+
 
 # Step 13: Cleanup and Completion
 cd "$CURRENT_DIR"
