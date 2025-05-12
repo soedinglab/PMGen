@@ -4,7 +4,7 @@ import sys
 import pandas as pd
 import numpy as np
 from utils.processing_functions import create_k_fold_leave_one_out_stratified_cross_validation
-from run_pMHC_DL import train_and_evaluate_scqvae
+from sklearn.model_selection import train_test_split
 
 def load_data(file_path, sep=","):
     """
@@ -125,7 +125,7 @@ def select_columns(df, columns):
 #         return f"{locus}*{num[:2]}:{num[2:]}"
 #     return chain
 
-def add_binding_label(df_path, train_path, test_path, output_dir=None):
+def add_binding_label(df_path, train_path, output_dir=None):
     """
     Add binding labels and MHC sequences to the DataFrame based on allotype and peptide pairs.
 
@@ -135,8 +135,6 @@ def add_binding_label(df_path, train_path, test_path, output_dir=None):
         DataFrame, path to a file, or directory containing multiple files to add binding labels to
     train_path : str
         Path to training data CSV file with binding labels
-    test_path : str
-        Path to test data CSV file with binding labels
     output_dir : str, optional
         Directory to save labeled files, if None will overwrite original files
 
@@ -146,32 +144,35 @@ def add_binding_label(df_path, train_path, test_path, output_dir=None):
     """
     # Load train and test binding label mappings
     train_df = pd.read_csv(train_path)
-    test_df = pd.read_csv(test_path)
+
+    # rename columns if needed
+    if "allele" not in train_df.columns:
+        train_df.rename(columns={"allotype": "allele"}, inplace=True)
+    if "long_mer" not in train_df.columns:
+        train_df.rename(columns={"peptide": "long_mer"}, inplace=True)
+    if "binding_label" not in train_df.columns:
+        if "assigned_label" in train_df.columns:
+            train_df.rename(columns={"assigned_label": "binding_label"}, inplace=True)
+        else:
+            raise ValueError("No binding label column found in the training data.")
 
     # Create binding label mappings
-    train_binding_labels = {
+    binding_labels = {
         (row["allele"], row["long_mer"]): row["binding_label"]
         for _, row in train_df.iterrows()
-    }
-
-    test_binding_labels = {
-        (row["allele"], row["long_mer"]): row["binding_label"]
-        for _, row in test_df.iterrows()
     }
 
     # Create MHC sequence mappings
-    train_mhc_sequences = {
-        row["allele"]: row["mhc_sequence"]
-        for _, row in train_df.iterrows()
-    }
-
-    test_mhc_sequences = {
-        row["allele"]: row["mhc_sequence"]
-        for _, row in test_df.iterrows()
-    }
+    if "mhc_sequence" in train_df.columns:
+        mhc_sequences = {
+            row["allele"]: row["mhc_sequence"]
+            for _, row in train_df.iterrows()
+        }
+    else:
+        mhc_sequences = {}
 
     # Combine MHC sequence mappings (test data takes precedence if duplicates)
-    mhc_sequences = {**train_mhc_sequences, **test_mhc_sequences}
+    mhc_sequences = {**mhc_sequences}
 
     # Check if df_path is a directory
     if isinstance(df_path, str) and os.path.isdir(df_path):
@@ -182,15 +183,18 @@ def add_binding_label(df_path, train_path, test_path, output_dir=None):
             if os.path.isfile(file_path) and (file_path.endswith('.csv') or file_path.endswith('.parquet')):
                 print(f"Processing file: {filename}")
                 results[filename] = process_single_file(
-                    file_path, train_binding_labels, test_binding_labels, mhc_sequences, output_dir
+                    file_path, binding_labels, mhc_sequences, output_dir
                 )
+            # remove the file after processing
+            if output_dir and os.path.exists(file_path):
+                os.remove(file_path)
         return results
     else:
         # Process a single file or DataFrame
-        return process_single_file(df_path, train_binding_labels, test_binding_labels, mhc_sequences, output_dir)
+        return process_single_file(df_path, binding_labels, mhc_sequences, output_dir)
 
 
-def process_single_file(df_or_path, train_binding_labels, test_binding_labels, mhc_sequences, output_dir=None):
+def process_single_file(df_or_path, binding_labels, mhc_sequences, output_dir=None):
     """Helper function to process a single file or DataFrame"""
     # Process the provided dataframe or file
     if isinstance(df_or_path, str):
@@ -205,7 +209,7 @@ def process_single_file(df_or_path, train_binding_labels, test_binding_labels, m
 
     # Determine if this is a test file based on filename
     is_test = file_path and "test" in os.path.basename(file_path).lower()
-    binding_labels = test_binding_labels if is_test else train_binding_labels
+    binding_labels = binding_labels if is_test else binding_labels
 
     # Check if columns use 'allotype'/'peptide' naming convention (parquet files)
     # or 'allele'/'long_mer' naming convention (CSV files)
@@ -248,45 +252,97 @@ def process_single_file(df_or_path, train_binding_labels, test_binding_labels, m
     return df
 
 
-def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0):
-    # Conbotnet dataset paths
-    # ConBotNet only contains mhc class II
+def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5):
+    """
+    Prepare datasets for Pep2Vec training and evaluation.
 
+    Parameters:
+    -----------
+    dataset_name : str
+        Name of the dataset directory (e.g., "Conbotnet", "ConvNeXT-MHC", "NetMHCpan_dataset")
+    mhc_type : str
+        Type of MHC ("mhc1" or "mhc2")
+    subset_prop : float
+        Proportion of data to use (1.0 = all data)
+    n_folds : int
+        Number of cross-validation folds
+    """
     # Setup paths
     base_dir = os.path.dirname(__file__)
     data_dir = os.path.join(base_dir, "data")
-    conbotnet_dir = os.path.join(data_dir, dataset_name)
-    folds_dir = os.path.join(conbotnet_dir, "folds")
+    dataset_dir = os.path.join(data_dir, dataset_name)
+    folds_dir = os.path.join(dataset_dir, "folds")
     output_dir = os.path.join(data_dir, "Pep2Vec", dataset_name)
 
     # Create directories
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(folds_dir, exist_ok=True)
 
-    # Define datasets
-    paths = {
-        'train': os.path.join(conbotnet_dir, "train.csv"),
-        'test': os.path.join(conbotnet_dir, "test_all.csv")
-    }
+    # Define paths and columns based on dataset
+    is_netmhcpan = dataset_name.lower() == "netmhcpan_dataset"
+
+    if is_netmhcpan:
+        # NetMHCpan has a single cleaned_data.csv file
+        cleaned_data_path = os.path.join(dataset_dir, "cleaned_data.csv")
+        columns = ["long_mer","convoluted_label", "assigned_label", "MHC_class", "allele"]
+    else:
+        # Other datasets have separate train/test files
+        paths = {
+            'train': os.path.join(dataset_dir, "train.csv"),
+            'test': os.path.join(dataset_dir, "test_all.csv")
+        }
+        columns = ["allele", "long_mer", "binding_label", "mhc_sequence"]
 
     # Column configuration
-    columns = ["allele", "long_mer", "binding_label", "mhc_sequence"]
-    rename_map = {"allele": "allotype", "long_mer": "peptide"} # required for pep2vec
+    rename_map = {"allele": "allotype", "long_mer": "peptide"}  # required for pep2vec
+
+    # Rename label column for NetMHCpan
+    if is_netmhcpan:
+        rename_map["assigned_label"] = "binding_label"
+        # TODO if mhc_sequence is required it must be further processed
+        columns = ["allotype", "peptide", "binding_label"]
 
     # Load and process datasets
     datasets = {}
-    for name, path in paths.items():
-        df = load_data(path)
-        print(f"{name.capitalize()} dataset shape: {df.shape}")
 
-        # Process dataframe
-        df = (select_columns(df, columns)
-              .rename(columns=rename_map)
-              .drop_duplicates(subset=["allotype", "peptide"])
-              .dropna())
+    if is_netmhcpan:
+        # Load NetMHCpan dataset from single file
+        print(f"Loading NetMHCpan dataset from {cleaned_data_path}")
+        df = load_data(cleaned_data_path)
+        print(f"Full dataset shape: {df.shape}")
 
-        print(f"{name.capitalize()} dataset shape after processing: {df.shape}")
-        datasets[name] = df
+        # Filter by MHC class based on mhc_type parameter
+        mhc_class = 2 if mhc_type.lower() == "mhc2" else 1
+        df = df[df["mhc_class"] == mhc_class].copy()
+        print(f"Dataset after filtering for MHC class {mhc_class}: {df.shape}")
+
+        # rename columns
+        df.rename(columns=rename_map, inplace=True)
+
+        # Process dataframes
+        train_df = (select_columns(df, columns)
+                    .rename(columns=rename_map)
+                    .drop_duplicates(subset=["allotype", "peptide"])
+                    .dropna())
+
+        print(f"Train dataset shape after processing: {train_df.shape}")
+
+        datasets['train'] = train_df
+        datasets['test'] = None
+    else:
+        # Regular dataset processing with separate files
+        for name, path in paths.items():
+            df = load_data(path)
+            print(f"{name.capitalize()} dataset shape: {df.shape}")
+
+            # Process dataframe
+            df = (select_columns(df, columns)
+                  .rename(columns=rename_map)
+                  .drop_duplicates(subset=["allotype", "peptide"])
+                  .dropna())
+
+            print(f"{name.capitalize()} dataset shape after processing: {df.shape}")
+            datasets[name] = df
 
     # # change the allele names to the ones in the NetMHCpan dataset
     # # Load the NetMHCpan dataset once
@@ -300,8 +356,25 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0):
     # datasets['test']['allotype'] = datasets['test']['allotype'].apply(
     #     lambda x: get_netmhcpan_allele(x, netmhcpan_dataset, allele_cache))
 
+    # define test1 and test2 datasets
+    # test1: stratified 10% sampling from train
+    train_df_ = datasets['train']
+    train_updated, test1 = train_test_split(
+        train_df_,
+        test_size=0.1,
+        stratify=train_df_['binding_label'],
+        random_state=42
+    )
+    datasets['train'] = train_updated.reset_index(drop=True)
+
+    # test2: select allele with lowest sample count
+    allele_counts = datasets['train']['allotype'].value_counts()
+    lowest_allele = allele_counts.idxmin()
+    test2 = datasets['train'][datasets['train']['allotype'] == lowest_allele].copy()
+    datasets['train'] = datasets['train'][datasets['train']['allotype'] != lowest_allele].reset_index(drop=True)
+
     # Create k-fold cross-validation splits
-    k = 5
+    k = n_folds
     folds = create_k_fold_leave_one_out_stratified_cross_validation(
         datasets['train'], k=k, target_col="binding_label",
         id_col="allotype", train_size=0.8, subset_prop=subset_prop
@@ -335,7 +408,12 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0):
             f.write(f"Fold {i}: {held_out_id}\n")
 
     # Save the test set
-    datasets['test'].to_csv(os.path.join(folds_dir, "test_set.csv"), index=False, header=True)
+    # if dataset has a test set, save it as well
+    if datasets.get('test') is not None:
+        datasets['test'].to_csv(os.path.join(folds_dir, "test_original.csv"), index=False, header=True)
+    # Save the test1 and test2 sets
+    test1.to_csv(os.path.join(folds_dir, "test1_stratified.csv"), index=False, header=True)
+    test2.to_csv(os.path.join(folds_dir, "test2_single_unique_allele.csv"), index=False, header=True)
     print("Test dataset saved.")
 
     ################### Pep2Vec ###################
@@ -373,25 +451,47 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0):
         validation_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", f"val_set_fold_{i}.csv")
         output_file = os.path.join(output_dir, f"pep2vec_output_val_fold_{i}.parquet")
         os.system(f"./Pep2Vec/pep2vec.bin --num_threads {num_cores}  --dataset {validation_file} --output_location {output_file} --mhctype {mhc_type}")
-    # test set
-    test_file = os.path.join(os.path.dirname(__file__), "data", dataset_name, "folds", "test_set.csv")
-    output_file = os.path.join(output_dir, f"pep2vec_output_test_fold_{i}.parquet")
-    os.system(f"./Pep2Vec/pep2vec.bin --num_threads {num_cores}  --dataset {test_file} --output_location {output_file} --mhctype {mhc_type}")
+
+    # # test set
+    # test_file = os.path.join(folds_dir, "test_original.csv")
+    # if os.path.exists(test_file):
+    #     output_file = os.path.join(output_dir, f"pep2vec_output_test.parquet")
+    #     os.system(
+    #         f"./Pep2Vec/pep2vec.bin --num_threads {num_cores} --dataset {test_file} --output_location {output_file} --mhctype {mhc_type}")
+    # # Process test1 and test2 datasets
+    # for test_name in ["test1_stratified", "test2_single_unique_allele"]:
+    #     test_file = os.path.join(folds_dir, f"{test_name}.csv")
+    #     if os.path.exists(test_file):
+    #         output_file = os.path.join(output_dir, f"pep2vec_output_{test_name}.parquet")
+    #         os.system(
+    #             f"./Pep2Vec/pep2vec.bin --num_threads {num_cores} --dataset {test_file} --output_location {output_file} --mhctype {mhc_type}")
     ###############################################
 
 
 if __name__ == "__main__":
-    main("Conbotnet", "mhc2", 0.01)
-    add_binding_label(
-        df_path=os.path.join("data", "Pep2Vec", "Conbotnet"),
-        train_path=os.path.join("data", "Conbotnet", "train.csv"),
-        test_path=os.path.join("data", "Conbotnet", "test_all.csv"),
-        output_dir=os.path.join("data", "Pep2Vec", "Conbotnet_new")
-    )
-    # main("ConvNeXT-MHC", "mhc1", 0.01)
+    # main("Conbotnet", "mhc2", 0.001)
+    # add_binding_label(
+    #     df_path=os.path.join("data", "Pep2Vec", "Conbotnet"),
+    #     train_path=os.path.join("data", "Conbotnet", "train.csv"),
+    #     test_path=os.path.join("data", "Conbotnet", "test_all.csv"),
+    #     output_dir=os.path.join("data", "Pep2Vec", "Conbotnet_new_subset")
+    # )
+    # main("ConvNeXT-MHC", "mhc1", 0.001, 5)
     # add_binding_label(
     #     df_path=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC"),
     #     train_path=os.path.join("data", "ConvNeXT-MHC", "train.csv"),
-    #     test_path=os.path.join("data", "ConvNeXT-MHC", "test_all.csv"),
-    #     output_dir=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC_subset_new")
+    #     output_dir=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC_new_subset")
     # )
+    # main("NetMHCpan_dataset", "mhc2", 0.01, 5)
+    # add_binding_label(
+    #     df_path=os.path.join("data", "Pep2Vec", "NetMHCIIpan_dataset"),
+    #     train_path=os.path.join("data", "NetMHCIIpan_dataset", "cleaned_data.csv"),
+    #     output_dir=os.path.join("data", "Pep2Vec", "NetMHCIpan_dataset_new_subset")
+    # )
+    main("NetMHCpan_dataset", "mhc1", 0.01, 5)
+    add_binding_label(
+        df_path=os.path.join("data", "Pep2Vec", "NetMHCIpan_dataset"),
+        train_path=os.path.join("data", "NetMHCIIpan_dataset", "cleaned_data.csv"),
+        output_dir=os.path.join("data", "Pep2Vec", "NetMHCIpan_dataset_new_subset")
+    )
+
