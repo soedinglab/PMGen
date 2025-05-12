@@ -468,7 +468,7 @@ def run_netmhcpan_(el_data, true_label, tmp_path, results_dir, chunk_number, mhc
             dropped_rows.to_csv(dropped_rows_path, mode="a", header=not os.path.exists(dropped_rows_path), index=False)
 
 
-def combine_datasets_(results_dir, include_dropped=False, final_output_path=None):
+def combine_datasets_(results_dir, include_dropped=False):
     """
     dropped rows are the samples that received the wrong label from netmhcpan
     Args:
@@ -509,13 +509,7 @@ def combine_datasets_(results_dir, include_dropped=False, final_output_path=None
 
     combined_df = pd.concat([pd.read_csv(f) for f in all_csv_files if os.path.getsize(f) > 0], ignore_index=True)
 
-    # save the combined dataframe to disk
-    if final_output_path:
-        combined_df.to_csv(final_output_path, index=False)
-    else:
-        combined_df.to_csv(os.path.join(results_dir, "combined_results.csv"), index=False)
-
-    return
+    return combined_df
 
 # def run_netmhcpan(el_data_1, unique_alleles, tmp_path, results_dir):
 #     for allele in unique_alleles:
@@ -811,7 +805,7 @@ def run_(arg1, arg2):
 
     if arg1 == "combine_results":
         # Combine results
-        df = combine_datasets_(results_dir, final_output_path=f"{results_dir}/combined_results.csv")
+        df = combine_datasets_(results_dir)
 
         el_data_0 = pd.read_csv(f"{tmp_path}/el_data_0.csv")
         ba_data = pd.read_csv(f"{tmp_path}/ba_data.csv")
