@@ -1,6 +1,6 @@
+import difflib
 import json
 import sys
-
 from run_utils import run_and_parse_netmhcpan
 import os
 import pandas as pd
@@ -29,17 +29,150 @@ def load_data(path):
     return data
 
 
+def add_mhc_sequence_column(input_df):
+    """
+    Add MHC sequence information to the dataset by looking up allele sequences.
+
+    Args:
+        input_df: DataFrame with an 'allele' column (like el_data_0 or el_data_1)
+
+    Returns:
+        DataFrame with added 'mhc_sequence' column
+    """
+    # TODO needs revision and validation
+    dict_file = "data/HLA_alleles/pseudoseqs/PMGen_pseudoseq.csv"
+
+    # Load allele-sequence mapping
+    try:
+        dict_df = pd.read_csv(dict_file, usecols=['simple_allele', 'sequence'])
+        dict_df['net_mhc_allele'] = (
+            dict_df['simple_allele']
+            .str.replace('*', '', regex=False)
+            .str.replace(':', '', regex=False)
+        )
+        mhc_sequence_map = dict(zip(dict_df['net_mhc_allele'], dict_df['sequence']))
+        print(f"Loaded allele sequence mapping with {len(mhc_sequence_map)} entries")
+    except FileNotFoundError:
+        print(f"Warning: Dictionary file {dict_file} not found. No sequences will be mapped.")
+        mhc_sequence_map = {}
+    except Exception as e:
+        print(f"Error loading dictionary file: {str(e)}")
+        mhc_sequence_map = {}
+
+    def lookup_sequence(allele_str):
+            """Find the sequence for an allele with fallback strategies."""
+            if pd.isna(allele_str):
+                return None
+
+            print(f"Processing allele: {allele_str}")
+
+            # Handle list of alleles (from el_data_0 or el_data_1)
+            if isinstance(allele_str, str) and allele_str.startswith('[') and allele_str.endswith(']'):
+                try:
+                    allele_list = eval(allele_str)
+                    if isinstance(allele_list, list):
+                        # Get sequence for each allele in list and join with '/'
+                        seqs = [lookup_sequence(a) for a in allele_list]
+                        found = [s for s in seqs if s is not None]
+                        return '/'.join(found) if found else None
+                except:
+                    pass  # If eval fails, continue with normal processing
+
+            # Split on '-' if there are two alleles mashed together
+            if 'H-2' in allele_str:
+                parts = [allele_str]
+            elif '-' in allele_str:
+                parts = allele_str.split('-') # eg. HLA-DRB101:01-DQA101:01 to [HLA, DRB101:01, DQA101:01] or HLA-DRB101:01 to [HLA, DRB101:01]
+                if len(parts) > 2: # eg. [HLA, DRB101:01, DQA101:01]
+                    pref = parts[0] # HLA
+                    part1 = "-".join(parts[0:2]) # HLA-DRB101:01
+                    part2 = pref + "-" + parts[2] # HLA-DQA101:01
+                    parts = [part1, part2] # [HLA-DRB101:01, HLA-DQA101:01]
+                elif len(parts) == 2: # eg. [HLA, DRB101:01]
+                    pref = parts[0] # HLA
+                    part1 = parts[1] # DRB101:01
+                    parts = [pref + "-" + part1] # [HLA-DRB101:01]
+                else:
+                    parts = [allele_str] # No split needed eg. DRB101:01
+            else:
+                parts = [allele_str]
+
+            seqs = []
+            for part in parts:
+                net = part.replace('*', '').replace(':', '')
+                seq = mhc_sequence_map.get(net)
+                if seq is None:
+                    # First try to find keys where our name is contained within
+                    containing_matches = [k for k in mhc_sequence_map.keys() if net in k]
+                    if containing_matches:
+                        # Sort by length to prefer closest match in length
+                        best = sorted(containing_matches, key=len)[0]
+                        seq = mhc_sequence_map[best]
+                        print(f"No exact match for '{net}', using containing match '{best}'")
+                    else:
+                        # fallback to closest match (cutoff can be tuned)
+                        matches = difflib.get_close_matches(net,
+                                                            mhc_sequence_map.keys(),
+                                                            n=1,
+                                                            cutoff=0.6)
+                        if matches:
+                            best = matches[0]
+                            seq = mhc_sequence_map[best]
+                            print(f"No exact match for '{part}', using closest match '{best}'")
+                seqs.append(seq)
+
+            # if *all* parts failed, return None
+            if all(s is None for s in seqs):
+                return None
+
+            # otherwise join only the found sequences with '/'
+            found = [s for s in seqs if s is not None]
+            return '/'.join(found)
+
+    # Process unique alleles for efficiency
+    # Process unique alleles for efficiency - handle both string and list types
+    # Process unique alleles for efficiency - handle both string and list types
+    if input_df['allele'].apply(lambda x: isinstance(x, list)).any():
+        # If the column contains lists, convert them to strings for uniqueness check
+        unique_alleles = input_df['allele'].dropna().apply(lambda x: str(x) if isinstance(x, list) else x).unique()
+        # Create mapping with original values
+        allele_seq_map = {}
+        for allele in unique_alleles:
+            # Keep allele as string for dictionary key purposes
+            allele_seq_map[allele] = lookup_sequence(allele)
+    else:
+        # Normal case when all values are strings or scalars
+        unique_alleles = input_df['allele'].dropna().unique()
+        allele_seq_map = {allele: lookup_sequence(allele) for allele in unique_alleles}
+
+    # Apply mapping to the DataFrame
+    updated_df = input_df.copy()
+    # Convert lists to strings for mapping lookup
+    updated_df['mhc_sequence'] = updated_df['allele'].apply(
+        lambda x: allele_seq_map.get(str(x) if isinstance(x, list) else x)
+    )
+
+    # Report and save
+    n_missing = updated_df['mhc_sequence'].isna().sum()
+    if n_missing:
+        print(f"Found {n_missing} alleles without matching mhc_sequence")
+        print(f"Combined dataset shape: {updated_df.shape}")
+
+    return updated_df
+
+
 def process_data(mhc_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
     tmp_path = "data/NetMHCpan_dataset/tmp/", mhc_type=2):
     """
     Load and process MHCII data for NetMHCpan
     This function works for only HLA inputs
     Args:
-        mhc_path:
-        tmp_path:
+        mhc_path: Path to the MHC data directory
+        tmp_path: Path to the temporary directory for storing intermediate files
 
     Returns:
-
+        el_data: DataFrame containing EL data
+        ba_data: DataFrame containing BA data
     """
 
     if not os.path.isdir(tmp_path):
@@ -58,7 +191,7 @@ def process_data(mhc_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/",
         return
 
     if mhc_type == 1:
-        train_files = [f for f in os.listdir(mhc_path) if "_ba" in f or "_el" in f]
+        train_files = [f for f in os.listdir(mhc_path) if "_ba" in f or "_el" in f and "test" not in f]
     else:
         train_files = [f for f in os.listdir(mhc_path) if "train" in f]
     print(f"Found {len(train_files)} train files")
@@ -335,6 +468,54 @@ def run_netmhcpan_(el_data, true_label, tmp_path, results_dir, chunk_number, mhc
             dropped_rows.to_csv(dropped_rows_path, mode="a", header=not os.path.exists(dropped_rows_path), index=False)
 
 
+def combine_datasets_(results_dir, include_dropped=False, final_output_path=None):
+    """
+    dropped rows are the samples that received the wrong label from netmhcpan
+    Args:
+        results_dir:
+        include_dropped:
+
+    Returns:
+
+    """
+    # read all CSV files in the results directory
+    all_csv_files = [os.path.join(results_dir, f) for f in os.listdir(results_dir) if f.endswith('.csv')]
+    # select el1 files and ignore files with dropped in the names
+    if include_dropped:
+        all_csv_files = [f for f in all_csv_files if "el1" in f]
+    else:
+        all_csv_files = [f for f in all_csv_files if "el1" in f and "dropped" not in f]
+    print(f"Combining {len(all_csv_files)} CSV files into final output")
+
+    for csv_file in all_csv_files:
+        try:
+            df = pd.read_csv(csv_file)
+            df.rename(columns={'peptide': 'long_mer', 'label': 'convoluted_label', 'MHC': 'allele'}, inplace=True)
+            # select only the columns that are needed
+            df = df[["allele", "long_mer", "assigned_label", "convoluted_label"]]
+        except Exception as e:
+            print(f"Error reading {csv_file}: {str(e)}")
+            continue
+
+        # Standardize column names
+        if 'Peptide' in df.columns and 'peptide' not in df.columns:
+            df['peptide'] = df['Peptide']
+        elif 'Peptide' in df.columns and 'peptide' in df.columns:
+            df['peptide'] = df['peptide'].fillna(df['Peptide'])
+        if 'MHC' in df.columns and 'allele' not in df.columns:
+            df['allele'] = df['MHC']
+        elif 'MHC' in df.columns and 'allele' in df.columns:
+            df['allele'] = df['allele'].fillna(df['MHC'])
+
+    combined_df = pd.concat([pd.read_csv(f) for f in all_csv_files if os.path.getsize(f) > 0], ignore_index=True)
+
+    # save the combined dataframe to disk
+    if final_output_path:
+        combined_df.to_csv(final_output_path, index=False)
+    else:
+        combined_df.to_csv(os.path.join(results_dir, "combined_results.csv"), index=False)
+
+    return
 
 # def run_netmhcpan(el_data_1, unique_alleles, tmp_path, results_dir):
 #     for allele in unique_alleles:
@@ -557,7 +738,7 @@ def run_(arg1, arg2):
     mhcI_path = "data/NetMHCpan_dataset/NetMHCpan_train/"
     # tmp_path = "data/NetMHCpan_dataset/tmp/"
     tmp_path = "data/NetMHCpan_dataset/tmp_I/"
-    results_dir = "data/NetMHCpan_dataset/results/"
+    results_dir = "data/NetMHCpan_dataset/results_I/"
 
     mhc_class = 1
 
@@ -612,6 +793,9 @@ def run_(arg1, arg2):
         # print the len of el_data_1
         print(f"Length of el_data_1: {len(el_data_1)}")
 
+        # print the len of el_data_0
+        print(f"Length of el_data_0: {len(el_data_0)}")
+
         # subset 1000 random samples from the data for testing
         # el_data_1 = el_data_1.sample(n=1000, random_state=42)
         # unique_cell_lines = el_data_1["cell_line_id"].unique()
@@ -620,24 +804,44 @@ def run_(arg1, arg2):
         # parallelize_netmhcpan(el_data_1, tmp_path, results_dir)
 
         # run the netmhcpan for the el_data_1
-        run_netmhcpan_(el_data_1, 1, tmp_path, results_dir, arg2, mhc_class=mhc_class)
+        # run_netmhcpan_(el_data_1, 1, tmp_path, results_dir, arg2, mhc_class=mhc_class)
 
         # run the netmhcpan for the el_data_0
         # run_netmhcpan_(el_data_0, 0, tmp_path, results_dir, arg2)
 
-    # if arg1 == "combine_results":
-    #     # Combine results
-    #     df = combine_results_(results_dir, final_output_path)
-    #
-    #     el_data_0 = pd.read_csv("data/NetMHCpan_dataset/tmp/el_data_0.csv")
-    #     ba_data = pd.read_csv("data/NetMHCpan_dataset/tmp/ba_data.csv")
-    #
-    #     # concatenate the dataframes df and el_data_0 and ba_data
-    #     df = pd.concat([df, el_data_0], ignore_index=True)
-    #     df = pd.concat([df, ba_data], ignore_index=True)
-    #
-    #     # save the final output
-    #     df.to_csv("data/NetMHCpan_dataset/NetMHCIIpan_all.csv", index=False)
+    if arg1 == "combine_results":
+        # Combine results
+        df = combine_datasets_(results_dir, final_output_path=f"{results_dir}/combined_results.csv")
+
+        el_data_0 = pd.read_csv(f"{tmp_path}/el_data_0.csv")
+        ba_data = pd.read_csv(f"{tmp_path}/ba_data.csv")
+
+        # add labels to ba_data with threshold of 0.426
+        ba_data["label"] = ba_data["label"].apply(lambda x: 1 if float(x) >= 0.426 else 0)
+        ba_data.rename(columns={'peptide': 'long_mer', 'label': 'convoluted_label'}, inplace=True)
+
+        # explode the el_data_0['allele'] column (we do this because all samples in the el_data_0 have the same label with 100% confidence)
+        el_data_0["allele"] = el_data_0["allele"].apply(lambda x: eval(x))
+        el_data_0 = el_data_0.explode("allele")
+        el_data_0.rename(columns={'peptide': 'long_mer', 'label': 'convoluted_label'}, inplace=True)
+
+        # concatenate the dataframes df and el_data_0 and ba_data
+        df = pd.concat([df, el_data_0], ignore_index=True)
+        df = pd.concat([df, ba_data], ignore_index=True)
+
+        # add mhc class column
+        df["mhc_class"] = mhc_class
+
+        # drop duplicates
+        print(f"Before dropping duplicates: {df.shape}")
+        df = df.drop_duplicates(subset=["allele", "long_mer"], keep="first")
+        print(f"After dropping duplicates: {df.shape}")
+
+        # add mhc_sequence column
+        df = add_mhc_sequence_column(df)
+
+        # save the final output
+        df.to_csv(f"data/NetMHCpan_dataset/combined_data_{mhc_class}.csv", index=False)
 
 def main():
     if len(sys.argv) < 1:
