@@ -75,11 +75,11 @@ def add_mhc_sequence_column(input_df):
                         seqs = [lookup_sequence(a) for a in allele_list]
                         found = [s for s in seqs if s is not None]
                         return '/'.join(found) if found else None
-                except:
-                    pass  # If eval fails, continue with normal processing
+                except Exception as e:
+                    print(f"  Failed to eval list: {e}")
 
             # Split on '-' if there are two alleles mashed together
-            if 'H-2' in allele_str:
+            elif 'H-2' in allele_str:
                 parts = [allele_str]
             elif '-' in allele_str:
                 parts = allele_str.split('-') # eg. HLA-DRB101:01-DQA101:01 to [HLA, DRB101:01, DQA101:01] or HLA-DRB101:01 to [HLA, DRB101:01]
@@ -100,8 +100,11 @@ def add_mhc_sequence_column(input_df):
             seqs = []
             for part in parts:
                 net = part.replace('*', '').replace(':', '')
+                print(f"  Normalized part: {part!r} → net key: {net!r}")
                 seq = mhc_sequence_map.get(net)
-                if seq is None:
+                if seq:
+                    print(f"Found exact match for {net}: sequence length {len(seq)}")
+                else:
                     # First try to find keys where our name is contained within
                     containing_matches = [k for k in mhc_sequence_map.keys() if net in k]
                     if containing_matches:
@@ -109,6 +112,7 @@ def add_mhc_sequence_column(input_df):
                         best = sorted(containing_matches, key=len)[0]
                         seq = mhc_sequence_map[best]
                         print(f"No exact match for '{net}', using containing match '{best}'")
+                        print(f"No exact match for {net}, using containing '{best}'")
                     else:
                         # fallback to closest match (cutoff can be tuned)
                         matches = difflib.get_close_matches(net,
@@ -118,7 +122,10 @@ def add_mhc_sequence_column(input_df):
                         if matches:
                             best = matches[0]
                             seq = mhc_sequence_map[best]
-                            print(f"No exact match for '{part}', using closest match '{best}'")
+                            print(f"No exact match for '{net}', using closest match '{best}'")
+                if seq is None:
+                    print(f"*No sequence found for part {net}*")
+
                 seqs.append(seq)
 
             # if *all* parts failed, return None
@@ -130,33 +137,21 @@ def add_mhc_sequence_column(input_df):
             return '/'.join(found)
 
     # Process unique alleles for efficiency
-    # Process unique alleles for efficiency - handle both string and list types
-    # Process unique alleles for efficiency - handle both string and list types
-    if input_df['allele'].apply(lambda x: isinstance(x, list)).any():
-        # If the column contains lists, convert them to strings for uniqueness check
-        unique_alleles = input_df['allele'].dropna().apply(lambda x: str(x) if isinstance(x, list) else x).unique()
-        # Create mapping with original values
-        allele_seq_map = {}
-        for allele in unique_alleles:
-            # Keep allele as string for dictionary key purposes
-            allele_seq_map[allele] = lookup_sequence(allele)
-    else:
-        # Normal case when all values are strings or scalars
-        unique_alleles = input_df['allele'].dropna().unique()
-        allele_seq_map = {allele: lookup_sequence(allele) for allele in unique_alleles}
+    # Build map for unique alleles
+    unique = input_df['allele'].dropna().unique()
+    allele_seq_map = {}
+    for a in unique:
+        allele_seq_map[a] = lookup_sequence(a)
 
-    # Apply mapping to the DataFrame
+    # Now apply
     updated_df = input_df.copy()
-    # Convert lists to strings for mapping lookup
-    updated_df['mhc_sequence'] = updated_df['allele'].apply(
-        lambda x: allele_seq_map.get(str(x) if isinstance(x, list) else x)
-    )
+    updated_df['mhc_sequence'] = updated_df['allele'].map(allele_seq_map)
 
-    # Report and save
-    n_missing = updated_df['mhc_sequence'].isna().sum()
-    if n_missing:
-        print(f"Found {n_missing} alleles without matching mhc_sequence")
-        print(f"Combined dataset shape: {updated_df.shape}")
+    # Report summary of misses
+    missing = [a for a, seq in allele_seq_map.items() if seq is None]
+    if missing:
+        print(f"\nTotal missing sequences: {len(missing)}")
+        print("Examples of alleles without a match:", missing[:10])
 
     return updated_df
 
@@ -490,22 +485,12 @@ def combine_datasets_(results_dir, include_dropped=False):
     for csv_file in all_csv_files:
         try:
             df = pd.read_csv(csv_file)
-            df.rename(columns={'peptide': 'long_mer', 'label': 'convoluted_label', 'MHC': 'allele'}, inplace=True)
+            df.rename(columns={'Peptide': 'peptide', 'MHC': 'allele'}, inplace=True)
             # select only the columns that are needed
-            df = df[["allele", "long_mer", "assigned_label", "convoluted_label"]]
+            df = df[["allele", "peptide", "assigned_label", "convoluted_label"]]
         except Exception as e:
             print(f"Error reading {csv_file}: {str(e)}")
             continue
-
-        # Standardize column names
-        if 'Peptide' in df.columns and 'peptide' not in df.columns:
-            df['peptide'] = df['Peptide']
-        elif 'Peptide' in df.columns and 'peptide' in df.columns:
-            df['peptide'] = df['peptide'].fillna(df['Peptide'])
-        if 'MHC' in df.columns and 'allele' not in df.columns:
-            df['allele'] = df['MHC']
-        elif 'MHC' in df.columns and 'allele' in df.columns:
-            df['allele'] = df['allele'].fillna(df['MHC'])
 
     combined_df = pd.concat([pd.read_csv(f) for f in all_csv_files if os.path.getsize(f) > 0], ignore_index=True)
 
@@ -812,12 +797,12 @@ def run_(arg1, arg2):
 
         # add labels to ba_data with threshold of 0.426
         ba_data["label"] = ba_data["label"].apply(lambda x: 1 if float(x) >= 0.426 else 0)
-        ba_data.rename(columns={'peptide': 'long_mer', 'label': 'convoluted_label'}, inplace=True)
+        ba_data.rename(columns={'label': 'assigned_label'}, inplace=True)
 
         # explode the el_data_0['allele'] column (we do this because all samples in the el_data_0 have the same label with 100% confidence)
         el_data_0["allele"] = el_data_0["allele"].apply(lambda x: eval(x))
         el_data_0 = el_data_0.explode("allele")
-        el_data_0.rename(columns={'peptide': 'long_mer', 'label': 'convoluted_label'}, inplace=True)
+        el_data_0.rename(columns={'label': 'assigned_label'}, inplace=True)
 
         # concatenate the dataframes df and el_data_0 and ba_data
         df = pd.concat([df, el_data_0], ignore_index=True)
@@ -826,9 +811,19 @@ def run_(arg1, arg2):
         # add mhc class column
         df["mhc_class"] = mhc_class
 
+        # Standardize column names
+        if 'Peptide' in df.columns and 'peptide' not in df.columns:
+            df['peptide'] = df['Peptide']
+        elif 'Peptide' in df.columns and 'peptide' in df.columns:
+            df['peptide'] = df['peptide'].fillna(df['Peptide'])
+        if 'MHC' in df.columns and 'allele' not in df.columns:
+            df['allele'] = df['MHC']
+        elif 'MHC' in df.columns and 'allele' in df.columns:
+            df['allele'] = df['allele'].fillna(df['MHC'])
+
         # drop duplicates
         print(f"Before dropping duplicates: {df.shape}")
-        df = df.drop_duplicates(subset=["allele", "long_mer"], keep="first")
+        df = df.drop_duplicates(subset=["allele", "peptide"], keep="first")
         print(f"After dropping duplicates: {df.shape}")
 
         # add mhc_sequence column
