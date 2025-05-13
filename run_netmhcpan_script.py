@@ -153,6 +153,10 @@ def add_mhc_sequence_column(input_df):
         print(f"\nTotal missing sequences: {len(missing)}")
         print("Examples of alleles without a match:", missing[:10])
 
+    # TODO fix later
+    # Drop rows where 'mhc_sequence' is None or NaN
+    updated_df = updated_df[updated_df['mhc_sequence'].notna() & (updated_df['mhc_sequence'] != None)]
+
     return updated_df
 
 
@@ -814,12 +818,16 @@ def run_(arg1, arg2):
         # Standardize column names
         if 'Peptide' in df.columns and 'peptide' not in df.columns:
             df['peptide'] = df['Peptide']
+            df.drop(columns=['Peptide'], inplace=True)
         elif 'Peptide' in df.columns and 'peptide' in df.columns:
             df['peptide'] = df['peptide'].fillna(df['Peptide'])
+            df.drop(columns=['Peptide'], inplace=True)
         if 'MHC' in df.columns and 'allele' not in df.columns:
             df['allele'] = df['MHC']
+            df.drop(columns=['MHC'], inplace=True)
         elif 'MHC' in df.columns and 'allele' in df.columns:
             df['allele'] = df['allele'].fillna(df['MHC'])
+            df.drop(columns=['MHC'], inplace=True)
 
         # drop duplicates
         print(f"Before dropping duplicates: {df.shape}")
