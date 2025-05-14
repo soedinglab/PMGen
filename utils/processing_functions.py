@@ -1062,25 +1062,27 @@ def fetch_polypeptide_sequences(pdb_path):
 # write a function that produces 5 fold cross validation from the df, each fold must have one allele to be left out completely and produce a stratified train and validation based on the label.
 # take into account the subset proportion.
 def create_k_fold_leave_one_out_stratified_cross_validation(df, k=5, target_col="label", id_col="allele",
-                                                        subset_prop=1.0, train_size=0.8, random_state=42):
+                                                       subset_prop=1.0, train_size=0.8, random_state=42):
     """
-    Creates k folds for cross-validation where each fold leaves one unique ID out
-    and splits the remaining data into stratified train/validation sets.
+    Creates k folds for cross-validation where each fold:
+    1. Leaves one unique ID out completely
+    2. Has a validation set with at least one unique allele not present in the training set
+    3. Splits the remaining data into stratified train/validation sets
+    4. Balances both train and validation sets based on target labels
 
     Args:
         df (pd.DataFrame): The input dataframe.
         k (int): The number of folds.
         target_col (str): The name of the column containing the target labels for stratification.
         id_col (str): The name of the column containing the IDs (alleles) to leave out.
-        subset_prop (float): The proportion of the remaining data to use for the training set.
+        subset_prop (float): The proportion of the remaining data to use.
         train_size (float): The proportion of the non-held-out data to use for training.
-        random_state (int): Random state for reproducibility of the stratified split.
+        random_state (int): Random state for reproducibility.
 
     Returns:
         list: A list of tuples, where each tuple contains (train_df, val_df, left_out_id) for a fold.
-              The left_out_id is the ID that was completely held out for that fold.
     """
-    # take a subset of the dataframe
+    # Take a subset of the dataframe
     df = df.sample(frac=subset_prop, random_state=random_state)
 
     # Get unique IDs (alleles)
@@ -1090,8 +1092,10 @@ def create_k_fold_leave_one_out_stratified_cross_validation(df, k=5, target_col=
     if k > len(unique_ids):
         raise ValueError(f"k must be less than or equal to the number of unique IDs ({len(unique_ids)}).")
 
-    # Select k IDs to leave out (one per fold)
+    # Set random seed for reproducibility
     np.random.seed(random_state)
+
+    # Randomly select k IDs to leave out (one per fold)
     selected_ids = np.random.choice(unique_ids, k, replace=False)
 
     folds = []
@@ -1103,15 +1107,55 @@ def create_k_fold_leave_one_out_stratified_cross_validation(df, k=5, target_col=
         # Get remaining data (exclude the left out ID)
         remaining_df = df[~leave_out_mask].copy()
 
-        # Create stratified train/validation split on the remaining data
-        train_df, val_df = train_test_split(
-            remaining_df,
+        # Get remaining unique IDs
+        remaining_unique_ids = remaining_df[id_col].unique()
+
+        # Select a validation-only ID (will only appear in validation set)
+        val_only_id = np.random.choice(remaining_unique_ids, 1)[0]
+
+        # Split data for unique validation ID and the rest
+        val_only_mask = remaining_df[id_col] == val_only_id
+        val_only_df = remaining_df[val_only_mask].copy()
+        train_eligible_df = remaining_df[~val_only_mask].copy()
+
+        # Create stratified split on the training-eligible data
+        train_df, extra_val_df = train_test_split(
+            train_eligible_df,
             train_size=train_size,
-            stratify=remaining_df[target_col],
+            stratify=train_eligible_df[target_col],
             random_state=random_state
         )
 
+        # Combine validation-only data with extra validation data
+        val_df = pd.concat([val_only_df, extra_val_df], ignore_index=True)
+
+        # Balance training set
+        train_class_counts = train_df[target_col].value_counts()
+        min_train_count = train_class_counts.min()
+        balanced_train_dfs = []
+
+        for label in train_class_counts.index:
+            label_df = train_df[train_df[target_col] == label]
+            # Downsample to the minority class count
+            balanced_label_df = label_df.sample(min_train_count, random_state=random_state)
+            balanced_train_dfs.append(balanced_label_df)
+
+        balanced_train_df = pd.concat(balanced_train_dfs, ignore_index=True)
+
+        # Balance validation set
+        val_class_counts = val_df[target_col].value_counts()
+        min_val_count = val_class_counts.min()
+        balanced_val_dfs = []
+
+        for label in val_class_counts.index:
+            label_df = val_df[val_df[target_col] == label]
+            # Downsample to the minority class count
+            balanced_label_df = label_df.sample(min_val_count, random_state=random_state)
+            balanced_val_dfs.append(balanced_label_df)
+
+        balanced_val_df = pd.concat(balanced_val_dfs, ignore_index=True)
+
         # Include the left_out_id in the tuple
-        folds.append((train_df, val_df, leave_out_id))
+        folds.append((balanced_train_df, balanced_val_df, leave_out_id))
 
     return folds
