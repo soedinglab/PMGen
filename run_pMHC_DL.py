@@ -5,10 +5,12 @@ import numpy as np
 import pandas as pd
 import time
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, precision_recall_curve
 from sklearn.model_selection import train_test_split
 from sklearn.cluster import KMeans
 import seaborn as sns
 from sklearn.decomposition import PCA
+from collections import Counter
 
 from utils.model import SCQ1DAutoEncoder, MoEModel, BinaryMLP, TabularTransformer, EmbeddingCNN
 
@@ -1606,7 +1608,7 @@ def train_and_evaluate_scqvae(
 
         # Extract latent codes for every batch
         for batch in dataset:
-            output, Zq, out_P_proj, _, _ = model(batch, training=False)
+            Zq, out_P_proj, _, _ = model.encode_(batch)
             quantized_latents.append(Zq.numpy())
             cluster_indices_soft.append(out_P_proj.numpy())
             cluster_indices_hard.append(tf.argmax(out_P_proj, axis=-1).numpy())
@@ -1705,9 +1707,9 @@ def train_and_evaluate_scqvae(
     seq_length = seq_length - 1 # Remove the index feature
 
     # remove labels
-    # train_dataset = train_dataset.apply(remove_y)
-    # val_dataset = val_dataset.apply(remove_y)
-    # test_dataset = test_dataset.apply(remove_y)
+    train_dataset = train_dataset.apply(remove_y)
+    val_dataset = val_dataset.apply(remove_y)
+    test_dataset = test_dataset.apply(remove_y)
 
 
     # --- Model Instantiation ---
@@ -1731,20 +1733,58 @@ def train_and_evaluate_scqvae(
     )
     print("Model built.")
 
+
     # --- Compile and Train ---
     print("Compiling the model...")
     model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
     print("Model compiled.")
 
-    print(f"Starting training for {epochs} epochs...")
+    # Determine minority class count
+    label_counts = Counter(y_train)
+    min_count = min(label_counts.values())
+    # Sample balanced indices
+    balanced_indices = []
+    for label in label_counts:
+        inds = np.where(y_train == label)[0]
+        sampled = np.random.choice(inds, min_count, replace=False)
+        balanced_indices.extend(sampled)
+    balanced_indices = np.array(balanced_indices)
+    # Create balanced dataset
+    X_bal = X_train[balanced_indices]
+    y_bal = y_train[balanced_indices]
+    balanced_dataset_y = create_dataset(X_bal, y_bal, batch_size=batch_size, is_training=True)
+    balanced_dataset = balanced_dataset_y.apply(remove_id).apply(remove_y)
+
+    # Initial training on balanced set
+    print(f"Training on balanced set for {epochs} epochs...")
     start_time = time.time()
     history = model.fit(
-        train_dataset,
+        balanced_dataset,
         epochs=epochs,
         validation_data=val_dataset
     )
     end_time = time.time()
-    print(f"\nTraining finished in {end_time - start_time:.2f} seconds.")
+    print(f"Balanced training finished in {end_time - start_time:.2f} seconds.")
+
+    # TODO Experimental
+    # Freeze encoder layers before fine-tuning
+    model.encoder.trainable = False
+    for layer in model.encoder.layers:
+        layer.trainable = False
+
+    # Recompile model after freezing layers
+    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
+
+    # Fine-tune on full dataset
+    print(f"Fine-tuning on full dataset for {epochs} epochs...")
+    start_time = time.time()
+    history = model.fit(
+        train_dataset,
+        epochs=epochs//10,
+        validation_data=val_dataset
+    )
+    end_time = time.time()
+    print(f"Fine-tuning finished in {end_time - start_time:.2f} seconds.")
 
     # --- Evaluation and Visualization ---
     print("\nEvaluating the model...")
@@ -1959,6 +1999,161 @@ def train_and_evaluate_moe(
             history (tf.keras.callbacks.History): Training history object.
             eval_results (list): Evaluation results on validation data.
         """
+        # ======================= Helper Functions =======================
+        from sklearn.metrics import roc_curve, auc, precision_recall_curve
+
+        def create_visualizations(X, X_val, y, y_val, y_pred, y_proba, soft_clusters, soft_clusters_val, history, output_dir,
+                                      random_state, visualize):
+            print("Creating PCA visualizations...")
+            pca = PCA(n_components=2, random_state=random_state)
+            X_all = np.vstack([X, X_val])
+            y_all = np.concatenate([y, y_val])
+            soft_clusters_all = np.vstack([soft_clusters, soft_clusters_val])
+            pca_proj = pca.fit_transform(X_all)
+
+            df_vis = pd.DataFrame({
+                'PC1': pca_proj[:, 0],
+                'PC2': pca_proj[:, 1],
+                'label': y_all,
+                'cluster': np.argmax(soft_clusters_all, axis=1)
+            })
+
+            plt.figure(figsize=(8, 6))
+            sns.scatterplot(data=df_vis, x='PC1', y='PC2', hue='label', alpha=0.6)
+            plt.title('PCA of Dataset Colored by Binding Label')
+            plt.savefig(os.path.join(output_dir, 'pca_binding_label.png'))
+            print(f"Saved binding label PCA plot to {os.path.join(output_dir, 'pca_binding_label.png')}")
+            if visualize:
+                plt.show()
+            plt.close()
+
+            plt.figure(figsize=(8, 6))
+            sns.scatterplot(data=df_vis, x='PC1', y='PC2', hue='cluster', legend=False, alpha=0.6)
+            plt.title('PCA of Dataset Colored by Soft Cluster Assignment')
+            plt.savefig(os.path.join(output_dir, 'pca_cluster_assignment.png'))
+            print(f"Saved cluster assignment PCA plot to {os.path.join(output_dir, 'pca_cluster_assignment.png')}")
+            if visualize:
+                plt.show()
+            plt.close()
+
+            plt.figure(figsize=(12, 5))
+            plt.subplot(1, 2, 1)
+            plt.plot(history.history['loss'], label='Training Loss')
+            plt.plot(history.history['val_loss'], label='Validation Loss')
+            plt.title('Model Loss')
+            plt.xlabel('Epoch')
+            plt.ylabel('Loss')
+            plt.legend()
+
+            plt.subplot(1, 2, 2)
+            plt.plot(history.history['accuracy'], label='Training Accuracy')
+            plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+            plt.title('Model Accuracy')
+            plt.xlabel('Epoch')
+            plt.ylabel('Accuracy')
+            plt.legend()
+
+            plt.tight_layout()
+            plt.savefig(os.path.join(output_dir, 'training_history.png'))
+            print(f"Saved training history plot to {os.path.join(output_dir, 'training_history.png')}")
+            if visualize:
+                plt.show()
+            plt.close()
+
+            # Add ROC and PRC plots if predictions are available
+            if y_proba is not None:
+                fpr, tpr, _ = roc_curve(y_val, y_proba)
+                roc_auc = auc(fpr, tpr)
+
+                plt.figure(figsize=(8, 6))
+                plt.plot(fpr, tpr, label=f'ROC curve (area = {roc_auc:.2f})')
+                plt.plot([0, 1], [0, 1], 'k--')
+                plt.title('Receiver Operating Characteristic')
+                plt.xlabel('False Positive Rate')
+                plt.ylabel('True Positive Rate')
+                plt.legend(loc='lower right')
+                plt.savefig(os.path.join(output_dir, 'roc_curve.png'))
+                print(f"Saved ROC curve plot to {os.path.join(output_dir, 'roc_curve.png')}")
+                if visualize:
+                    plt.show()
+                plt.close()
+
+                precision, recall, _ = precision_recall_curve(y_val, y_proba)
+                pr_auc = auc(recall, precision)
+
+                plt.figure(figsize=(8, 6))
+                plt.plot(recall, precision, label=f'PR curve (area = {pr_auc:.2f})')
+                plt.title('Precision-Recall Curve')
+                plt.xlabel('Recall')
+                plt.ylabel('Precision')
+                plt.legend(loc='lower left')
+                plt.savefig(os.path.join(output_dir, 'precision_recall_curve.png'))
+                print(f"Saved Precision-Recall curve plot to {os.path.join(output_dir, 'precision_recall_curve.png')}")
+                if visualize:
+                    plt.show()
+                plt.close()
+
+        def evaluation_metrics(y_true, y_pred, y_prob=None):
+            """
+            Calculate evaluation metrics for the model predictions.
+
+            Args:
+                y_true (np.ndarray): True labels.
+                y_pred (np.ndarray): Predicted labels (class predictions).
+                y_prob (np.ndarray, optional): Predicted probabilities for the positive class.
+                                               Required for metrics like AUROC and AUPRC.
+
+            Returns:
+                dict: Dictionary of evaluation metrics.
+            """
+            from sklearn.metrics import (accuracy_score, precision_score, recall_score, f1_score,
+                                         roc_auc_score, average_precision_score, balanced_accuracy_score,
+                                         matthews_corrcoef, cohen_kappa_score, confusion_matrix)
+
+            # Basic classification metrics
+            accuracy = accuracy_score(y_true, y_pred)
+            precision = precision_score(y_true, y_pred, average='weighted')
+            recall = recall_score(y_true, y_pred, average='weighted')
+            f1 = f1_score(y_true, y_pred, average='weighted')
+
+            # Additional classification metrics
+            balanced_acc = balanced_accuracy_score(y_true, y_pred)
+            mcc = matthews_corrcoef(y_true, y_pred)
+            kappa = cohen_kappa_score(y_true, y_pred)
+
+            # Confusion matrix-based metrics
+            tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+            specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+            npv = tn / (tn + fn) if (tn + fn) > 0 else 0
+
+            metrics = {
+                'accuracy': accuracy,
+                'precision': precision,
+                'recall': recall,
+                'f1_score': f1,
+                'balanced_accuracy': balanced_acc,
+                'mcc': mcc,
+                'kappa': kappa,
+                'specificity': specificity,
+                'npv': npv
+            }
+
+            # Probability-based metrics (only if probabilities are provided)
+            if y_prob is not None:
+                try:
+                    auroc = roc_auc_score(y_true, y_prob)
+                    auprc = average_precision_score(y_true, y_prob)
+                    metrics.update({
+                        'auroc': auroc,
+                        'auprc': auprc
+                    })
+                except Exception as e:
+                    print(f"Warning: Could not calculate probability-based metrics: {e}")
+
+            return metrics
+
+        # ==============================================
+
         # Set random seeds for reproducibility
         np.random.seed(random_state)
         tf.random.set_seed(random_state)
@@ -2113,22 +2308,71 @@ def train_and_evaluate_moe(
         else:
             raise ValueError(f"Unsupported model_type: {model_type}")
 
-        # Train the model
-        print(f"Training model for {epochs} epochs...")
+        # --- create a balanced dataset ---
+        label_counts = Counter(y)
+        min_count = min(label_counts.values())
+        balanced_indices = np.concatenate([
+            np.random.choice(np.where(y == lbl)[0], min_count, replace=False)
+            for lbl in label_counts
+        ])
+        np.random.shuffle(balanced_indices)
+        X_bal = X[balanced_indices]
+        soft_bal = soft_clusters[balanced_indices]
+        y_bal = y[balanced_indices]
+
+        train_bal_ds = tf.data.Dataset.from_tensor_slices(((X_bal, soft_bal), y_bal)) \
+            .shuffle(buffer_size=1000, seed=random_state) \
+            .batch(batch_size)
+
+        # --- Train the model ---
+        print(f"Training on balanced set for {epochs} epochs...")
         history = model.fit(
-            train_dataset,
+            train_bal_ds,
             validation_data=val_dataset,
             epochs=epochs,
             **kwargs
         )
 
-        # Evaluate on validation set
-        print("Evaluating model on validation data...")
+        # TODO experimental
+        # Freeze initial half of layers, then fine-tune on full dataset
+        for layer in model.layers[: len(model.layers) // 2]:
+            layer.trainable = False
+        model.compile(
+            optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+            loss=tf.keras.losses.BinaryCrossentropy(),
+            metrics=['accuracy'],
+        )
+        print(f"Fine-tuning on full dataset for {epochs} epochs...")
+        history = model.fit(
+            train_dataset,
+            validation_data=val_dataset,
+            epochs=epochs//5,
+            **kwargs
+        )
+
+        # print(f"Training model for {epochs} epochs...")
+        # history = model.fit(
+        #     train_dataset,
+        #     validation_data=val_dataset,
+        #     epochs=epochs,
+        #     **kwargs
+        # )
+
         eval_results = model.evaluate(val_dataset)
         print(f"Validation loss: {eval_results[0]:.4f}, accuracy: {eval_results[1]:.4f}")
+        # Get predictions
+        y_proba = model.predict((X_val, soft_clusters_val))
 
-        # Ensure the model is built before saving
-        print(model((X[:1], soft_clusters[:1]), training=False))
+        # Ensure y_proba is a NumPy array before using NumPy operations
+        if isinstance(y_proba, tf.Tensor):
+            y_prob_np = y_proba.numpy()
+        else:
+            y_prob_np = y_proba
+
+        # Convert probabilities to binary predictions
+        y_pred = (y_prob_np > 0.5).astype(int)
+        eval_dict = evaluation_metrics(y_val, y_pred, y_prob=y_prob_np)
+        print(f"Evaluation metrics: {eval_dict}")
 
         # TODO fix later
         # Save the trained model
@@ -2141,75 +2385,24 @@ def train_and_evaluate_moe(
         # Visualization using PCA
         if visualize:
             print("Creating PCA visualizations...")
-            pca = PCA(n_components=2, random_state=random_state)
-            X_all = np.vstack([X, X_val])
-            y_all = np.concatenate([y, y_val])
-            soft_clusters_all = np.vstack([soft_clusters, soft_clusters_val])
-            pca_proj = pca.fit_transform(X_all)
-
-            df_vis = pd.DataFrame({
-                'PC1': pca_proj[:, 0],
-                'PC2': pca_proj[:, 1],
-                'label': y_all,
-                'cluster': np.argmax(soft_clusters_all, axis=1)
-            })
-
-            # Plot by binding label
-            plt.figure(figsize=(8, 6))
-            sns.scatterplot(data=df_vis, x='PC1', y='PC2', hue='label', alpha=0.6)
-            plt.title('PCA of Dataset Colored by Binding Label')
-            plt.savefig(os.path.join(output_dir, 'pca_binding_label.png'))
-            print(f"Saved binding label PCA plot to {os.path.join(output_dir, 'pca_binding_label.png')}")
-            plt.show()
-            plt.close()
-
-            # Plot by cluster assignment
-            plt.figure(figsize=(8, 6))
-            sns.scatterplot(data=df_vis, x='PC1', y='PC2', hue='cluster', legend=False, alpha=0.6)
-            plt.title('PCA of Dataset Colored by Soft Cluster Assignment')
-            plt.savefig(os.path.join(output_dir, 'pca_cluster_assignment.png'))
-            print(f"Saved cluster assignment PCA plot to {os.path.join(output_dir, 'pca_cluster_assignment.png')}")
-            plt.show()
-            plt.close()
-
-            # Plot training history
-            plt.figure(figsize=(12, 5))
-            plt.subplot(1, 2, 1)
-            plt.plot(history.history['loss'], label='Training Loss')
-            plt.plot(history.history['val_loss'], label='Validation Loss')
-            plt.title('Model Loss')
-            plt.xlabel('Epoch')
-            plt.ylabel('Loss')
-            plt.legend()
-
-            plt.subplot(1, 2, 2)
-            plt.plot(history.history['accuracy'], label='Training Accuracy')
-            plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
-            plt.title('Model Accuracy')
-            plt.xlabel('Epoch')
-            plt.ylabel('Accuracy')
-            plt.legend()
-
-            plt.tight_layout()
-            plt.savefig(os.path.join(output_dir, 'training_history.png'))
-            print(f"Saved training history plot to {os.path.join(output_dir, 'training_history.png')}")
-            plt.show()
-            plt.close()
+            create_visualizations(X, X_val, y, y_val, y_pred, y_proba, soft_clusters, soft_clusters_val, history, output_dir,
+                                      random_state, visualize)
 
         return model, history, eval_results
 
 
 if __name__ == "__main__":
-    # Call train_and_evaluate_scqvae without trying to unpack return values
+    dataset_folder = "ConvNeXT-MHC"
+    # # Call train_and_evaluate_scqvae without trying to unpack return values
     train_and_evaluate_scqvae(
-        data_path="data/Pep2Vec/ConvNeXT-MHC_subset_new/pep2vec_output_fold_0.parquet",
-        val_data_path="data/Pep2Vec/ConvNeXT-MHC_subset_new/pep2vec_output_val_fold_0.parquet",
+        data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_fold_0.parquet",
+        val_data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_val_fold_0.parquet",
         input_type="latent1024",
         num_embeddings=32,
         embedding_dim=64,
         batch_size=32,
-        epochs=20,
-        output_dir="data/SCQvae/ConvNeXT-MHC",
+        epochs=200,
+        output_dir=f"data/SCQvae/{dataset_folder}",
         visualize=True,
         save_model=True,
         init_k_means=False,
@@ -2217,20 +2410,20 @@ if __name__ == "__main__":
         test_size=0.2,
         output_data="train_val_seperate",  # Options: "val", "train", "train_val_seperate"
     )
-    m = "MoE"
+    m = "MLP" # Options: "MoE", "MLP", "transformer", "CNN"
     print(f"Running {m}")
     train_and_evaluate_moe(
-        data_path="data/SCQvae/ConvNeXT-MHC/quantized_outputs_train.parquet",
-        val_data_path="data/SCQvae/ConvNeXT-MHC/quantized_outputs_val.parquet",
-        # data_path="data/Pep2Vec/ConvNeXT-MHC_subset_new/pep2vec_output_fold_0.parquet",
-        # val_data_path="data/Pep2Vec/ConvNeXT-MHC_subset_new/pep2vec_output_val_fold_0.parquet",
+        data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_train.parquet",
+        val_data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_val.parquet",
+        # data_path="data/Pep2Vec/NetMHCpan_dataset_new_subset/pep2vec_output_fold_0.parquet",
+        # val_data_path="data/Pep2Vec/NetMHCpan_dataset_new_subset/pep2vec_output_val_fold_0.parquet",
         input_type="latent",
-        model_type=m, # Options: "MoE", "MLP", "transformer", "CNN"
-        batch_size=32,
-        epochs=20,
+        model_type=m,
+        batch_size=64,
+        epochs=200,
         learning_rate=1e-4,
-        hidden_dim=4,
-        output_dir="data/MoE/ConvNeXT-MHC",
+        hidden_dim=2,
+        output_dir=f"data/MoE/{dataset_folder}",
         visualize=True,
         save_model=True,
         random_state=42,
