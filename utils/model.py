@@ -373,14 +373,17 @@ class SCQ1DAutoEncoder(keras.Model):
         return output, Zq, out_P_proj, vq_loss, perplexity
 
     # # Method to get just the latent sequence and one-hot encodings for inference
-    def encode(self, inputs):
-        """Encode inputs to latent sequence and one-hot cluster assignments."""
-        x = self.encoder(inputs)  # (batch_size, embedding_dim)
+    def encode_(self, inputs):
+        if isinstance(inputs, tuple):
+            x, labels = inputs
+        else:
+            x, labels = inputs, None
+        # Encoder: Compress input to embedding space
+        x = self.encoder(x)  # (batch_size, embedding_dim)
         x = tf.expand_dims(x, axis=1)  # (batch_size, 1, embedding_dim)
-        # Get quantized embedding and one-hot encodings
-        quantized, one_hot_encodings, _, _ = self.scq_layer(x)
-        # Return quantized latent sequence and one-hot encodings
-        return tf.squeeze(quantized, axis=1), tf.squeeze(one_hot_encodings, axis=1)
+        # SCQ: Quantize the embedding
+        Zq, out_P_proj, vq_loss, perplexity = self.scq_layer(x)
+        return Zq, out_P_proj, vq_loss, perplexity
 
     def train_step(self, data):
         # unpack features and (optional) labels
@@ -673,6 +676,18 @@ class MoEModel(tf.keras.Model):
         results = {m.name: m.result() for m in self.metrics}
         results.update({'loss': loss})
         return results
+
+    def predict(self, inputs):
+        if isinstance(inputs, tuple) and len(inputs) == 2:
+            # Input includes features and gates
+            inputs, gates = inputs
+            outputs = self.moe_layer((inputs, gates), training=False)
+        else:
+            # Input is just features, gates will be computed by gating network
+            outputs = self.moe_layer(inputs, training=False)
+
+        predictions = outputs['prediction']
+        return predictions
 
 
 def visualize_dataset_analysis(features, labels, cluster_probs, method='pca', raw_dot_plot=False, feature_indices=None):
