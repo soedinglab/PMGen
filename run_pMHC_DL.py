@@ -12,7 +12,7 @@ import seaborn as sns
 from sklearn.decomposition import PCA
 from collections import Counter
 
-from utils.model import SCQ1DAutoEncoder, MoEModel, BinaryMLP, TabularTransformer, EmbeddingCNN
+from utils.model import SCQ1DAutoEncoder, MoEModel, BinaryMLP, TabularTransformer, EmbeddingCNN, EnhancedMoEModel
 
 '''
 # Set TensorFlow logging level for more information
@@ -985,139 +985,242 @@ def train_and_evaluate_scqvae(
         dataset = dataset.prefetch(tf.data.AUTOTUNE)  # Prefetch for better performance
         return dataset
 
-    def load_data(data_path, val_data_path=None, test_size=0.2, random_state=42, input_type='latent1024'):
-        """
-        Load and prepare data for training with simplified validation.
+    # def load_data(data_path, val_data_path=None, test_size=0.2, random_state=42, input_type='latent1024'):
+    #     """
+    #     Load and prepare data for training with simplified validation.
+    #
+    #     Args:
+    #         data_path: Path to training data parquet file
+    #         val_data_path: Optional path to validation data
+    #         test_size: Fraction of data to use for validation if val_data_path is None
+    #         random_state: Random seed for reproducibility
+    #         input_type: Type of input data ('latent1024' or 'pMHC-sequence', 'attention51')
+    #
+    #     Returns:
+    #         X_train: Training data features with unique indices
+    #         X_test: Test/validation data features with unique indices
+    #         X_val: Validation data features with unique indices
+    #         y_train: Training data labels
+    #         y_test: Test/validation data labels
+    #         y_val: Validation data labels
+    #         seq_length: Length of each sequence including the index feature
+    #     """
+    #     print(f"Loading training data from {data_path}")
+    #     df = pd.read_parquet(data_path)
+    #
+    #     # Add original indices to track samples
+    #     df['original_idx'] = np.arange(len(df))
+    #
+    #     # Handle different input types
+    #     if input_type == 'latent1024':
+    #         columns = [col for col in df.columns if 'latent' in col]
+    #         if not columns:
+    #             raise ValueError("No latent columns found in the dataset")
+    #         seq_length = len(columns)
+    #         print(f"Found {seq_length} latent columns")
+    #     elif input_type == 'pMHC-sequence':
+    #         # Only check for peptide column as mhc_sequence is now optional
+    #         if 'peptide' not in df.columns:
+    #             raise ValueError("Required column 'peptide' not found in the dataset")
+    #         columns = ['peptide']
+    #         if 'mhc_sequence' in df.columns:
+    #             columns.append('mhc_sequence')
+    #         print(f"Using sequence columns: {columns}")
+    #         # Note: pMHC-sequence processing would be implemented here
+    #         raise NotImplementedError("pMHC-sequence input not yet implemented")
+    #     elif input_type == 'attention51':
+    #         # Check for attention columns
+    #         columns = [col for col in df.columns if 'attn_' in col]
+    #         if not columns:
+    #             raise ValueError("No attention columns found in the dataset")
+    #         seq_length = len(columns)
+    #         print(f"Found {seq_length} attention columns")
+    #     else:
+    #         raise ValueError(f"Unknown input_type: {input_type}. Expected 'latent1024' or 'pMHC-sequence'")
+    #
+    #     label_col = 'binding_label'
+    #     y = df[label_col].values
+    #
+    #     # Extract original indices to ensure uniqueness across splits
+    #     original_indices = df['original_idx'].values
+    #
+    #     # Extract features and clean data
+    #     X = df[columns].values
+    #     if np.isnan(X).any() or np.isinf(X).any():
+    #         print("Warning: Dataset contains NaN or Inf values. Replacing with zeros.")
+    #         X = np.nan_to_num(X)
+    #
+    #     # Add index as an additional feature
+    #     X_with_idx = np.column_stack((original_indices.reshape(-1, 1), X))
+    #
+    #     # Reshape with the added index column
+    #     seq_length_with_idx = seq_length + 1
+    #     X_with_idx = X_with_idx.reshape(-1, seq_length_with_idx)
+    #
+    #     print(f"Data shape with indices: {X_with_idx.shape}, Data range: [{np.min(X):.4f}, {np.max(X):.4f}]")
+    #     print(f"Label distribution: {np.bincount(y.astype(int) if y.dtype != object else [0])}")
+    #
+    #     # Initialize test variables
+    #     X_test = None
+    #     y_test = None
+    #
+    #     # Handle validation data if provided
+    #     if val_data_path:
+    #         try:
+    #             print(f"Loading validation data from {val_data_path}")
+    #             val_df = pd.read_parquet(val_data_path)
+    #
+    #             # Create unique indices for validation data by offsetting from training data
+    #             val_df['original_idx'] = np.arange(len(val_df)) + len(df) + 1000  # Add 1000 as buffer
+    #
+    #             val_X = val_df[columns].values
+    #             val_indices = val_df['original_idx'].values
+    #
+    #             if np.isnan(val_X).any() or np.isinf(val_X).any():
+    #                 print("Warning: Validation set contains NaN or Inf values. Replacing with zeros.")
+    #                 val_X = np.nan_to_num(val_X)
+    #
+    #             # Extract validation labels
+    #             if label_col is not None and label_col in val_df.columns:
+    #                 val_y = val_df[label_col].values
+    #             else:
+    #                 print("Warning: No binding label column found in validation data. Using dummy labels.")
+    #                 val_y = np.zeros(len(val_df))
+    #
+    #             # Add indices to validation features
+    #             X_test = np.column_stack((val_indices.reshape(-1, 1), val_X))
+    #             X_test = X_test.reshape(-1, seq_length_with_idx)
+    #             y_test = val_y
+    #
+    #             print(f"Validation data shape with indices: {X_test.shape}")
+    #             print(f"Validation label distribution: {np.bincount(y_test.astype(int) if y_test.dtype != object else [0])}")
+    #         except Exception as e:
+    #             print(f"Error loading validation data: {e}")
+    #             X_test = None
+    #             y_test = None
+    #
+    #     # Split training data for validation set (the indices will automatically be split correctly)
+    #     X_train, X_val, y_train, y_val = train_test_split(X_with_idx, y, test_size=test_size, random_state=random_state)
+    #     print(f"Training data shape with indices: {X_train.shape}, Validation data shape: {X_val.shape}")
+    #     print(f"Training label distribution: {np.bincount(y_train.astype(int) if y_train.dtype != object else [0])}")
+    #     print(f"Validation label distribution: {np.bincount(y_val.astype(int) if y_val.dtype != object else [0])}")
+    #
+    #     # Verify index uniqueness
+    #     all_indices = np.concatenate([
+    #         X_train[:, 0],
+    #         X_val[:, 0],
+    #         X_test[:, 0] if X_test is not None else np.array([])
+    #     ])
+    #     unique_indices = np.unique(all_indices)
+    #     if len(unique_indices) != len(all_indices):
+    #         print("Warning: Some indices are not unique across data splits!")
+    #     else:
+    #         print(f"Successfully created {len(unique_indices)} unique indices across all data splits")
+    #
+    #     return X_train, X_test, X_val, y_train, y_test, y_val, seq_length_with_idx
 
+    def load_data(data_path, input_type='latent1024'):
+        """ Load training and validation folds along with test datasets.
         Args:
-            data_path: Path to training data parquet file
-            val_data_path: Optional path to validation data
-            test_size: Fraction of data to use for validation if val_data_path is None
-            random_state: Random seed for reproducibility
-            input_type: Type of input data ('latent1024' or 'pMHC-sequence', 'attention51')
+            data_path (str): Path to the directory containing fold data
+            input_type (str): Type of input data to extract ('latent1024', 'attention51', etc.)
 
         Returns:
-            X_train: Training data features with unique indices
-            X_test: Test/validation data features with unique indices
-            X_val: Validation data features with unique indices
-            y_train: Training data labels
-            y_test: Test/validation data labels
-            y_val: Validation data labels
-            seq_length: Length of each sequence including the index feature
+            tuple: (folds, test1, test2) where:
+                - folds is a list of (X_train, y_train, X_val, y_val) tuples for each fold
+                - test1 is a tuple of (X_test1, y_test1) for stratified test data
+                - test2 is a tuple of (X_test2, y_test2) for single unique allele test data
         """
-        print(f"Loading training data from {data_path}")
-        df = pd.read_parquet(data_path)
+        print(f"Loading data from {data_path}")
 
-        # Add original indices to track samples
-        df['original_idx'] = np.arange(len(df))
+        # Initialize containers
+        folds = []
+        test1 = None
+        test2 = None
+        seq_length = 0
 
-        # Handle different input types
-        if input_type == 'latent1024':
-            columns = [col for col in df.columns if 'latent' in col]
-            if not columns:
-                raise ValueError("No latent columns found in the dataset")
-            seq_length = len(columns)
-            print(f"Found {seq_length} latent columns")
-        elif input_type == 'pMHC-sequence':
-            # Only check for peptide column as mhc_sequence is now optional
-            if 'peptide' not in df.columns:
-                raise ValueError("Required column 'peptide' not found in the dataset")
-            columns = ['peptide']
-            if 'mhc_sequence' in df.columns:
-                columns.append('mhc_sequence')
-            print(f"Using sequence columns: {columns}")
-            # Note: pMHC-sequence processing would be implemented here
-            raise NotImplementedError("pMHC-sequence input not yet implemented")
-        elif input_type == 'attention51':
-            # Check for attention columns
-            columns = [col for col in df.columns if 'attn_' in col]
-            if not columns:
-                raise ValueError("No attention columns found in the dataset")
-            seq_length = len(columns)
-            print(f"Found {seq_length} attention columns")
-        else:
-            raise ValueError(f"Unknown input_type: {input_type}. Expected 'latent1024' or 'pMHC-sequence'")
+        # Load all available folds
+        fold_index = 0
+        while True:
+            train_path = os.path.join(data_path, f"pep2vec_output_train_fold_{fold_index}.parquet")
+            val_path = os.path.join(data_path, f"pep2vec_output_val_fold_{fold_index}.parquet")
 
-        label_col = 'binding_label'
-        y = df[label_col].values
+            if not (os.path.exists(train_path) and os.path.exists(val_path)):
+                break
 
-        # Extract original indices to ensure uniqueness across splits
-        original_indices = df['original_idx'].values
+            # Load train and validation data for this fold
+            train_df = pd.read_parquet(train_path)
+            val_df = pd.read_parquet(val_path)
 
-        # Extract features and clean data
-        X = df[columns].values
-        if np.isnan(X).any() or np.isinf(X).any():
-            print("Warning: Dataset contains NaN or Inf values. Replacing with zeros.")
-            X = np.nan_to_num(X)
+            # Process features based on input_type
+            if input_type == 'latent1024':
+                train_features = [col for col in train_df.columns if 'latent' in col]
+                val_features = [col for col in val_df.columns if 'latent' in col]
+                seq_length = len(train_features)
 
-        # Add index as an additional feature
-        X_with_idx = np.column_stack((original_indices.reshape(-1, 1), X))
+                if not train_features or not val_features:
+                    raise ValueError(f"No latent features found in fold {fold_index}")
 
-        # Reshape with the added index column
-        seq_length_with_idx = seq_length + 1
-        X_with_idx = X_with_idx.reshape(-1, seq_length_with_idx)
+                X_train = train_df[train_features].values
+                X_val = val_df[val_features].values
 
-        print(f"Data shape with indices: {X_with_idx.shape}, Data range: [{np.min(X):.4f}, {np.max(X):.4f}]")
-        print(f"Label distribution: {np.bincount(y.astype(int) if y.dtype != object else [0])}")
+            elif input_type == 'attention51':
+                train_features = [col for col in train_df.columns if 'attn_' in col]
+                val_features = [col for col in val_df.columns if 'attn_' in col]
+                seq_length = len(train_features)
 
-        # Initialize test variables
-        X_test = None
-        y_test = None
+                if not train_features or not val_features:
+                    raise ValueError(f"No attention features found in fold {fold_index}")
 
-        # Handle validation data if provided
-        if val_data_path:
-            try:
-                print(f"Loading validation data from {val_data_path}")
-                val_df = pd.read_parquet(val_data_path)
+                X_train = train_df[train_features].values
+                X_val = val_df[val_features].values
 
-                # Create unique indices for validation data by offsetting from training data
-                val_df['original_idx'] = np.arange(len(val_df)) + len(df) + 1000  # Add 1000 as buffer
+            elif input_type == 'pMHC-sequence':
+                # Handle sequence data - placeholder for implementation
+                raise NotImplementedError("pMHC-sequence input type not yet implemented")
+            else:
+                raise ValueError(f"Unknown input_type: {input_type}")
 
-                val_X = val_df[columns].values
-                val_indices = val_df['original_idx'].values
+            # Extract labels if available
+            y_train = train_df['binding_label'].values if 'binding_label' in train_df.columns else None
+            y_val = val_df['binding_label'].values if 'binding_label' in val_df.columns else None
 
-                if np.isnan(val_X).any() or np.isinf(val_X).any():
-                    print("Warning: Validation set contains NaN or Inf values. Replacing with zeros.")
-                    val_X = np.nan_to_num(val_X)
+            # Append fold data
+            folds.append((X_train, y_train, X_val, y_val))
+            fold_index += 1
 
-                # Extract validation labels
-                if label_col is not None and label_col in val_df.columns:
-                    val_y = val_df[label_col].values
-                else:
-                    print("Warning: No binding label column found in validation data. Using dummy labels.")
-                    val_y = np.zeros(len(val_df))
+        print(f"Loaded {len(folds)} folds")
 
-                # Add indices to validation features
-                X_test = np.column_stack((val_indices.reshape(-1, 1), val_X))
-                X_test = X_test.reshape(-1, seq_length_with_idx)
-                y_test = val_y
+        # Load test1 (stratified) dataset
+        test1_path = os.path.join(data_path, "test1_stratified.csv")
+        if os.path.exists(test1_path):
+            test1_df = pd.read_csv(test1_path)
 
-                print(f"Validation data shape with indices: {X_test.shape}")
-                print(f"Validation label distribution: {np.bincount(y_test.astype(int) if y_test.dtype != object else [0])}")
-            except Exception as e:
-                print(f"Error loading validation data: {e}")
-                X_test = None
-                y_test = None
+            if input_type == 'latent1024':
+                test1_features = [col for col in test1_df.columns if 'latent' in col]
+                if test1_features:
+                    X_test1 = test1_df[test1_features].values
+                    y_test1 = test1_df['binding_label'].values if 'binding_label' in test1_df.columns else None
+                    test1 = (X_test1, y_test1)
+                    print(f"Loaded test1 dataset: {X_test1.shape}")
 
-        # Split training data for validation set (the indices will automatically be split correctly)
-        X_train, X_val, y_train, y_val = train_test_split(X_with_idx, y, test_size=test_size, random_state=random_state)
-        print(f"Training data shape with indices: {X_train.shape}, Validation data shape: {X_val.shape}")
-        print(f"Training label distribution: {np.bincount(y_train.astype(int) if y_train.dtype != object else [0])}")
-        print(f"Validation label distribution: {np.bincount(y_val.astype(int) if y_val.dtype != object else [0])}")
+        # Load test2 (single unique allele) dataset
+        test2_path = os.path.join(data_path, "test2_single_unique_allele.csv")
+        if os.path.exists(test2_path):
+            test2_df = pd.read_csv(test2_path)
 
-        # Verify index uniqueness
-        all_indices = np.concatenate([
-            X_train[:, 0],
-            X_val[:, 0],
-            X_test[:, 0] if X_test is not None else np.array([])
-        ])
-        unique_indices = np.unique(all_indices)
-        if len(unique_indices) != len(all_indices):
-            print("Warning: Some indices are not unique across data splits!")
-        else:
-            print(f"Successfully created {len(unique_indices)} unique indices across all data splits")
+            if input_type == 'latent1024':
+                test2_features = [col for col in test2_df.columns if 'latent' in col]
+                if test2_features:
+                    X_test2 = test2_df[test2_features].values
+                    y_test2 = test2_df['binding_label'].values if 'binding_label' in test2_df.columns else None
+                    test2 = (X_test2, y_test2)
+                    print(f"Loaded test2 dataset: {X_test2.shape}")
 
-        return X_train, X_test, X_val, y_train, y_test, y_val, seq_length_with_idx
+        seq_length_with_idx = seq_length
+
+        return folds, test1, test2, seq_length_with_idx
+
 
     # def load_data_hash(data_path, val_data_path=None, test_size=0.2, random_state=42, input_type='latent1024', cache=True):
     #     """
@@ -1666,181 +1769,168 @@ def train_and_evaluate_scqvae(
         return dataset.map(lambda x, y: x)
 
     # ======================= End of Helper Functions =======================
-
-    # --- Main Pipeline ---
-    print("--- Main Pipeline ---")
+    # --- Main Pipeline for Folds ---
+    print("--- Main Pipeline (Folds) ---")
 
     print("Loading/Generating Training Data...")
-    X_train, X_test, X_val, y_train, y_test, y_val, seq_length = load_data(data_path, val_data_path, test_size=test_size, random_state=random_state)
+    folds, test1, test2, seq_length = load_data(data_path, input_type=input_type)
 
-    # Preserve original labels before dropping
-    if output_data == "all":
-        original_data = np.concatenate([X_train, X_val], axis=0)
-        original_labels = np.concatenate([y_train, y_val], axis=0)
-    elif output_data == "train":
-        original_data = X_train
-        original_labels = y_train
-    else:
-        original_data = X_val
-        original_labels = y_val
+    for fold_idx, (X_train, y_train, X_val, y_val) in enumerate(folds):
+        if fold_idx == 0: # only for the first fold # TODO: remove this
+            print(f"\n=== Processing Fold {fold_idx + 1}/{len(folds)} ===")
 
-    # Initialize codebook with k-means
-    print("Initializing codebook with k-means...")
-    if init_k_means:
-        print("Initializing codebook with k-means")
-        initial_codebook = initialize_codebook_with_kmeans(X_train, num_embeddings, seq_length)
-    else:
-        print("Not initializing codebook with k-means")
-        initial_codebook = None
+            # Preserve original labels before dropping
+            if output_data == "all":
+                original_data = np.concatenate([X_train, X_val], axis=0)
+                original_labels = np.concatenate([y_train, y_val], axis=0)
+            elif output_data == "train":
+                original_data = X_train
+                original_labels = y_train
+            else:
+                original_data = X_val
+                original_labels = y_val
 
-    # Create datasets
-    print("Creating TensorFlow Datasets...")
-    train_dataset_y = create_dataset(X_train, y_train, batch_size=batch_size, is_training=True)
-    val_dataset_y = create_dataset(X_val, y_val, batch_size=batch_size, is_training=False)
-    test_dataset_y = create_dataset(X_test, y_test, batch_size=batch_size, is_training=False)
-    print("Datasets created.")
+            # Initialize codebook with k-means
+            print("Initializing codebook with k-means...")
+            if init_k_means:
+                print("Initializing codebook with k-means")
+                initial_codebook = initialize_codebook_with_kmeans(X_train, num_embeddings, seq_length)
+            else:
+                print("Not initializing codebook with k-means")
+                initial_codebook = None
 
-    # drop IDs
-    train_dataset = train_dataset_y.apply(remove_id)
-    val_dataset = val_dataset_y.apply(remove_id)
-    test_dataset = test_dataset_y.apply(remove_id)
-    seq_length = seq_length - 1 # Remove the index feature
+            # Create datasets
+            print("Creating TensorFlow Datasets...")
+            train_dataset_y = create_dataset(X_train, y_train, batch_size=batch_size, is_training=True)
+            val_dataset_y = create_dataset(X_val, y_val, batch_size=batch_size, is_training=False)
+            print("Datasets created.")
 
-    # remove labels
-    train_dataset = train_dataset.apply(remove_y)
-    val_dataset = val_dataset.apply(remove_y)
-    test_dataset = test_dataset.apply(remove_y)
+            # drop IDs
+            train_dataset = train_dataset_y.apply(remove_id)
+            val_dataset = val_dataset_y.apply(remove_id)
+            seq_length_fold = seq_length - 1  # Remove the index feature
 
+            # remove labels
+            train_dataset = train_dataset.apply(remove_y)
+            val_dataset = val_dataset.apply(remove_y)
 
-    # --- Model Instantiation ---
-    print("Building the SCQ1DAutoEncoder model...")
-    input_shape = (seq_length,)
-    model = SCQ1DAutoEncoder(
-        input_dim=input_shape,
-        num_embeddings=num_embeddings,
-        embedding_dim=embedding_dim,
-        commitment_beta=commitment_beta,
-        scq_params={
-            'lambda_reg': 1.0,          # Increased regularization
-            'discrete_loss': True,      # Use discrete loss
-            'reset_dead_codes': True,   # Reset underused vectors
-            'usage_threshold': 1e-4,    # Lower threshold
-            'reset_interval': 5         # Frequent resets
-        },
-        initial_codebook=initial_codebook,  # Pass k-means initialized codebook
-        num_classes=1, # set binary classification
-        cluster_lambda=10,  # Increased lambda for cluster loss
-    )
-    print("Model built.")
+            # --- Model Instantiation ---
+            print("Building the SCQ1DAutoEncoder model...")
+            input_shape = (seq_length_fold,)
+            model = SCQ1DAutoEncoder(
+                input_dim=input_shape,
+                num_embeddings=num_embeddings,
+                embedding_dim=embedding_dim,
+                commitment_beta=commitment_beta,
+                scq_params={
+                    'lambda_reg': 1.0,
+                    'discrete_loss': True,
+                    'reset_dead_codes': True,
+                    'usage_threshold': 1e-4,
+                    'reset_interval': 5
+                },
+                initial_codebook=initial_codebook,
+                num_classes=1,
+                cluster_lambda=10,
+            )
+            print("Model built.")
 
+            # --- Compile and Train ---
+            print("Compiling the model...")
+            model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
+            print("Model compiled.")
 
-    # --- Compile and Train ---
-    print("Compiling the model...")
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
-    print("Model compiled.")
+            # Determine minority class count
+            label_counts = Counter(y_train)
+            min_count = min(label_counts.values())
+            # Sample balanced indices
+            balanced_indices = []
+            for label in label_counts:
+                inds = np.where(y_train == label)[0]
+                sampled = np.random.choice(inds, min_count, replace=False)
+                balanced_indices.extend(sampled)
+            balanced_indices = np.array(balanced_indices)
+            # Create balanced dataset
+            X_bal = X_train[balanced_indices]
+            print(f"Balanced dataset shape: {X_bal.shape}")
+            y_bal = y_train[balanced_indices]
+            balanced_dataset_y = create_dataset(X_bal, y_bal, batch_size=batch_size, is_training=True)
+            balanced_dataset = balanced_dataset_y.apply(remove_id).apply(remove_y)
 
-    # Determine minority class count
-    label_counts = Counter(y_train)
-    min_count = min(label_counts.values())
-    # Sample balanced indices
-    balanced_indices = []
-    for label in label_counts:
-        inds = np.where(y_train == label)[0]
-        sampled = np.random.choice(inds, min_count, replace=False)
-        balanced_indices.extend(sampled)
-    balanced_indices = np.array(balanced_indices)
-    # Create balanced dataset
-    X_bal = X_train[balanced_indices]
-    y_bal = y_train[balanced_indices]
-    balanced_dataset_y = create_dataset(X_bal, y_bal, batch_size=batch_size, is_training=True)
-    balanced_dataset = balanced_dataset_y.apply(remove_id).apply(remove_y)
+            # Initial training on balanced set
+            print(f"Training on balanced set for {epochs} epochs...")
+            start_time = time.time()
+            history = model.fit(
+                balanced_dataset,
+                epochs=epochs,
+                validation_data=val_dataset
+            )
+            end_time = time.time()
+            print(f"Balanced training finished in {end_time - start_time:.2f} seconds.")
 
-    # Initial training on balanced set
-    print(f"Training on balanced set for {epochs} epochs...")
-    start_time = time.time()
-    history = model.fit(
-        balanced_dataset,
-        epochs=epochs,
-        validation_data=val_dataset
-    )
-    end_time = time.time()
-    print(f"Balanced training finished in {end_time - start_time:.2f} seconds.")
+            # Freeze encoder layers before fine-tuning
+            model.encoder.trainable = False
+            for layer in model.encoder.layers:
+                layer.trainable = False
 
-    # TODO Experimental
-    # Freeze encoder layers before fine-tuning
-    model.encoder.trainable = False
-    for layer in model.encoder.layers:
-        layer.trainable = False
+            # Recompile model after freezing layers
+            model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
 
-    # Recompile model after freezing layers
-    model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
+            # # Fine-tune on full dataset
+            # print(f"Fine-tuning on full dataset for {epochs} epochs...")
+            # start_time = time.time()
+            # history = model.fit(
+            #     train_dataset,
+            #     epochs=epochs // 10,
+            #     validation_data=val_dataset
+            # )
+            # end_time = time.time()
+            # print(f"Fine-tuning finished in {end_time - start_time:.2f} seconds.")
 
-    # Fine-tune on full dataset
-    print(f"Fine-tuning on full dataset for {epochs} epochs...")
-    start_time = time.time()
-    history = model.fit(
-        train_dataset,
-        epochs=epochs//10,
-        validation_data=val_dataset
-    )
-    end_time = time.time()
-    print(f"Fine-tuning finished in {end_time - start_time:.2f} seconds.")
+            # --- Evaluation and Visualization ---
+            print("\nEvaluating the model...")
 
-    # --- Evaluation and Visualization ---
-    print("\nEvaluating the model...")
+            if visualize:
+                print("\nPlotting training history...")
+                plot_training_metrics(history, save_path=os.path.join(output_dir, f'vqvae_training_metrics_fold{fold_idx}.png'))
+                print("\nPerforming example inference...")
+                try:
+                    example_batch, _ = next(iter(val_dataset))
+                except Exception:
+                    example_batch = next(iter(val_dataset))
+                output = model(example_batch, training=False)
+                reconstruction, quantized_latent, cluster_indices, vq_loss, perplexity = output
+                print("\nVisualizing reconstructions...")
+                plot_reconstructions(example_batch.numpy(), reconstruction.numpy(),
+                                     save_path=os.path.join(output_dir, f'vqvae_reconstructions_fold{fold_idx}.png'))
 
-    if visualize:
-        print("\nPlotting training history...")
-        plot_training_metrics(history, save_path=os.path.join(output_dir, 'vqvae_training_metrics.png'))
-        print("\nPerforming example inference...")
-        try:
-            example_batch, _ = next(iter(val_dataset))
-        except Exception:
-            example_batch = next(iter(val_dataset))
-        output = model(example_batch, training=False)
-        reconstruction, quantized_latent, cluster_indices, vq_loss, perplexity = output
-        print("\nVisualizing reconstructions...")
-        plot_reconstructions(example_batch.numpy(), reconstruction.numpy(),
-                             save_path=os.path.join(output_dir, 'vqvae_reconstructions.png'))
-        plot_reconstructions(example_batch.numpy(), reconstruction.numpy(),
-                             save_path=os.path.join(output_dir, 'vqvae_reconstructions.png'))
-        print("\nAnalyzing codebook usage...")
-        # # Use hard indices for codebook usage analysis (index 5 in model output)
-        # plot_codebook_usage(cluster_indices, num_embeddings, save_path=os.path.join(output_dir, 'codebook_usage.png'))
-        # print("\nAnalyzing cluster distribution from one-hot encodings...")
-        # # Use one-hot encodings for cluster distribution (index 2 in model output)
-        # # print number of samples
-        # print(f"Shape of cluster_indices: {cluster_indices.shape}")
-        # plot_cluster_distribution(cluster_indices, save_path=os.path.join(output_dir, 'cluster_distribution.png'))
+            # --- Save Model ---
+            if save_model:
+                model_dir = os.path.join(output_dir, f'model_fold{fold_idx}')
+                os.makedirs(model_dir, exist_ok=True)
+                model.save_weights(os.path.join(model_dir, 'vqvae_model_weights.h5'))
+                print(f"\nModel weights saved to '{os.path.join(model_dir, 'vqvae_model_weights.h5')}'")
 
-    # --- Save Model ---
-    if save_model:
-        model_dir = os.path.join(output_dir, 'model')
-        os.makedirs(model_dir, exist_ok=True)
-        model.save_weights(os.path.join(model_dir, 'vqvae_model_weights.h5'))
-        print(f"\nModel weights saved to '{os.path.join(model_dir, 'vqvae_model_weights.h5')}'")
+            # --- Extract Latent Space ---
+            print("\nExtracting quantized latent space...")
 
-    # --- Extract Latent Space ---
-    print("\nExtracting quantized latent space...")
+            if output_data == "train_val_combined":
+                out_ds = tf.data.Dataset.concatenate(train_dataset, val_dataset)
+                process_and_save(out_ds, f"combined_fold{fold_idx}", model, original_labels, output_dir, num_embeddings)
 
-    if output_data == "train_val_combined":
-        out_ds = tf.data.Dataset.concatenate(train_dataset, val_dataset)
-        process_and_save(out_ds, "combined", model, original_labels, output_dir, num_embeddings)
+            elif output_data in ("train", "val"):
+                ds_name = output_data
+                ds = train_dataset if ds_name == "train" else val_dataset
+                process_and_save(ds, f"{ds_name}_fold{fold_idx}", model, original_labels, output_dir, num_embeddings)
 
-    elif output_data in ("train", "val"):
-        ds_name = output_data
-        ds = train_dataset if ds_name == "train" else val_dataset
-        process_and_save(ds, ds_name, model, original_labels, output_dir, num_embeddings)
+            elif output_data == "train_val_seperate":
+                process_and_save(train_dataset, f"train_fold{fold_idx}", model, y_train, output_dir, num_embeddings)
+                process_and_save(val_dataset, f"val_fold{fold_idx}", model, y_val, output_dir, num_embeddings)
 
-    elif output_data == "train_val_seperate":
-        # Process train and val separately
-        process_and_save(train_dataset, "train", model,y_train , output_dir, num_embeddings)
-        process_and_save(val_dataset, "val", model,y_val , output_dir, num_embeddings)
+            else:
+                raise ValueError("Invalid output_data. Must be 'train', 'val', 'train_val_combined', or 'train_val_seperate'.")
 
-    else:
-        raise ValueError("Invalid output_data. Must be 'train', 'val', 'train_val_combined', or 'train_val_seperate'.")
-
-    print(f"\nAll requested splits processed. Outputs are in: {output_dir}")
+        print(f"\nAll requested splits processed for all folds. Outputs are in: {output_dir}")
 
     # out_dataset2 = None
     # if output_data == "train_val_combined":
@@ -2278,6 +2368,18 @@ def train_and_evaluate_moe(
                 loss=tf.keras.losses.BinaryCrossentropy(),
                 metrics=['accuracy'],
             )
+        elif model_type == 'MoE_2':
+            model = EnhancedMoEModel(
+                feature_dim,
+                hidden_dim=hidden_dim,
+                num_experts=num_experts,
+                use_hard_clustering=use_soft_clusters_as_gates,
+            )
+            model.compile(
+                optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
+                loss=tf.keras.losses.BinaryCrossentropy(),
+                metrics=['accuracy'],
+            )
         elif model_type == 'MLP':
             model = BinaryMLP(
                 feature_dim,
@@ -2350,14 +2452,6 @@ def train_and_evaluate_moe(
             **kwargs
         )
 
-        # print(f"Training model for {epochs} epochs...")
-        # history = model.fit(
-        #     train_dataset,
-        #     validation_data=val_dataset,
-        #     epochs=epochs,
-        #     **kwargs
-        # )
-
         eval_results = model.evaluate(val_dataset)
         print(f"Validation loss: {eval_results[0]:.4f}, accuracy: {eval_results[1]:.4f}")
         # Get predictions
@@ -2392,37 +2486,37 @@ def train_and_evaluate_moe(
 
 
 if __name__ == "__main__":
-    dataset_folder = "ConvNeXT-MHC"
+    dataset_folder = "NetMHCIpan_dataset"
     # # Call train_and_evaluate_scqvae without trying to unpack return values
-    train_and_evaluate_scqvae(
-        data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_fold_0.parquet",
-        val_data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_val_fold_0.parquet",
-        input_type="latent1024",
-        num_embeddings=32,
-        embedding_dim=64,
-        batch_size=32,
-        epochs=200,
-        output_dir=f"data/SCQvae/{dataset_folder}",
-        visualize=True,
-        save_model=True,
-        init_k_means=False,
-        random_state=42,
-        test_size=0.2,
-        output_data="train_val_seperate",  # Options: "val", "train", "train_val_seperate"
-    )
-    m = "MLP" # Options: "MoE", "MLP", "transformer", "CNN"
+    # train_and_evaluate_scqvae(
+    #     data_path=f"data/Pep2Vec/{dataset_folder}_new_subset",
+    #     # val_data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_val_fold_0.parquet",
+    #     input_type="latent1024",
+    #     num_embeddings=64,
+    #     embedding_dim=64,
+    #     batch_size=128,
+    #     epochs=5,
+    #     output_dir=f"data/SCQvae/{dataset_folder}",
+    #     visualize=True,
+    #     save_model=True,
+    #     init_k_means=False,
+    #     random_state=42,
+    #     test_size=0.2,
+    #     output_data="train_val_seperate",  # Options: "val", "train", "train_val_seperate"
+    # )
+    m = "CNN" # Options: "MoE", "MLP", "transformer", "CNN"
     print(f"Running {m}")
     train_and_evaluate_moe(
-        data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_train.parquet",
-        val_data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_val.parquet",
-        # data_path="data/Pep2Vec/NetMHCpan_dataset_new_subset/pep2vec_output_fold_0.parquet",
-        # val_data_path="data/Pep2Vec/NetMHCpan_dataset_new_subset/pep2vec_output_val_fold_0.parquet",
+        # data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_train_fold0.parquet",
+        # val_data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_val_fold0.parquet",
+        data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_train_fold_0.parquet",
+        val_data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_val_fold_0.parquet",
         input_type="latent",
         model_type=m,
-        batch_size=64,
-        epochs=200,
+        batch_size=128,
+        epochs=5,
         learning_rate=1e-4,
-        hidden_dim=2,
+        hidden_dim=4,
         output_dir=f"data/MoE/{dataset_folder}",
         visualize=True,
         save_model=True,
