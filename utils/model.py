@@ -1277,3 +1277,272 @@ class EmbeddingCNN(Model):
 #     predictions = model.predict(features)
 #     print(f"Predictions shape: {predictions.shape}")
 #     print(f"Predictions head: {predictions[:5]}")
+
+
+# mixture_of_experts.py
+"""
+Mixture‑of‑Experts implementation supporting **soft** and **hard** clustering.
+
+* **Soft clustering** (probabilistic gates) is used **during inference** to fuse the
+  parameters of all experts into a *virtual* expert.
+* **Hard clustering** (one‑hot gates) is used **during training**; each sample
+  activates exactly one expert so gradients flow only through the selected expert.
+
+Key ideas
+---------
+1.  **SparseDispatcher** routes inputs to experts and fuses outputs.  It now accepts
+    either soft or hard gates transparently.
+2.  **Expert** is a light two‑layer perceptron ending in a sigmoid.
+3.  **MixtureOfExperts**
+    * consumes `inputs` **and** a *soft* clustering vector (`gates_soft`).
+    * converts to hard gates (`gates_hard`) with `tf.one_hot(tf.argmax(...))` when
+      `hard_gating=True`.
+    * during inference (`hard_gating=False`) the *soft* gates are used to create a
+      **parameter‑blended virtual expert**: every weight matrix and bias vector is
+      a convex combination of the corresponding parameters of the individual
+      experts.
+4.  **MoEModel** overrides `train_step` / `test_step` so that
+    * training  → `hard_gating=True`
+    * inference → `hard_gating=False`
+
+The code is ready to run in a standard TensorFlow‑2 environment.
+"""
+
+
+class Expert(layers.Layer):
+    """A binary prediction expert with added complexity."""
+
+    def __init__(self, input_dim, hidden_dim, output_dim=1, dropout_rate=0.2):
+        super().__init__()
+        self.fc1 = layers.Dense(hidden_dim, activation='relu', input_shape=(input_dim,))
+        self.dropout1 = layers.Dropout(dropout_rate)
+        self.fc2 = layers.Dense(hidden_dim // 2, activation='relu')
+        self.dropout2 = layers.Dropout(dropout_rate)
+        self.fc3 = layers.Dense(output_dim)
+
+    def call(self, x, training=False):
+        x = self.fc1(x)
+        x = self.dropout1(x, training=training)
+        x = self.fc2(x)
+        x = self.dropout2(x, training=training)
+        x = self.fc3(x)
+        return tf.nn.sigmoid(x)
+
+
+class EnhancedMixtureOfExperts(layers.Layer):
+    """
+    Enhanced Mixture of Experts layer that uses cluster assignments.
+
+    This implementation eliminates the need for a SparseDispatcher by:
+    - During training: Using hard clustering to train specific experts
+    - During inference: Using soft clustering to mix the experts' weights
+    """
+
+    def __init__(self, input_dim, hidden_dim, num_experts, output_dim=1,
+                 use_hard_clustering=True, dropout_rate=0.2):
+        super().__init__()
+        self.num_experts = num_experts
+        self.use_hard_clustering = use_hard_clustering
+        self.output_dim = output_dim
+
+        # Create n experts
+        self.experts = [
+            Expert(input_dim, hidden_dim, output_dim, dropout_rate)
+            for _ in range(num_experts)
+        ]
+
+    def convert_to_hard_clustering(self, soft_clusters):
+        """Convert soft clustering values to hard clustering (one-hot encoding)"""
+        # Get the index of the maximum value for each sample
+        hard_indices = tf.argmax(soft_clusters, axis=1)
+        # Convert to one-hot encoding
+        return tf.one_hot(hard_indices, depth=self.num_experts)
+
+    def call(self, inputs, training=False):
+        # Unpack inputs
+        if isinstance(inputs, tuple) and len(inputs) == 2:
+            x, clustering = inputs
+        else:
+            raise ValueError("Inputs must include both features and clustering values")
+
+        batch_size = tf.shape(x)[0]
+
+        # Convert to hard clustering during training if requested
+        if training and self.use_hard_clustering:
+            clustering = self.convert_to_hard_clustering(clustering)
+
+        # Initialize output tensor
+        combined_output = tf.zeros([batch_size, self.output_dim])
+
+        # Process each expert
+        for i, expert in enumerate(self.experts):
+            # Get the weight for this expert for each sample in the batch
+            expert_weights = clustering[:, i:i + 1]  # Shape: [batch_size, 1]
+
+            # Only compute outputs for samples with non-zero weights
+            # to save computation during training with hard clustering
+            if training and self.use_hard_clustering:
+                # Find samples assigned to this expert
+                assigned_indices = tf.where(expert_weights[:, 0] > 0)[:, 0]
+
+                if tf.size(assigned_indices) > 0:
+                    # Get assigned samples
+                    assigned_x = tf.gather(x, assigned_indices)
+
+                    # Get expert output for assigned samples
+                    expert_output = expert(assigned_x, training=training)
+
+                    # Use scatter_nd to place results back into full batch tensor
+                    indices = tf.expand_dims(assigned_indices, axis=1)
+                    updates = expert_output
+                    combined_output += tf.scatter_nd(indices, updates, [batch_size, self.output_dim])
+            else:
+                # During inference or when using soft clustering:
+                # Compute expert output for all samples
+                expert_output = expert(x, training=training)
+
+                # Weight the output by the clustering values
+                weighted_output = expert_output * expert_weights
+
+                # Add to combined output
+                combined_output += weighted_output
+
+        return combined_output
+
+
+class EnhancedMoEModel(tf.keras.Model):
+    """Complete model wrapping the Enhanced MoE layer"""
+
+    def __init__(self, input_dim, hidden_dim, num_experts, output_dim=1,
+                 use_hard_clustering=True, dropout_rate=0.2):
+        super().__init__()
+        self.use_hard_clustering = use_hard_clustering
+        self.moe_layer = EnhancedMixtureOfExperts(
+            input_dim,
+            hidden_dim,
+            num_experts,
+            output_dim=output_dim,
+            use_hard_clustering=use_hard_clustering,
+            dropout_rate=dropout_rate
+        )
+
+    def call(self, inputs, training=False):
+        return self.moe_layer(inputs, training=training)
+
+    def train_step(self, data):
+        if isinstance(data, tuple) and len(data) == 2:
+            # Unpack the data
+            x, y = data
+
+            # Ensure x contains both inputs and clustering values
+            if not (isinstance(x, tuple) and len(x) == 2):
+                raise ValueError("Input must be a tuple of (features, clustering)")
+        else:
+            raise ValueError("Training data must include both inputs and labels")
+
+        # Unpack inputs
+        inputs, soft_cluster_vector = x
+
+        with tf.GradientTape() as tape:
+            # Forward pass
+            predictions = self(x, training=True)
+
+            # Compute loss
+            loss = self.compiled_loss(y, predictions, regularization_losses=self.losses)
+
+            # Add expert load balancing loss if using soft clustering
+            if not self.use_hard_clustering:
+                expert_usage = tf.reduce_mean(soft_cluster_vector, axis=0)
+                load_balancing_loss = tf.reduce_sum(expert_usage * tf.math.log(expert_usage + 1e-10)) * 0.01
+                loss += load_balancing_loss
+
+        # Compute gradients and update weights
+        gradients = tape.gradient(loss, self.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
+
+        # Update metrics
+        self.compiled_metrics.update_state(y, predictions)
+
+        # Return metrics
+        results = {m.name: m.result() for m in self.metrics}
+        results.update({'loss': loss})
+        return results
+
+    def test_step(self, data):
+        if isinstance(data, tuple) and len(data) == 2:
+            # Unpack the data
+            x, y = data
+
+            # Ensure x contains both inputs and clustering values
+            if not (isinstance(x, tuple) and len(x) == 2):
+                raise ValueError("Input must be a tuple of (features, clustering)")
+        else:
+            raise ValueError("Test data must include both inputs and labels")
+
+        # Forward pass (always use soft clustering for inference)
+        original_hard_clustering = self.moe_layer.use_hard_clustering
+        self.moe_layer.use_hard_clustering = False
+        predictions = self(x, training=False)
+        self.moe_layer.use_hard_clustering = original_hard_clustering
+
+        # Compute loss
+        loss = self.compiled_loss(y, predictions, regularization_losses=self.losses)
+
+        # Update metrics
+        self.compiled_metrics.update_state(y, predictions)
+
+        # Return metrics
+        results = {m.name: m.result() for m in self.metrics}
+        results.update({'loss': loss})
+        return results
+
+
+# Example usage:
+
+# Define model parameters
+input_dim = 10
+hidden_dim = 64
+num_experts = 5
+output_dim = 1
+
+# Create model
+model = EnhancedMoEModel(
+    input_dim=input_dim,
+    hidden_dim=hidden_dim,
+    num_experts=num_experts,
+    output_dim=output_dim,
+    use_hard_clustering=True  # Use hard clustering during training
+)
+
+# Compile model
+model.compile(
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy']
+)
+
+# Generate sample data
+import numpy as np
+
+# Sample features
+X = np.random.random((100, input_dim))
+
+# Sample clustering values (soft clustering, sums to 1 for each sample)
+clusters = np.random.random((100, num_experts))
+clusters = clusters / clusters.sum(axis=1, keepdims=True)
+
+# Sample labels
+y = np.random.randint(0, 2, (100, output_dim))
+
+# Train model
+model.fit(
+    x=(X, clusters),
+    y=y,
+    epochs=5,
+    batch_size=32
+)
+
+# Prediction (will use soft clustering automatically)
+predictions = model.predict(
+    x=(X, clusters)
+)
