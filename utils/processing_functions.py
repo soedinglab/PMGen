@@ -1058,6 +1058,92 @@ def fetch_polypeptide_sequences(pdb_path):
                 sequences[chain_id] = sequence
     return sequences
 
+# leave out k ids, then create the first fold (train and validation) then add one ID and create fold 2 from fold 1 and added data and so on.
+# the added data is sampled from the rest equal to total / k
+def create_progressive_k_fold_cross_validation(df, k=5, target_col="Label", id_col="id",
+                                             random_state=42, save_to_disk=False,
+                                             output_dir=None):
+    """
+    Creates k folds for cross-validation where each fold progressively adds IDs to training.
+
+    Strategy:
+    1. First fold leaves out k IDs for validation
+    2. Each subsequent fold adds one ID to training and samples a new validation set
+    3. Each fold maintains approximately equal size (total/k samples)
+
+    Args:
+        df (pd.DataFrame): The input dataframe.
+        k (int): The number of folds.
+        target_col (str): The name of the column containing target labels.
+        id_col (str): The name of the column containing the IDs.
+        random_state (int): Random state for reproducibility.
+        save_to_disk (bool): Whether to save the folds to disk.
+        output_dir (str): Directory to save fold files if save_to_disk is True.
+
+    Returns:
+        list: A list of tuples, where each tuple contains (train_df, val_df) for a fold.
+    """
+    # Get unique IDs
+    unique_ids = df[id_col].unique()
+
+    if len(unique_ids) < k:
+        raise ValueError(f"Not enough unique IDs ({len(unique_ids)}) for {k} folds")
+
+    # Shuffle IDs
+    np.random.seed(random_state)
+    np.random.shuffle(unique_ids)
+
+    # Calculate target size for each fold
+    target_fold_size = len(df) // k
+
+    # Initialize list to store folds
+    folds = []
+
+    # Start with k IDs left out
+    validation_ids = unique_ids[:k]
+    training_ids = np.array([])
+
+    for fold_idx in range(k):
+        # For each fold, add one ID to training and get a new validation ID
+        if fold_idx > 0:
+            # Add one ID from validation to training
+            training_ids = np.append(training_ids, validation_ids[0])
+            # Remove the first ID from validation
+            validation_ids = validation_ids[1:]
+
+        # Get all data for current training and validation IDs
+        train_mask = df[id_col].isin(training_ids)
+        val_mask = df[id_col].isin([validation_ids[0]])  # Use only the first validation ID
+
+        train_df = df[train_mask].copy()
+        val_df = df[val_mask].copy()
+
+        # Add samples from remaining IDs to reach target fold size
+        remaining_ids = [id for id in unique_ids if id not in training_ids and id not in [validation_ids[0]]]
+
+        if len(train_df) < target_fold_size and remaining_ids:
+            samples_needed = target_fold_size - len(train_df)
+            additional_mask = df[id_col].isin(remaining_ids)
+            additional_df = df[additional_mask].sample(
+                n=min(samples_needed, sum(additional_mask)),
+                random_state=random_state+fold_idx
+            )
+            train_df = pd.concat([train_df, additional_df])
+
+        # Reset indices
+        train_df = train_df.reset_index(drop=True)
+        val_df = val_df.reset_index(drop=True)
+
+        folds.append((train_df, val_df, validation_ids))
+
+        # Save folds to disk if requested
+        if save_to_disk and output_dir:
+            os.makedirs(output_dir, exist_ok=True)
+            train_df.to_parquet(f"{output_dir}/train_fold_{fold_idx}.parquet")
+            val_df.to_parquet(f"{output_dir}/val_fold_{fold_idx}.parquet")
+
+    return folds
+
 
 # write a function that produces 5 fold cross validation from the df, each fold must have one allele to be left out completely and produce a stratified train and validation based on the label.
 # take into account the subset proportion.
