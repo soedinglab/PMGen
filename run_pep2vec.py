@@ -4,8 +4,7 @@ import random
 import sys
 import pandas as pd
 import numpy as np
-from utils.processing_functions import create_k_fold_leave_one_out_stratified_cross_validation
-from sklearn.model_selection import train_test_split
+from utils.processing_functions import create_k_fold_leave_one_out_stratified_cross_validation, create_progressive_k_fold_cross_validation
 
 
 def load_data(file_path, sep=","):
@@ -241,7 +240,7 @@ def add_binding_label_streaming(input_path, map_csv, output_dir=None, is_netmhcp
         stream_file(input_path)
 
 
-def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, process_fold_n=None):
+def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, process_fold_n=None, chunk_n=0):
     """
     Prepare datasets for Pep2Vec training and evaluation.
 
@@ -270,28 +269,25 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, 
     # Define paths and columns based on dataset
     is_netmhcpan = dataset_name.lower() == "netmhcpan_dataset"
 
-    if is_netmhcpan:
-        # NetMHCpan has a single cleaned_data.csv file
-        cleaned_data_path = os.path.join(dataset_dir, f"combined_data_{mhc_type[-1]}.csv")
-        print(cleaned_data_path)
-        columns = ["allele", "long_mer", "convoluted_label", "assigned_label", "MHC_class"]
-    else:
+    if not is_netmhcpan:
         # Other datasets have separate train/test files
         paths = {
             'train': os.path.join(dataset_dir, "train.csv"),
             'test': os.path.join(dataset_dir, "test_all.csv")
         }
         columns = ["allele", "long_mer", "binding_label", "mhc_sequence"]
+        rename_map = {"allele": "allotype", "long_mer": "peptide"}  # required for pep2vec
 
     # Column configuration
     # Rename label column for NetMHCpan
     if is_netmhcpan:
+        # NetMHCpan has a single cleaned_data.csv file
+        # cleaned_data_path = os.path.join(dataset_dir, f"combined_data_{mhc_type[-1]}.csv")
+        cleaned_data_path = os.path.join(dataset_dir, f"chunks_I/subset_balanced_300k.csv")
+        print(cleaned_data_path)
         rename_map = {"allele": "allotype", "Peptide": "peptide"}  # required for pep2vec
         rename_map["assigned_label"] = "binding_label"
-        # TODO if mhc_sequence is required it must be further processed
         columns = ["allotype", "peptide", "binding_label"]
-    else:
-        rename_map = {"allele": "allotype", "long_mer": "peptide"}  # required for pep2vec
 
     # Load and process datasets
     datasets = {}
@@ -302,9 +298,9 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, 
         # df = load_data(cleaned_data_path)
         usecols = ['allele', 'peptide', 'assigned_label', 'mhc_sequence', 'mhc_class']
         rng = random.Random(42)
-        df = pd.read_csv(cleaned_data_path,
-                         usecols=usecols,
-                         skiprows=lambda i: i > 0 and rng.random() > subset_prop)
+        df = pd.read_csv(cleaned_data_path, usecols=usecols)
+        if subset_prop < 1.0:
+            df = df.sample(frac=subset_prop, random_state=42)
         df_map = df.rename(columns={'assigned_label': 'binding_label', 'peptide': 'long_mer'})
         print(f"Full dataset shape: {df.shape}")
 
@@ -350,11 +346,7 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, 
     else:
         # Regular dataset processing with separate files
         for name, path in paths.items():
-            rng = random.Random(42)
-            df = pd.read_csv(path,
-                             skiprows=lambda i: i > 0 and rng.random() > subset_prop)
-            print(f"{name.capitalize()} dataset shape: {df.shape}")
-
+            df = pd.read_csv(path)
             df_map = df.copy()
 
             # Process dataframe
@@ -381,25 +373,20 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, 
     # define test1 and test2 datasets
     # test1: balanced sampling with equal representation from each binding_label
     train_df_ = datasets['train']
-    unique_labels = train_df_['binding_label'].unique()
 
-    # Determine sample size (minimum of 100 or smallest class size)
-    samples_per_label = min(100, min(train_df_['binding_label'].value_counts()))
+    # Determine sample size (minimum of 1000 or smallest class size)
+    samples_per_label = min(1000, min(train_df_['binding_label'].value_counts()))
     print(f"Creating balanced test1 with {samples_per_label} samples per label")
 
     # Sample equally from each label
-    test1_indices = []
-    for label in unique_labels:
-        label_samples = train_df_[train_df_['binding_label'] == label].sample(
-            n=samples_per_label, random_state=42
-        )
-        test1_indices.extend(label_samples.index.tolist())
+    test1 = (train_df_
+             .groupby('binding_label', group_keys=False)  # no re‑index shuffle
+             .sample(n=samples_per_label, random_state=42)  # vectorised sample
+             .reset_index(drop=True))
 
-    # Create test1 from the selected indices
-    test1 = train_df_.loc[test1_indices].reset_index(drop=True)
+    train_mask = ~train_df_.index.isin(test1.index)
+    train_updated = train_df_.loc[train_mask]
 
-    # Create updated training set by dropping the selected indices
-    train_updated = train_df_.drop(index=test1_indices).reset_index(drop=True)
     datasets['train'] = train_updated
 
     # test2: select allele with lowest sample count
@@ -411,9 +398,9 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, 
     if process_fold_n == 0 or process_fold_n == None:
         # Create k-fold cross-validation splits
         k = n_folds
-        folds = create_k_fold_leave_one_out_stratified_cross_validation(
+        folds = create_progressive_k_fold_cross_validation(
             datasets['train'], k=k, target_col="binding_label",
-            id_col="allotype", train_size=0.8, subset_prop=subset_prop
+            id_col="allotype"
         )
 
         held_out_ids_path = os.path.join(folds_dir, "held_out_ids.txt")
@@ -453,33 +440,34 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, 
         test2.to_csv(os.path.join(folds_dir, "test2_single_unique_allele.csv"), index=False, header=True)
         print("Test dataset saved.")
 
+    # load the fold csv files for specified fold
+    train_path = os.path.join(folds_dir, f"train_set_fold_{process_fold_n}.csv")
+    val_path = os.path.join(folds_dir, f"val_set_fold_{process_fold_n}.csv")
+    if os.path.exists(train_path) and os.path.exists(val_path):
+        datasets['train'] = pd.read_csv(train_path, index_col=0)
+        datasets['val'] = pd.read_csv(val_path, index_col=0)
     else:
-        # load the fold csv files for specified fold
-        fold_idx = process_fold_n
-        train_path = os.path.join(folds_dir, f"train_set_fold_{fold_idx}.csv")
-        val_path = os.path.join(folds_dir, f"val_set_fold_{fold_idx}.csv")
-        if os.path.exists(train_path) and os.path.exists(val_path):
-            datasets['train'] = pd.read_csv(train_path, index_col=0)
-            datasets['val'] = pd.read_csv(val_path, index_col=0)
-        else:
-            raise FileNotFoundError(f"Fold files not found for fold {fold_idx}")
+        raise FileNotFoundError(f"Fold files not found for fold {process_fold_n}")
 
     ################### Pep2Vec ###################
     # automatically get the number of cores
     num_cores = max(os.cpu_count() - 2, 1)
     # TODO only process one fold? with process_fold_n
-    for i in range(n_folds):
-        if process_fold_n != None and process_fold_n == i:
-            continue
+    if process_fold_n == None:
+        for i in range(n_folds):
+            for split in ['train', 'val']:
+                csv_in = os.path.join(folds_dir, f"{split}_set_fold_{i}.csv")
+                out_pq = os.path.join(output_dir, f"pep2vec_output_{split}_fold_{i}.parquet")
+                if os.path.exists(csv_in):
+                    os.system(
+                        f"./Pep2Vec/pep2vec.bin --num_threads {num_cores} --dataset {csv_in} --output_location {out_pq} --mhctype {mhc_type}")
+    else:
         for split in ['train', 'val']:
-            csv_in = os.path.join(folds_dir, f"{split}_set_fold_{i}.csv")
-            out_pq = os.path.join(output_dir, f"pep2vec_output_{split}_fold_{i}.parquet")
+            csv_in = os.path.join(folds_dir, f"{split}_set_fold_{process_fold_n}.csv")
+            out_pq = os.path.join(output_dir, f"pep2vec_output_{split}_fold_{process_fold_n}.parquet")
             if os.path.exists(csv_in):
                 os.system(
                     f"./Pep2Vec/pep2vec.bin --num_threads {num_cores} --dataset {csv_in} --output_location {out_pq} --mhctype {mhc_type}")
-        # Only run one fold if specified
-        if process_fold_n is not None:
-            break
 
     # # test set
     test_file = os.path.join(folds_dir, "test_original.csv")
@@ -507,27 +495,37 @@ if __name__ == "__main__":
 
     print(f"Running for Fold {fold_n}")
 
-    df_map = main("Conbotnet", "mhc2", 0.001, 5, fold_n)
-    add_binding_label_streaming(
-        input_path=os.path.join("data", "Pep2Vec", "Conbotnet"),
-        map_csv=df_map,
-        output_dir=os.path.join("data", "Pep2Vec", "Conbotnet_new_subset"),
-        is_netmhcpan=False
-    )
-
-    # main("ConvNeXT-MHC", "mhc1", 0.001, 5)
-    # add_binding_label(
-    #     df_path=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC"),
-    #     train_path=os.path.join("data", "ConvNeXT-MHC", "train.csv"),
-    #     output_dir=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC_new_subset")
+    # main("Conbotnet", "mhc2", 1, 5, fold_n)
+    # df_map = None
+    # if not df_map:
+    #     df1 = pd.read_csv(os.path.join("data", "Conbotnet", "train.csv"),)
+    #     df2 = pd.read_csv(os.path.join("data", "Conbotnet", "test_all.csv"),)
+    #     df_map = pd.concat([df1, df2])
+    # add_binding_label_streaming(
+    #     input_path=os.path.join("data", "Pep2Vec", "Conbotnet"),
+    #     map_csv=df_map,
+    #     output_dir=os.path.join("data", "Pep2Vec", "Conbotnet_new_subset"),
+    #     is_netmhcpan=False
     # )
+
+    df_map = main("ConvNeXT-MHC", "mhc1", 0.01, 5, fold_n)
+    # df_map = None
+    # if not df_map:
+    #     df1 = pd.read_csv(os.path.join("data", "ConvNeXT-MHC", "train.csv"),)
+    #     df2 = pd.read_csv(os.path.join("data", "ConvNeXT-MHC", "test_all.csv"),)
+    #     df_map = pd.concat([df1, df2])
+    add_binding_label_streaming(
+        input_path=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC"),
+        map_csv=df_map,
+        output_dir=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC_new_subset")
+    )
     # main("NetMHCpan_dataset", "mhc2", 0.01, 5)
     # add_binding_label(
     #     df_path=os.path.join("data", "Pep2Vec", "NetMHCIIpan_dataset"),
     #     train_path=os.path.join("data", "NetMHCIIpan_dataset", "cleaned_data.csv"),
     #     output_dir=os.path.join("data", "Pep2Vec", "NetMHCIpan_dataset_new_subset")
     # )
-    # df_map = main("NetMHCpan_dataset", "mhc1", 0.001, 5, fold_n)
+    # df_map = main("NetMHCpan_dataset", "mhc1", 1, 5, fold_n)
     # add_binding_label_streaming(
     #     input_path=os.path.join("data", "Pep2Vec", "NetMHCpan_dataset"),
     #     map_csv=df_map,
