@@ -1,5 +1,7 @@
 import json
 import os
+import uuid
+
 import tensorflow as tf
 import numpy as np
 import pandas as pd
@@ -936,7 +938,6 @@ def train_and_evaluate_scqvae(
     save_model=True,
     init_k_means=False,
     random_state=42,
-    test_size=0.2,
     output_data="train_val_seperate", # Options: "val", "train", "train_val_seperate"
     **kwargs
 ):
@@ -1120,106 +1121,143 @@ def train_and_evaluate_scqvae(
     #     return X_train, X_test, X_val, y_train, y_test, y_val, seq_length_with_idx
 
     def load_data(data_path, input_type='latent1024'):
-        """ Load training and validation folds along with test datasets.
-        Args:
-            data_path (str): Path to the directory containing fold data
-            input_type (str): Type of input data to extract ('latent1024', 'attention51', etc.)
+            """ Load training and validation folds along with test datasets.
+            Args:
+                data_path (str): Path to the directory containing fold data
+                input_type (str): Type of input data to extract ('latent1024', 'attention51', etc.)
 
-        Returns:
-            tuple: (folds, test1, test2) where:
-                - folds is a list of (X_train, y_train, X_val, y_val) tuples for each fold
-                - test1 is a tuple of (X_test1, y_test1) for stratified test data
-                - test2 is a tuple of (X_test2, y_test2) for single unique allele test data
-        """
-        print(f"Loading data from {data_path}")
+            Returns:
+                tuple: (folds, test1, test2, seq_length_with_idx)
+            """
+            print(f"[load_data] Loading data from {data_path}")
 
-        # Initialize containers
-        folds = []
-        test1 = None
-        test2 = None
-        seq_length = 0
+            # Initialize containers
+            folds = []
+            seq_length = 0
 
-        # Load all available folds
-        fold_index = 0
-        while True:
-            train_path = os.path.join(data_path, f"pep2vec_output_train_fold_{fold_index}.parquet")
-            val_path = os.path.join(data_path, f"pep2vec_output_val_fold_{fold_index}.parquet")
+            # Load all available folds
+            fold_index = 0
+            while True:
+                train_path = os.path.join(data_path, f"pep2vec_output_train_fold_{fold_index}.parquet")
+                val_path = os.path.join(data_path, f"pep2vec_output_val_fold_{fold_index}.parquet")
 
-            if not (os.path.exists(train_path) and os.path.exists(val_path)):
-                break
+                print(f"[load_data] Checking for fold {fold_index}:")
+                print(f"  train_path: {train_path} exists: {os.path.exists(train_path)}")
+                print(f"  val_path:   {val_path} exists: {os.path.exists(val_path)}")
 
-            # Load train and validation data for this fold
-            train_df = pd.read_parquet(train_path)
-            val_df = pd.read_parquet(val_path)
+                if not (os.path.exists(train_path) and os.path.exists(val_path)):
+                    print(f"[load_data] No more folds found at index {fold_index}.")
+                    break
 
-            # Process features based on input_type
-            if input_type == 'latent1024':
-                train_features = [col for col in train_df.columns if 'latent' in col]
-                val_features = [col for col in val_df.columns if 'latent' in col]
-                seq_length = len(train_features)
+                # Load train and validation data for this fold
+                train_df = pd.read_parquet(train_path)
+                val_df = pd.read_parquet(val_path)
+                print(f"[load_data] Fold {fold_index} train_df shape: {train_df.shape}, columns: {list(train_df.columns)}")
+                print(f"[load_data] Fold {fold_index} val_df shape: {val_df.shape}, columns: {list(val_df.columns)}")
 
-                if not train_features or not val_features:
-                    raise ValueError(f"No latent features found in fold {fold_index}")
+                num_rows_train = len(train_df)
+                num_rows_val = len(val_df)
+                # drop rows with NaN binding_label
+                train_df = train_df.dropna(subset=['binding_label'])
+                val_df = val_df.dropna(subset=['binding_label'])
+                print(f"Number of dropped rows in train_df: {num_rows_train - len(train_df)}")
+                print(f"Number of dropped rows in val_df: {num_rows_val - len(val_df)}")
 
-                X_train = train_df[train_features].values
-                X_val = val_df[val_features].values
+                # Process features based on input_type
+                if input_type == 'latent1024':
+                    train_features = [col for col in train_df.columns if 'latent' in col]
+                    val_features = [col for col in val_df.columns if 'latent' in col]
 
-            elif input_type == 'attention51':
-                train_features = [col for col in train_df.columns if 'attn_' in col]
-                val_features = [col for col in val_df.columns if 'attn_' in col]
-                seq_length = len(train_features)
+                    print(f"[load_data] Fold {fold_index} latent features: {train_features}")
+                    if not train_features or not val_features:
+                        raise ValueError(f"No latent features found in fold {fold_index}")
 
-                if not train_features or not val_features:
-                    raise ValueError(f"No attention features found in fold {fold_index}")
+                    X_train = train_df[train_features].values
+                    X_val = val_df[val_features].values
+                    seq_length = len(train_features)
 
-                X_train = train_df[train_features].values
-                X_val = val_df[val_features].values
+                elif input_type == 'attention51':
+                    train_features = [col for col in train_df.columns if 'attn_' in col]
+                    val_features = [col for col in val_df.columns if 'attn_' in col]
 
-            elif input_type == 'pMHC-sequence':
-                # Handle sequence data - placeholder for implementation
-                raise NotImplementedError("pMHC-sequence input type not yet implemented")
-            else:
-                raise ValueError(f"Unknown input_type: {input_type}")
+                    print(f"[load_data] Fold {fold_index} attention features: {train_features}")
+                    if not train_features or not val_features:
+                        raise ValueError(f"No attention features found in fold {fold_index}")
 
-            # Extract labels if available
-            y_train = train_df['binding_label'].values if 'binding_label' in train_df.columns else None
-            y_val = val_df['binding_label'].values if 'binding_label' in val_df.columns else None
+                    X_train = train_df[train_features].values
+                    X_val = val_df[val_features].values
+                    seq_length = len(train_features)
 
-            # Append fold data
-            folds.append((X_train, y_train, X_val, y_val))
-            fold_index += 1
+                elif input_type == 'pMHC-sequence':
+                    print(f"[load_data] Fold {fold_index} pMHC-sequence not implemented")
+                    raise NotImplementedError("pMHC-sequence input type not yet implemented")
+                else:
+                    raise ValueError(f"Unknown input_type: {input_type}")
 
-        print(f"Loaded {len(folds)} folds")
+                print(f"[load_data] Fold {fold_index} X_train shape: {X_train.shape}, X_val shape: {X_val.shape}")
 
-        # Load test1 (stratified) dataset
-        test1_path = os.path.join(data_path, "test1_stratified.csv")
-        if os.path.exists(test1_path):
-            test1_df = pd.read_csv(test1_path)
+                # Check for idx column
+                print(f"[load_data] Fold {fold_index} train_df has 'idx': {'idx' in train_df.columns}")
+                print(f"[load_data] Fold {fold_index} val_df has 'idx': {'idx' in val_df.columns}")
 
-            if input_type == 'latent1024':
-                test1_features = [col for col in test1_df.columns if 'latent' in col]
-                if test1_features:
-                    X_test1 = test1_df[test1_features].values
-                    y_test1 = test1_df['binding_label'].values if 'binding_label' in test1_df.columns else None
-                    test1 = (X_test1, y_test1)
-                    print(f"Loaded test1 dataset: {X_test1.shape}")
+                # Extract labels if available
+                y_train = train_df['binding_label'].values if 'binding_label' in train_df.columns else None
+                y_val = val_df['binding_label'].values if 'binding_label' in val_df.columns else None
 
-        # Load test2 (single unique allele) dataset
-        test2_path = os.path.join(data_path, "test2_single_unique_allele.csv")
-        if os.path.exists(test2_path):
-            test2_df = pd.read_csv(test2_path)
+                # Append fold data
+                folds.append((X_train, y_train, X_val, y_val))
+                fold_index += 1
 
-            if input_type == 'latent1024':
-                test2_features = [col for col in test2_df.columns if 'latent' in col]
-                if test2_features:
-                    X_test2 = test2_df[test2_features].values
-                    y_test2 = test2_df['binding_label'].values if 'binding_label' in test2_df.columns else None
-                    test2 = (X_test2, y_test2)
-                    print(f"Loaded test2 dataset: {X_test2.shape}")
+            print(f"[load_data] Loaded {len(folds)} folds")
 
-        seq_length_with_idx = seq_length
+            X_test1, y_test1 = None, None
+            X_test2, y_test2 = None, None
 
-        return folds, test1, test2, seq_length_with_idx
+            # Load test1 (stratified) dataset
+            test1_path = os.path.join(data_path, "pep2vec_output_test1_stratified.parquet")
+            print(f"[load_data] Checking for test1: {test1_path} exists: {os.path.exists(test1_path)}")
+            if os.path.exists(test1_path):
+                test1_df = pd.read_parquet(test1_path)
+                print(f"[load_data] test1_df shape: {test1_df.shape}, columns: {list(test1_df.columns)}")
+
+                if input_type == 'latent1024':
+                    latent_cols = [col for col in test1_df.columns if 'latent' in col]
+                    test1_df['idx_feature'] = [int(uuid.uuid4().int) % (2 ** 31 - 1) for _ in range(len(test1_df))]
+                    if 'binding_label' in test1_df.columns:
+                        y_test1 = test1_df['binding_label'].values
+                        select_cols = ['idx_feature'] + latent_cols
+                    else:
+                        select_cols = ['idx_feature'] + latent_cols
+                    print(f"[load_data] test1 selected columns: {select_cols}")
+                    if latent_cols:
+                        X_test1 = test1_df[select_cols].values
+                        print(f"[load_data] Loaded test1 dataset: {X_test1.shape}")
+                        print(f"[load_data] test1_df has 'idx_feature': {'idx_feature' in test1_df.columns}")
+
+            # Load test2 (single unique allele) dataset
+            test2_path = os.path.join(data_path, "pep2vec_output_test2_single_unique_allele.parquet")
+            print(f"[load_data] Checking for test2: {test2_path} exists: {os.path.exists(test2_path)}")
+            if os.path.exists(test2_path):
+                test2_df = pd.read_parquet(test2_path)
+                print(f"[load_data] test2_df shape: {test2_df.shape}, columns: {list(test2_df.columns)}")
+
+                if input_type == 'latent1024':
+                    latent_cols = [col for col in test2_df.columns if 'latent' in col]
+                    test2_df['idx_feature'] = [int(uuid.uuid4().int) % (2 ** 31 - 1) for _ in range(len(test2_df))]
+                    if 'binding_label' in test2_df.columns:
+                        y_test2 = test2_df['binding_label'].values
+                        select_cols = ['idx_feature'] + latent_cols
+                    else:
+                        select_cols = ['idx_feature'] + latent_cols
+                    print(f"[load_data] test2 selected columns: {select_cols}")
+                    if latent_cols:
+                        X_test2 = test2_df[select_cols].values
+                        print(f"[load_data] Loaded test2 dataset: {X_test2.shape}")
+                        print(f"[load_data] test2_df has 'idx_feature': {'idx_feature' in test2_df.columns}")
+
+            print(f"[load_data] seq_length: {seq_length}")
+
+            return folds, X_test1, y_test1, X_test2, y_test2, seq_length
 
 
     # def load_data_hash(data_path, val_data_path=None, test_size=0.2, random_state=42, input_type='latent1024', cache=True):
@@ -1698,7 +1736,6 @@ def train_and_evaluate_scqvae(
     def process_and_save(dataset: tf.data.Dataset,
                          split_name: str,
                          model: tf.keras.Model,
-                         original_labels: np.ndarray,
                          output_dir: str,
                          num_embeddings: int):
         """
@@ -1708,18 +1745,22 @@ def train_and_evaluate_scqvae(
         quantized_latents = []
         cluster_indices_soft = []
         cluster_indices_hard = []
+        labels = []
 
         # Extract latent codes for every batch
-        for batch in dataset:
+        for batch_X, batch_y in dataset:
             Zq, out_P_proj, _, _ = model.encode_(batch)
             quantized_latents.append(Zq.numpy())
             cluster_indices_soft.append(out_P_proj.numpy())
             cluster_indices_hard.append(tf.argmax(out_P_proj, axis=-1).numpy())
+            labels.append(batch_y.numpy())
+
 
         # Concatenate across batches
         quantized_latent = np.concatenate(quantized_latents, axis=0)
         soft_probs = np.concatenate(cluster_indices_soft, axis=0)
         hard_assign = np.concatenate(cluster_indices_hard, axis=0)
+        labels = np.concatenate(labels, axis=0)
 
         # Build DataFrame
         records = []
@@ -1735,9 +1776,13 @@ def train_and_evaluate_scqvae(
 
             rec['hard_cluster'] = int(hard_assign[i])
             # binding label if available
-            if i < len(original_labels):
-                lbl = original_labels[i]
-                rec['binding_label'] = float(lbl[0] if hasattr(lbl, 'shape') and lbl.shape else lbl)
+            if i < len(labels):
+                lbl = labels[i]
+                # Handle scalar, 0-dim, or 1-dim arrays
+                if isinstance(lbl, (np.ndarray, list)) and np.asarray(lbl).size > 0:
+                    rec['binding_label'] = float(np.asarray(lbl).flatten()[0])
+                else:
+                    rec['binding_label'] = float(lbl)
             else:
                 rec['binding_label'] = np.nan
             records.append(rec)
@@ -1768,12 +1813,40 @@ def train_and_evaluate_scqvae(
         """Remove the last column (y) from the feature tensor."""
         return dataset.map(lambda x, y: x)
 
+    def plot_PCA(zq, y, num_embeddings, save_path=None):
+        """Plot PCA of the quantized latents."""
+        pca = PCA(n_components=2)
+        # print the shape of zq
+        print(f"zq shape: {zq.shape}")
+        # reshape from B, 1, N to B, N
+        if len(zq.shape) == 3 and zq.shape[1] == 1:
+            zq = zq.reshape(zq.shape[0], zq.shape[2])
+        zq_2d = pca.fit_transform(zq)
+
+        plt.figure(figsize=(10, 8))
+        scatter = plt.scatter(zq_2d[:, 0], zq_2d[:, 1], c=y, cmap='viridis', alpha=0.5)
+        plt.colorbar(scatter, label='Binding Label')
+        plt.title(f'PCA of Quantized Latents (num_embeddings={num_embeddings})')
+        plt.xlabel('PCA Component 1')
+        plt.ylabel('PCA Component 2')
+        if save_path:
+            plt.savefig(save_path)
+        if visualize:
+            plt.show()
+        else:
+            plt.close()
+
     # ======================= End of Helper Functions =======================
     # --- Main Pipeline for Folds ---
     print("--- Main Pipeline (Folds) ---")
 
     print("Loading/Generating Training Data...")
-    folds, test1, test2, seq_length = load_data(data_path, input_type=input_type)
+    folds, X_test1, y_test1, X_test2, y_test2, seq_length = load_data(data_path, input_type=input_type)
+
+    print(f"Folds shape: {[f[0].shape for f in folds]}")
+    print(f"X_test1 shape: {X_test1.shape if X_test1 is not None else 'None'}")
+    print(f"X_test2 shape: {X_test2.shape if X_test2 is not None else 'None'}")
+    print(f"Sequence length: {seq_length}")
 
     for fold_idx, (X_train, y_train, X_val, y_val) in enumerate(folds):
         if fold_idx == 0: # only for the first fold # TODO: remove this
@@ -1801,22 +1874,13 @@ def train_and_evaluate_scqvae(
 
             # Create datasets
             print("Creating TensorFlow Datasets...")
-            train_dataset_y = create_dataset(X_train, y_train, batch_size=batch_size, is_training=True)
-            val_dataset_y = create_dataset(X_val, y_val, batch_size=batch_size, is_training=False)
+            train_dataset = create_dataset(X_train, y_train, batch_size=batch_size, is_training=True)
+            val_dataset = create_dataset(X_val, y_val, batch_size=batch_size, is_training=False)
             print("Datasets created.")
-
-            # drop IDs
-            train_dataset = train_dataset_y.apply(remove_id)
-            val_dataset = val_dataset_y.apply(remove_id)
-            seq_length_fold = seq_length - 1  # Remove the index feature
-
-            # remove labels
-            train_dataset = train_dataset.apply(remove_y)
-            val_dataset = val_dataset.apply(remove_y)
 
             # --- Model Instantiation ---
             print("Building the SCQ1DAutoEncoder model...")
-            input_shape = (seq_length_fold,)
+            input_shape = (seq_length,)
             model = SCQ1DAutoEncoder(
                 input_dim=input_shape,
                 num_embeddings=num_embeddings,
@@ -1824,14 +1888,12 @@ def train_and_evaluate_scqvae(
                 commitment_beta=commitment_beta,
                 scq_params={
                     'lambda_reg': 1.0,
-                    'discrete_loss': True,
+                    'discrete_loss': False,
                     'reset_dead_codes': True,
                     'usage_threshold': 1e-4,
                     'reset_interval': 5
                 },
-                initial_codebook=initial_codebook,
-                num_classes=1,
-                cluster_lambda=10,
+                cluster_lambda=1
             )
             print("Model built.")
 
@@ -1840,22 +1902,31 @@ def train_and_evaluate_scqvae(
             model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate))
             print("Model compiled.")
 
-            # Determine minority class count
+            # Create balanced dataset for training
+            print("Creating balanced dataset...")
             label_counts = Counter(y_train)
             min_count = min(label_counts.values())
-            # Sample balanced indices
             balanced_indices = []
             for label in label_counts:
                 inds = np.where(y_train == label)[0]
                 sampled = np.random.choice(inds, min_count, replace=False)
                 balanced_indices.extend(sampled)
             balanced_indices = np.array(balanced_indices)
+
             # Create balanced dataset
             X_bal = X_train[balanced_indices]
-            print(f"Balanced dataset shape: {X_bal.shape}")
             y_bal = y_train[balanced_indices]
+            print(f"Balanced dataset shape: {X_bal.shape}")
             balanced_dataset_y = create_dataset(X_bal, y_bal, batch_size=batch_size, is_training=True)
-            balanced_dataset = balanced_dataset_y.apply(remove_id).apply(remove_y)
+            balanced_dataset = balanced_dataset_y.map(lambda x, y: x)  # Remove labels
+
+            # Print shapes for debugging
+            for batch in balanced_dataset.take(1):
+                print(f"Balanced dataset batch shape: {batch.shape}")
+                break
+            for features, labels in val_dataset.take(1):
+                print(f"Validation dataset batch features shape: {features.shape}, labels shape: {labels.shape}")
+                break
 
             # Initial training on balanced set
             print(f"Training on balanced set for {epochs} epochs...")
@@ -1895,7 +1966,7 @@ def train_and_evaluate_scqvae(
                 plot_training_metrics(history, save_path=os.path.join(output_dir, f'vqvae_training_metrics_fold{fold_idx}.png'))
                 print("\nPerforming example inference...")
                 try:
-                    example_batch, _ = next(iter(val_dataset))
+                    example_batch, y_batch = next(iter(val_dataset))
                 except Exception:
                     example_batch = next(iter(val_dataset))
                 output = model(example_batch, training=False)
@@ -1903,6 +1974,10 @@ def train_and_evaluate_scqvae(
                 print("\nVisualizing reconstructions...")
                 plot_reconstructions(example_batch.numpy(), reconstruction.numpy(),
                                      save_path=os.path.join(output_dir, f'vqvae_reconstructions_fold{fold_idx}.png'))
+                Zq, out_P_proj, vq_loss, perplexity = model.encode_(example_batch)
+                print("\nVisualizing encoder output...")
+                plot_PCA(Zq.numpy(), y_batch, num_embeddings,
+                         save_path=os.path.join(output_dir, f'scqvae_PCA_fold{fold_idx}.png'))
 
             # --- Save Model ---
             if save_model:
@@ -1924,8 +1999,8 @@ def train_and_evaluate_scqvae(
                 process_and_save(ds, f"{ds_name}_fold{fold_idx}", model, original_labels, output_dir, num_embeddings)
 
             elif output_data == "train_val_seperate":
-                process_and_save(train_dataset, f"train_fold{fold_idx}", model, y_train, output_dir, num_embeddings)
-                process_and_save(val_dataset, f"val_fold{fold_idx}", model, y_val, output_dir, num_embeddings)
+                process_and_save(train_dataset, f"train_fold{fold_idx}", model, output_dir, num_embeddings)
+                process_and_save(val_dataset, f"val_fold{fold_idx}", model, output_dir, num_embeddings)
 
             else:
                 raise ValueError("Invalid output_data. Must be 'train', 'val', 'train_val_combined', or 'train_val_seperate'.")
@@ -2100,6 +2175,7 @@ def train_and_evaluate_moe(
             y_all = np.concatenate([y, y_val])
             soft_clusters_all = np.vstack([soft_clusters, soft_clusters_val])
             pca_proj = pca.fit_transform(X_all)
+            print("Unique labels in y_all:", np.unique(y_all))
 
             df_vis = pd.DataFrame({
                 'PC1': pca_proj[:, 0],
@@ -2255,6 +2331,10 @@ def train_and_evaluate_moe(
         print(f"Loading training data from {data_path}")
         df = pd.read_parquet(data_path)
 
+        # drop rows with nan labels
+        if 'binding_label' in df.columns:
+            df = df.dropna(subset=['binding_label'])
+
         # Extract features from latent columns
         if input_type == 'latent':
             # Get all latent columns
@@ -2290,6 +2370,7 @@ def train_and_evaluate_moe(
         if use_soft_clusters_as_gates:
             soft_cluster_cols = [col for col in df.columns if col.startswith('soft_cluster_')]
             if not soft_cluster_cols:
+                print(f"Dataframe columns: {df.columns}")
                 raise ValueError("No soft_cluster_* columns found in the dataset")
             print(f"Found {len(soft_cluster_cols)} soft cluster probability columns")
             soft_clusters = df[soft_cluster_cols].values
@@ -2307,6 +2388,11 @@ def train_and_evaluate_moe(
         if val_data_path:
             print(f"Loading validation data from {val_data_path}")
             df_val = pd.read_parquet(val_data_path)
+
+            # drop rows with nan labels
+            if 'binding_label' in df_val.columns:
+                df_val = df_val.dropna(subset=['binding_label'])
+
             if input_type == 'latent':
                 # Use same latent columns as training
                 X_val = df_val[latent_cols].values
@@ -2411,44 +2497,51 @@ def train_and_evaluate_moe(
             raise ValueError(f"Unsupported model_type: {model_type}")
 
         # --- create a balanced dataset ---
-        label_counts = Counter(y)
-        min_count = min(label_counts.values())
-        balanced_indices = np.concatenate([
-            np.random.choice(np.where(y == lbl)[0], min_count, replace=False)
-            for lbl in label_counts
-        ])
-        np.random.shuffle(balanced_indices)
-        X_bal = X[balanced_indices]
-        soft_bal = soft_clusters[balanced_indices]
-        y_bal = y[balanced_indices]
-
-        train_bal_ds = tf.data.Dataset.from_tensor_slices(((X_bal, soft_bal), y_bal)) \
-            .shuffle(buffer_size=1000, seed=random_state) \
-            .batch(batch_size)
-
-        # --- Train the model ---
-        print(f"Training on balanced set for {epochs} epochs...")
-        history = model.fit(
-            train_bal_ds,
-            validation_data=val_dataset,
-            epochs=epochs,
-            **kwargs
-        )
+        # label_counts = Counter(y)
+        # min_count = min(label_counts.values())
+        # balanced_indices = np.concatenate([
+        #     np.random.choice(np.where(y == lbl)[0], min_count, replace=False)
+        #     for lbl in label_counts
+        # ])
+        # np.random.shuffle(balanced_indices)
+        # X_bal = X[balanced_indices]
+        # soft_bal = soft_clusters[balanced_indices]
+        # y_bal = y[balanced_indices]
+        #
+        # train_bal_ds = tf.data.Dataset.from_tensor_slices(((X_bal, soft_bal), y_bal)) \
+        #     .shuffle(buffer_size=1000, seed=random_state) \
+        #     .batch(batch_size)
+        #
+        # # --- Train the model ---
+        # print(f"Training on balanced set for {epochs} epochs...")
+        # history = model.fit(
+        #     train_bal_ds,
+        #     validation_data=val_dataset,
+        #     epochs=epochs,
+        #     **kwargs
+        # )
 
         # TODO experimental
-        # Freeze initial half of layers, then fine-tune on full dataset
-        for layer in model.layers[: len(model.layers) // 2]:
-            layer.trainable = False
+        # # Freeze initial half of layers, then fine-tune on full dataset
+        # for layer in model.layers[: len(model.layers) // 2]:
+        #     layer.trainable = False
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
             loss=tf.keras.losses.BinaryCrossentropy(),
-            metrics=['accuracy'],
+            metrics=["accuracy"],
+                # tf.keras.metrics.BinaryAccuracy(),
+                # tf.keras.metrics.Precision(),
+                # tf.keras.metrics.Recall(),
+                # tf.keras.metrics.AUC()
+            # ],
+            # run_eagerly=False
         )
+        # tf.config.run_functions_eagerly(True)
         print(f"Fine-tuning on full dataset for {epochs} epochs...")
         history = model.fit(
             train_dataset,
             validation_data=val_dataset,
-            epochs=epochs//5,
+            epochs=epochs,
             **kwargs
         )
 
@@ -2487,42 +2580,41 @@ def train_and_evaluate_moe(
 
 if __name__ == "__main__":
     dataset_folder = "NetMHCIpan_dataset"
-    # # Call train_and_evaluate_scqvae without trying to unpack return values
-    # train_and_evaluate_scqvae(
-    #     data_path=f"data/Pep2Vec/{dataset_folder}_new_subset",
-    #     # val_data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_val_fold_0.parquet",
-    #     input_type="latent1024",
-    #     num_embeddings=64,
-    #     embedding_dim=64,
-    #     batch_size=128,
-    #     epochs=5,
-    #     output_dir=f"data/SCQvae/{dataset_folder}",
-    #     visualize=True,
-    #     save_model=True,
-    #     init_k_means=False,
-    #     random_state=42,
-    #     test_size=0.2,
-    #     output_data="train_val_seperate",  # Options: "val", "train", "train_val_seperate"
-    # )
-    m = "CNN" # Options: "MoE", "MLP", "transformer", "CNN"
+    # Call train_and_evaluate_scqvae without trying to unpack return values
+    train_and_evaluate_scqvae(
+        data_path=f"data/Pep2Vec/{dataset_folder}_new_subset",
+        # val_data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_val_fold_0.parquet",
+        input_type="latent1024",
+        num_embeddings=32,
+        embedding_dim=32,
+        batch_size=1024,
+        epochs=20,
+        output_dir=f"data/SCQvae/{dataset_folder}",
+        visualize=True,
+        save_model=True,
+        init_k_means=False,
+        random_state=42,
+        output_data="train_val_seperate",  # Options: "val", "train", "train_val_seperate"
+    )
+    m = "MLP" # Options: "MoE", "MLP", "transformer", "CNN"
     print(f"Running {m}")
     train_and_evaluate_moe(
-        # data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_train_fold0.parquet",
-        # val_data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_val_fold0.parquet",
-        data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_train_fold_0.parquet",
-        val_data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_val_fold_0.parquet",
+        data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_train_fold0.parquet",
+        val_data_path=f"data/SCQvae/{dataset_folder}/quantized_outputs_val_fold0.parquet",
+        # data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_train_fold_0.parquet",
+        # val_data_path=f"data/Pep2Vec/{dataset_folder}_new_subset/pep2vec_output_val_fold_0.parquet",
         input_type="latent",
         model_type=m,
         batch_size=128,
-        epochs=5,
+        epochs=10,
         learning_rate=1e-4,
-        hidden_dim=4,
+        hidden_dim=16,
         output_dir=f"data/MoE/{dataset_folder}",
         visualize=True,
         save_model=True,
         random_state=42,
-        test_size=0.2,
-        use_soft_clusters_as_gates=False,
+        test_size=0.2, # fraction of data to use for validation if no val_data_path
+        use_soft_clusters_as_gates=True,
     )
 
 

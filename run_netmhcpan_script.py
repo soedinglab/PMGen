@@ -718,7 +718,7 @@ def combine_datasets_(results_dir, include_dropped=False):
 
 def run_(arg1, arg2):
     # mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/"
-    mhcI_path = "data/NetMHCpan_dataset/NetMHCpan_train/"
+    # mhcI_path = "data/NetMHCpan_dataset/NetMHCpan_train/"
     # tmp_path = "data/NetMHCpan_dataset/tmp/"
     tmp_path = "data/NetMHCpan_dataset/tmp_I/"
     results_dir = "data/NetMHCpan_dataset/results_I/"

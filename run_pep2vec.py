@@ -395,7 +395,11 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, 
     test2 = datasets['train'][datasets['train']['allotype'] == lowest_allele].copy()
     datasets['train'] = datasets['train'][datasets['train']['allotype'] != lowest_allele].reset_index(drop=True)
 
-    if process_fold_n == 0 or process_fold_n == None:
+    if process_fold_n:
+        process_fold_n = int(process_fold_n)
+        if process_fold_n < 0 or process_fold_n >= n_folds:
+            raise ValueError(f"Invalid fold number: {process_fold_n}. Must be between 0 and {n_folds - 1}.")
+    if not process_fold_n or process_fold_n == 0:
         # Create k-fold cross-validation splits
         k = n_folds
         folds = create_progressive_k_fold_cross_validation(
@@ -439,21 +443,30 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, 
         test1.to_csv(os.path.join(folds_dir, "test1_stratified.csv"), index=False, header=True)
         test2.to_csv(os.path.join(folds_dir, "test2_single_unique_allele.csv"), index=False, header=True)
         print("Test dataset saved.")
-
-    # load the fold csv files for specified fold
-    train_path = os.path.join(folds_dir, f"train_set_fold_{process_fold_n}.csv")
-    val_path = os.path.join(folds_dir, f"val_set_fold_{process_fold_n}.csv")
-    if os.path.exists(train_path) and os.path.exists(val_path):
-        datasets['train'] = pd.read_csv(train_path, index_col=0)
-        datasets['val'] = pd.read_csv(val_path, index_col=0)
     else:
-        raise FileNotFoundError(f"Fold files not found for fold {process_fold_n}")
+        print("no folds created, using the existing ones")
+
+        # load the fold csv files for specified fold
+        train_path = os.path.join(folds_dir, f"train_set_fold_{process_fold_n}.csv")
+        val_path = os.path.join(folds_dir, f"val_set_fold_{process_fold_n}.csv")
+        if os.path.exists(train_path) and os.path.exists(val_path):
+            datasets['train'] = pd.read_csv(train_path, index_col=0)
+            datasets['val'] = pd.read_csv(val_path, index_col=0)
+        else:
+            raise FileNotFoundError(f"Fold files not found for fold {process_fold_n}")
 
     ################### Pep2Vec ###################
     # automatically get the number of cores
     num_cores = max(os.cpu_count() - 2, 1)
     # TODO only process one fold? with process_fold_n
-    if process_fold_n == None:
+    if process_fold_n:
+        for split in ['train', 'val']:
+            csv_in = os.path.join(folds_dir, f"{split}_set_fold_{process_fold_n}.csv")
+            out_pq = os.path.join(output_dir, f"pep2vec_output_{split}_fold_{process_fold_n}.parquet")
+            if os.path.exists(csv_in):
+                os.system(
+                    f"./Pep2Vec/pep2vec.bin --num_threads {num_cores} --dataset {csv_in} --output_location {out_pq} --mhctype {mhc_type}")
+    else:
         for i in range(n_folds):
             for split in ['train', 'val']:
                 csv_in = os.path.join(folds_dir, f"{split}_set_fold_{i}.csv")
@@ -461,13 +474,6 @@ def main(dataset_name="Conbotnet", mhc_type="mhc2", subset_prop=1.0, n_folds=5, 
                 if os.path.exists(csv_in):
                     os.system(
                         f"./Pep2Vec/pep2vec.bin --num_threads {num_cores} --dataset {csv_in} --output_location {out_pq} --mhctype {mhc_type}")
-    else:
-        for split in ['train', 'val']:
-            csv_in = os.path.join(folds_dir, f"{split}_set_fold_{process_fold_n}.csv")
-            out_pq = os.path.join(output_dir, f"pep2vec_output_{split}_fold_{process_fold_n}.parquet")
-            if os.path.exists(csv_in):
-                os.system(
-                    f"./Pep2Vec/pep2vec.bin --num_threads {num_cores} --dataset {csv_in} --output_location {out_pq} --mhctype {mhc_type}")
 
     # # test set
     test_file = os.path.join(folds_dir, "test_original.csv")
@@ -508,17 +514,17 @@ if __name__ == "__main__":
     #     is_netmhcpan=False
     # )
 
-    df_map = main("ConvNeXT-MHC", "mhc1", 0.01, 5, fold_n)
+    # df_map = main("ConvNeXT-MHC", "mhc1", 0.01, 5, fold_n)
     # df_map = None
     # if not df_map:
     #     df1 = pd.read_csv(os.path.join("data", "ConvNeXT-MHC", "train.csv"),)
     #     df2 = pd.read_csv(os.path.join("data", "ConvNeXT-MHC", "test_all.csv"),)
     #     df_map = pd.concat([df1, df2])
-    add_binding_label_streaming(
-        input_path=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC"),
-        map_csv=df_map,
-        output_dir=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC_new_subset")
-    )
+    # add_binding_label_streaming(
+    #     input_path=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC"),
+    #     map_csv=df_map,
+    #     output_dir=os.path.join("data", "Pep2Vec", "ConvNeXT-MHC_new_subset")
+    # )
     # main("NetMHCpan_dataset", "mhc2", 0.01, 5)
     # add_binding_label(
     #     df_path=os.path.join("data", "Pep2Vec", "NetMHCIIpan_dataset"),
