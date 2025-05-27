@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm                          # progress bars
 from typing import Dict
-from processing_functions import create_progressive_k_fold_cross_validation
+from processing_functions import create_progressive_k_fold_cross_validation, create_k_fold_leave_one_out_stratified_cv
 
 # ---------------------------------------------------------------------
 # 1. CONFIGURATION – adjust if your paths change
@@ -168,11 +168,17 @@ def create_test_set(df: pd.DataFrame, samples_per_label: int=10000) -> dict[str,
 
     # test2: remove lowest-frequency allele from train to form test2
     allele_counts = datasets['train']['allele'].value_counts()
-    lowest_allele = allele_counts.idxmin()
-    test2 = datasets['train'][datasets['train']['allele'] == lowest_allele].copy()
+    n_test2_samples = 0
+    i = 1
+    while n_test2_samples < 1000:
+        i += 1
+        lowest_alleles = allele_counts.nsmallest(n=i).index.tolist()
+        test2 = datasets['train'][datasets['train']['allele'].isin(lowest_alleles)].copy()
+        n_test2_samples = test2.shape[0]
+
     datasets['train'] = (
         datasets['train']
-        [datasets['train']['allele'] != lowest_allele]
+        [datasets['train']['allele'].isin(lowest_alleles) == False]
         .reset_index(drop=True)
     )
     datasets['test2'] = test2
@@ -190,6 +196,9 @@ def main() -> None:
     # filter out
     df = df[df["mhc_class"] == mhc_class]
 
+    # drop mhc_class column
+    df = df.drop(columns=["mhc_class"])
+
     print(f"→ Loading MHC class {mhc_class} embeddings")
     emb_dict = load_mhc1_embeddings(NPZ_PATH)
 
@@ -199,6 +208,11 @@ def main() -> None:
     # print("→ Dropping duplicates and nones")
     df = df.drop_duplicates(subset=["long_mer", "allele"])
     df = df.dropna(subset=["long_mer"])
+
+    # move the label column to the end
+    label_col = "assigned_label"
+    cols = [col for col in df.columns if col != label_col] + [label_col]
+    df = df[cols]
 
     print(f"→ Writing parquet to {OUT_PARQUET}")
     df.to_parquet(OUT_PARQUET, engine="pyarrow", index=False, compression="zstd")
@@ -214,11 +228,12 @@ def main() -> None:
 
 
     print("→ Creating cross-validation folds")
-    folds = create_progressive_k_fold_cross_validation(
+    folds = create_k_fold_leave_one_out_stratified_cv(
         datasets['train'],
         target_col="assigned_label",
         k=5,
         id_col="allele",
+        balance_method="down_sampling",
     )
 
     print("→ Saving folds to CSV")
@@ -235,7 +250,10 @@ def main() -> None:
        val_df.to_parquet(val_path, index=False, engine="pyarrow", compression="zstd")
        print(f"Saved fold {fold_id} train to {train_path}")
        print(f"Saved fold {fold_id} val to {val_path}")
-       ids_str = ", ".join(map(str, validation_ids))
+       if isinstance(validation_ids, list):
+           ids_str = ", ".join(map(str, validation_ids))
+       else:
+           ids_str = str(validation_ids)
        with open(held_out_ids_path, "a") as f:
            f.write(f"Fold {fold_id}: {ids_str}\n")
 

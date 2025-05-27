@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 """
-mhc_crossattn_pipeline.py
 =========================
 
 End‑to‑end trainer for a **peptide×MHC cross‑attention classifier**.
@@ -36,6 +35,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 from utils.model import build_classifier
+from sklearn.metrics import confusion_matrix, roc_curve, auc, roc_auc_score
+import seaborn as sns
 
 # ---------------------------------------------------------------------------
 # Utility: peptide → one‑hot (seq_len, 21)
@@ -89,9 +90,9 @@ def load_dataset(parquet_path: str):
     # 1) Peptide one‑hot ----------------------------------------------------
     if "long_mer" not in df.columns:
         raise ValueError("Expected a 'long_mer' column with peptide sequences")
-    seq_len = int(df["long_mer"].str.len().max())
-    print(f"   longest peptide = {seq_len} residues")
-    pep_onehot = peptides_to_onehot(df["long_mer"].tolist(), seq_len)
+    pep_seq_len = int(df["long_mer"].str.len().max())
+    print(f"   longest peptide = {pep_seq_len} residues")
+    pep_onehot = peptides_to_onehot(df["long_mer"].tolist(), pep_seq_len)
     print("   peptide one-hot shape:", pep_onehot.shape)
 
     # 2) Latent embeddings --------------------------------------------------
@@ -110,48 +111,59 @@ def load_dataset(parquet_path: str):
     # 3) Labels -------------------------------------------------------------
     labels = df["assigned_label"].astype("float32").values[:, None]  # (N,1)
 
-    return pep_onehot, latents, labels, seq_len
+    return pep_onehot, latents, labels, pep_seq_len
 
 
-def load_dataset_in_batches(parquet: str, batch_size: int = 100):
+def load_dataset_in_batches(parquet: str, target_seq_len: int, batch_size: int = 100):
     print(f"→ reading {parquet} in batches of {batch_size}")
     df = pd.read_parquet(parquet)
     if "long_mer" not in df.columns:
         raise ValueError("Expected a 'long_mer' column with peptide sequences")
-    seq_len = int(df["long_mer"].str.len().max())
+    # REMOVE or IGNORE: pep_seq_len = int(df["long_mer"].str.len().max()) # This was the problematic line for one-hot encoding
     total = len(df)
     for start in range(0, total, batch_size):
         end = min(start + batch_size, total)
-        pep_onehot = peptides_to_onehot(df["long_mer"].values[start:end].tolist(), seq_len)
+        # Use target_seq_len for one-hot encoding
+        pep_onehot = peptides_to_onehot(df["long_mer"].values[start:end].tolist(), target_seq_len)
         if "mhc_embedding" in df.columns:
             latents = np.stack(df["mhc_embedding"].values[start:end]).astype("float32")
         elif "mhc_embedding_path" in df.columns:
-            latents = np.stack([_read_embedding_file(p) for p in tqdm(df["mhc_embedding_path"].values[start:end],
-                                                                      desc=f"Loading embeddings {start}-{end}")])
+            latents = np.stack([_read_embedding_file(p) for p in df["mhc_embedding_path"].values[start:end]])
         else:
             raise ValueError("Need a 'mhc_embedding' or 'mhc_embedding_path' column")
+
+        if latents.shape[1:] != (36, 1152):
+            raise ValueError(f"Unexpected latent shape {latents.shape[1:]}, expected (36,1152)")
+
         labels = df["assigned_label"].values[start:end].astype("float32")
-        yield pep_onehot, latents, labels, seq_len
+        labels = labels[:, None]
+
+        yield pep_onehot, latents, labels # Removed the local pep_seq_len from yield
+
 
 
 # ---------------------------------------------------------------------------
 # Visualisation utility
 # ---------------------------------------------------------------------------
-def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_id: int = None):
+def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_id: int = None,
+                        model=None, val_dataset=None):
     """
-    Plot training curves from a Keras history object.
+    Plot training curves and validation metrics from a Keras history object.
+
     Args:
         history: Keras history object containing training metrics.
         run_dir: Directory to save the plot.
         fold_id: Optional fold identifier for naming the output file.
+        model: Optional model to compute confusion matrix and ROC curve.
+        val_dataset: Optional validation dataset to generate predictions.
 
     Returns: None
-
     """
     hist = history.history
-    plt.figure(figsize=(21, 4))
+    plt.figure(figsize=(21, 6))
 
-    plt.subplot(1, 3, 1)
+    # Plot 1: Loss curve
+    plt.subplot(1, 4, 1)
     plt.plot(hist["loss"], label="train")
     plt.plot(hist["val_loss"], label="val")
     plt.xlabel("epoch")
@@ -160,8 +172,9 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
     plt.legend()
     plt.grid(True)
 
+    # Plot 2: Accuracy curve
     if "binary_accuracy" in hist and "val_binary_accuracy" in hist:
-        plt.subplot(1, 3, 2)
+        plt.subplot(1, 4, 2)
         plt.plot(hist["binary_accuracy"], label="train acc")
         plt.plot(hist["val_binary_accuracy"], label="val acc")
         plt.xlabel("epoch")
@@ -170,8 +183,9 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
         plt.legend()
         plt.grid(True)
 
+    # Plot 3: AUC curve
     if "auc" in hist and "val_auc" in hist:
-        plt.subplot(1, 3, 3)
+        plt.subplot(1, 4, 3)
         plt.plot(hist["auc"], label="train AUC")
         plt.plot(hist["val_auc"], label="val AUC")
         plt.xlabel("epoch")
@@ -180,23 +194,277 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
         plt.legend()
         plt.grid(True)
 
-    out_png = os.path.join(run_dir, f"training_curve{'_fold' + str(fold_id) if fold_id is not None else ''}.png")
+    # Plot 4: Confusion matrix
+    if model is not None and val_dataset is not None:
+        plt.subplot(1, 4, 4)
+
+        try:
+            # Collect validation predictions and true labels simultaneously
+            y_true_list = []
+            y_pred_proba_list = []
+
+            for features, labels in val_dataset:
+                y_true_list.append(labels.numpy())
+                batch_pred = model(features, training=False).numpy()
+                y_pred_proba_list.append(batch_pred)
+
+            y_true = np.concatenate(y_true_list, axis=0).flatten()
+            y_pred_proba = np.concatenate(y_pred_proba_list, axis=0).flatten()
+            # print min, max, mean of y_pred_proba
+            print(f"y_pred_proba: min={y_pred_proba.min():.4f}, max={y_pred_proba.max():.4f}, mean={y_pred_proba.mean():.4f}")
+            y_pred = (y_pred_proba > 0.5).astype(int)
+
+            # Compute confusion matrix
+            cm = confusion_matrix(y_true, y_pred)
+
+            # Plot confusion matrix
+            sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
+                        xticklabels=["Negative", "Positive"],
+                        yticklabels=["Negative", "Positive"])
+            plt.xlabel("Predicted")
+            plt.ylabel("True")
+            plt.title(f"Confusion Matrix\nAUROC: {roc_auc_score(y_true, y_pred_proba):.4f}")
+        except Exception as e:
+            print(f"Warning: could not generate confusion matrix: {e}")
+
+    # Save main plot
+    plt.figure(1)
     plt.tight_layout()
+    out_png = os.path.join(run_dir, f"training_curve{'_fold' + str(fold_id) if fold_id is not None else ''}.png")
     plt.savefig(out_png)
     plt.show()
     print(f"✓ Training curve saved to {out_png}")
 
 
+def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None, history=None):
+    """
+    Plot comprehensive evaluation metrics for a test dataset using a trained model.
+
+    Args:
+        model: Trained Keras model.
+        test_dataset: TensorFlow dataset for testing.
+        run_dir: Directory to save the plot.
+        fold_id: Optional fold identifier for naming the output file.
+        history: Optional training history object to display loss/accuracy curves.
+
+    Returns: None
+    """
+    # Collect predictions
+    y_true_list = []
+    y_pred_proba_list = []
+
+    for features, labels in test_dataset:
+        y_true_list.append(labels.numpy())
+        batch_pred = model(features, training=False).numpy()
+        y_pred_proba_list.append(batch_pred)
+
+    y_true = np.concatenate(y_true_list, axis=0)
+    y_pred_proba = np.concatenate(y_pred_proba_list, axis=0)
+    # print min, max, mean of y_pred_proba
+    print(f"y_pred_proba: min={y_pred_proba.min():.4f}, max={y_pred_proba.max():.4f}, mean={y_pred_proba.mean():.4f}")
+    y_pred = (y_pred_proba > 0.5).astype(int)
+
+    # Create a multi-panel figure
+    plt.figure(figsize=(20, 12))
+
+    # Panel 1: ROC Curve
+    plt.subplot(2, 2, 1)
+    fpr, tpr, _ = roc_curve(y_true, y_pred_proba)
+    roc_auc = auc(fpr, tpr)
+    plt.plot(fpr, tpr, color='blue', label=f'ROC curve (area = {roc_auc:.4f})')
+    plt.plot([0, 1], [0, 1], color='red', linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.legend(loc='lower right')
+
+    # Panel 2: Confusion Matrix
+    plt.subplot(2, 2, 2)
+    cm = confusion_matrix(y_true.flatten(), y_pred.flatten())
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
+                xticklabels=["Negative", "Positive"],
+                yticklabels=["Negative", "Positive"])
+    plt.xlabel("Predicted")
+    plt.ylabel("True")
+    plt.title("Confusion Matrix")
+
+    # Panel 3: Loss curve (if history provided)
+    if history is not None:
+        plt.subplot(2, 2, 3)
+        hist = history.history
+        plt.plot(hist.get("loss", []), label="train")
+        plt.plot(hist.get("val_loss", []), label="val")
+        plt.xlabel("epoch")
+        plt.ylabel("loss")
+        plt.title("BCE Loss")
+        plt.legend()
+        plt.grid(True)
+
+        # Panel 4: Accuracy curve (if available in history)
+        plt.subplot(2, 2, 4)
+        if "binary_accuracy" in hist and "val_binary_accuracy" in hist:
+            plt.plot(hist["binary_accuracy"], label="train acc")
+            plt.plot(hist["val_binary_accuracy"], label="val acc")
+        elif "accuracy" in hist and "val_accuracy" in hist:
+            plt.plot(hist["accuracy"], label="train acc")
+            plt.plot(hist["val_accuracy"], label="val acc")
+        plt.xlabel("epoch")
+        plt.ylabel("accuracy")
+        plt.title("Accuracy")
+        plt.legend()
+        plt.grid(True)
+    else:
+        # Panel 3: Test metrics when history not available
+        plt.subplot(2, 2, 3)
+        from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+
+        accuracy = accuracy_score(y_true, y_pred)
+        precision = precision_score(y_true, y_pred, zero_division=0)
+        recall = recall_score(y_true, y_pred, zero_division=0)
+        f1 = f1_score(y_true, y_pred, zero_division=0)
+
+        metrics = {
+            'Accuracy': accuracy,
+            'Precision': precision,
+            'Recall': recall,
+            'F1 Score': f1,
+            'AUC': roc_auc
+        }
+
+        # Create a bar chart for metrics
+        plt.bar(range(len(metrics)), list(metrics.values()), align='center')
+        plt.xticks(range(len(metrics)), list(metrics.keys()), rotation=45)
+        plt.ylim(0, 1.0)
+        plt.title('Test Set Evaluation Metrics')
+
+        # Add values on top of bars
+        for i, v in enumerate(metrics.values()):
+            plt.text(i, v + 0.02, f'{v:.4f}', ha='center')
+
+    plt.tight_layout()
+    out_png = os.path.join(run_dir, f"test_metrics{'_fold' + str(fold_id) if fold_id is not None else ''}.png")
+    plt.savefig(out_png)
+    plt.show()
+    print(f"✓ Test metrics visualization saved to {out_png}")
+
+    # Return evaluation metrics as dictionary for possible further use
+    return {
+        'roc_auc': roc_auc,
+        'accuracy': accuracy_score(y_true, y_pred),
+        'precision': precision_score(y_true, y_pred, zero_division=0),
+        'recall': recall_score(y_true, y_pred, zero_division=0),
+        'f1': f1_score(y_true, y_pred, zero_division=0)
+    }
+
 # ---------------------------------------------------------------------------
 # TF‑data helper
 # ---------------------------------------------------------------------------
 
-def make_tf_dataset(peps, lats, labels, batch=128, shuffle=True):
-    ds = tf.data.Dataset.from_tensor_slices(((peps, lats), labels))
-    if shuffle:
-        ds = ds.shuffle(buffer_size=len(labels), seed=42)
-    return ds.batch(batch).prefetch(tf.data.AUTOTUNE)
+def make_tf_dataset(source, longest_peptide_seq_length, batch: int = 128, shuffle: bool = True):
+    if isinstance(source, (str, os.PathLike)):
+        def gen():
+            # Pass longest_peptide_seq_length as target_seq_len
+            # The generator now yields 3 items
+            for peps, lats, labs in load_dataset_in_batches(str(source),
+                                                            target_seq_len=longest_peptide_seq_length,
+                                                            batch_size=batch):
+                yield (peps, lats), labs
+        output_signature = (
+            (tf.TensorSpec(shape=(None, longest_peptide_seq_length, 21), dtype=tf.float32),
+             tf.TensorSpec(shape=(None, 36, 1152), dtype=tf.float32)),
+            tf.TensorSpec(shape=(None, 1), dtype=tf.float32)
+        )
+        ds = tf.data.Dataset.from_generator(gen, output_signature=output_signature)
+        if shuffle:
+            # Consider increasing buffer_size for better shuffling if dataset is large
+            # e.g., buffer_size=num_batches_in_epoch or a sufficiently large number
+            ds = ds.shuffle(buffer_size=max(10, len(pd.read_parquet(str(source))) // batch // 2 ), seed=42)
+        return ds.prefetch(tf.data.AUTOTUNE)
+    else: # This part for in-memory dataframes seems correct as it uses longest_peptide_seq_length
+        peps = peptides_to_onehot(source["long_mer"].tolist(), longest_peptide_seq_length)
+        labels = source["assigned_label"].values.astype("float32")[:, None]
 
+        if "mhc_embedding" in source.columns:
+            lats = np.stack(source["mhc_embedding"].values).astype("float32")
+        elif "mhc_embedding_path" in source.columns:
+            lats = np.stack([_read_embedding_file(p) for p in source["mhc_embedding_path"]]).astype("float32")
+        else:
+            raise ValueError("Need 'mhc_embedding' or 'mhc_embedding_path' column")
+
+        ds = tf.data.Dataset.from_tensor_slices(((peps, lats), labels))
+        if shuffle:
+            ds = ds.shuffle(buffer_size=len(labels), seed=42)
+        return ds.batch(batch).prefetch(tf.data.AUTOTUNE)
+
+    # peps = source["long_mer"]
+    # labels = source["assigned_label"]
+    # lats = np.stack([np.load(p) for p in source["mhc_embedding_path"]]).astype("float32")
+    # ds = tf.data.Dataset.from_tensor_slices(((peps, lats), labels))
+    # if shuffle:
+    #     ds = ds.shuffle(buffer_size=len(labels), seed=42)
+    # return ds.batch(batch).prefetch(tf.data.AUTOTUNE)
+
+
+# def _collect_batches(loader, max_batch_size: int = 3_000):
+#     '''
+#     Concatenate a lazy *loader* (yielding pep, latent, label, seq_len)
+#     into single large NumPy arrays **with just one final copy**.
+#
+#     On each iteration we append references to the individual batch arrays;
+#     only at the very end do we *concatenate* along axis0.  This strategy is
+#     RAM‑friendly because the intermediate lists only hold *views* of the
+#     already‑allocated batch memory while the batches are alive, and we avoid
+#     the O(N²) cost of repeated `np.concatenate` calls inside the loop.
+#
+#     If the total number of samples reaches *max_batch_size*, stop loading more.
+#     '''
+#     pep_chunks, lat_chunks, lab_chunks = [], [], []
+#     seq_len = None
+#     total = 0
+#
+#     for peps, lats, labels, seq_len in loader:
+#         n = len(peps)
+#         if total + n > max_batch_size:
+#             # Only take up to the limit
+#             take = max_batch_size - total
+#             if take <= 0:
+#                 break
+#             pep_chunks.append(peps[:take])
+#             lat_chunks.append(lats[:take])
+#             labels = labels[:take]
+#             labels = labels.reshape(-1, 1) if labels.ndim == 1 else labels
+#             lab_chunks.append(labels)
+#             total += take
+#             break
+#         pep_chunks.append(peps)
+#         lat_chunks.append(lats)
+#         labels = labels.reshape(-1, 1) if labels.ndim == 1 else labels
+#         lab_chunks.append(labels)
+#         total += n
+#         if total >= max_batch_size:
+#             break
+#
+#     # single allocation per tensor ↓
+#     peps   = np.concatenate(pep_chunks, axis=0, dtype=np.float32)
+#     lats   = np.concatenate(lat_chunks, axis=0, dtype=np.float32)
+#     labels = np.concatenate(lab_chunks, axis=0, dtype=np.float32)
+#
+#     # explicitly free the now‑unneeded small arrays
+#     del pep_chunks, lat_chunks, lab_chunks
+#     return peps, lats, labels, seq_len
+
+# convenience wrappers -------------------------------------------------------
+
+# def collect_parquet(parquet_path: str, batch_size: int = 30_000):
+#     '''Load **all** samples in *parquet_path* using streaming batches.'''
+#     loader = load_dataset_in_batches(parquet_path, batch_size=batch_size)
+#     return _collect_batches(loader)
+#
+#
+# def collect_fold(fold_path: str, batch_size: int = 3_000):
+#     return collect_parquet(fold_path, batch_size=batch_size)
 
 # ---------------------------------------------------------------------------
 # Training script
@@ -223,8 +491,7 @@ def main(argv=None):
     # ----------------------- Load & split ----------------------------------
     if args.parquet:
         # peps, lats, labels, seq_len = load_dataset(args.parquet)
-        batch_loader = load_dataset_in_batches(args.parquet, batch_size=30000)
-        peps, lats, labels, seq_len = next(batch_loader)
+        peps, lats, labels, longest_peptide_seq_length = load_dataset(args.parquet)
 
         print(f"✓ loaded {len(peps):,} samples"
               f" ({peps.shape[1]} residues, {lats.shape[1]} latent features)")
@@ -235,32 +502,58 @@ def main(argv=None):
             random_state=42,
             stratify=labels)
 
-        train_ds = make_tf_dataset(X_train_p, X_train_l, y_train, batch=args.batch)
-        val_ds = make_tf_dataset(X_val_p, X_val_l, y_val, batch=args.batch,
-                                 shuffle=False)
+        train_loader =  make_tf_dataset((X_train_p, X_train_l, y_train), longest_peptide_seq_length=longest_peptide_seq_length, batch=args.batch, shuffle=True)
+        val_loader = make_tf_dataset((X_val_p, X_val_l, y_val), longest_peptide_seq_length=longest_peptide_seq_length ,batch=args.batch, shuffle=False)
+
     elif args.dataset_path:
-        # load test sets
+        # Load test sets
         test1 = pd.read_parquet(args.dataset_path + "/test1.parquet")
         test2 = pd.read_parquet(args.dataset_path + "/test2.parquet")
-        num_fold = os.listdir(args.dataset_path + "/folds")
-        folds = []
-        for i in range(1, len(num_fold) // 2 + 1):
-            train_path = args.dataset_path + f"/folds/fold_{i}_train.parquet"
-            val_path = args.dataset_path + f"/folds/fold_{i}_val.parquet"
-            train_loader = load_dataset_in_batches(train_path, batch_size=3000)
-            val_loader = load_dataset_in_batches(val_path, batch_size=3000)
+        fold_files = sorted([f for f in os.listdir(os.path.join(args.dataset_path, 'folds')) if f.endswith('.parquet')])
+        n_folds = len(fold_files) // 2
 
-            X_train_p, X_train_l, y_train, seq_len = next(train_loader)
-            X_val_p, X_val_l, y_val, _ = next(val_loader)
-            train_ds = make_tf_dataset(X_train_p, X_train_l, y_train, batch=args.batch)
-            val_ds = make_tf_dataset(X_val_p, X_val_l, y_val, batch=args.batch, shuffle=False)
-            folds.append((train_ds, val_ds))
+        # Find the longest peptide sequence across all datasets
+        longest_peptide_seq_length = 0
+
+        # Check test datasets
+        if "long_mer" in test1.columns:
+            longest_peptide_seq_length = max(longest_peptide_seq_length, int(test1["long_mer"].str.len().max()))
+        if "long_mer" in test2.columns:
+            longest_peptide_seq_length = max(longest_peptide_seq_length, int(test2["long_mer"].str.len().max()))
+
+        # Check all fold files
+        for i in range(1, n_folds + 1):
+            train_path = os.path.join(args.dataset_path, f'folds/fold_{i}_train.parquet')
+            val_path = os.path.join(args.dataset_path, f'folds/fold_{i}_val.parquet')
+
+            train_df = pd.read_parquet(train_path)
+            val_df = pd.read_parquet(val_path)
+
+            if "long_mer" in train_df.columns:
+                longest_peptide_seq_length = max(longest_peptide_seq_length, int(train_df["long_mer"].str.len().max()))
+            if "long_mer" in val_df.columns:
+                longest_peptide_seq_length = max(longest_peptide_seq_length, int(val_df["long_mer"].str.len().max()))
+
+        print(f"✓ Longest peptide sequence length across all datasets: {longest_peptide_seq_length}")
+
+        # Create fold datasets with consistent sequence length
+        folds = []
+        for i in range(1, n_folds + 1):
+            train_path = os.path.join(args.dataset_path, f'folds/fold_{i}_train.parquet')
+            val_path = os.path.join(args.dataset_path, f'folds/fold_{i}_val.parquet')
+
+            train_loader = make_tf_dataset(train_path, longest_peptide_seq_length=longest_peptide_seq_length, batch=args.batch)
+            val_loader = make_tf_dataset(val_path, longest_peptide_seq_length=longest_peptide_seq_length, batch=args.batch, shuffle=False)
+
+            folds.append((train_loader, val_loader))
+
+        # Create test loaders with the same sequence length
+        test1_loader = make_tf_dataset(test1, longest_peptide_seq_length=longest_peptide_seq_length, batch=args.batch, shuffle=False)
+        test2_loader = make_tf_dataset(test2, longest_peptide_seq_length=longest_peptide_seq_length, batch=args.batch, shuffle=False)
 
         print(f"✓ loaded {len(test1):,} test1 samples, "
               f"{len(test2):,} test2 samples, "
               f"{len(folds)} folds")
-
-
     else:
         raise ValueError("Need either --parquet or --dataset_path argument")
 
@@ -270,68 +563,119 @@ def main(argv=None):
     # set random seeds for reproducibility
     os.environ["PYTHONHASHSEED"] = "42"
     os.environ["TF_DETERMINISTIC_OPS"] = "1"
-
-    tf.random.set_seed(42);
+    tf.random.set_seed(42)
     np.random.seed(42)
-    model = build_classifier(seq_len)
-    model.summary()
 
+        # # Verify and explicitly pad/trim to match training seq_len
+        # if test1_seq_len != seq_len or test2_seq_len != seq_len:
+        #     print(f"Adjusting test datasets to match training seq_len: {seq_len}")
+        #     X_test1_p = X_test1_p[:, :seq_len, :]
+        #     X_test2_p = X_test2_p[:, :seq_len, :]
+        #
+        # # Pad or trim test peptides to match seq_len
+        # X_test1_p = X_test1_p[:, :seq_len, :]
+        # X_test2_p = X_test2_p[:, :seq_len, :]
+        # test1_ds = make_tf_dataset(X_test1_p, X_test1_l, y_test1, batch=args.batch, shuffle=False)
+        # test2_ds = make_tf_dataset(X_test2_p, X_test2_l, y_test2, batch=args.batch, shuffle=False)
+
+    #     print(f'✓ loaded {len(test1):,} test1 samples, '
+    #           f'{len(test2):,} test2 samples, '
+    #           f'{len(folds)} folds')
+    #
+    #     print("★ Done.")
+    #     # TODO think about ensembling folds later
+    #
+    # else:
+    #     raise ValueError("Need either --parquet or --dataset_path argument")
+
+    # ------------------------- TRAIN --------------------------------------
     ckpt_cb = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(run_dir, "best_weights.h5"),
-        monitor="val_loss", save_best_only=True, mode="min")
+        filepath=os.path.join(run_dir, 'best_weights.h5'),
+        monitor='val_loss', save_best_only=True, mode='min')
     early_cb = tf.keras.callbacks.EarlyStopping(
-        monitor="val_loss", patience=10, restore_best_weights=True)
+        monitor='val_loss', patience=10, restore_best_weights=True)
 
     if args.parquet:
-        history = model.fit(train_ds,
-                            validation_data=val_ds,
+        tf.keras.backend.clear_session()
+        os.environ['PYTHONHASHSEED'] = '42'
+        os.environ['TF_DETERMINISTIC_OPS'] = '1'
+        model = build_classifier(longest_peptide_seq_length)
+        model.summary()
+
+
+        history = model.fit(train_loader,
+                            validation_data=val_loader,
                             epochs=args.epochs,
                             callbacks=[ckpt_cb, early_cb])
-        # ----------------------- Plot curve ------------------------------------
-        plot_training_curve(history, run_dir)
-        # ----------------------- Save model & metadata ------------------------
-        meta = dict(parquet=args.parquet,
-                    epochs=len(history["loss"]),
-                    batch=args.batch,
-                    seq_len=seq_len,
-                    model_params=dict(embed_dim=256, num_heads=8, ff_dim=512))
-        json.dump(meta, open(os.path.join(run_dir, "run_config.json"), "w"), indent=2)
-        print("★ Done.")
+
+        # plot
+        plot_training_curve(history, run_dir, fold_id=None, model=model, val_dataset=val_loader)
+
+        # save model and metadata
+        model.save(os.path.join(run_dir, 'model.h5'))
+        metadata = {
+            "epochs": args.epochs,
+            "batch_size": args.batch,
+            "longest_peptide_seq_length": longest_peptide_seq_length,
+            "run_dir": run_dir
+        }
+        with open(os.path.join(run_dir, 'metadata.json'), 'w') as f:
+            json.dump(metadata, f, indent=4)
+
 
     elif args.dataset_path:
-        # Train on folds
-        for i, (train_ds, val_ds) in enumerate(folds):
-            print(f"Training on fold {i + 1}/{len(folds)}")
-            # clear GPU memory
+        for fold_id, (train_loader, val_loader) in enumerate(folds, start=1):
+            print(f'Training on fold {fold_id}/{len(folds)}')
             tf.keras.backend.clear_session()
-            # set random seeds for reproducibility
-            tf.random.set_seed(42);
+            tf.random.set_seed(42)
             np.random.seed(42)
-            model = build_classifier(seq_len)  # Rebuild model for each fold
+            print("########################### seq length: ", longest_peptide_seq_length)
+            model = build_classifier(longest_peptide_seq_length)
+            model.summary()
 
-            history = model.fit(train_ds,
-                                validation_data=val_ds,
+            # print one sample
+            # print("Sample input shape:", next(iter(train_loader))[0][0].shape)
+            # print("Sample latent shape:", next(iter(train_loader))[0][1].shape)
+            # print("Sample label shape:", next(iter(train_loader))[1].shape)
+
+            history = model.fit(train_loader,
+                                validation_data=val_loader,
                                 epochs=args.epochs,
                                 callbacks=[ckpt_cb, early_cb])
 
-            # Save fold metadata
-            fold_meta = dict(fold_id=i + 1, epochs=len(history.history["loss"]),
-                             batch=args.batch, seq_len=seq_len)
-            json.dump(fold_meta, open(os.path.join(run_dir, f"fold_{i + 1}_config.json"), "w"), indent=2)
+            # plot
+            plot_training_curve(history, run_dir, fold_id, model, val_loader)
 
-            # ----------------------- Plot training curve ---------------------------
-            plot_training_curve(history, run_dir)
+            # save model and metadata
+            model.save(os.path.join(run_dir, f'model_fold_{fold_id}.h5'))
+            metadata = {
+                "fold_id": fold_id,
+                "epochs": args.epochs,
+                "batch_size": args.batch,
+                "seq_len": longest_peptide_seq_length,
+                "run_dir": run_dir
+            }
+            with open(os.path.join(run_dir, f'metadata_fold_{fold_id}.json'), 'w') as f:
+                json.dump(metadata, f, indent=4)
+            print(f"✓ Fold {fold_id} model saved to {run_dir}")
 
-        print("★ Done.")
-        # TODO think about ensembling folds later
+            # Evaluate on test sets
+            print("Evaluating on test1 set...")
+            test1_results = model.evaluate(test1_loader, verbose=1)
+            print(f"Test1 results: {test1_results}")
+            print("Evaluating on test2 set...")
+            test2_results = model.evaluate(test2_loader, verbose=1)
+            print(f"Test2 results: {test2_results}")
 
-    else:
-        raise ValueError("Need either --parquet or --dataset_path argument")
+            # Plot ROC curve for test1
+            plot_test_metrics(model, test1_loader, run_dir, fold_id)
+            # Plot ROC curve for test2
+            plot_test_metrics(model, test2_loader, run_dir, fold_id)
 
 
 if __name__ == "__main__":
     main([
         # "--parquet", "../data/Custom_dataset/NetMHCpan_dataset/mhc2_with_esm_embeddings.parquet",
         "--dataset_path", "../data/Custom_dataset/NetMHCpan_dataset/mhc_1",
-        "--epochs", "100", "--batch", "128"
+        "--epochs", "3", "--batch", "1024"
     ])

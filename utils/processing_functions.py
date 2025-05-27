@@ -17,6 +17,8 @@ warnings.filterwarnings("ignore")
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from user_setting import netmhcipan_path, netmhciipan_path, pmgen_abs_dir
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupShuffleSplit, StratifiedShuffleSplit
+from sklearn.utils import resample
 
 def process_dataframe(df):
     # Step 1: Sort IDs with 2 or 5 parts
@@ -1147,101 +1149,235 @@ def create_progressive_k_fold_cross_validation(df, k=5, target_col="Label", id_c
 
 # write a function that produces 5 fold cross validation from the df, each fold must have one allele to be left out completely and produce a stratified train and validation based on the label.
 # take into account the subset proportion.
-def create_k_fold_leave_one_out_stratified_cross_validation(df, k=5, target_col="label", id_col="allele",
-                                                       subset_prop=1.0, train_size=0.8, random_state=42):
+# def create_k_fold_leave_one_out_stratified_cross_validation(df, k=5, target_col="label", id_col="allele",
+#                                                        subset_prop=1.0, train_size=0.8, random_state=42):
+#     """
+#     Creates k folds for cross-validation where each fold:
+#     1. Leaves one unique ID out completely
+#     2. Has a validation set with at least one unique allele not present in the training set
+#     3. Splits the remaining data into stratified train/validation sets
+#     4. Balances both train and validation sets based on target labels
+#
+#     Args:
+#         df (pd.DataFrame): The input dataframe.
+#         k (int): The number of folds.
+#         target_col (str): The name of the column containing the target labels for stratification.
+#         id_col (str): The name of the column containing the IDs (alleles) to leave out.
+#         subset_prop (float): The proportion of the remaining data to use.
+#         train_size (float): The proportion of the non-held-out data to use for training.
+#         random_state (int): Random state for reproducibility.
+#
+#     Returns:
+#         list: A list of tuples, where each tuple contains (train_df, val_df, left_out_id) for a fold.
+#     """
+#     # Take a subset of the dataframe
+#     df = df.sample(frac=subset_prop, random_state=random_state)
+#
+#     # Get unique IDs (alleles)
+#     unique_ids = df[id_col].unique()
+#
+#     # Check if k is larger than the number of unique IDs
+#     if k > len(unique_ids):
+#         raise ValueError(f"k must be less than or equal to the number of unique IDs ({len(unique_ids)}).")
+#
+#     # Set random seed for reproducibility
+#     np.random.seed(random_state)
+#
+#     # Randomly select k IDs to leave out (one per fold)
+#     selected_ids = np.random.choice(unique_ids, k, replace=False)
+#
+#     folds = []
+#     for leave_out_id in selected_ids:
+#         print("leave out ID:", leave_out_id)
+#         # Create a mask for the ID to leave out
+#         leave_out_mask = df[id_col] == leave_out_id
+#
+#         # Get remaining data (exclude the left out ID)
+#         remaining_df = df[~leave_out_mask].copy()
+#
+#         # Get remaining unique IDs
+#         remaining_unique_ids = remaining_df[id_col].unique()
+#
+#         # Select a validation-only ID (will only appear in validation set)
+#         val_only_id = np.random.choice(remaining_unique_ids, 1)[0]
+#
+#         # Split data for unique validation ID and the rest
+#         val_only_mask = remaining_df[id_col] == val_only_id
+#         val_only_df = remaining_df[val_only_mask].copy()
+#         train_eligible_df = remaining_df[~val_only_mask].copy()
+#
+#         # Create stratified split on the training-eligible data
+#         train_df, extra_val_df = train_test_split(
+#             train_eligible_df,
+#             train_size=train_size,
+#             stratify=train_eligible_df[target_col],
+#             random_state=random_state
+#         )
+#
+#         # Combine validation-only data with extra validation data
+#         val_df = pd.concat([val_only_df, extra_val_df], ignore_index=True)
+#
+#         # Balance training set
+#         train_class_counts = train_df[target_col].value_counts()
+#         min_train_count = train_class_counts.min()
+#         balanced_train_dfs = []
+#
+#         for label in train_class_counts.index:
+#             label_df = train_df[train_df[target_col] == label]
+#             # Downsample to the minority class count
+#             balanced_label_df = label_df.sample(min_train_count, random_state=random_state)
+#             balanced_train_dfs.append(balanced_label_df)
+#
+#         balanced_train_df = pd.concat(balanced_train_dfs, ignore_index=True)
+#
+#         # Balance validation set
+#         val_class_counts = val_df[target_col].value_counts()
+#         min_val_count = val_class_counts.min()
+#         balanced_val_dfs = []
+#
+#         for label in val_class_counts.index:
+#             label_df = val_df[val_df[target_col] == label]
+#             # Downsample to the minority class count
+#             balanced_label_df = label_df.sample(min_val_count, random_state=random_state)
+#             balanced_val_dfs.append(balanced_label_df)
+#
+#         balanced_val_df = pd.concat(balanced_val_dfs, ignore_index=True)
+#
+#         # Include the left_out_id in the tuple
+#         folds.append((balanced_train_df, balanced_val_df, leave_out_id))
+#
+#     return folds
+
+
+def create_k_fold_leave_one_out_stratified_cv(
+    df: pd.DataFrame,
+    k: int = 5,
+    target_col: str = "label",
+    id_col: str = "allele",
+    subset_prop: float = 1.0,
+    train_size: float = 0.8,
+    random_state: int = 42,
+    balance_method: str = "down_sampling"  # "down_sampling" or "GNUSS"
+):
     """
-    Creates k folds for cross-validation where each fold:
-    1. Leaves one unique ID out completely
-    2. Has a validation set with at least one unique allele not present in the training set
-    3. Splits the remaining data into stratified train/validation sets
-    4. Balances both train and validation sets based on target labels
+    Build *k* folds such that
 
-    Args:
-        df (pd.DataFrame): The input dataframe.
-        k (int): The number of folds.
-        target_col (str): The name of the column containing the target labels for stratification.
-        id_col (str): The name of the column containing the IDs (alleles) to leave out.
-        subset_prop (float): The proportion of the remaining data to use.
-        train_size (float): The proportion of the non-held-out data to use for training.
-        random_state (int): Random state for reproducibility.
+    1. **One whole ID (group) is left out of both train & val** (`left_out_id`).
+    2. **Validation contains exactly one additional ID** (`val_only_id`)
+       that never appears in train.
+    3. Remaining rows are split *stratified* on `target_col`
+       (`train_size` fraction for training).
+    4. Train & val are **down-sampled** to perfectly balanced label counts.
 
-    Returns:
-        list: A list of tuples, where each tuple contains (train_df, val_df, left_out_id) for a fold.
+    Returns
+    -------
+    list[tuple[pd.DataFrame, pd.DataFrame, Hashable]]
+        Each tuple = (train_df, val_df, left_out_id).
     """
-    # Take a subset of the dataframe
-    df = df.sample(frac=subset_prop, random_state=random_state)
+    rng = np.random.RandomState(random_state)
+    df = df.sample(frac=subset_prop, random_state=random_state).reset_index(drop=True)
 
-    # Get unique IDs (alleles)
+    # --- pick the k IDs that will be held out completely -------------------
     unique_ids = df[id_col].unique()
-
-    # Check if k is larger than the number of unique IDs
     if k > len(unique_ids):
-        raise ValueError(f"k must be less than or equal to the number of unique IDs ({len(unique_ids)}).")
-
-    # Set random seed for reproducibility
-    np.random.seed(random_state)
-
-    # Randomly select k IDs to leave out (one per fold)
-    selected_ids = np.random.choice(unique_ids, k, replace=False)
+        raise ValueError(f"k={k} > unique {id_col} count ({len(unique_ids)})")
+    left_out_ids = rng.choice(unique_ids, size=k, replace=False)
 
     folds = []
-    for leave_out_id in selected_ids:
-        print("leave out ID:", leave_out_id)
-        # Create a mask for the ID to leave out
-        leave_out_mask = df[id_col] == leave_out_id
+    for fold_idx, left_out_id in enumerate(left_out_ids, 1):
+        mask_left_out = df[id_col] == left_out_id
+        working_df = df.loc[~mask_left_out].copy()
 
-        # Get remaining data (exclude the left out ID)
-        remaining_df = df[~leave_out_mask].copy()
+        # ---------------------------------------------------------------
+        # 1) choose ONE id that will appear *only* in validation
+        #    (GroupShuffleSplit with test_size=1 group)
+        # ---------------------------------------------------------------
+        gss = GroupShuffleSplit(
+            n_splits=1, test_size=1, random_state=rng.randint(1_000_000)
+        )
+        (train_groups_idx, val_only_groups_idx), = gss.split(
+            X=np.zeros(len(working_df)), y=None, groups=working_df[id_col]
+        )
+        val_only_group_id = working_df.iloc[val_only_groups_idx][id_col].unique()[0]
 
-        # Get remaining unique IDs
-        remaining_unique_ids = remaining_df[id_col].unique()
+        mask_val_only = working_df[id_col] == val_only_group_id
+        df_val_only = working_df[mask_val_only]
+        df_eligible = working_df[~mask_val_only]
 
-        # Select a validation-only ID (will only appear in validation set)
-        val_only_id = np.random.choice(remaining_unique_ids, 1)[0]
-
-        # Split data for unique validation ID and the rest
-        val_only_mask = remaining_df[id_col] == val_only_id
-        val_only_df = remaining_df[val_only_mask].copy()
-        train_eligible_df = remaining_df[~val_only_mask].copy()
-
-        # Create stratified split on the training-eligible data
-        train_df, extra_val_df = train_test_split(
-            train_eligible_df,
-            train_size=train_size,
-            stratify=train_eligible_df[target_col],
-            random_state=random_state
+        # ---------------------------------------------------------------
+        # 2) stratified split of *eligible* rows
+        # ---------------------------------------------------------------
+        sss = StratifiedShuffleSplit(
+            n_splits=1, train_size=train_size, random_state=rng.randint(1_000_000)
+        )
+        train_idx, extra_val_idx = next(
+            sss.split(df_eligible, df_eligible[target_col])
+        )
+        df_train = df_eligible.iloc[train_idx]
+        df_val   = pd.concat(
+            [df_val_only, df_eligible.iloc[extra_val_idx]], ignore_index=True
         )
 
-        # Combine validation-only data with extra validation data
-        val_df = pd.concat([val_only_df, extra_val_df], ignore_index=True)
+        # ---------------------------------------------------------------
+        # 3) balance train and val via down-sampling
+        # ---------------------------------------------------------------
+        def _balance_down_sampling(frame: pd.DataFrame) -> pd.DataFrame:
+            min_count = frame[target_col].value_counts().min()
+            balanced_parts = [
+                resample(
+                    frame[frame[target_col] == lbl],
+                    replace=False,
+                    n_samples=min_count,
+                    random_state=rng,
+                )
+                for lbl in frame[target_col].unique()
+            ]
+            return pd.concat(balanced_parts, ignore_index=True)
 
-        # Balance training set
-        train_class_counts = train_df[target_col].value_counts()
-        min_train_count = train_class_counts.min()
-        balanced_train_dfs = []
+        def _balance_GNUSS(frame: pd.DataFrame) -> pd.DataFrame:
+            """
+            Balance the DataFrame by upsampling the minority class with Gaussian noise.
+            """
+            # Determine label counts and the maximum class size
+            counts = frame[target_col].value_counts()
+            max_count = counts.max()
 
-        for label in train_class_counts.index:
-            label_df = train_df[train_df[target_col] == label]
-            # Downsample to the minority class count
-            balanced_label_df = label_df.sample(min_train_count, random_state=random_state)
-            balanced_train_dfs.append(balanced_label_df)
+            # Identify numeric columns for noise injection
+            numeric_cols = frame.select_dtypes(include="number").columns
 
-        balanced_train_df = pd.concat(balanced_train_dfs, ignore_index=True)
+            balanced_parts = []
+            for label, count in counts.items():
+                df_label = frame[frame[target_col] == label]
+                balanced_parts.append(df_label)
+                if count < max_count:
+                    # Upsample with replacement
+                    n_needed = max_count - count
+                    sampled = df_label.sample(n=n_needed, replace=True, random_state=rng)
+                    # Add Gaussian noise to numeric features
+                    noise = pd.DataFrame(
+                        rng.normal(loc=0, scale=1e-6, size=(n_needed, len(numeric_cols))),
+                        columns=numeric_cols,
+                        index=sampled.index
+                    )
+                    sampled[numeric_cols] = sampled[numeric_cols] + noise
+                    balanced_parts.append(sampled)
 
-        # Balance validation set
-        val_class_counts = val_df[target_col].value_counts()
-        min_val_count = val_class_counts.min()
-        balanced_val_dfs = []
+            # Combine and return
+            return pd.concat(balanced_parts).reset_index(drop=True)
 
-        for label in val_class_counts.index:
-            label_df = val_df[val_df[target_col] == label]
-            # Downsample to the minority class count
-            balanced_label_df = label_df.sample(min_val_count, random_state=random_state)
-            balanced_val_dfs.append(balanced_label_df)
+        if balance_method == "GNUSS":
+            df_train_bal = _balance_GNUSS(df_train)
+            df_val_bal   = _balance_GNUSS(df_val)
+        else:  # default to down-sampling
+            df_train_bal = _balance_down_sampling(df_train)
+            df_val_bal   = _balance_down_sampling(df_val)
 
-        balanced_val_df = pd.concat(balanced_val_dfs, ignore_index=True)
+        folds.append((df_train_bal, df_val_bal, left_out_id))
 
-        # Include the left_out_id in the tuple
-        folds.append((balanced_train_df, balanced_val_df, leave_out_id))
+        print(
+            f"[fold {fold_idx}/{k}] left-out={left_out_id} | "
+            f"val-only={val_only_group_id} | "
+            f"train={len(df_train_bal)}, val={len(df_val_bal)}"
+        )
 
     return folds
