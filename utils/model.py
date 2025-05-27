@@ -8,7 +8,7 @@ from tensorflow.keras import layers
 class SCQ_layer(layers.Layer):
     def __init__(self, num_embed, dim_embed, lambda_reg=1.0, proj_iter=10,
                  discrete_loss=False, beta_loss=0.25, reset_dead_codes=False,
-                 usage_threshold=1e-3, reset_interval=2, **kwargs):
+                 usage_threshold=1e-3, reset_interval=5, **kwargs):
         """
         Soft Convex Quantization (SCQ) layer.
 
@@ -299,8 +299,8 @@ class SCQ_layer(layers.Layer):
 
 class SCQ1DAutoEncoder(keras.Model):
     def __init__(self, input_dim, num_embeddings, embedding_dim, commitment_beta,
-                 scq_params, initial_codebook, num_classes, cluster_lambda=1.0, **kwargs):
-        super().__init__(**kwargs)
+                 scq_params, initial_codebook=None, cluster_lambda=1.0):
+        super().__init__()
         self.input_dim = input_dim  # e.g., (1024,)
         self.embedding_dim = embedding_dim
         self.num_embeddings = num_embeddings
@@ -308,8 +308,6 @@ class SCQ1DAutoEncoder(keras.Model):
 
         # weight on the new cluster‐consistency loss
         self.cluster_lambda = cluster_lambda
-        # number of distinct labels
-        self.num_classes = num_classes
 
         # Encoder: Dense layers to compress 1024 features to embedding_dim
         self.encoder = keras.Sequential([
@@ -440,7 +438,7 @@ class SCQ1DAutoEncoder(keras.Model):
             x = data[0]
             y = data[1] if len(data) > 1 else data[0]
         else:
-            x = y = data
+            x = data
 
         reconstruction, quantized, _, vq_loss, perplexity = self(x, training=False)
         recon_loss = tf.reduce_mean(tf.math.squared_difference(x, reconstruction))
@@ -1361,7 +1359,7 @@ class EnhancedMixtureOfExperts(layers.Layer):
     def call(self, inputs, training=False):
         # Unpack inputs
         if isinstance(inputs, tuple) and len(inputs) == 2:
-            x, clustering = inputs
+            x, soft_cluster_probs = inputs
         else:
             raise ValueError("Inputs must include both features and clustering values")
 
@@ -1369,7 +1367,9 @@ class EnhancedMixtureOfExperts(layers.Layer):
 
         # Convert to hard clustering during training if requested
         if training and self.use_hard_clustering:
-            clustering = self.convert_to_hard_clustering(clustering)
+            clustering = self.convert_to_hard_clustering(soft_cluster_probs)
+        else:
+            clustering = soft_cluster_probs
 
         # Initialize output tensor
         combined_output = tf.zeros([batch_size, self.output_dim])
@@ -1497,52 +1497,262 @@ class EnhancedMoEModel(tf.keras.Model):
         return results
 
 
-# Example usage:
+# if __name__ == "__main__":
+#     # Generate dummy dataset with clustered data and labels for training
+#     num_train_samples = 8000
+#     num_test_samples = 2000
+#     feature_dim = 64
+#     num_clusters = 32
+#
+#     # Function to generate dataset with specified parameters
+#     def generate_dataset(num_samples, feature_dim, num_clusters, epsilon=0.1):
+#         # Compute samples per cluster
+#         base_count = num_samples // num_clusters
+#         counts = [base_count + (1 if i < num_samples % num_clusters else 0) for i in range(num_clusters)]
+#
+#         features_list = []
+#         labels_list = []
+#         cluster_probs_list = []
+#         distributions = ['normal', 'uniform', 'gamma', 'poisson']
+#
+#         for c in range(num_clusters):
+#             cluster_count = counts[c]
+#             n0 = cluster_count // 2
+#             n1 = cluster_count - n0
+#             dist = distributions[(2 * c) % len(distributions)]
+#             print(f"Cluster {c}: {dist} distribution, {n0} samples 0, {n1} samples 1")
+#
+#             if dist == 'normal':
+#                 features_0 = tf.random.normal([n0, feature_dim], mean=c, stddev=1.0)
+#             elif dist == 'uniform':
+#                 features_0 = tf.random.uniform([n0, feature_dim], minval=0, maxval=1)
+#             elif dist == 'gamma':
+#                 features_0 = tf.random.gamma([n0, feature_dim], alpha=2.0, beta=1.0)
+#             elif dist == 'poisson':
+#                 features_0 = tf.cast(tf.random.poisson([n0, feature_dim], lam=3), tf.float32)
+#             else:
+#                 features_0 = tf.random.normal([n0, feature_dim], mean=c, stddev=1.0)
+#
+#             if dist == 'normal':
+#                 features_1 = tf.random.normal([n1, feature_dim], mean=c+0.5, stddev=1.5)
+#             elif dist == 'uniform':
+#                 features_1 = tf.random.uniform([n1, feature_dim], minval=1, maxval=2)
+#             elif dist == 'gamma':
+#                 features_1 = tf.random.gamma([n1, feature_dim], alpha=5.0, beta=2.0)
+#             elif dist == 'poisson':
+#                 features_1 = tf.cast(tf.random.poisson([n1, feature_dim], lam=6), tf.float32)
+#             else:
+#                 features_1 = tf.random.normal([n1, feature_dim], mean=c+0.5, stddev=1.5)
+#
+#             features_i = tf.concat([features_0, features_1], axis=0)
+#             labels_i = tf.concat([tf.zeros([n0, 1], tf.int32), tf.ones([n1, 1], tf.int32)], axis=0)
+#             features_list.append(features_i)
+#             labels_list.append(labels_i)
+#
+#             # Generate random cluster probabilities per sample
+#             cluster_indices = tf.fill([cluster_count], c)
+#             lam_value = tf.maximum(tf.cast(c, tf.float32) + 1.0, 1.0)
+#             noise = tf.cast(tf.random.poisson([cluster_count, num_clusters], lam=lam_value), tf.float32)
+#             noise = noise + epsilon
+#             probs = noise / (tf.reduce_sum(noise, axis=1, keepdims=True))
+#             alpha = tf.random.uniform([cluster_count, 1], minval=0.5, maxval=0.8)
+#             probs = (1 - alpha) * probs + alpha * tf.one_hot(cluster_indices, num_clusters)
+#             probs = probs / tf.reduce_sum(probs, axis=1, keepdims=True)
+#             cluster_probs_list.append(probs)
+#
+#         features = tf.concat(features_list, axis=0)
+#         labels = tf.concat(labels_list, axis=0)
+#         cluster_probs = tf.concat(cluster_probs_list, axis=0)
+#
+#         # Shuffle dataset
+#         indices = tf.random.shuffle(tf.range(tf.shape(features)[0]))
+#         features = tf.gather(features, indices)
+#         labels = tf.gather(labels, indices)
+#         cluster_probs = tf.gather(cluster_probs, indices)
+#
+#         return features, labels, cluster_probs
+#
+#     # Generate training dataset
+#     print("\nGenerating training dataset...")
+#     train_features, train_labels, train_cluster_probs = generate_dataset(
+#         num_train_samples, feature_dim, num_clusters)
+#
+#     # Generate separate test dataset
+#     print("\nGenerating test dataset...")
+#     test_features, test_labels, test_cluster_probs = generate_dataset(
+#         num_test_samples, feature_dim, num_clusters, epsilon=1)
+#
+#     print(f"\nTraining labels min: {tf.reduce_min(train_labels)}, max: {tf.reduce_max(train_labels)}")
+#     print(f"Training labels head: {train_labels[:5]}")
+#     print(f"Test labels min: {tf.reduce_min(test_labels)}, max: {tf.reduce_max(test_labels)}")
+#     print(f"Test labels head: {test_labels[:5]}")
+#
+#     # Visualize training dataset
+#     print("\nVisualizing training dataset...")
+#     visualize_dataset_analysis(train_features, train_labels, train_cluster_probs,
+#                               raw_dot_plot=False, method='pca', feature_indices=(0, 1))
+#
+#     # Create training dataset
+#     train_dataset = tf.data.Dataset.from_tensor_slices(
+#         ((train_features, train_cluster_probs), train_labels)
+#     ).shuffle(1000).batch(64)
+#
+#     # Create test dataset (no need to shuffle extensively)
+#     test_dataset = tf.data.Dataset.from_tensor_slices(
+#         ((test_features, test_cluster_probs), test_labels)
+#     ).batch(64)
+#
+#     # Print info about test dataset
+#     for features, labels in test_dataset.take(1):
+#         print(f"\nTest features shape: {features[0].shape}, Test labels shape: {labels.shape}")
+#         print(f"Test features head: {features[0][:3]}")
+#         print(f"Test labels head: {labels[:3]}")
+#
+#     # Create and compile model
+#     model = EnhancedMoEModel(feature_dim, hidden_dim=8, num_experts=num_clusters, use_hard_clustering=True)
+#     model.compile(
+#         optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+#         loss=tf.keras.losses.BinaryCrossentropy(),
+#         metrics=['accuracy'],
+#     )
+#
+#     # Train model
+#     print("\nTraining model...")
+#     model.fit(train_dataset, epochs=20)
+#
+#     # Evaluate on independent test set
+#     print("\nEvaluating on independent test set...")
+#     eval_results = model.evaluate(test_dataset)
+#     print(f"Evaluation results: {eval_results}")
+#
+#     # Predict and analyze
+#     # test_batch = next(iter(test_dataset.take(1)))
+#     # predictions = model(test_batch[0], training=False)
+#     # print(f"Sample predictions shape: {predictions['prediction'].shape}")
+#     # print(f"Gate activations: {tf.reduce_mean(predictions['gates'], axis=0)}")
+#
+# # Test on a single sample
+# for (feat, cluster_prob), label in test_dataset.unbatch().take(1):
+#     feat = tf.expand_dims(feat, 0)
+#     cluster_prob = tf.expand_dims(cluster_prob, 0)
+#     output = model((feat, cluster_prob), training=False)
+#     print("Single sample prediction:", output.numpy()[0], "True label:", label.numpy())
 
-# Define model parameters
-input_dim = 10
-hidden_dim = 64
-num_experts = 5
-output_dim = 1
+import tensorflow as tf
+from tensorflow.keras import layers, Model, Sequential
 
-# Create model
-model = EnhancedMoEModel(
-    input_dim=input_dim,
-    hidden_dim=hidden_dim,
-    num_experts=num_experts,
-    output_dim=output_dim,
-    use_hard_clustering=True  # Use hard clustering during training
-)
+# --------------------------------------------------------------------------- #
+# 1. Positional + projection layer for the peptide (21-dim per residue)       #
+# --------------------------------------------------------------------------- #
+class PeptideEmbedding(layers.Layer):
+    """
+    Projects peptide vectors (one-hot or 21-dim physicochemical) to embed_dim
+    and adds a learned positional embedding.
+    """
+    def __init__(self, seq_len, embed_dim, **kwargs):
+        super().__init__(**kwargs)
+        self.embed_dim  = embed_dim
+        self.seq_len    = seq_len
+        self.proj       = layers.Dense(embed_dim, use_bias=False,
+                                       name="peptide_proj")
+        self.pos_emb    = layers.Embedding(input_dim=seq_len,
+                                           output_dim=embed_dim,
+                                           name="peptide_pos")
 
-# Compile model
-model.compile(
-    optimizer='adam',
-    loss='binary_crossentropy',
-    metrics=['accuracy']
-)
+    def call(self, x):
+        # x: (batch, S, 21)
+        h = self.proj(x)                                   # (batch, S, embed_dim)
+        pos = tf.range(self.seq_len)
+        pos = self.pos_emb(pos)[tf.newaxis, ...]           # (1, S, embed_dim)
+        return h + pos                                     # broadcast add
 
-# Generate sample data
-import numpy as np
 
-# Sample features
-X = np.random.random((100, input_dim))
+# --------------------------------------------------------------------------- #
+# 2. Cross-attention transformer block                                        #
+# --------------------------------------------------------------------------- #
+class CrossAttentionBlock(layers.Layer):
+    """
+    Latent queries attend over peptide keys/values, followed by FFN + residuals.
+    """
+    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.attn  = layers.MultiHeadAttention(num_heads=num_heads,
+                                               key_dim=embed_dim,
+                                               name="cross_attn")
+        self.ffn   = Sequential([
+            layers.Dense(ff_dim, activation="relu"),
+            layers.Dense(embed_dim)
+        ], name="ffn")
+        self.norm1 = layers.LayerNormalization(epsilon=1e-6)
+        self.norm2 = layers.LayerNormalization(epsilon=1e-6)
+        self.drop1 = layers.Dropout(rate)
+        self.drop2 = layers.Dropout(rate)
 
-# Sample clustering values (soft clustering, sums to 1 for each sample)
-clusters = np.random.random((100, num_experts))
-clusters = clusters / clusters.sum(axis=1, keepdims=True)
+    def call(self, latent_q, pep_kv, pep_mask, training=False):
+        # Cross-attention: latent as queries, peptide as keys/values
+        # pep_mask: (B,S)  => broadcast to (B, L, S)
+        attn_mask = tf.cast(pep_mask, dtype=tf.float32)[:, tf.newaxis, :]  # (B, 1, S)
 
-# Sample labels
-y = np.random.randint(0, 2, (100, output_dim))
+        z = self.attn(query=latent_q, key=pep_kv, value=pep_kv, attention_mask=attn_mask)
+        z = self.drop1(z, training=training)
+        x = self.norm1(latent_q + z)            # residual + norm
 
-# Train model
-model.fit(
-    x=(X, clusters),
-    y=y,
-    epochs=5,
-    batch_size=32
-)
+        f = self.ffn(x)
+        f = self.drop2(f, training=training)
+        return self.norm2(x + f)                # residual + norm
 
-# Prediction (will use soft clustering automatically)
-predictions = model.predict(
-    x=(X, clusters)
-)
+
+# --------------------------------------------------------------------------- #
+# 3. Build the complete classifier                                            #
+# --------------------------------------------------------------------------- #
+def build_classifier(seq_len,
+                     embed_dim     = 256,
+                     num_heads     = 8,
+                     ff_dim        = 512,
+                     dropout_rate  = 0.1):
+    # --- Inputs -------------------------------------------------------------
+    peptide_in = layers.Input(shape=(seq_len, 21),   name="peptide")       # (B, S, 21)
+    latent_in  = layers.Input(shape=(36, 1152),      name="latent_raw")    # (B, 36, 1152)
+
+    # --- Projections --------------------------------------------------------
+    pep_mask = tf.reduce_any(peptide_in > 0, axis=-1)  # bool (B,S)
+    pep_emb   = PeptideEmbedding(seq_len, embed_dim)(peptide_in)           # (B, S, D)
+
+    latent_proj = layers.Dense(embed_dim, use_bias=False,
+                               name="latent_proj")(latent_in)             # (B, 36, D)
+
+    # --- Cross-attention fusion --------------------------------------------
+    x = CrossAttentionBlock(embed_dim, num_heads, ff_dim,
+                            rate=dropout_rate)(latent_proj, pep_emb, pep_mask)  # (B, 36, D)
+
+    # --- Pool & prediction head --------------------------------------------
+    x = layers.GlobalAveragePooling1D(name="pool")(x)                      # (B, D)
+    x = layers.Dropout(dropout_rate)(x)
+    out = layers.Dense(1, activation="sigmoid", name="output")(x)          # (B, 1)
+
+    # --- Compile the model -------------------------------------------------
+
+    model = Model(inputs=[peptide_in, latent_in], outputs=out,
+                  name="peptide_latent_classifier")
+    model.compile(optimizer="adam",
+                  loss="binary_crossentropy",
+                  metrics=[tf.keras.metrics.AUC(name="auc"),
+                           tf.keras.metrics.BinaryAccuracy(name="acc")])
+    return model
+
+
+# --------------------------------------------------------------------------- #
+# 4. Demo: instantiate and inspect                                           #
+# --------------------------------------------------------------------------- #
+# if __name__ == "__main__":
+#     SEQ_LEN = 15       # typical peptide length (adjust to your data)
+#
+#     model = build_classifier(seq_len=SEQ_LEN)
+#     model.summary()
+#
+#     # Training example (dummy):
+#     peptide_batch = tf.random.uniform((320, SEQ_LEN, 21))
+#     latent_batch  = tf.random.uniform((320, 36, 1152))
+#     labels        = tf.random.uniform((320, 1), maxval=2, dtype=tf.int32)
+#     model.fit([peptide_batch, latent_batch], labels, epochs=100)
+
