@@ -1688,14 +1688,16 @@ class CrossAttentionBlock(layers.Layer):
         self.drop1 = layers.Dropout(rate)
         self.drop2 = layers.Dropout(rate)
 
-    def call(self, latent_q, pep_kv, pep_mask, training=False):
+    def call(self, latent_kv, pep_q, pep_mask, training=False):
+        # latent_kv: (B, 36, D)  => keys/values
+        # pep_q: (B, S, D)       => queries
         # Cross-attention: latent as queries, peptide as keys/values
-        # pep_mask: (B,S)  => broadcast to (B, L, S)
-        attn_mask = tf.cast(pep_mask, dtype=tf.float32)[:, tf.newaxis, :]  # (B, 1, S)
+        # pep_mask: (B,S)  => broadcast to (B, S, L) where L=36
+        pep_mask = tf.expand_dims(pep_mask, axis=-1)  # (B, S, 1)
 
-        z = self.attn(query=latent_q, key=pep_kv, value=pep_kv, attention_mask=attn_mask)
+        z = self.attn(pep_q, latent_kv, attention_mask=pep_mask, training=True)  # (B, S, D)
         z = self.drop1(z, training=training)
-        x = self.norm1(latent_q + z)            # residual + norm
+        x = self.norm1(pep_q + z)            # residual + norm
 
         f = self.ffn(x)
         f = self.drop2(f, training=training)
@@ -1709,7 +1711,7 @@ def build_classifier(seq_len,
                      embed_dim     = 256,
                      num_heads     = 8,
                      ff_dim        = 512,
-                     dropout_rate  = 0.1):
+                     dropout_rate  = 0.01):
     # --- Inputs -------------------------------------------------------------
     peptide_in = layers.Input(shape=(seq_len, 21),   name="peptide")       # (B, S, 21)
     latent_in  = layers.Input(shape=(36, 1152),      name="latent_raw")    # (B, 36, 1152)
@@ -1737,7 +1739,7 @@ def build_classifier(seq_len,
     model.compile(optimizer="adam",
                   loss="binary_crossentropy",
                   metrics=[tf.keras.metrics.AUC(name="auc"),
-                           tf.keras.metrics.BinaryAccuracy(name="acc")])
+                           tf.keras.metrics.BinaryAccuracy(name="binary_acc")])
     return model
 
 
