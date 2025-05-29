@@ -1641,107 +1641,475 @@ class EnhancedMoEModel(tf.keras.Model):
 import tensorflow as tf
 from tensorflow.keras import layers, Model, Sequential
 
+
 # --------------------------------------------------------------------------- #
-# 1. Positional + projection layer for the peptide (21-dim per residue)       #
+# 1.1 Positional + projection layer for the peptide (21-dim per residue)      #
 # --------------------------------------------------------------------------- #
-class PeptideEmbedding(layers.Layer):
+class PeptideProj(layers.Layer):
     """
     Projects peptide vectors (one-hot or 21-dim physicochemical) to embed_dim
     and adds a learned positional embedding.
     """
-    def __init__(self, seq_len, embed_dim, **kwargs):
+
+    def __init__(self, max_seq_len, embed_dim, **kwargs):
         super().__init__(**kwargs)
-        self.embed_dim  = embed_dim
-        self.seq_len    = seq_len
-        self.proj       = layers.Dense(embed_dim, use_bias=False,
-                                       name="peptide_proj")
-        self.pos_emb    = layers.Embedding(input_dim=seq_len,
-                                           output_dim=embed_dim,
-                                           name="peptide_pos")
+        self.embed_dim = embed_dim
+        self.max_seq_len = max_seq_len
+        self.proj = layers.Dense(embed_dim, use_bias=False, name="peptide_proj")
+        self.pos_emb = layers.Embedding(
+            input_dim=max_seq_len,
+            output_dim=embed_dim,
+            name="peptide_pos"
+        )
 
     def call(self, x):
         # x: (batch, S, 21)
-        h = self.proj(x)                                   # (batch, S, embed_dim)
-        pos = tf.range(self.seq_len)
-        pos = self.pos_emb(pos)[tf.newaxis, ...]           # (1, S, embed_dim)
-        return h + pos                                     # broadcast add
+        batch_size = tf.shape(x)[0]
+        seq_len = tf.shape(x)[1]
+
+        # Project input features
+        h = self.proj(x)  # (batch, S, embed_dim)
+
+        # Create position indices
+        pos_indices = tf.range(seq_len)  # (S,)
+        pos_embeddings = self.pos_emb(pos_indices)  # (S, embed_dim)
+
+        # Add positional embeddings (broadcasting)
+        pos_embeddings = tf.expand_dims(pos_embeddings, 0)  # (1, S, embed_dim)
+        return h + pos_embeddings  # (batch, S, embed_dim)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "max_seq_len": self.max_seq_len,
+            "embed_dim": self.embed_dim
+        })
+        return config
 
 
 # --------------------------------------------------------------------------- #
-# 2. Cross-attention transformer block                                        #
+# 1.2 Positional + projection layer for the latent (1152-dim per residue)     #
 # --------------------------------------------------------------------------- #
-class CrossAttentionBlock(layers.Layer):
+class LatentProj(layers.Layer):
     """
-    Latent queries attend over peptide keys/values, followed by FFN + residuals.
+    Projects latent vectors (1152-dim) to embed_dim and adds a learned positional
+    embedding.
     """
-    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1, **kwargs):
+
+    def __init__(self, max_n_residues, embed_dim, **kwargs):
         super().__init__(**kwargs)
-        self.attn  = layers.MultiHeadAttention(num_heads=num_heads,
-                                               key_dim=embed_dim,
-                                               name="cross_attn")
-        self.ffn   = Sequential([
+        self.embed_dim = embed_dim
+        self.max_n_residues = max_n_residues
+        self.proj = layers.Dense(embed_dim, use_bias=False, name="latent_proj")
+        self.pos_emb = layers.Embedding(
+            input_dim=max_n_residues,
+            output_dim=embed_dim,
+            name="latent_pos"
+        )
+
+    def call(self, x):
+        # x: (batch, R, 1152)
+        batch_size = tf.shape(x)[0]
+        n_residues = tf.shape(x)[1]
+
+        # Project input features
+        h = self.proj(x)  # (batch, R, embed_dim)
+
+        # Create position indices
+        pos_indices = tf.range(n_residues)  # (R,)
+        pos_embeddings = self.pos_emb(pos_indices)  # (R, embed_dim)
+
+        # Add positional embeddings (broadcasting)
+        pos_embeddings = tf.expand_dims(pos_embeddings, 0)  # (1, R, embed_dim)
+        return h + pos_embeddings  # (batch, R, embed_dim)
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "max_n_residues": self.max_n_residues,
+            "embed_dim": self.embed_dim
+        })
+        return config
+
+
+# --------------------------------------------------------------------------- #
+# 2.1 Self-attention transformer block                                        #
+# --------------------------------------------------------------------------- #
+class SelfAttentionBlock(layers.Layer):
+    """
+    Self-attention block for sequences, followed by FFN + residuals.
+    """
+
+    def __init__(self, embed_dim, num_heads, ff_dim, dropout_rate=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.ff_dim = ff_dim
+        self.dropout_rate = dropout_rate
+
+        self.attn = layers.MultiHeadAttention(
+            num_heads=num_heads,
+            key_dim=embed_dim // num_heads,
+            name="self_attn"
+        )
+        self.ffn = Sequential([
             layers.Dense(ff_dim, activation="relu"),
             layers.Dense(embed_dim)
         ], name="ffn")
         self.norm1 = layers.LayerNormalization(epsilon=1e-6)
         self.norm2 = layers.LayerNormalization(epsilon=1e-6)
-        self.drop1 = layers.Dropout(rate)
-        self.drop2 = layers.Dropout(rate)
+        self.drop1 = layers.Dropout(dropout_rate)
+        self.drop2 = layers.Dropout(dropout_rate)
 
-    def call(self, latent_kv, pep_q, pep_mask, training=False):
-        # latent_kv: (B, 36, D)  => keys/values
-        # pep_q: (B, S, D)       => queries
-        # Cross-attention: latent as queries, peptide as keys/values
-        # pep_mask: (B,S)  => broadcast to (B, S, L) where L=36
-        pep_mask = tf.expand_dims(pep_mask, axis=-1)  # (B, S, 1)
+    def call(self, x, mask=None, training=False):
+        # x: (B, L, D)
+        # Convert mask to proper format for attention if provided
+        attention_mask = None
+        if mask is not None:
+            # mask: (B, L) -> need (B, 1, 1, L) for self-attention
+            attention_mask = mask[:, tf.newaxis, tf.newaxis, :]  # (B, 1, 1, L)
 
-        z = self.attn(pep_q, latent_kv, attention_mask=pep_mask, training=True)  # (B, S, D)
-        z = self.drop1(z, training=training)
-        x = self.norm1(pep_q + z)            # residual + norm
+        # Self-attention
+        attn_out = self.attn(
+            query=x, key=x, value=x,
+            attention_mask=attention_mask,
+            training=training
+        )
+        attn_out = self.drop1(attn_out, training=training)
+        x = self.norm1(x + attn_out)  # residual + norm
 
-        f = self.ffn(x)
-        f = self.drop2(f, training=training)
-        return self.norm2(x + f)                # residual + norm
+        # Feed-forward
+        ff_out = self.ffn(x)
+        ff_out = self.drop2(ff_out, training=training)
+        return self.norm2(x + ff_out)  # residual + norm
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "embed_dim": self.embed_dim,
+            "num_heads": self.num_heads,
+            "ff_dim": self.ff_dim,
+            "dropout_rate": self.dropout_rate
+        })
+        return config
+
+
+# --------------------------------------------------------------------------- #
+# 2.2 Cross-attention transformer block                                       #
+# --------------------------------------------------------------------------- #
+class CrossAttentionBlock(layers.Layer):
+    """
+    Cross-attention block with self-attention on queries first, then cross-attention.
+    First applies self-attention to queries, then cross-attention with keys/values.
+    """
+
+    def __init__(self, embed_dim, num_heads, ff_dim, dropout_rate=0.1, **kwargs):
+        super().__init__(**kwargs)
+        self.embed_dim = embed_dim
+        self.num_heads = num_heads
+        self.ff_dim = ff_dim
+        self.dropout_rate = dropout_rate
+
+        # Self-attention for queries
+        self.self_attn = layers.MultiHeadAttention(
+            num_heads=num_heads,
+            key_dim=embed_dim // num_heads,
+            name="self_attn"
+        )
+
+        # Cross-attention between queries and keys/values
+        self.cross_attn = layers.MultiHeadAttention(
+            num_heads=num_heads,
+            key_dim=embed_dim // num_heads,
+            name="cross_attn"
+        )
+
+        self.ffn = Sequential([
+            layers.Dense(ff_dim, activation="relu"),
+            layers.Dense(embed_dim)
+        ], name="ffn")
+
+        # Normalization layers
+        self.norm1 = layers.LayerNormalization(epsilon=1e-6, name="norm1")
+        self.norm2 = layers.LayerNormalization(epsilon=1e-6, name="norm2")
+        self.norm3 = layers.LayerNormalization(epsilon=1e-6, name="norm3")
+
+        # Dropout layers
+        self.drop1 = layers.Dropout(dropout_rate)
+        self.drop2 = layers.Dropout(dropout_rate)
+        self.drop3 = layers.Dropout(dropout_rate)
+
+    def call(self, queries, keys_values, query_mask=None, key_mask=None, training=False):
+        """
+        Args:
+            queries: (B, L_q, D) - query sequences
+            keys_values: (B, L_kv, D) - key/value sequences
+            query_mask: (B, L_q) - mask for queries
+            key_mask: (B, L_kv) - mask for keys/values
+            training: bool
+        """
+        # Convert masks to proper format for attention if provided
+        query_attention_mask = None
+        if query_mask is not None:
+            # query_mask: (B, L_q) -> need (B, 1, 1, L_q) for self-attention
+            query_attention_mask = query_mask[:, tf.newaxis, tf.newaxis, :]  # (B, 1, 1, L_q)
+
+        key_attention_mask = None
+        if key_mask is not None:
+            # key_mask: (B, L_kv) -> need (B, 1, 1, L_kv) for cross-attention
+            key_attention_mask = key_mask[:, tf.newaxis, tf.newaxis, :]  # (B, 1, 1, L_kv)
+
+        # Step 1: Self-attention on queries
+        self_attn_out = self.self_attn(
+            query=queries,
+            key=queries,
+            value=queries,
+            attention_mask=query_attention_mask,
+            training=training
+        )
+        self_attn_out = self.drop1(self_attn_out, training=training)
+        queries_refined = self.norm1(queries + self_attn_out)  # residual + norm
+
+        # Step 2: Cross-attention between refined queries and keys/values
+        cross_attn_out = self.cross_attn(
+            query=queries_refined,
+            key=keys_values,
+            value=keys_values,
+            attention_mask=key_attention_mask,
+            training=training
+        )
+        cross_attn_out = self.drop2(cross_attn_out, training=training)
+        x = self.norm2(queries_refined + cross_attn_out)  # residual connection
+
+        # Step 3: Feed-forward network
+        ff_out = self.ffn(x)
+        ff_out = self.drop3(ff_out, training=training)
+        return self.norm3(x + ff_out)  # residual + norm
+
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            "embed_dim": self.embed_dim,
+            "num_heads": self.num_heads,
+            "ff_dim": self.ff_dim,
+            "dropout_rate": self.dropout_rate
+        })
+        return config
 
 
 # --------------------------------------------------------------------------- #
 # 3. Build the complete classifier                                            #
 # --------------------------------------------------------------------------- #
-def build_classifier(seq_len,
-                     embed_dim     = 256,
-                     num_heads     = 8,
-                     ff_dim        = 512,
-                     dropout_rate  = 0.01):
+def build_classifier(max_seq_len=50,
+                     max_n_residues=500,
+                     n_blocks=4,
+                     embed_dim=256,
+                     num_heads=8,
+                     ff_dim=512,
+                     dropout_rate=0.01):
+    """
+    Build peptide-latent interaction classifier.
+
+    Args:
+        max_seq_len: Maximum peptide sequence length
+        max_n_residues: Maximum number of protein residues
+        n_blocks: Number of transformer blocks
+        embed_dim: Embedding dimension
+        num_heads: Number of attention heads
+        ff_dim: Feed-forward dimension
+        dropout_rate: Dropout rate
+
+    Returns:
+        Compiled Keras model
+    """
+
     # --- Inputs -------------------------------------------------------------
-    peptide_in = layers.Input(shape=(seq_len, 21),   name="peptide")       # (B, S, 21)
-    latent_in  = layers.Input(shape=(36, 1152),      name="latent_raw")    # (B, 36, 1152)
+    peptide_in = layers.Input(shape=(None, 21), name="peptide")  # (B, S, 21)
+    latent_in = layers.Input(shape=(None, 1152), name="latent_raw")  # (B, R, 1152)
+
+    # --- Create attention masks ---------------------------------------------
+    # Peptide mask: True where peptide has content (non-zero vectors)
+    pep_mask = tf.reduce_any(tf.abs(peptide_in) > 1e-6, axis=-1)  # (B, S)
+
+    # Latent mask: True where latent has content (non-zero vectors)
+    latent_mask = tf.reduce_any(tf.abs(latent_in) > 1e-6, axis=-1)  # (B, R)
 
     # --- Projections --------------------------------------------------------
-    pep_mask = tf.reduce_any(peptide_in > 0, axis=-1)  # bool (B,S)
-    pep_emb   = PeptideEmbedding(seq_len, embed_dim)(peptide_in)           # (B, S, D)
+    pep_proj = PeptideProj(max_seq_len, embed_dim, name="peptide_projection")(peptide_in)
+    latent_proj = LatentProj(max_n_residues, embed_dim, name="latent_projection")(latent_in)
 
-    latent_proj = layers.Dense(embed_dim, use_bias=False,
-                               name="latent_proj")(latent_in)             # (B, 36, D)
+    # --- Self-attention blocks for latent representation -------------------
+    latent_embed = latent_proj
+    for i in range(n_blocks):
+        latent_embed = SelfAttentionBlock(
+            embed_dim=embed_dim,
+            num_heads=num_heads,
+            ff_dim=ff_dim,
+            dropout_rate=dropout_rate,
+            name=f"latent_self_attn_block_{i + 1}"
+        )(latent_embed, mask=latent_mask)
 
-    # --- Cross-attention fusion --------------------------------------------
-    x = CrossAttentionBlock(embed_dim, num_heads, ff_dim,
-                            rate=dropout_rate)(latent_proj, pep_emb, pep_mask)  # (B, 36, D)
+    # --- Cross-attention fusion ---------------------------------------------
+    # Latent queries attend to peptide keys/values
+    fused = latent_embed
+    for i in range(n_blocks):
+        fused = CrossAttentionBlock(
+            embed_dim=embed_dim,
+            num_heads=num_heads,
+            ff_dim=ff_dim,
+            dropout_rate=dropout_rate,
+            name=f"cross_attn_block_{i + 1}"
+        )(queries=fused, keys_values=pep_proj, query_mask=latent_mask, key_mask=pep_mask)
 
-    # --- Pool & prediction head --------------------------------------------
-    x = layers.GlobalAveragePooling1D(name="pool")(x)                      # (B, D)
-    x = layers.Dropout(dropout_rate)(x)
-    out = layers.Dense(1, activation="sigmoid", name="output")(x)          # (B, 1)
+    # --- Aggregation and prediction head -----------------------------------
+    # Global average pooling with masking
+    latent_mask_expanded = tf.expand_dims(tf.cast(latent_mask, tf.float32), -1)  # (B, R, 1)
+    masked_fused = fused * latent_mask_expanded  # Zero out padded positions
 
-    # --- Compile the model -------------------------------------------------
+    # Compute mean only over valid positions
+    pooled = tf.reduce_sum(masked_fused, axis=1)  # (B, D)
+    valid_lengths = tf.reduce_sum(latent_mask_expanded, axis=1)  # (B, 1)
+    pooled = pooled / (valid_lengths + 1e-8)  # Average over valid positions
 
-    model = Model(inputs=[peptide_in, latent_in], outputs=out,
-                  name="peptide_latent_classifier")
-    model.compile(optimizer="adam",
-                  loss="binary_crossentropy",
-                  metrics=[tf.keras.metrics.AUC(name="auc"),
-                           tf.keras.metrics.BinaryAccuracy(name="binary_acc")])
+    # Simpler classification head
+    output = layers.Dense(1, activation="sigmoid", name="output")(pooled)
+    # # Final prediction layers
+    # x = layers.Dense(embed_dim, activation="relu", name="pred_hidden")(pooled)
+    # x = layers.Dropout(dropout_rate)(x)
+    # x = layers.Dense(embed_dim // 2, activation="relu", name="pred_hidden2")(x)
+    # x = layers.Dropout(dropout_rate)(x)
+    # output = layers.Dense(1, activation="softmax", name="output")(x)
+
+    # --- Build and compile model --------------------------------------------
+    model = Model(
+        inputs=[peptide_in, latent_in],
+        outputs=output,
+        name="peptide_latent_classifier"
+    )
+
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+        loss="binary_crossentropy",
+        metrics=["binary_accuracy", "AUC"]
+    )
+
     return model
 
+
+# ----------------------------------------------------------------------------- #
+# # 4. Utility function to test the model                                       #
+# # --------------------------------------------------------------------------- #
+# def test_model():
+#     """Test the model with dummy data to ensure it works."""
+#
+#     # Create model
+#     model = build_classifier(
+#         max_seq_len=20,
+#         max_n_residues=100,
+#         n_blocks=2,
+#         embed_dim=128,
+#         num_heads=4,
+#         ff_dim=256,
+#         dropout_rate=0.1
+#     )
+#
+#     # Print model summary
+#     print("Model Summary:")
+#     model.summary()
+#
+#     # Create dummy data
+#     batch_size = 4
+#     seq_len = 15
+#     n_residues = 80
+#
+#     # Dummy peptide data (one-hot encoded)
+#     peptide_data = tf.random.uniform((batch_size, seq_len, 21), maxval=2, dtype=tf.int32)
+#     peptide_data = tf.cast(peptide_data, tf.float32)
+#
+#     # Dummy latent data
+#     latent_data = tf.random.normal((batch_size, n_residues, 1152))
+#
+#     # Test forward pass
+#     print("\nTesting forward pass...")
+#     predictions = model([peptide_data, latent_data])
+#     print(f"Output shape: {predictions.shape}")
+#     print(f"Sample predictions: {predictions[:3].numpy().flatten()}")
+#
+#     # Test with different sequence lengths
+#     print("\nTesting with variable sequence lengths...")
+#     peptide_data2 = tf.random.uniform((batch_size, 10, 21), maxval=2, dtype=tf.int32)
+#     peptide_data2 = tf.cast(peptide_data2, tf.float32)
+#     latent_data2 = tf.random.normal((batch_size, 60, 1152))
+#
+#     predictions2 = model([peptide_data2, latent_data2])
+#     print(f"Output shape with different lengths: {predictions2.shape}")
+#
+#     print("\nModel test completed successfully!")
+#
+#     return model
+#
+#
+# if __name__ == "__main__":
+#     # Test the model
+#     test_model()
+
+
+# # --------------------------------------------------------------------------- #
+# # 4. Utility function to test the model                                      #
+# # --------------------------------------------------------------------------- #
+# def test_model():
+#     """Test the model with dummy data to ensure it works."""
+#
+#     # Create model
+#     model = build_classifier(
+#         max_seq_len=20,
+#         max_n_residues=100,
+#         n_blocks=2,
+#         embed_dim=128,
+#         num_heads=4,
+#         ff_dim=256,
+#         dropout_rate=0.1
+#     )
+#
+#     # Print model summary
+#     print("Model Summary:")
+#     model.summary()
+#
+#     # Create dummy data
+#     batch_size = 4
+#     seq_len = 15
+#     n_residues = 80
+#
+#     # Dummy peptide data (one-hot encoded)
+#     peptide_data = tf.random.uniform((batch_size, seq_len, 21), maxval=2, dtype=tf.int32)
+#     peptide_data = tf.cast(peptide_data, tf.float32)
+#
+#     # Dummy latent data
+#     latent_data = tf.random.normal((batch_size, n_residues, 1152))
+#
+#     # Test forward pass
+#     print("\nTesting forward pass...")
+#     predictions = model([peptide_data, latent_data])
+#     print(f"Output shape: {predictions.shape}")
+#     print(f"Sample predictions: {predictions[:3].numpy().flatten()}")
+#
+#     # Test with different sequence lengths
+#     print("\nTesting with variable sequence lengths...")
+#     peptide_data2 = tf.random.uniform((batch_size, 10, 21), maxval=2, dtype=tf.int32)
+#     peptide_data2 = tf.cast(peptide_data2, tf.float32)
+#     latent_data2 = tf.random.normal((batch_size, 60, 1152))
+#
+#     predictions2 = model([peptide_data2, latent_data2])
+#     print(f"Output shape with different lengths: {predictions2.shape}")
+#
+#     print("\nModel test completed successfully!")
+#
+#     return model
+#
+#
+# if __name__ == "__main__":
+#     # Test the model
+#     test_model()
 
 # --------------------------------------------------------------------------- #
 # 4. Demo: instantiate and inspect                                           #
