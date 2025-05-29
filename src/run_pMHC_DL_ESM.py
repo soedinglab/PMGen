@@ -724,7 +724,7 @@ def main(argv=None):
             test1_results = model.evaluate(test1_loader, verbose=1)
             print(f"Test1 results: {test1_results}")
             print("Evaluating on test2 set...")
-            test2_results = model.evaluate(test2_loader, verbose=1, )
+            test2_results = model.evaluate(test2_loader, verbose=1)
             print(f"Test2 results: {test2_results}")
 
             # Plot ROC curve for test1
