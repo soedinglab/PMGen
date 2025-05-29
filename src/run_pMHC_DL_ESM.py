@@ -34,9 +34,15 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
+
+from utils.create_ESM_dataset import mhc_class
 from utils.model import build_classifier
-from sklearn.metrics import confusion_matrix, roc_curve, auc, roc_auc_score
+from sklearn.metrics import (
+    confusion_matrix, roc_curve, auc, precision_score,
+    recall_score, f1_score, accuracy_score, roc_auc_score
+)
 import seaborn as sns
+
 
 # ---------------------------------------------------------------------------
 # Utility: peptide → one‑hot (seq_len, 21)
@@ -96,7 +102,7 @@ def load_dataset(parquet_path: str):
     print("   peptide one-hot shape:", pep_onehot.shape)
 
     # 2) Latent embeddings --------------------------------------------------
-    print("   loading MHC-I embeddings")
+    print(f"   loading MHC {mhc_class} embeddings")
     if "mhc_embedding" in df.columns:
         latents = np.stack(df["mhc_embedding"].values).astype("float32")
     elif "mhc_embedding_path" in df.columns:
@@ -161,82 +167,95 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
     """
     hist = history.history
     plt.figure(figsize=(21, 6))
+    plot_name = f"training_curve{'_fold' + str(fold_id) if fold_id is not None else ''}"
+
+    # set plot name above all plots
+    plt.suptitle(f"Training Curves{' (Fold ' + str(fold_id) + ')' if fold_id is not None else ''}", fontsize=16, fontweight='bold')
 
     # Plot 1: Loss curve
     plt.subplot(1, 4, 1)
-    plt.plot(hist["loss"], label="train")
-    plt.plot(hist["val_loss"], label="val")
-    plt.xlabel("epoch")
-    plt.ylabel("loss")
-    plt.title("BCE loss")
+    plt.plot(hist["loss"], label="train", linewidth=2)
+    plt.plot(hist["val_loss"], label="val", linewidth=2)
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.title("BCE Loss")
     plt.legend()
-    plt.grid(True)
+    plt.grid(True, alpha=0.3)
 
     # Plot 2: Accuracy curve
     if "binary_accuracy" in hist and "val_binary_accuracy" in hist:
         plt.subplot(1, 4, 2)
-        plt.plot(hist["binary_accuracy"], label="train acc")
-        plt.plot(hist["val_binary_accuracy"], label="val acc")
-        plt.xlabel("epoch")
-        plt.ylabel("accuracy")
+        plt.plot(hist["binary_accuracy"], label="train acc", linewidth=2)
+        plt.plot(hist["val_binary_accuracy"], label="val acc", linewidth=2)
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
         plt.title("Binary Accuracy")
         plt.legend()
-        plt.grid(True)
+        plt.grid(True, alpha=0.3)
+    elif "accuracy" in hist and "val_accuracy" in hist:
+        plt.subplot(1, 4, 2)
+        plt.plot(hist["accuracy"], label="train acc", linewidth=2)
+        plt.plot(hist["val_accuracy"], label="val acc", linewidth=2)
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
+        plt.title("Accuracy")
+        plt.legend()
+        plt.grid(True, alpha=0.3)
 
     # Plot 3: AUC curve
     if "auc" in hist and "val_auc" in hist:
         plt.subplot(1, 4, 3)
-        plt.plot(hist["auc"], label="train AUC")
-        plt.plot(hist["val_auc"], label="val AUC")
-        plt.xlabel("epoch")
+        plt.plot(hist["auc"], label="train AUC", linewidth=2)
+        plt.plot(hist["val_auc"], label="val AUC", linewidth=2)
+        plt.xlabel("Epoch")
         plt.ylabel("AUC")
         plt.title("AUC")
         plt.legend()
-        plt.grid(True)
+        plt.grid(True, alpha=0.3)
 
-    # Plot 4: Confusion matrix
+    # Plot 4: Confusion matrix (if model and validation dataset provided)
     if model is not None and val_dataset is not None:
         plt.subplot(1, 4, 4)
 
-        try:
-            # Collect validation predictions and true labels simultaneously
-            y_true_list = []
-            y_pred_proba_list = []
+        # Get predictions
+        y_pred_proba = model.predict(val_dataset)
+        y_pred = (y_pred_proba > 0.5).astype(int)
 
-            for features, labels in val_dataset:
-                y_true_list.append(labels.numpy())
-                batch_pred = model(features, training=False).numpy()
-                y_pred_proba_list.append(batch_pred)
+        # Extract true labels
+        y_true = []
+        for _, labels in val_dataset:
+            y_true.extend(labels.numpy())
+        y_true = np.array(y_true)
 
-            y_true = np.concatenate(y_true_list, axis=0).flatten()
-            y_pred_proba = np.concatenate(y_pred_proba_list, axis=0).flatten()
-            # print min, max, mean of y_pred_proba
-            print(f"y_pred_proba: min={y_pred_proba.min():.4f}, max={y_pred_proba.max():.4f}, mean={y_pred_proba.mean():.4f}")
-            y_pred = (y_pred_proba > 0.5).astype(int)
-
-            # Compute confusion matrix
-            cm = confusion_matrix(y_true, y_pred)
-
-            # Plot confusion matrix
-            sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-                        xticklabels=["Negative", "Positive"],
-                        yticklabels=["Negative", "Positive"])
-            plt.xlabel("Predicted")
-            plt.ylabel("True")
-            plt.title(f"Confusion Matrix\nAUROC: {roc_auc_score(y_true, y_pred_proba):.4f}")
-        except Exception as e:
-            print(f"Warning: could not generate confusion matrix: {e}")
+        # Create confusion matrix
+        cm = confusion_matrix(y_true, y_pred)
+        sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                    xticklabels=['Negative', 'Positive'],
+                    yticklabels=['Negative', 'Positive'])
+        plt.title('Confusion Matrix')
+        plt.xlabel('Predicted')
+        plt.ylabel('Actual')
+    else:
+        # If no model/dataset provided, show a placeholder or additional metric
+        plt.subplot(1, 4, 4)
+        plt.text(0.5, 0.5, 'Confusion Matrix\n(Requires model + val_dataset)',
+                 ha='center', va='center', transform=plt.gca().transAxes,
+                 bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgray"))
+        plt.axis('off')
 
     # Save main plot
-    plt.figure(1)
     plt.tight_layout()
-    out_png = os.path.join(run_dir, f"training_curve{'_fold' + str(fold_id) if fold_id is not None else ''}.png")
-    plt.savefig(out_png)
+    out_png = os.path.join(run_dir, f"{plot_name}.png")
+
+    # Create directory if it doesn't exist
+    os.makedirs(run_dir, exist_ok=True)
+
+    plt.savefig(out_png, dpi=300, bbox_inches='tight')
     plt.show()
     print(f"✓ Training curve saved to {out_png}")
 
 
-def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None, history=None):
+def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None, history=None, string: str =None):
     """
     Plot comprehensive evaluation metrics for a test dataset using a trained model.
 
@@ -247,79 +266,81 @@ def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None, hi
         fold_id: Optional fold identifier for naming the output file.
         history: Optional training history object to display loss/accuracy curves.
 
-    Returns: None
+    Returns: Dictionary containing evaluation metrics
     """
     # Collect predictions
-    y_true_list = []
-    y_pred_proba_list = []
+    print("Generating predictions...")
+    y_pred_proba = model.predict(test_dataset)
+    y_pred = (y_pred_proba > 0.5).astype(int).flatten()
 
-    for features, labels in test_dataset:
-        y_true_list.append(labels.numpy())
-        batch_pred = model(features, training=False).numpy()
-        y_pred_proba_list.append(batch_pred)
+    # Extract true labels
+    y_true = []
+    for _, labels in test_dataset:
+        y_true.extend(labels.numpy())
+    y_true = np.array(y_true).flatten()
 
-    y_true = np.concatenate(y_true_list, axis=0)
-    y_pred_proba = np.concatenate(y_pred_proba_list, axis=0)
-    # print min, max, mean of y_pred_proba
-    print(f"y_pred_proba: min={y_pred_proba.min():.4f}, max={y_pred_proba.max():.4f}, mean={y_pred_proba.mean():.4f}")
-    y_pred = (y_pred_proba > 0.5).astype(int)
+    # Calculate ROC curve
+    fpr, tpr, _ = roc_curve(y_true, y_pred_proba.flatten())
+    roc_auc = auc(fpr, tpr)
 
     # Create a multi-panel figure
-    plt.figure(figsize=(20, 12))
+    plt.figure(figsize=(15, 10))
+    plt.suptitle(f"{string} Evaluation Metrics{' (Fold ' + str(fold_id) + ')' if fold_id is not None else ''}",
+                 fontsize=16, fontweight='bold')
 
     # Panel 1: ROC Curve
     plt.subplot(2, 2, 1)
-    fpr, tpr, _ = roc_curve(y_true, y_pred_proba)
-    roc_auc = auc(fpr, tpr)
-    plt.plot(fpr, tpr, color='blue', label=f'ROC curve (area = {roc_auc:.4f})')
-    plt.plot([0, 1], [0, 1], color='red', linestyle='--')
+    plt.plot(fpr, tpr, color='darkorange', lw=2,
+             label=f'ROC curve (AUC = {roc_auc:.4f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', alpha=0.8)
     plt.xlim([0.0, 1.0])
     plt.ylim([0.0, 1.05])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
-    plt.title('ROC Curve')
-    plt.legend(loc='lower right')
+    plt.title('Receiver Operating Characteristic (ROC) Curve')
+    plt.legend(loc="lower right")
+    plt.grid(True, alpha=0.3)
 
     # Panel 2: Confusion Matrix
     plt.subplot(2, 2, 2)
-    cm = confusion_matrix(y_true.flatten(), y_pred.flatten())
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues",
-                xticklabels=["Negative", "Positive"],
-                yticklabels=["Negative", "Positive"])
-    plt.xlabel("Predicted")
-    plt.ylabel("True")
-    plt.title("Confusion Matrix")
+    cm = confusion_matrix(y_true, y_pred)
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
+                xticklabels=['Negative', 'Positive'],
+                yticklabels=['Negative', 'Positive'])
+    plt.title('Confusion Matrix')
+    plt.xlabel('Predicted Label')
+    plt.ylabel('True Label')
 
     # Panel 3: Loss curve (if history provided)
     if history is not None:
         plt.subplot(2, 2, 3)
         hist = history.history
-        plt.plot(hist.get("loss", []), label="train")
-        plt.plot(hist.get("val_loss", []), label="val")
-        plt.xlabel("epoch")
-        plt.ylabel("loss")
+        plt.plot(hist.get("loss", []), label="train", linewidth=2)
+        plt.plot(hist.get("val_loss", []), label="val", linewidth=2)
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
         plt.title("BCE Loss")
         plt.legend()
-        plt.grid(True)
+        plt.grid(True, alpha=0.3)
 
         # Panel 4: Accuracy curve (if available in history)
         plt.subplot(2, 2, 4)
         if "binary_accuracy" in hist and "val_binary_accuracy" in hist:
-            plt.plot(hist["binary_accuracy"], label="train acc")
-            plt.plot(hist["val_binary_accuracy"], label="val acc")
+            plt.plot(hist["binary_accuracy"], label="train acc", linewidth=2)
+            plt.plot(hist["val_binary_accuracy"], label="val acc", linewidth=2)
         elif "accuracy" in hist and "val_accuracy" in hist:
-            plt.plot(hist["accuracy"], label="train acc")
-            plt.plot(hist["val_accuracy"], label="val acc")
-        plt.xlabel("epoch")
-        plt.ylabel("accuracy")
+            plt.plot(hist["accuracy"], label="train acc", linewidth=2)
+            plt.plot(hist["val_accuracy"], label="val acc", linewidth=2)
+        plt.xlabel("Epoch")
+        plt.ylabel("Accuracy")
         plt.title("Accuracy")
         plt.legend()
-        plt.grid(True)
+        plt.grid(True, alpha=0.3)
     else:
         # Panel 3: Test metrics when history not available
         plt.subplot(2, 2, 3)
-        from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
+        # Calculate metrics
         accuracy = accuracy_score(y_true, y_pred)
         precision = precision_score(y_true, y_pred, zero_division=0)
         recall = recall_score(y_true, y_pred, zero_division=0)
@@ -334,29 +355,68 @@ def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None, hi
         }
 
         # Create a bar chart for metrics
-        plt.bar(range(len(metrics)), list(metrics.values()), align='center')
-        plt.xticks(range(len(metrics)), list(metrics.keys()), rotation=45)
+        bars = plt.bar(range(len(metrics)), list(metrics.values()),
+                       color=['skyblue', 'lightcoral', 'lightgreen', 'gold', 'orange'],
+                       alpha=0.8, edgecolor='black', linewidth=1)
+        plt.xticks(range(len(metrics)), list(metrics.keys()), rotation=45, ha='right')
         plt.ylim(0, 1.0)
         plt.title('Test Set Evaluation Metrics')
+        plt.ylabel('Score')
+        plt.grid(True, alpha=0.3, axis='y')
 
         # Add values on top of bars
-        for i, v in enumerate(metrics.values()):
-            plt.text(i, v + 0.02, f'{v:.4f}', ha='center')
+        for i, (bar, value) in enumerate(zip(bars, metrics.values())):
+            plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+                     f'{value:.4f}', ha='center', va='bottom', fontweight='bold')
+
+        # Panel 4: Prediction distribution
+        plt.subplot(2, 2, 4)
+        plt.hist(y_pred_proba[y_true == 0], bins=30, alpha=0.7,
+                 label='Negative Class', color='red', density=True)
+        plt.hist(y_pred_proba[y_true == 1], bins=30, alpha=0.7,
+                 label='Positive Class', color='blue', density=True)
+        plt.axvline(x=0.5, color='black', linestyle='--', linewidth=2,
+                    label='Decision Threshold')
+        plt.xlabel('Predicted Probability')
+        plt.ylabel('Density')
+        plt.title('Prediction Probability Distribution')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
 
     plt.tight_layout()
+
+    # Create directory if it doesn't exist
+    os.makedirs(run_dir, exist_ok=True)
+
     out_png = os.path.join(run_dir, f"test_metrics{'_fold' + str(fold_id) if fold_id is not None else ''}.png")
-    plt.savefig(out_png)
+    plt.savefig(out_png, dpi=300, bbox_inches='tight')
     plt.show()
     print(f"✓ Test metrics visualization saved to {out_png}")
 
-    # Return evaluation metrics as dictionary for possible further use
-    return {
+    # Calculate and return evaluation metrics
+    metrics_dict = {
         'roc_auc': roc_auc,
         'accuracy': accuracy_score(y_true, y_pred),
         'precision': precision_score(y_true, y_pred, zero_division=0),
         'recall': recall_score(y_true, y_pred, zero_division=0),
-        'f1': f1_score(y_true, y_pred, zero_division=0)
+        'f1': f1_score(y_true, y_pred, zero_division=0),
+        'confusion_matrix': cm.tolist(),
+        'fpr': fpr.tolist(),
+        'tpr': tpr.tolist()
     }
+
+    # Print summary
+    print("\n" + "=" * 50)
+    print("TEST SET EVALUATION SUMMARY")
+    print("=" * 50)
+    print(f"Accuracy:  {metrics_dict['accuracy']:.4f}")
+    print(f"Precision: {metrics_dict['precision']:.4f}")
+    print(f"Recall:    {metrics_dict['recall']:.4f}")
+    print(f"F1 Score:  {metrics_dict['f1']:.4f}")
+    print(f"ROC AUC:   {metrics_dict['roc_auc']:.4f}")
+    print("=" * 50)
+
+    return metrics_dict
 
 # ---------------------------------------------------------------------------
 # TF‑data helper
@@ -664,18 +724,18 @@ def main(argv=None):
             test1_results = model.evaluate(test1_loader, verbose=1)
             print(f"Test1 results: {test1_results}")
             print("Evaluating on test2 set...")
-            test2_results = model.evaluate(test2_loader, verbose=1)
+            test2_results = model.evaluate(test2_loader, verbose=1, )
             print(f"Test2 results: {test2_results}")
 
             # Plot ROC curve for test1
-            plot_test_metrics(model, test1_loader, run_dir, fold_id)
+            plot_test_metrics(model, test1_loader, run_dir, fold_id, "Test1 - balanced alleles")
             # Plot ROC curve for test2
-            plot_test_metrics(model, test2_loader, run_dir, fold_id)
+            plot_test_metrics(model, test2_loader, run_dir, fold_id, "Test2 - rare alleles")
 
 
 if __name__ == "__main__":
     main([
-        # "--parquet", "../data/Custom_dataset/NetMHCpan_dataset/mhc2_with_esm_embeddings.parquet",
-        "--dataset_path", "../data/Custom_dataset/NetMHCpan_dataset/mhc_1",
-        "--epochs", "3", "--batch", "1024"
+        # "--parquet", "../data/Custom_dataset/NetMHCpan_dataset/mhc_2/mhc2_with_esm_embeddings.parquet",
+        "--dataset_path", "../data/Custom_dataset/NetMHCpan_dataset/mhc_2",
+        "--epochs", "5", "--batch", "64"
     ])
