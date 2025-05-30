@@ -35,7 +35,6 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-from utils.create_ESM_dataset import mhc_class
 from utils.model import build_classifier
 from sklearn.metrics import (
     confusion_matrix, roc_curve, auc, precision_score,
@@ -102,7 +101,7 @@ def load_dataset(parquet_path: str):
     print("   peptide one-hot shape:", pep_onehot.shape)
 
     # 2) Latent embeddings --------------------------------------------------
-    print(f"   loading MHC {mhc_class} embeddings")
+    print(f"   loading MHC embeddings")
     if "mhc_embedding" in df.columns:
         latents = np.stack(df["mhc_embedding"].values).astype("float32")
     elif "mhc_embedding_path" in df.columns:
@@ -120,9 +119,13 @@ def load_dataset(parquet_path: str):
     return pep_onehot, latents, labels, pep_seq_len
 
 
-def load_dataset_in_batches(parquet: str, target_seq_len: int, batch_size: int = 100):
+def load_dataset_in_batches(parquet: str, target_seq_len: int, batch_size: int = 100, subset: float = None):
     print(f"→ reading {parquet} in batches of {batch_size}")
-    df = pd.read_parquet(parquet)
+    if subset is not None:
+        print(f"   using subset fraction: {subset}")
+        df = pd.read_parquet(parquet).sample(frac=subset, random_state=42)
+    else:
+        df = pd.read_parquet(parquet)
     if "long_mer" not in df.columns:
         raise ValueError("Expected a 'long_mer' column with peptide sequences")
     # REMOVE or IGNORE: pep_seq_len = int(df["long_mer"].str.len().max()) # This was the problematic line for one-hot encoding
@@ -141,7 +144,7 @@ def load_dataset_in_batches(parquet: str, target_seq_len: int, batch_size: int =
         if latents.shape[1:] != (36, 1152):
             raise ValueError(f"Unexpected latent shape {latents.shape[1:]}, expected (36,1152)")
 
-        labels = df["assigned_label"].values[start:end].astype("float32")
+        labels = df["assigned_label"].values[start:end].astype("int32")
         labels = labels[:, None]
 
         yield pep_onehot, latents, labels # Removed the local pep_seq_len from yield
@@ -226,6 +229,11 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
         for _, labels in val_dataset:
             y_true.extend(labels.numpy())
         y_true = np.array(y_true)
+
+        # print ranges of y_true and y_pred
+        print(f"y_true range: {y_true.min()} to {y_true.max()}")
+
+        print(f"y_pred range: {y_pred.min()} to {y_pred.max()}")
 
         # Create confusion matrix
         cm = confusion_matrix(y_true, y_pred)
@@ -388,7 +396,7 @@ def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None, hi
     # Create directory if it doesn't exist
     os.makedirs(run_dir, exist_ok=True)
 
-    out_png = os.path.join(run_dir, f"test_metrics{'_fold' + str(fold_id) if fold_id is not None else ''}.png")
+    out_png = os.path.join(run_dir, f"{string}_metrics{'_fold' + str(fold_id) if fold_id is not None else ''}.png")
     plt.savefig(out_png, dpi=300, bbox_inches='tight')
     plt.show()
     print(f"✓ Test metrics visualization saved to {out_png}")
@@ -422,14 +430,15 @@ def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None, hi
 # TF‑data helper
 # ---------------------------------------------------------------------------
 
-def make_tf_dataset(source, longest_peptide_seq_length, batch: int = 128, shuffle: bool = True):
+def make_tf_dataset(source, longest_peptide_seq_length, batch: int = 128, shuffle: bool = True, subset: float = None):
     if isinstance(source, (str, os.PathLike)):
         def gen():
             # Pass longest_peptide_seq_length as target_seq_len
             # The generator now yields 3 items
             for peps, lats, labs in load_dataset_in_batches(str(source),
                                                             target_seq_len=longest_peptide_seq_length,
-                                                            batch_size=batch):
+                                                            batch_size=batch,
+                                                            subset=subset):
                 yield (peps, lats), labs
         output_signature = (
             (tf.TensorSpec(shape=(None, longest_peptide_seq_length, 21), dtype=tf.float32),
@@ -602,7 +611,7 @@ def main(argv=None):
             train_path = os.path.join(args.dataset_path, f'folds/fold_{i}_train.parquet')
             val_path = os.path.join(args.dataset_path, f'folds/fold_{i}_val.parquet')
 
-            train_loader = make_tf_dataset(train_path, longest_peptide_seq_length=longest_peptide_seq_length, batch=args.batch)
+            train_loader = make_tf_dataset(train_path, longest_peptide_seq_length=longest_peptide_seq_length, batch=args.batch, shuffle=True)
             val_loader = make_tf_dataset(val_path, longest_peptide_seq_length=longest_peptide_seq_length, batch=args.batch, shuffle=False)
 
             folds.append((train_loader, val_loader))
@@ -728,14 +737,14 @@ def main(argv=None):
             print(f"Test2 results: {test2_results}")
 
             # Plot ROC curve for test1
-            plot_test_metrics(model, test1_loader, run_dir, fold_id, "Test1 - balanced alleles")
+            plot_test_metrics(model, test1_loader, run_dir, fold_id, string="Test1 - balanced alleles")
             # Plot ROC curve for test2
-            plot_test_metrics(model, test2_loader, run_dir, fold_id, "Test2 - rare alleles")
+            plot_test_metrics(model, test2_loader, run_dir, fold_id, string="Test2 - rare alleles")
 
 
 if __name__ == "__main__":
     main([
         # "--parquet", "../data/Custom_dataset/NetMHCpan_dataset/mhc_2/mhc2_with_esm_embeddings.parquet",
         "--dataset_path", "../data/Custom_dataset/NetMHCpan_dataset/mhc_2",
-        "--epochs", "5", "--batch", "64"
+        "--epochs", "100", "--batch", "128"
     ])
