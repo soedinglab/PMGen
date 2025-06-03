@@ -28,6 +28,8 @@ Author :  Amirreza (updated for cross‑attention, 2025‑05‑22)
 """
 from __future__ import annotations
 import os, sys, argparse, datetime, pathlib, json
+print(sys.executable)
+
 import numpy as np
 import pandas as pd
 import tensorflow as tf
