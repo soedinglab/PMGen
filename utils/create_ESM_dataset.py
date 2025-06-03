@@ -35,6 +35,8 @@ OUT_PARQUET = pathlib.Path(
 EMB_OUT_DIR = pathlib.Path(
     f"../data/Custom_dataset/{dataset_name}/mhc_{mhc_class}/mhc{mhc_class}_encodings"
 )   # or `None` to embed directly
+
+AUGMENTATION = "down_sampling" # "down_sampling" # "GNUSS", None
 # ---------------------------------------------------------------------
 
 
@@ -144,7 +146,7 @@ def attach_embeddings(
     return df
 
 
-def create_test_set(df: pd.DataFrame, samples_per_label: int=10000) -> dict[str, pd.DataFrame]:
+def create_test_set(df: pd.DataFrame, bench_df= pd.DataFrame, samples_per_label: int=10000) -> dict[str, pd.DataFrame]:
     """
     Create two test sets:
       - test1: equally sample samples_per_label from each assigned_label
@@ -163,69 +165,140 @@ def create_test_set(df: pd.DataFrame, samples_per_label: int=10000) -> dict[str,
     train_mask = ~train_df_.index.isin(test1.index)
     train_updated = train_df_.loc[train_mask].reset_index(drop=True)
 
-    datasets['train'] = train_updated
-    datasets['test1'] = test1
+    # remove alleles that are in the benchmark dataset from the train set
+    if not bench_df.empty:
+        # ensure the allele column is of type string
+        bench_df['allele'] = bench_df['allele'].astype(str)
+        # filter out alleles that are in the benchmark dataset
+        train_updated = train_updated[
+            ~train_updated['allele'].isin(bench_df['allele'])
+        ].reset_index(drop=True)
+
+        # drop the rows with nan assigned_label, allele and long_mer from the benchmark dataset
+        bench_df = bench_df.dropna(subset=['assigned_label', 'allele', 'long_mer'])
+        # ensure the assigned_label is of type int
+        bench_df['assigned_label'] = bench_df['assigned_label'].astype(int)
+        # ensure the long_mer is of type string
+        bench_df['long_mer'] = bench_df['long_mer'].astype(str)
+        # ensure the allele is of type string
+        bench_df['allele'] = bench_df['allele'].astype(str)
+        # ensure the mhc_class is of type int
+        bench_df['mhc_class'] = bench_df['mhc_class'].astype(int)
+        datasets["benchmark_dataset"] = bench_df
+
 
     # test2: remove lowest-frequency allele from train to form test2
-    allele_counts = datasets['train']['allele'].value_counts()
+    allele_counts = train_updated['allele'].value_counts()
     n_test2_samples = 0
     i = 1
     while n_test2_samples < 1000:
         i += 1
         lowest_alleles = allele_counts.nsmallest(n=i).index.tolist()
-        test2 = datasets['train'][datasets['train']['allele'].isin(lowest_alleles)].copy()
+        test2 = train_updated[train_updated['allele'].isin(lowest_alleles)].copy()
         n_test2_samples = test2.shape[0]
 
-    datasets['train'] = (
-        datasets['train']
-        [datasets['train']['allele'].isin(lowest_alleles) == False]
+    train_updated = (
+        train_updated
+        [train_updated['allele'].isin(lowest_alleles) == False]
         .reset_index(drop=True)
     )
+
+    datasets['train'] = train_updated
+    datasets['test1'] = test1
     datasets['test2'] = test2
 
     return datasets
 
 
 def main() -> None:
-    print("→ Loading cleaned NetMHCpan CSV")
-    df = pd.read_csv(
-        CSV_PATH,
-        usecols=["long_mer", "assigned_label", "allele", "mhc_class"],
-    )
+    # print("→ Loading cleaned NetMHCpan CSV")
+    # df = pd.read_csv(
+    #     CSV_PATH,
+    #     usecols=["long_mer", "assigned_label", "allele", "mhc_class"],
+    # )
+    #
+    # # filter out
+    # df = df[df["mhc_class"] == mhc_class]
+    #
+    # print(len(df), "rows in the dataset after filtering for MHC class", mhc_class)
+    #
+    # # drop mhc_class column
+    # df = df.drop(columns=["mhc_class"])
+    #
+    # print(f"→ Loading MHC class {mhc_class} embeddings")
+    # emb_dict = load_mhc1_embeddings(NPZ_PATH)
+    #
+    # print("→ Merging")
+    # df = attach_embeddings(df, emb_dict, EMB_OUT_DIR)
+    #
+    # print(len(df), "rows in the dataset after filtering for Mer")
+    #
+    # # print("→ Dropping duplicates and nones")
+    # df = df.drop_duplicates(subset=["long_mer", "allele"])
+    # df = df.dropna(subset=["long_mer"])
+    #
+    # print(len(df), "rows in the dataset after dropping duplicates and Nones")
+    #
+    # # move the label column to the end
+    # label_col = "assigned_label"
+    # cols = [col for col in df.columns if col != label_col] + [label_col]
+    # df = df[cols]
+    #
+    # print(len(df), "rows in the dataset after dropping duplicates and Nones")
+    #
+    # print(f"→ Writing parquet to {OUT_PARQUET}")
+    # df.to_parquet(OUT_PARQUET, engine="pyarrow", index=False, compression="zstd")
+    #
+    # print(f"→ Dataset shape: {df.shape}")
+    #
+    #
+    # # load benchmark datasets
+    # # bench_df1 = pd.read_csv(
+    # #     "../data/Custom_dataset/benchmark_Conbot.csv",
+    # #     usecols=["long_mer", "binding_label", "allele", "mhc_class"],
+    # #     # rename columns to match the main dataset
+    # #     dtype={"binding_label": "int8", "allele": "string", "mhc_class": "int8"},
+    # #     names=["long_mer", "assigned_label", "allele", "mhc_class"],
+    # #     # convert binding_label to assigned_label
+    # #     converters={"assigned_label": lambda x: 1 if x == "1" else 0},
+    # # )
+    # bench_df1 = pd.read_csv(
+    #     "../data/Custom_dataset/benchmark_Conbot.csv")
+    # # rename columns to match the main dataset
+    # bench_df1 = bench_df1.rename(columns={
+    #     "binding_label": "assigned_label",
+    # })
+    # # ensure the assigned_label is of type int
+    # bench_df1['assigned_label'] = bench_df1['assigned_label'].astype(int)
+    # # ensure the allele is of type string
+    # bench_df1['allele'] = bench_df1['allele'].astype(str)
+    # # convert II to 2 # and I to 1
+    # bench_df1['mhc_class'] = bench_df1['mhc_class'].replace({"II": 2, "I": 1})
+    #
+    # print(bench_df1.columns)
+    # # TODO process later
+    # bench_df2 = pd.read_csv(
+    #     "../data/Custom_dataset/benchmark_ConvNeXT.csv",
+    #     usecols=["allele"],
+    #
+    # )
+    #
+    # # combine benchmark datasets
+    # bench_df = pd.concat([bench_df1, bench_df2], ignore_index=True)
+    #
+    # print("→ Create and save test sets")
+    # datasets = create_test_set(df, bench_df)
+    # for name, subset in datasets.items():
+    #     print(f"{name.capitalize()} set shape: {subset.shape}")
+    #     if name != "train":
+    #         subset.to_parquet(OUT_PARQUET.parent / f"{name}.parquet", index=False, engine="pyarrow", compression="zstd")
 
-    # filter out
-    df = df[df["mhc_class"] == mhc_class]
-
-    # drop mhc_class column
-    df = df.drop(columns=["mhc_class"])
-
-    print(f"→ Loading MHC class {mhc_class} embeddings")
-    emb_dict = load_mhc1_embeddings(NPZ_PATH)
-
-    print("→ Merging")
-    df = attach_embeddings(df, emb_dict, EMB_OUT_DIR)
-
-    # print("→ Dropping duplicates and nones")
-    df = df.drop_duplicates(subset=["long_mer", "allele"])
-    df = df.dropna(subset=["long_mer"])
-
-    # move the label column to the end
-    label_col = "assigned_label"
-    cols = [col for col in df.columns if col != label_col] + [label_col]
-    df = df[cols]
-
-    print(f"→ Writing parquet to {OUT_PARQUET}")
-    df.to_parquet(OUT_PARQUET, engine="pyarrow", index=False, compression="zstd")
-
-    print(f"→ Dataset shape: {df.shape}")
-
-    print("→ Create and save test sets")
-    datasets = create_test_set(df)
-    for name, subset in datasets.items():
-        print(f"{name.capitalize()} set shape: {subset.shape}")
-        if name != "train":
-            subset.to_parquet(OUT_PARQUET.parent / f"{name}.parquet", index=False, engine="pyarrow", compression="zstd")
-
+    ###
+    # TODO remove later
+    print("→ Loading existing dataset from parquet")
+    datasets = {}
+    datasets['train'] = pd.read_parquet(OUT_PARQUET, engine="pyarrow")
+    ###
 
     print("→ Creating cross-validation folds")
     folds = create_k_fold_leave_one_out_stratified_cv(
@@ -233,7 +306,7 @@ def main() -> None:
         target_col="assigned_label",
         k=5,
         id_col="allele",
-        balance_method="down_sampling",
+        augmentation=AUGMENTATION,
     )
 
     print("→ Saving folds to CSV")
