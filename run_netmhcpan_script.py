@@ -717,13 +717,14 @@ def combine_datasets_(results_dir, include_dropped=False):
 #     #         task.result()
 
 def run_(arg1, arg2):
-    # mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/"
+    mhcII_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/"
     # mhcI_path = "data/NetMHCpan_dataset/NetMHCpan_train/"
-    # tmp_path = "data/NetMHCpan_dataset/tmp/"
-    tmp_path = "data/NetMHCpan_dataset/tmp_I/"
-    results_dir = "data/NetMHCpan_dataset/results_I/"
+    tmp_path = "data/NetMHCpan_dataset/tmp_II/"
+    # tmp_path = "data/NetMHCpan_dataset/tmp_I/"
+    # results_dir = "data/NetMHCpan_dataset/results_I/"
+    results_dir = "data/NetMHCpan_dataset/results_II/"
 
-    mhc_class = 1
+    mhc_class = 2
 
     # make tmp directory
     if not os.path.isdir(tmp_path):
@@ -828,10 +829,16 @@ def run_(arg1, arg2):
         elif 'MHC' in df.columns and 'allele' in df.columns:
             df['allele'] = df['allele'].fillna(df['MHC'])
             df.drop(columns=['MHC'], inplace=True)
+        if "peptide" in df.columns:
+            if "long_mer" in df.columns:
+                df["peptide"] = df["peptide"].fillna(df["long_mer"])
+                df.drop(columns=["long_mer"], inplace=True)
+                # rename the peptide to long_mer
+                df.rename(columns={"peptide": "long_mer"}, inplace=True)
 
         # drop duplicates
         print(f"Before dropping duplicates: {df.shape}")
-        df = df.drop_duplicates(subset=["allele", "peptide"], keep="first")
+        df = df.drop_duplicates(subset=["allele", "long_mer"], keep="first")
         print(f"After dropping duplicates: {df.shape}")
 
         # add mhc_sequence column
