@@ -1638,6 +1638,175 @@ class EnhancedMoEModel(tf.keras.Model):
 #     output = model((feat, cluster_prob), training=False)
 #     print("Single sample prediction:", output.numpy()[0], "True label:", label.numpy())
 
+
+# ------------------------------------------------------------------------------- #
+# manual implementations
+# ----------------------------------------------------------------------------- #
+class AttentionLayer(keras.layers.Layer):
+    """
+    Custom multi-head attention layer supporting self- and cross-attention.
+
+    Args:
+        input_dim (int): Input feature dimension.
+        output_dim (int): Output feature dimension per head.
+        type (str): 'self' or 'cross'.
+        heads (int): Number of attention heads.
+        resnet (bool): Whether to use residual connection.
+        return_att_weights (bool): Whether to return attention weights.
+        name (str): Name for weight scopes.
+        epsilon (float): Epsilon for layer normalization.
+        gate (bool): Whether to use gating mechanism.
+    """
+
+    def __init__(self, input_dim, output_dim, type, heads=4,
+                 resnet=True, return_att_weights=False, name='attention',
+                 epsilon=1e-6, gate=True):
+        super().__init__(name=name)
+        assert isinstance(input_dim, int) and isinstance(output_dim, int)
+        assert type in ['self', 'cross']
+        if resnet:
+            assert input_dim == output_dim
+
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.type = type
+        self.heads = heads
+        self.resnet = resnet
+        self.return_att_weights = return_att_weights
+        self.epsilon = epsilon
+        self.gate = gate
+
+        self.q = self.add_weight(shape=(heads, input_dim, output_dim),
+                                 initializer='random_normal', trainable=True, name=f'q_{name}')
+        self.k = self.add_weight(shape=(heads, input_dim, output_dim),
+                                 initializer='random_normal', trainable=True, name=f'k_{name}')
+        self.v = self.add_weight(shape=(heads, input_dim, output_dim),
+                                 initializer='random_normal', trainable=True, name=f'v_{name}')
+        if gate:
+            self.g = self.add_weight(shape=(heads, input_dim, output_dim),
+                                     initializer='random_uniform', trainable=True, name=f'gate_{name}')
+        self.norm = layers.LayerNormalization(epsilon=epsilon, name=f'ln_{name}')
+        self.norm_out = layers.LayerNormalization(epsilon=epsilon, name=f'ln_out_{name}')
+        if resnet:
+            self.norm_resnet = layers.LayerNormalization(epsilon=epsilon, name=f'ln_resnet_{name}')
+        self.out_w = self.add_weight(shape=(output_dim * heads, output_dim),
+                                     initializer='random_normal', trainable=True, name=f'outw_{name}')
+        self.out_b = self.add_weight(shape=(output_dim,), initializer='zeros',
+                                     trainable=True, name=f'outb_{name}')
+        self.scale = 1.0 / tf.math.sqrt(tf.cast(output_dim, tf.float32))
+
+    def call(self, x, context=None, mask=None):
+        """
+        Args:
+            x: Tensor of shape (B, N, D)
+            context: Optional tensor (B, M, D) for cross-attention
+            mask: Optional boolean mask of shape (B, N) or (B, N, 1)
+        """
+        # Auto-generate padding mask if not provided (based on all-zero tokens)
+        if mask is None:
+            mask = tf.reduce_sum(tf.abs(x), axis=-1) > 0  # shape: (B, N)
+        mask = tf.cast(mask, tf.float32)  # shape: (B, N)
+
+        x_norm = self.norm(x)
+        if self.type == 'self':
+            q_input = k_input = v_input = x_norm
+            mask_k = mask_q = mask
+        else:
+            assert context is not None, "context is required for cross-attention"
+            context_norm = self.norm(context)
+            q_input = x_norm
+            k_input = v_input = context_norm
+            mask_q = tf.cast(tf.reduce_sum(tf.abs(x), axis=-1) > 0, tf.float32)
+            mask_k = tf.cast(tf.reduce_sum(tf.abs(context), axis=-1) > 0, tf.float32)
+
+        q = tf.einsum('bnd,hde->hbne', q_input, self.q)
+        k = tf.einsum('bmd,hde->hbme', k_input, self.k)
+        v = tf.einsum('bmd,hde->hbme', v_input, self.v)
+
+        att = tf.einsum('hbne,hbme->hbnm', q, k) * self.scale
+
+        # Add large negative mask to padded keys
+        mask_k = tf.expand_dims(mask_k, 1)  # (B, 1, M)
+        mask_q = tf.expand_dims(mask_q, 1)  # (B, 1, N)
+        attention_mask = tf.einsum('bqn,bkm->bnm', mask_q, mask_k)  # (B, N, M)
+        attention_mask = tf.expand_dims(attention_mask, 0)  # (1, B, N, M)
+        att += (1.0 - attention_mask) * -1e9
+
+        att = tf.nn.softmax(att, axis=-1) * attention_mask
+
+        out = tf.einsum('hbnm,hbme->hbne', att, v)
+
+        if self.gate:
+            g = tf.einsum('bnd,hde->hbne', x_norm, self.g)
+            g = tf.nn.sigmoid(g)
+            out *= g
+
+        if self.resnet:
+            out += tf.expand_dims(x, axis=0)
+            out = self.norm_resnet(out)
+
+        out = tf.transpose(out, [1, 2, 3, 0])  # (B, N, E, H)
+        out = tf.reshape(out, [tf.shape(x)[0], tf.shape(x)[1], self.output_dim * self.heads])
+        out = tf.matmul(out, self.out_w) + self.out_b
+
+        if self.resnet:
+            out += x
+        out = self.norm_out(out)
+        # Zero out padded tokens after bias addition
+        mask_exp = tf.expand_dims(mask, axis=-1)  # (B, N, 1)
+        out *= mask_exp
+        return (out, att) if self.return_att_weights else out
+
+
+class PositionalEncoding(keras.layers.Layer):
+    """
+    Sinusoidal Positional Encoding layer that applies encodings
+    only to non-masked tokens.
+
+    Args:
+        embed_dim (int): Dimension of embeddings (must match input last dim).
+        max_len (int): Maximum sequence length expected (used to precompute encodings).
+    """
+
+    def __init__(self, embed_dim, max_len=100):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.max_len = max_len
+
+        # Create (1, max_len, embed_dim) encoding matrix
+        pos = tf.range(max_len, dtype=tf.float32)[:, tf.newaxis]  # (max_len, 1)
+        i = tf.range(embed_dim, dtype=tf.float32)[tf.newaxis, :]  # (1, embed_dim)
+        angle_rates = 1 / tf.pow(1000.0, (2 * (i // 2)) / tf.cast(embed_dim, tf.float32))
+        angle_rads = pos * angle_rates  # (max_len, embed_dim)
+
+        # Apply sin to even indices, cos to odd indices
+        sines = tf.sin(angle_rads[:, 0::2])
+        cosines = tf.cos(angle_rads[:, 1::2])
+
+        pos_encoding = tf.concat([sines, cosines], axis=-1)  # (max_len, embed_dim)
+        pos_encoding = pos_encoding[tf.newaxis, ...]  # (1, max_len, embed_dim)
+        self.pos_encoding = tf.cast(pos_encoding, dtype=tf.float32)
+
+    def call(self, x, mask=None):
+        """
+        Args:
+            x: Input tensor of shape (B, N, D)
+            mask: Optional boolean mask of shape (B, N). True = valid, False = padding
+        Returns:
+            Tensor with positional encodings added where mask is True.
+        """
+        seq_len = tf.shape(x)[1]
+        pe = self.pos_encoding[:, :seq_len, :]  # (1, N, D)
+
+        if mask is not None:
+            mask = tf.cast(mask[:, :, tf.newaxis], tf.float32)  # (B, N, 1)
+            pe = pe * mask  # zero out positions where mask is 0 (# TODO: check if this is correct)
+
+        return x + pe
+
+# --------------------------------------------------------------------------- #
+
+
 import tensorflow as tf
 from tensorflow.keras import layers, Model, Sequential
 
@@ -1961,6 +2130,7 @@ def build_classifier(max_seq_len=50,
             name=f"cross_attn_block_{i + 1}"
         )(queries=fused, keys_values=pep_proj, query_mask=latent_mask, key_mask=pep_mask)
 
+
     # --- Aggregation and prediction head -----------------------------------
     # Global average pooling with masking
     latent_mask_expanded = tf.expand_dims(tf.cast(latent_mask, tf.float32), -1)  # (B, R, 1)
@@ -2126,3 +2296,6 @@ def build_classifier(max_seq_len=50,
 #     labels        = tf.random.uniform((320, 1), maxval=2, dtype=tf.int32)
 #     model.fit([peptide_batch, latent_batch], labels, epochs=100)
 
+
+## Barcode peptides ##
+# a model that creates a barcode for peptides by taking 9mer windows and returning a 1D vector that represents
