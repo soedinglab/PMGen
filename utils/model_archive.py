@@ -255,7 +255,7 @@ class RotaryPositionalEncoding(keras.layers.Layer):
         self.embed_dim = embed_dim
         self.max_len = max_len
         self.mask_token = mask_token
-        self._name = name
+        self.name = name
         self.pad_token = pad_token
 
     def build(self, x):
@@ -291,7 +291,7 @@ class RotaryPositionalEncoding(keras.layers.Layer):
         return x_rot
 
     @property
-    def name(self):
+    def _name(self):
         return self._name
 
 
@@ -560,9 +560,10 @@ def build_custom_classifier(max_len_peptide: int,
                     pep_pe, mask=pep_mask)
 
     # ----- MHC branch ------------------------------------------------------
-    mhc_mask_bool = tf.math.reduce_any(tf.not_equal(mhc_input, 0.), axis=-1)
-    mhc_mask      = layers.Lambda(lambda x: tf.where(x, 1., pad_token),
-                                  name="mhc_mask")(mhc_mask_bool)
+    mhc_mask = layers.Lambda(
+        lambda x: tf.where(tf.math.reduce_any(tf.not_equal(x, 0.), axis=-1), 1., pad_token),
+        name="mhc_mask"
+    )(mhc_input)
 
     # TODO check if it is correct
     mhc_proj1 = layers.Dense(embed_dim_mhc, activation="relu",
@@ -617,13 +618,13 @@ def build_custom_classifier(max_len_peptide: int,
     # x_bc = layers.Dropout(0.3, name="barcodout1_dropout")(x_bc)
     # out_bc = layers.Dense(1, activation="sigmoid", name="barcode_cls")(x_bc)
 
-    anchor_feat = final_features[0]
-    x_an = layers.Flatten(name="anchorout_flatten")(anchor_feat)
-    x_an = layers.Dense(64, activation="relu", name="anchorout1_dense")(x_an)
-    x_an = layers.Dropout(0.3, name="anchorout1_dropout")(x_an)
-    x_an = layers.Dense(16, activation="relu", name="anchorout2_dense")(x_an)
-    x_an = layers.Dropout(0.3, name="anchorout2_dropout")(x_an)
-    out_an = layers.Dense(1, activation="sigmoid", name="anchor_cls")(x_an)
+    anchor_feat = final_features[0]  # (B, num_anchors, E)
+    x_an1 = layers.Flatten(name="anchorout_flatten")(anchor_feat)
+    x_an2 = layers.Dense(64, activation="relu", name="anchorout1_dense")(x_an1)
+    x_an3 = layers.Dropout(0.3, name="anchorout1_dropout")(x_an2)
+    x_an4 = layers.Dense(16, activation="relu", name="anchorout2_dense")(x_an3)
+    x_an5 = layers.Dropout(0.3, name="anchorout2_dropout")(x_an4)
+    out_an = layers.Dense(1, activation="sigmoid", name="anchor_cls")(x_an5)
 
     # pooled = layers.GlobalAveragePooling1D(name="attout_gap")(final_att[0])
     # x_po = layers.Dense(32, activation="relu", name="attout1_dense")(pooled)
@@ -637,93 +638,91 @@ def build_custom_classifier(max_len_peptide: int,
     model.compile(
         loss="binary_crossentropy",
         optimizer="adam",
-        metrics={
-            "anchor_cls":  ["binary_accuracy", "AUC"],
-        },
+        metrics=["binary_accuracy", "AUC"],
     )
     return model
 
-# def main():
-#     max_len_peptide = 15
-#     k = 9
-#     max_len_mhc = 40
-#     RF_max = max_len_peptide - k + 1
-#
-#     model = build_custom_classifier(max_len_peptide, max_len_mhc, k=k)
-#     model.summary(line_length=110)
-#
-#     batch = 16
-#     # pep_dummy = np.zeros((batch, RF_max, k, 21), dtype=np.float32)
-#     # pep_dummy[:, :3] = np.random.rand(batch, 3, k, 21)
-#     #
-#     # mhc_dummy = np.zeros((batch, max_len_mhc, 1152), dtype=np.float32)
-#     # mhc_dummy[:, :25] = np.random.rand(batch, 25, 1152)
-#
-#     pep_syn = generate_peptide(samples=1000, min_len=9, max_len=max_len_peptide, k=k)
-#     mhc_syn, _, mhc_mask = generate_mhc(samples=1000, min_len=25, max_len=max_len_mhc, dim=1152)
-#
-#     y = np.random.randint(0, 2, size=(1000, 1)).astype(np.float32)
-#
-#     history = model.fit(x=[pep_syn, mhc_syn], y=y, epochs=10, batch_size=batch)
-#
-#     # save model
-#     model_dir = pathlib.Path("model_output")
-#     model_dir.mkdir(parents=True, exist_ok=True)
-#     model_path = model_dir / "peptide_mhc_cross_attention_model.h5"
-#     model.save(model_path)
-#     print(f"Model saved to {model_path}")
-#
-#     print("Sanity‑check complete — no dimension errors.")
-#
-#     # PREDICT
-#     preds = model.predict([pep_syn[:batch], mhc_syn[:batch]])
-#     print("Predictions for first batch:")
-#     for i, pred in enumerate(preds):
-#         print(f"Sample {i + 1}: Anchor: {pred[0]:.4f}")
-#     # Save model metadata
-#     metadata = {
-#         "max_len_peptide": max_len_peptide,
-#         "k": k,
-#         "max_len_mhc": max_len_mhc,
-#         "RF_max": RF_max,
-#         "embed_dim_pep": 64,
-#         "embed_dim_mhc": 128,
-#         "mask_token": MASK_TOKEN,
-#         "pad_token": PAD_TOKEN
-#     }
-#     metadata_path = model_dir / "model_metadata.json"
-#     with open(metadata_path, 'w') as f:
-#         json.dump(metadata, f, indent=4)
-#
-#     print(f"Model metadata saved to {metadata_path}")
-#
-#     # plot metrics and confusion
-#     import matplotlib.pyplot as plt
-#     import seaborn as sns
-#     import pandas as pd
-#     history_df = pd.DataFrame(history.history)
-#     print(f"Keys in history: {list(history_df.columns)}")
-#
-#     ## Plot metrics with error handling and saving to disk
-#     metrics_dir = model_dir / "metrics"
-#     metrics_dir.mkdir(parents=True, exist_ok=True)
-#
-#     # Plot binary accuracy
-#     plt.figure(figsize=(10, 5))
-#     sns.lineplot(data=history_df, x=history_df.index, y='binary_accuracy', label='Binary Accuracy')
-#     plt.title('Binary Accuracy Over Epochs')
-#     plt.xlabel('Epochs')
-#     plt.ylabel('Binary Accuracy')
-#     plt.legend()
-#     plt.show()
-#
-#     # plot AUC
-#     plt.figure(figsize=(10, 5))
-#     sns.lineplot(data=history_df, x=history_df.index, y='auc', label='AUC')
-#     plt.title('AUC Over Epochs')
-#     plt.xlabel('Epochs')
-#     plt.ylabel('AUC')
-#     plt.legend()
-#     plt.show()
-# if __name__ == "__main__":
-#     main()
+def main():
+    max_len_peptide = 15
+    k = 9
+    max_len_mhc = 40
+    RF_max = max_len_peptide - k + 1
+
+    model = build_custom_classifier(max_len_peptide, max_len_mhc, k=k)
+    model.summary(line_length=110)
+
+    batch = 16
+    # pep_dummy = np.zeros((batch, RF_max, k, 21), dtype=np.float32)
+    # pep_dummy[:, :3] = np.random.rand(batch, 3, k, 21)
+    #
+    # mhc_dummy = np.zeros((batch, max_len_mhc, 1152), dtype=np.float32)
+    # mhc_dummy[:, :25] = np.random.rand(batch, 25, 1152)
+
+    pep_syn = generate_peptide(samples=1000, min_len=9, max_len=max_len_peptide, k=k)
+    mhc_syn, _, mhc_mask = generate_mhc(samples=1000, min_len=25, max_len=max_len_mhc, dim=1152)
+
+    y = np.random.randint(0, 2, size=(1000, 1)).astype(np.float32)
+
+    history = model.fit(x=[pep_syn, mhc_syn], y=y, epochs=10, batch_size=batch)
+
+    # save model
+    model_dir = pathlib.Path("model_output")
+    model_dir.mkdir(parents=True, exist_ok=True)
+    model_path = model_dir / "peptide_mhc_cross_attention_model.h5"
+    model.save(model_path)
+    print(f"Model saved to {model_path}")
+
+    print("Sanity‑check complete — no dimension errors.")
+
+    # PREDICT
+    preds = model.predict([pep_syn[:batch], mhc_syn[:batch]])
+    print("Predictions for first batch:")
+    for i, pred in enumerate(preds):
+        print(f"Sample {i + 1}: Anchor: {pred[0]:.4f}")
+    # Save model metadata
+    metadata = {
+        "max_len_peptide": max_len_peptide,
+        "k": k,
+        "max_len_mhc": max_len_mhc,
+        "RF_max": RF_max,
+        "embed_dim_pep": 64,
+        "embed_dim_mhc": 128,
+        "mask_token": MASK_TOKEN,
+        "pad_token": PAD_TOKEN
+    }
+    metadata_path = model_dir / "model_metadata.json"
+    with open(metadata_path, 'w') as f:
+        json.dump(metadata, f, indent=4)
+
+    print(f"Model metadata saved to {metadata_path}")
+
+    # plot metrics and confusion
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import pandas as pd
+    history_df = pd.DataFrame(history.history)
+    print(f"Keys in history: {list(history_df.columns)}")
+
+    ## Plot metrics with error handling and saving to disk
+    metrics_dir = model_dir / "metrics"
+    metrics_dir.mkdir(parents=True, exist_ok=True)
+
+    # Plot binary accuracy
+    plt.figure(figsize=(10, 5))
+    sns.lineplot(data=history_df, x=history_df.index, y='binary_accuracy', label='Binary Accuracy')
+    plt.title('Binary Accuracy Over Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('Binary Accuracy')
+    plt.legend()
+    plt.show()
+
+    # plot AUC
+    plt.figure(figsize=(10, 5))
+    sns.lineplot(data=history_df, x=history_df.index, y='AUC', label='AUC')
+    plt.title('AUC Over Epochs')
+    plt.xlabel('Epochs')
+    plt.ylabel('AUC')
+    plt.legend()
+    plt.show()
+if __name__ == "__main__":
+    main()

@@ -224,10 +224,10 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
         plt.grid(True, alpha=0.3)
 
     # Plot 3: AUC curve
-    if "auc" in hist and "val_auc" in hist:
+    if "AUC" in hist and "val_auc" in hist:
         plt.subplot(1, 4, 3)
-        plt.plot(hist["auc"], label="train AUC", linewidth=2)
-        plt.plot(hist["val_auc"], label="val AUC", linewidth=2)
+        plt.plot(hist["AUC"], label="train AUC", linewidth=2)
+        plt.plot(hist["val_AUC"], label="val AUC", linewidth=2)
         plt.xlabel("Epoch")
         plt.ylabel("AUC")
         plt.title("AUC")
@@ -575,7 +575,7 @@ def main(argv=None):
             train_loader,
             validation_data=val_loader,
             epochs= args.epochs,
-            # class_weight=class_weight,
+            class_weight=class_weight,
             callbacks=[ckpt_cb, early_cb],
             verbose=1,
         )
@@ -613,5 +613,5 @@ def main(argv=None):
 if __name__ == "__main__":
     main([
         "--dataset_path", "../data/Custom_dataset/NetMHCpan_dataset/mhc_1",
-        "--epochs", "3", "--batch", "64", "--test_batches", "20"
+        "--epochs", "15", "--batch", "128", "--test_batches", "30"
     ])
