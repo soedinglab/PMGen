@@ -42,23 +42,11 @@ model.summary()
 # Create better visualization as SVG with cleaner layout
 tf.keras.utils.plot_model(
     model,
-    to_file='model_architecture.png',
+    to_file='model_output/model_architecture.png',
     show_shapes=True,
     show_layer_names=True,
     rankdir='TB',  # Top to bottom layout
     dpi=200,       # Higher resolution
     expand_nested=True,  # Expand nested models to show all layers
     show_layer_activations=True  # Show activation functions
-)
-
-# Create a simplified version showing only main components
-tf.keras.utils.plot_model(
-    model,
-    to_file='model_architecture_simplified.png',
-    show_shapes=False,
-    show_layer_names=True,
-    rankdir='LR',  # Left to right layout for simplified view
-    dpi=200,
-    expand_nested=True,  # Expand nested models to show all layers
-    show_dtype=False
 )

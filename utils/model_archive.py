@@ -509,6 +509,7 @@ def generate_peptide(samples=1024, min_len=5, max_len=15, k=9):
 MASK_TOKEN = -1
 PAD_TOKEN  = -2.
 
+@tf.keras.utils.register_keras_serializable()
 def make_rf_mask(pep_batch: tf.Tensor) -> tf.Tensor:
     """Return (B, RF) float mask for a peptide batch of shape *(B, RF,K,21)*.
 
@@ -562,6 +563,7 @@ def build_custom_classifier(max_len_peptide: int,
     # ----- MHC branch ------------------------------------------------------
     mhc_mask = layers.Lambda(
         lambda x: tf.where(tf.math.reduce_any(tf.not_equal(x, 0.), axis=-1), 1., pad_token),
+        output_shape=lambda input_shape: (input_shape[0], input_shape[1]),
         name="mhc_mask"
     )(mhc_input)
 
