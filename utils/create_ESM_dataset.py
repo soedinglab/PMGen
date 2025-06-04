@@ -21,7 +21,7 @@ from utils.processing_functions import create_progressive_k_fold_cross_validatio
 # 1. CONFIGURATION – adjust if your paths change
 # ---------------------------------------------------------------------
 dataset_name = "NetMHCpan_dataset"
-mhc_class = 1
+mhc_class = 2
 CSV_PATH   = pathlib.Path(f"../data/{dataset_name}/combined_data_{mhc_class}.csv")
 NPZ_PATH   = pathlib.Path(
     f"../data/ESM/esmc_600m/NetMHCpan pseudoseqs/mhc{mhc_class}_encodings.npz"
@@ -36,7 +36,7 @@ EMB_OUT_DIR = pathlib.Path(
     f"../data/Custom_dataset/{dataset_name}/mhc_{mhc_class}/mhc{mhc_class}_encodings"
 )   # or `None` to embed directly
 
-AUGMENTATION = "down_sampling" # "down_sampling" # "GNUSS", None
+AUGMENTATION = None  # "GNUSS", None
 # ---------------------------------------------------------------------
 
 
