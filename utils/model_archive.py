@@ -33,23 +33,6 @@ from random import random
 print(sys.executable)
 
 import numpy as np
-import pandas as pd
-import tensorflow as tf
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from tqdm import tqdm
-
-from utils.model import build_classifier
-from sklearn.metrics import (
-    confusion_matrix, roc_curve, auc, precision_score,
-    recall_score, f1_score, accuracy_score, roc_auc_score
-)
-import seaborn as sns
-
-import os, gc, warnings
-from typing import Generator, Tuple, Union
-
-import pyarrow.parquet as pq
 from tensorflow import keras
 from tensorflow.keras import layers
 
@@ -581,17 +564,18 @@ def build_custom_classifier(max_len_peptide: int,
     mhc_mask      = layers.Lambda(lambda x: tf.where(x, 1., pad_token),
                                   name="mhc_mask")(mhc_mask_bool)
 
-    mhc_pe = RotaryPositionalEncoding(embed_dim=1152, max_len=max_len_mhc,
-                                mask_token=mask_token, pad_token=pad_token,
-                                name="mhc_pos_enc")(mhc_input, mhc_mask)
-
+    # TODO check if it is correct
     mhc_proj1 = layers.Dense(embed_dim_mhc, activation="relu",
-                             name="mhc_proj1")(mhc_pe)                         # (B, L_mhc,D_mhc)
+                             name="mhc_proj1")(mhc_input)  # (B, L_mhc, D_mhc)
+
+    mhc_pe = RotaryPositionalEncoding(embed_dim=embed_dim_mhc,max_len=max_len_mhc,
+                                        mask_token=mask_token,pad_token=pad_token,
+                                        name="mhc_pos_enc")(mhc_proj1, mhc_mask)
 
     mhc_att1  = AttentionLayer(input_dim=embed_dim_mhc, output_dim=embed_dim_mhc,
                                type="self", heads=4, name="mhc_self_att1",
                                mask_token=mask_token, pad_token=pad_token)(
-                    mhc_proj1, mask=mhc_mask)
+                    mhc_pe, mask=mhc_mask)
     mhc_att2, att_w1 = AttentionLayer(input_dim=embed_dim_mhc, output_dim=embed_dim_mhc,
                                  type="self", heads=4, name="mhc_self_att2",
                                  resnet=False, mask_token=mask_token, pad_token=pad_token,
@@ -628,10 +612,10 @@ def build_custom_classifier(max_len_peptide: int,
     # ----------------------------------------------------------------------
     #  Three heads (barcode, anchors, pooled) — unchanged
     # ----------------------------------------------------------------------
-    barcode_vec = final_features[-2]
-    x_bc = layers.Dense(32, activation="relu", name="barcodout1_dense")(barcode_vec)
-    x_bc = layers.Dropout(0.3, name="barcodout1_dropout")(x_bc)
-    out_bc = layers.Dense(1, activation="sigmoid", name="barcode_cls")(x_bc)
+    # barcode_vec = final_features[-2]
+    # x_bc = layers.Dense(32, activation="relu", name="barcodout1_dense")(barcode_vec)
+    # x_bc = layers.Dropout(0.3, name="barcodout1_dropout")(x_bc)
+    # out_bc = layers.Dense(1, activation="sigmoid", name="barcode_cls")(x_bc)
 
     anchor_feat = final_features[0]
     x_an = layers.Flatten(name="anchorout_flatten")(anchor_feat)
@@ -641,57 +625,105 @@ def build_custom_classifier(max_len_peptide: int,
     x_an = layers.Dropout(0.3, name="anchorout2_dropout")(x_an)
     out_an = layers.Dense(1, activation="sigmoid", name="anchor_cls")(x_an)
 
-    pooled = layers.GlobalAveragePooling1D(name="attout_gap")(final_att[0])
-    x_po = layers.Dense(32, activation="relu", name="attout1_dense")(pooled)
-    x_po = layers.Dropout(0.3, name="attout1_dropout")(x_po)
-    out_po = layers.Dense(1, activation="sigmoid", name="attn_cls")(x_po)
+    # pooled = layers.GlobalAveragePooling1D(name="attout_gap")(final_att[0])
+    # x_po = layers.Dense(32, activation="relu", name="attout1_dense")(pooled)
+    # x_po = layers.Dropout(0.3, name="attout1_dropout")(x_po)
+    # out_po = layers.Dense(1, activation="sigmoid", name="attn_cls")(x_po)
 
     model = keras.Model(inputs=[pep_input, mhc_input],
-                        outputs=[out_bc, out_an, out_po],
+                        outputs=out_an,
                         name="PeptideMHC_CrossAtt")
 
     model.compile(
         loss="binary_crossentropy",
         optimizer="adam",
         metrics={
-            "barcode_cls": ["binary_accuracy", keras.metrics.AUC(name="auroc")],
-            "anchor_cls":  ["binary_accuracy", keras.metrics.AUC(name="auroc")],
-            "attn_cls":    ["binary_accuracy", keras.metrics.AUC(name="auroc")],
+            "anchor_cls":  ["binary_accuracy", "AUC"],
         },
     )
     return model
 
-def main():
-    max_len_peptide = 15
-    k = 9
-    max_len_mhc = 40
-    RF_max = max_len_peptide - k + 1
-
-    model = build_custom_classifier(max_len_peptide, max_len_mhc, k=k)
-    model.summary(line_length=110)
-
-    batch = 8
-    # pep_dummy = np.zeros((batch, RF_max, k, 21), dtype=np.float32)
-    # pep_dummy[:, :3] = np.random.rand(batch, 3, k, 21)
-    #
-    # mhc_dummy = np.zeros((batch, max_len_mhc, 1152), dtype=np.float32)
-    # mhc_dummy[:, :25] = np.random.rand(batch, 25, 1152)
-
-    pep_syn = generate_peptide(samples=1000, min_len=9, max_len=max_len_peptide, k=k)
-    mhc_syn, _, mhc_mask = generate_mhc(samples=1000, min_len=25, max_len=max_len_mhc, dim=1152)
-
-    y = np.random.randint(0, 2, size=(1000, 1)).astype(np.float32)
-
-    model.fit(x=[pep_syn, mhc_syn], y=[y, y, y], epochs=10, batch_size=batch)
-
-    # save model
-    model_dir = pathlib.Path("model_output")
-    model_dir.mkdir(parents=True, exist_ok=True)
-    model_path = model_dir / "peptide_mhc_cross_attention_model.h5"
-    model.save(model_path)
-    print(f"Model saved to {model_path}")
-
-    print("Sanity‑check complete — no dimension errors.")
-
-if __name__ == "__main__":
-    main()
+# def main():
+#     max_len_peptide = 15
+#     k = 9
+#     max_len_mhc = 40
+#     RF_max = max_len_peptide - k + 1
+#
+#     model = build_custom_classifier(max_len_peptide, max_len_mhc, k=k)
+#     model.summary(line_length=110)
+#
+#     batch = 16
+#     # pep_dummy = np.zeros((batch, RF_max, k, 21), dtype=np.float32)
+#     # pep_dummy[:, :3] = np.random.rand(batch, 3, k, 21)
+#     #
+#     # mhc_dummy = np.zeros((batch, max_len_mhc, 1152), dtype=np.float32)
+#     # mhc_dummy[:, :25] = np.random.rand(batch, 25, 1152)
+#
+#     pep_syn = generate_peptide(samples=1000, min_len=9, max_len=max_len_peptide, k=k)
+#     mhc_syn, _, mhc_mask = generate_mhc(samples=1000, min_len=25, max_len=max_len_mhc, dim=1152)
+#
+#     y = np.random.randint(0, 2, size=(1000, 1)).astype(np.float32)
+#
+#     history = model.fit(x=[pep_syn, mhc_syn], y=y, epochs=10, batch_size=batch)
+#
+#     # save model
+#     model_dir = pathlib.Path("model_output")
+#     model_dir.mkdir(parents=True, exist_ok=True)
+#     model_path = model_dir / "peptide_mhc_cross_attention_model.h5"
+#     model.save(model_path)
+#     print(f"Model saved to {model_path}")
+#
+#     print("Sanity‑check complete — no dimension errors.")
+#
+#     # PREDICT
+#     preds = model.predict([pep_syn[:batch], mhc_syn[:batch]])
+#     print("Predictions for first batch:")
+#     for i, pred in enumerate(preds):
+#         print(f"Sample {i + 1}: Anchor: {pred[0]:.4f}")
+#     # Save model metadata
+#     metadata = {
+#         "max_len_peptide": max_len_peptide,
+#         "k": k,
+#         "max_len_mhc": max_len_mhc,
+#         "RF_max": RF_max,
+#         "embed_dim_pep": 64,
+#         "embed_dim_mhc": 128,
+#         "mask_token": MASK_TOKEN,
+#         "pad_token": PAD_TOKEN
+#     }
+#     metadata_path = model_dir / "model_metadata.json"
+#     with open(metadata_path, 'w') as f:
+#         json.dump(metadata, f, indent=4)
+#
+#     print(f"Model metadata saved to {metadata_path}")
+#
+#     # plot metrics and confusion
+#     import matplotlib.pyplot as plt
+#     import seaborn as sns
+#     import pandas as pd
+#     history_df = pd.DataFrame(history.history)
+#     print(f"Keys in history: {list(history_df.columns)}")
+#
+#     ## Plot metrics with error handling and saving to disk
+#     metrics_dir = model_dir / "metrics"
+#     metrics_dir.mkdir(parents=True, exist_ok=True)
+#
+#     # Plot binary accuracy
+#     plt.figure(figsize=(10, 5))
+#     sns.lineplot(data=history_df, x=history_df.index, y='binary_accuracy', label='Binary Accuracy')
+#     plt.title('Binary Accuracy Over Epochs')
+#     plt.xlabel('Epochs')
+#     plt.ylabel('Binary Accuracy')
+#     plt.legend()
+#     plt.show()
+#
+#     # plot AUC
+#     plt.figure(figsize=(10, 5))
+#     sns.lineplot(data=history_df, x=history_df.index, y='auc', label='AUC')
+#     plt.title('AUC Over Epochs')
+#     plt.xlabel('Epochs')
+#     plt.ylabel('AUC')
+#     plt.legend()
+#     plt.show()
+# if __name__ == "__main__":
+#     main()
