@@ -27,6 +27,8 @@ The script
 Author :  Amirreza (updated for cross‑attention, 2025‑05‑22)
 """
 from __future__ import annotations
+
+import math
 import os, sys, argparse, datetime, pathlib, json
 from random import random
 
@@ -39,87 +41,33 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
-# from utils.model import build_classifier
 from model_archive import build_custom_classifier
 from sklearn.metrics import (
     confusion_matrix, roc_curve, auc, precision_score,
     recall_score, f1_score, accuracy_score, roc_auc_score
 )
 import seaborn as sns
-
-import os, gc, warnings
-from typing import Generator, Tuple, Union
-
+import os
 import pyarrow.parquet as pq
 
-
-# ---------------------------------------------------------------------------
-# Utility: peptide → one‑hot (seq_len, 21)
-# ---------------------------------------------------------------------------
-AA = "ACDEFGHIKLMNPQRSTVWY"  # 20 standard AAs, order fixed
-AA_TO_IDX = {aa: i for i, aa in enumerate(AA)}
-UNK_IDX = 20  # index for unknown / padding
-
+# ----------------------------------------------------------------------------
+# 1) Peptide → k‑mer one‑hot *inside* TF graph (GPU/TPU friendly)
+# ----------------------------------------------------------------------------
+pad_token = 20
 AA = tf.constant(list("ACDEFGHIKLMNPQRSTVWY"))
 TABLE = tf.lookup.StaticHashTable(
-    tf.lookup.KeyValueTensorInitializer(AA,
-                                        tf.range(20, dtype=tf.int32)),
-    default_value=20)                 # UNK_IDX
+    tf.lookup.KeyValueTensorInitializer(AA, tf.range(20, dtype=tf.int32)),
+    default_value=tf.constant(pad_token, dtype=tf.int32),  # UNK / padding
+)
 
-# def peptides_to_onehot(seqs: list[str], seq_len: int) -> np.ndarray:
-#     """Vectorise *seqs* into (N, seq_len, 21) one‑hot with padding."""
-#     N = len(seqs)
-#     arr = np.zeros((N, seq_len, 21), dtype=np.float32)
-#     for i, s in enumerate(seqs):
-#         if not s:
-#             raise "[ERR] empty peptide sequence"
-#         for j, aa in enumerate(s.upper()[:seq_len]):
-#             arr[i, j, AA_TO_IDX.get(aa, UNK_IDX)] = 1.0
-#         # remaining positions stay zero → acts as padded UNK (index 20)
-#     return arr
-
-
-# def peptides_to_onehot_kmer_windows(seqs, seq_len, k=9):
-#     # seqs : tf.Tensor([b'PEPTIDE', ...])  shape=(N,)
-#     # output: (N, RF, k, 21) where RF = seq_len - k + 1
-#     tokens = tf.strings.bytes_split(seqs)                       # ragged ‹N, L›
-#     idx    = TABLE.lookup(tokens.flat_values)
-#     ragged = tf.RaggedTensor.from_row_lengths(idx, tokens.row_lengths())
-#     idx_pad = ragged.to_tensor(default_value=20, shape=(None, seq_len))
-#     onehot  = tf.one_hot(idx_pad, 21, dtype=tf.float32)         # (N, seq_len, 21)
-#
-#     RF = seq_len - k + 1
-#     ta = tf.TensorArray(dtype=tf.float32, size=RF)
-#     def body(i, ta):
-#         slice_k = onehot[:, i:i+k, :]                           # (N, k, 21)
-#         return i+1, ta.write(i, slice_k)
-#     _, ta = tf.while_loop(lambda i, _: i < RF, body, [0, ta])
-#     patches = ta.stack()                                        # (RF, N, k, 21)
-#     return tf.transpose(patches, [1, 0, 2, 3])                  # (N, RF, k, 21)
-
-
-def kmer_token_frames(seqs: tf.Tensor,  # shape=(N,), dtype=string
-                      seq_len: int,
-                      k: int = 9,
-                      unk: int = 20):
-    """
-    Vectorised k-mer framing that returns **integer** tokens.
-    Result:  (N, RF, k)  where RF = seq_len - k + 1
-    """
-    # 1 byte-split → lookup
+def kmer_onehot_tensor(seqs: tf.Tensor, seq_len: int, k: int = 9) -> tf.Tensor:
+    """Vectorised k‑mer framing + one‑hot with no Python loops."""
     tokens  = tf.strings.bytes_split(seqs)               # ragged ‹N,L›
-    idx     = TABLE.lookup(tokens.flat_values)           # 1-D ints
-    ragged  = tf.RaggedTensor.from_row_lengths(idx,
-                      tokens.row_lengths())
-    idx_pad = ragged.to_tensor(default_value=unk,
-                               shape=(None, seq_len))     # (N,L)
-
-    # 2 slide a window over axis 1 in **one** op
-    frames = tf.signal.frame(idx_pad,                    # (N,RF,k)
-                             frame_length=k,
-                             frame_step=1,
-                             axis=1)
-    return frames
+    idx     = TABLE.lookup(tokens.flat_values)
+    ragged  = tf.RaggedTensor.from_row_lengths(idx, tokens.row_lengths())
+    idx_pad = ragged.to_tensor(default_value=pad_token, shape=(None, seq_len))  # (N,L)
+    frames  = tf.signal.frame(idx_pad, frame_length=k, frame_step=1, axis=1)  # (N,RF,k)
+    return tf.one_hot(frames, depth=21, dtype=tf.float32)                 # (N,RF,k,21)
 
 # ---------------------------------------------------------------------------
 # tf.data convenience wrapper ----------------------------------------------
@@ -128,221 +76,6 @@ def kmer_token_frames(seqs: tf.Tensor,  # shape=(N,), dtype=string
 def _parquet_rowcount(parquet_path: str | os.PathLike) -> int:
     return pq.ParquetFile(parquet_path).metadata.num_rows
 
-
-def make_tf_dataset(source: Union[str, os.PathLike, tuple, tf.data.Dataset, pd.DataFrame],
-                    *,
-                    longest_peptide_seq_length: int,
-                    max_mhc_seq_length: int,
-                    batch: int = 128,
-                    shuffle: bool = True,
-                    augmentation: str = None,
-                    test_batches: int = None) -> tf.data.Dataset:
-    """
-    Create a memory‑aware ``tf.data.Dataset`` from *source* which can be:
-
-    * **Pathlike** → stream Parquet in mini‑batches (zero‑copy Arrow)
-    * **pandas.DataFrame** → convert in‑memory table to tensors lazily
-    * **tuple** of numpy arrays/lists → classic RAM pipeline
-    * **tf.data.Dataset** → return after optional shuffle/batch tweaks
-    """
-    # ---------------- pathlike -> streaming -----------------------------
-    if isinstance(source, (str, os.PathLike)):
-        parquet_path = str(source)
-
-        # Apply down-sampling augmentation for streaming data
-        if augmentation == 'down':
-            print("   applying down-sampling augmentation for streaming data")
-
-        k = 9
-        rf = longest_peptide_seq_length - k + 1
-        output_signature = (
-            (
-                tf.TensorSpec(shape=(None, rf, k, 21), dtype=tf.float32),
-                tf.TensorSpec(shape=(None, max_mhc_seq_length, 1152), dtype=tf.float32),
-            ),
-            tf.TensorSpec(shape=(None, 1), dtype=tf.float32),
-        )
-
-        ds = tf.data.Dataset.from_generator(
-            lambda: load_dataset_in_batches_with_augmentation(
-                parquet_path,
-                target_seq_len=longest_peptide_seq_length,
-                batch_size=batch,
-                augmentation=augmentation,
-            ),
-            output_signature=output_signature,
-        )
-
-        if shuffle:
-            est_rows = _parquet_rowcount(parquet_path)
-            buffer_size = min(max(8, est_rows // batch // 10), 10 * batch)
-            ds = ds.shuffle(buffer_size=buffer_size, seed=42, reshuffle_each_iteration=True)
-        if test_batches is not None:
-            ds = ds.take(test_batches)
-            return ds
-
-        return ds.prefetch(tf.data.AUTOTUNE)
-
-    # ---------------- DataFrame -> in‑RAM dataset ------------------------
-    if isinstance(source, pd.DataFrame):
-        df: pd.DataFrame = source.copy()  # shallow copy to avoid surprises
-
-        # Apply augmentation to DataFrame if specified
-        if augmentation == 'down':
-            df = apply_downsampling_augmentation(df)
-
-        # Case A: original raw‑fields DataFrame --------------------------
-        if {'long_mer', 'assigned_label'}.issubset(df.columns):
-            # pep_onehot = peptides_to_onehot_kmer_windows(df['long_mer'].tolist(), longest_peptide_seq_length)
-            frames = kmer_token_frames(
-                df['long_mer'].astype(str).values,
-                seq_len=longest_peptide_seq_length,
-                k=9  # k-mer framing
-            )
-            pep_onehot = tf.one_hot(frames, depth=21, dtype=tf.float32).numpy()  # (N, RF, k, 21)
-
-            if 'mhc_embedding' in df.columns and df['mhc_embedding'].dtype != object:
-                latents = np.stack(df['mhc_embedding']).astype('float32')
-            else:
-                latents = np.stack([
-                    _read_embedding_file(p) for p in df['mhc_embedding_path']
-                ])
-            labels = df['assigned_label'].astype('float32').values[:, None]
-
-            ds = tf.data.Dataset.from_tensor_slices(((pep_onehot, latents), labels))
-
-        # Case B: already‑vectorised columns -----------------------------
-        elif len(df.columns) >= 3:
-            # Attempt heuristic mapping
-            arrs = [np.stack(df[c].values) if isinstance(df[c].iloc[0], (list, np.ndarray)) else df[c].values for c in
-                    df.columns]
-            peps, lats, labels = arrs[:3]
-            ds = tf.data.Dataset.from_tensor_slices(((peps, lats), labels))
-        else:
-            raise ValueError('DataFrame must contain raw fields (long_mer & label) or three array‑like columns.')
-
-        if shuffle:
-            ds = ds.shuffle(buffer_size=len(df), seed=42)
-        if test_batches is not None:
-            ds = ds.take(test_batches)
-            return ds
-        return ds.batch(batch).prefetch(tf.data.AUTOTUNE)
-
-    # ---------------- tf.data.Dataset -> return with tweaks --------------
-    if isinstance(source, tf.data.Dataset):
-        ds = source
-        if shuffle:
-            ds = ds.shuffle(buffer_size=1000, seed=42)
-        # add batch op if elements are individual examples (rank>0 check)
-        if not isinstance(ds.element_spec[0][0].shape[0], tf.TensorShape):
-            ds = ds.batch(batch)
-
-        if test_batches is not None:
-            ds = ds.take(test_batches)
-            return ds
-        return ds.prefetch(tf.data.AUTOTUNE)
-
-    # ---------------- tuple/ndarray in‑memory ----------------------------
-    if isinstance(source, tuple):
-        if len(source) == 3:
-            peps, lats, labels = source
-        elif len(source) == 2:
-            (peps, lats), labels = source
-        else:
-            raise ValueError('Tuple must be (peps,lats,labels) or ((peps,lats),labels).')
-
-        ds = tf.data.Dataset.from_tensor_slices(((peps, lats), labels))
-        if shuffle:
-            ds = ds.shuffle(buffer_size=len(labels), seed=42)
-        if test_batches is not None:
-            ds = ds.take(test_batches)
-            return ds
-        return ds.batch(batch).prefetch(tf.data.AUTOTUNE)
-
-    raise TypeError(f'Unsupported *source* type {type(source).__name__}.')
-
-
-def load_dataset_in_batches_with_augmentation(parquet_path: str,
-                                              target_seq_len: int,
-                                              batch_size: int,
-                                              augmentation: str = None):
-    """
-    Modified generator that applies augmentation per chunk during streaming.
-    """
-    pq_file = pq.ParquetFile(parquet_path)
-
-    for batch_df in pq_file.iter_batches(batch_size=batch_size):
-        chunk_df = batch_df.to_pandas()
-
-        # Apply augmentation to each chunk individually
-        if augmentation == 'down':
-            chunk_df = apply_downsampling_augmentation(chunk_df)
-
-            # Skip empty chunks after augmentation
-            if len(chunk_df) == 0:
-                continue
-
-        # Process the chunk as usual
-        # pep_onehot = peptides_to_onehot_kmer_windows(chunk_df['long_mer'].tolist(), target_seq_len)
-        frames = kmer_token_frames(
-            chunk_df['long_mer'].astype(str).values,
-            seq_len=target_seq_len,
-            k=9
-        )
-        pep_onehot = tf.one_hot(frames, depth=21, dtype=tf.float32).numpy()  # (N, RF, k, 21)
-
-        if 'mhc_embedding' in chunk_df.columns and chunk_df['mhc_embedding'].dtype != object:
-            latents = np.stack(chunk_df['mhc_embedding']).astype('float32')
-        else:
-            latents = np.stack([
-                _read_embedding_file(p) for p in chunk_df['mhc_embedding_path']
-            ])
-
-        labels = chunk_df['assigned_label'].astype('float32').values[:, None]
-
-        yield (pep_onehot, latents), labels
-
-
-def apply_downsampling_augmentation(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Apply down-sampling augmentation to balance classes in a DataFrame chunk.
-    Calculates the sampling ratio for each chunk individually.
-    """
-    if 'assigned_label' not in df.columns:
-        return df
-
-    # Calculate class distribution for this specific chunk
-    pos_count = (df['assigned_label'] == 1).sum()
-    neg_count = (df['assigned_label'] == 0).sum()
-
-    if pos_count == 0 or neg_count == 0:
-        # If chunk has only one class, return as-is
-        return df
-
-    # Determine minority class and target count
-    min_count = min(pos_count, neg_count)
-
-    seed = np.random.randint(1, 10000)
-
-    # Sample equal numbers from each class
-    pos_samples = df[df['assigned_label'] == 1].sample(
-        n=min_count,
-        random_state=seed,
-        replace=False
-    )
-    neg_samples = df[df['assigned_label'] == 0].sample(
-        n=min_count,
-        random_state=seed,
-        replace=False
-    )
-
-    # Combine and shuffle
-    balanced_df = pd.concat([pos_samples, neg_samples], ignore_index=True)
-    balanced_df = balanced_df.sample(frac=1, random_state=seed).reset_index(drop=True)
-
-    # print(f"   chunk: {pos_count} pos, {neg_count} neg -> {len(balanced_df)} balanced samples")
-
-    return balanced_df
 # ---------------------------------------------------------------------------
 # Robust loader for latent embeddings (same as before)
 # ---------------------------------------------------------------------------
@@ -363,50 +96,82 @@ def _read_embedding_file(path: str | os.PathLike) -> np.ndarray:
         raise ValueError(f"Unrecognised embedding file {path}")
 
 
-# ---------------------------------------------------------------------------
-# Dataset loader – returns (peptide_onehot, latent), labels
-# ---------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
+# 3) Streaming Parquet → tf.data.Dataset (stays in TF tensors the whole time)
+# ----------------------------------------------------------------------------
 
-def load_dataset(parquet_path: str):
-    print(f"→ Reading {parquet_path}")
-    df = pd.read_parquet(parquet_path)
 
-    # 1) Peptide one‑hot ----------------------------------------------------
-    if "long_mer" not in df.columns:
-        raise ValueError("Expected a 'long_mer' column with peptide sequences")
-    pep_seq_len = int(df["long_mer"].str.len().max())
-    print(f"   longest peptide = {pep_seq_len} residues")
-    # pep_onehot = peptides_to_onehot_kmer_windows(df["long_mer"].tolist(), pep_seq_len)
-    frames = kmer_token_frames(df["long_mer"].astype(str).values,
-                                seq_len=pep_seq_len,
-                                k=9)  # k-mer framing
-    pep_onehot = tf.one_hot(frames, depth=21, dtype=tf.float32).numpy()  # (N, RF, k, 21)
-    print("   peptide one-hot shape:", pep_onehot.shape)
+def _load_parquet_rows(parquet_path, seq_len, k=9, test_batches=None):
+    pq_file = pq.ParquetFile(parquet_path)
+    batch_counter = 0
+    for batch_df in pq_file.iter_batches(batch_size=2048):
+        if test_batches is not None and batch_counter >= test_batches:
+            break
+        df = batch_df.to_pandas()
 
-    # 2) Latent embeddings --------------------------------------------------
-    print(f"   loading MHC embeddings")
-    if "mhc_embedding" in df.columns:
-        latents = np.stack(df["mhc_embedding"].values).astype("float32")
-        max_mhc_seq_length = latents.shape[1]
-    elif "mhc_embedding_path" in df.columns:
-        latents = np.stack([_read_embedding_file(p) for p in df["mhc_embedding_path"]])
-        max_mhc_seq_length = latents.shape[1]
-    else:
-        raise ValueError("Need 'mhc_embedding' or 'mhc_embedding_path' column")
+        peps   = tf.constant(df["long_mer"].astype(str).values, dtype=tf.string)
+        x_pep  = kmer_onehot_tensor(peps, seq_len, k)  # tf.Tensor on GPU/CPU
 
-    print("   latent shape:", latents.shape)
-    print("   max_mhc_seq_length:", max_mhc_seq_length)
-    # if latents.shape[1:] != (36, 1152):
-    #     raise ValueError(f"Unexpected latent shape {latents.shape[1:]}, expected (36,1152)")
+        if "mhc_embedding" in df.columns and df["mhc_embedding"].dtype != object:
+            latents = tf.constant(np.stack(df["mhc_embedding"]).astype("float32"))
+        else:
+            latents = tf.constant(np.stack([_read_embedding_file(p) for p in df["mhc_embedding_path"]]))
 
-    # 3) Labels -------------------------------------------------------------
-    labels = df["assigned_label"].astype("float32").values[:, None]  # (N,1)
+        labels = tf.constant(df["assigned_label"].astype("float32").values[:, None])
+        batch_counter += 1
+        yield (x_pep, latents), labels
 
-    return pep_onehot, latents, labels, pep_seq_len, max_mhc_seq_length
+
+def make_stream_dataset(
+    parquet_path: str,
+    max_pep_seq_len: int,
+    max_mhc_len: int,
+    batch: int = 512,
+    shuffle: bool = True,
+    k: int = 9,
+    test_batches: int = None
+) -> tf.data.Dataset:
+    """Replacement for the "path‐like" branch; optimized to avoid caching when using small test_batches."""
+    rf = max_pep_seq_len - k + 1
+    output_signature = (
+        (
+            tf.TensorSpec(shape=(None, rf, k, 21), dtype=tf.float32), # one-hot peptide tensor
+            tf.TensorSpec(shape=(None, max_mhc_len, 1152), dtype=tf.float32), # latent embeddings
+        ),
+        tf.TensorSpec(shape=(None, 1), dtype=tf.float32), # labels
+    )
+
+    # Pass test_batches into generator to limit batches early
+    ds = tf.data.Dataset.from_generator(
+        lambda: _load_parquet_rows(parquet_path, max_pep_seq_len, k, test_batches),
+        output_signature=output_signature,
+    )
+
+    if shuffle:
+        ds = ds.shuffle(buffer_size=10 * batch, reshuffle_each_iteration=True)
+
+    # If test_batches is provided, limit dataset and batch after
+    if test_batches is not None:
+        return ds.prefetch(tf.data.AUTOTUNE)
+
+    # Batch *after* shuffle so that every epoch gets fresh mixes
+    return ds.cache().prefetch(tf.data.AUTOTUNE)
+
+# ----------------------------------------------------------------------------
+# 4) On‑the‑fly 1:1 class balancing without Pandas down‑sampling
+# ----------------------------------------------------------------------------
+
+def build_balanced_dataset(ds: tf.data.Dataset) -> tf.data.Dataset:
+    """Wrap a dataset so that every step yields a balanced positive/negative mini‑batch."""
+    pos = ds.filter(lambda x, y: tf.reduce_any(tf.equal(y, 1)))
+    neg = ds.filter(lambda x, y: tf.reduce_any(tf.equal(y, 0)))
+    balanced = tf.data.experimental.sample_from_datasets([pos, neg], weights=[0.5, 0.5])
+    return balanced
 
 # ---------------------------------------------------------------------------
 # Visualisation utility
 # ---------------------------------------------------------------------------
+
 def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_id: int = None,
                         model=None, val_dataset=None):
     """
@@ -475,7 +240,6 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
 
         # Get predictions
         y_pred_proba = model.predict(val_dataset)
-        y_pred_proba = np.array(y_pred_proba)
         y_pred = (y_pred_proba > 0.5).astype(int)
 
         # Extract true labels
@@ -533,7 +297,6 @@ def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None, hi
     # Collect predictions
     print("Generating predictions...")
     y_pred_proba = model.predict(test_dataset)
-    y_pred_proba = np.array(y_pred_proba)
     y_pred = (y_pred_proba > 0.5).astype(int).flatten()
 
     # Extract true labels
@@ -697,8 +460,6 @@ def main(argv=None):
                    help="Output dir (default: runs/run_YYYYmmdd-HHMMSS)")
     p.add_argument("--val_fraction", type=float, default=0.2,
                    help="Fraction for train/val split")
-    p.add_argument("--augmentation", default=None, # GNUSS, down
-                   help="Augmentation method for dataset (default: None)")
     p.add_argument("--test_batches", type=int, default=None,
                    help="Limit to N batches for testing (default: None = use all data)")
 
@@ -709,75 +470,76 @@ def main(argv=None):
     print(f"★ Outputs → {run_dir}\n")
 
     # ----------------------- Load & split ----------------------------------
-    if args.parquet:
-        # peps, lats, labels, seq_len = load_dataset(args.parquet)
-        peps, lats, labels, longest_peptide_seq_length, max_mhc_seq_length = load_dataset(args.parquet)
+    # Load test sets
+    test1 = pd.read_parquet(args.dataset_path + "/test1.parquet")
+    test2 = pd.read_parquet(args.dataset_path + "/test2.parquet")
+    esm_files = list(pathlib.Path(args.dataset_path).glob('*esm_embeddings.parquet'))
+    if not esm_files:
+        raise FileNotFoundError('No esm embeddings parquet found in dataset_path')
+    whole_data = pd.read_parquet(str(esm_files[0]))
 
-        print(f"✓ loaded {len(peps):,} samples"
-              f" ({peps.shape[1]} residues, {lats.shape[1]} latent features)")
+    fold_files = sorted([f for f in os.listdir(os.path.join(args.dataset_path, f'folds')) if f.endswith('.parquet')])
+    n_folds = len(fold_files) // 2
 
-        X_train_p, X_val_p, X_train_l, X_val_l, y_train, y_val = train_test_split(
-            peps, lats, labels,
-            test_size=args.val_fraction,
-            random_state=42,
-            stratify=labels)
+    # Find the longest peptide sequence across all datasets
+    longest_peptide_seq_length = 0
+    max_mhc_seq_length = 36 # TODO make dynamic later
 
-        train_loader =  make_tf_dataset((X_train_p, X_train_l, y_train), longest_peptide_seq_length=longest_peptide_seq_length, max_mhc_seq_length=max_mhc_seq_length , batch=args.batch, shuffle=True, test_batches=args.test_batches, augmentation=args.augmentation)
-        val_loader = make_tf_dataset((X_val_p, X_val_l, y_val), longest_peptide_seq_length=longest_peptide_seq_length, max_mhc_seq_length=max_mhc_seq_length ,batch=args.batch, shuffle=False, test_batches=args.test_batches, augmentation=None)
+    # Check test datasets
+    if "long_mer" in test1.columns:
+        longest_peptide_seq_length = max(longest_peptide_seq_length, int(test1["long_mer"].str.len().max()))
 
-    elif args.dataset_path:
-        # Load test sets
-        test1 = pd.read_parquet(args.dataset_path + "/test1.parquet")
-        test2 = pd.read_parquet(args.dataset_path + "/test2.parquet")
-        fold_files = sorted([f for f in os.listdir(os.path.join(args.dataset_path, f'folds')) if f.endswith('.parquet')])
-        n_folds = len(fold_files) // 2
+    if "long_mer" in test2.columns:
+        longest_peptide_seq_length = max(longest_peptide_seq_length, int(test2["long_mer"].str.len().max()))
+    # Check whole dataset
+    if "long_mer" in whole_data.columns:
+        longest_peptide_seq_length = max(longest_peptide_seq_length, int(whole_data["long_mer"].str.len().max()))
 
-        # Find the longest peptide sequence across all datasets
-        longest_peptide_seq_length = 0
-        max_mhc_seq_length = 36 # TODO make dynamic later
+    # Create fold datasets with consistent sequence length
+    folds = []
+    class_weights = []
+    # Check all fold files
+    for i in range(1, n_folds + 1):
+        train_path = os.path.join(args.dataset_path, f'folds/fold_{i}_train.parquet')
+        val_path = os.path.join(args.dataset_path, f'folds/fold_{i}_val.parquet')
 
-        # Check test datasets
-        if "long_mer" in test1.columns:
-            longest_peptide_seq_length = max(longest_peptide_seq_length, int(test1["long_mer"].str.len().max()))
+        train_loader = make_stream_dataset(train_path, max_pep_seq_len=longest_peptide_seq_length, max_mhc_len=max_mhc_seq_length, batch=args.batch, shuffle=True, test_batches=args.test_batches)
+        val_loader = make_stream_dataset(val_path, max_pep_seq_len=longest_peptide_seq_length, max_mhc_len=max_mhc_seq_length, batch=args.batch, shuffle=False, test_batches=args.test_batches)
 
-        if "long_mer" in test2.columns:
-            longest_peptide_seq_length = max(longest_peptide_seq_length, int(test2["long_mer"].str.len().max()))
+        # # 3) Shuffle + cache + repeat + prefetch for infinite, fresh-each-epoch stream
+        # train_ds = (train_loader
+        #             .shuffle(buffer_size=100_000, reshuffle_each_iteration=True)
+        #             .cache()  # or .cache("train.cache")
+        #             .repeat()  # infinite
+        #             .prefetch(tf.data.AUTOTUNE))
+        #
+        # # Validation can skip repeat() and caching if you prefer, but prefetch is still good:
+        # val_ds = (val_loader
+        #           .shuffle(buffer_size=20_000, reshuffle_each_iteration=True)
+        #           .cache()  # optional for val
+        #           .prefetch(tf.data.AUTOTUNE))
 
-        # Check all fold files
-        for i in range(1, n_folds + 1):
-            train_path = os.path.join(args.dataset_path, f'folds/fold_{i}_train.parquet')
-            val_path = os.path.join(args.dataset_path, f'folds/fold_{i}_val.parquet')
+        # Calculate class weights for the current fold
+        train_labels = pd.read_parquet(train_path)["assigned_label"].values.astype(int)
+        counts = np.bincount(train_labels, minlength=2)
+        cw = {0: 1.0, 1: 1.0}  # Default weights if one class is missing or data is empty
+        if counts[0] > 0 and counts[1] > 0:  # If both classes are present
+            total = counts.sum()
+            cw[0] = total / (2 * counts[0])
+            cw[1] = total / (2 * counts[1])
 
-            train_df = pd.read_parquet(train_path)
-            val_df = pd.read_parquet(val_path)
+        folds.append((train_loader, val_loader))
+        class_weights.append(cw)
 
-            if "long_mer" in train_df.columns:
-                longest_peptide_seq_length = max(longest_peptide_seq_length, int(train_df["long_mer"].str.len().max()))
-            if "long_mer" in val_df.columns:
-                longest_peptide_seq_length = max(longest_peptide_seq_length, int(val_df["long_mer"].str.len().max()))
+    # Create test loaders with the same sequence length
+    test1_loader = make_stream_dataset(args.dataset_path + "/test1.parquet"
+    , max_pep_seq_len=longest_peptide_seq_length, max_mhc_len=max_mhc_seq_length, batch=128, shuffle=False)
+    test2_loader = make_stream_dataset(args.dataset_path + "/test2.parquet"
+    , max_pep_seq_len=longest_peptide_seq_length,max_mhc_len=max_mhc_seq_length, batch=128, shuffle=False)
 
-        print(f"✓ Longest peptide sequence length across all datasets: {longest_peptide_seq_length}")
-
-        # Create fold datasets with consistent sequence length
-        folds = []
-        for i in range(1, n_folds + 1):
-            train_path = os.path.join(args.dataset_path, f'folds/fold_{i}_train.parquet')
-            val_path = os.path.join(args.dataset_path, f'folds/fold_{i}_val.parquet')
-
-            train_loader = make_tf_dataset(train_path, longest_peptide_seq_length=longest_peptide_seq_length, max_mhc_seq_length=max_mhc_seq_length, batch=args.batch, shuffle=True, augmentation=args.augmentation, test_batches=args.test_batches)
-            val_loader = make_tf_dataset(val_path, longest_peptide_seq_length=longest_peptide_seq_length, max_mhc_seq_length=max_mhc_seq_length, batch=args.batch, shuffle=False, test_batches=args.test_batches, augmentation=None)
-
-            folds.append((train_loader, val_loader))
-
-        # Create test loaders with the same sequence length
-        test1_loader = make_tf_dataset(test1, longest_peptide_seq_length=longest_peptide_seq_length, max_mhc_seq_length=max_mhc_seq_length, batch=128, shuffle=False, augmentation=None, test_batches=args.test_batches)
-        test2_loader = make_tf_dataset(test2, longest_peptide_seq_length=longest_peptide_seq_length,max_mhc_seq_length=max_mhc_seq_length, batch=128, shuffle=False, augmentation=None, test_batches=args.test_batches)
-
-        print(f"✓ loaded {len(test1):,} test1 samples, "
-              f"{len(test2):,} test2 samples, "
-              f"{len(folds)} folds")
-    else:
-        raise ValueError("Need either --parquet or --dataset_path argument")
+    print(f"✓ loaded {len(test1):,} test1 samples, "
+          f"{len(test2):,} test2 samples, "
+          f"{len(folds)} folds")
 
     # ----------------------- Model -----------------------------------------
     # clear GPU memory
@@ -795,122 +557,61 @@ def main(argv=None):
     early_cb = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss', patience=10, restore_best_weights=True)
 
-    if args.parquet:
+    for fold_id, ((train_loader, val_loader), class_weight) in enumerate(zip(folds, class_weights), start=1):
+        print(f'Training on fold {fold_id}/{len(folds)}')
         tf.keras.backend.clear_session()
-        os.environ['PYTHONHASHSEED'] = '42'
-        os.environ['TF_DETERMINISTIC_OPS'] = '1'
-        model = build_custom_classifier(longest_peptide_seq_length, max_mhc_seq_length)
+        tf.random.set_seed(42)
+        np.random.seed(42)
+        print("########################### seq length: ", longest_peptide_seq_length)
+        model = build_custom_classifier(longest_peptide_seq_length, max_mhc_seq_length, pad_token=pad_token)
         model.summary()
 
-        history = model.fit(train_loader,
-                            validation_data=val_loader,
-                            epochs=args.epochs,
-                            callbacks=[ckpt_cb, early_cb])
+        # check dimension of the target
+        if train_loader.element_spec[1].shape[-1] != 1:
+            raise ValueError("Expected binary labels (shape should be (None, 1))")
+
+        print("Training model...")
+        hist = model.fit(
+            train_loader,
+            validation_data=val_loader,
+            epochs= args.epochs,
+            # class_weight=class_weight,
+            callbacks=[ckpt_cb, early_cb],
+            verbose=1,
+        )
 
         # plot
-        plot_training_curve(history, run_dir, fold_id=None, model=model, val_dataset=val_loader)
+        plot_training_curve(hist, run_dir, fold_id, model, val_loader)
 
         # save model and metadata
-        model.save(os.path.join(run_dir, 'model.h5'))
+        model.save(os.path.join(run_dir, f'model_fold_{fold_id}.h5'))
         metadata = {
+            "fold_id": fold_id,
             "epochs": args.epochs,
             "batch_size": args.batch,
-            "longest_peptide_seq_length": longest_peptide_seq_length,
+            "seq_len": longest_peptide_seq_length,
             "run_dir": run_dir
         }
-        with open(os.path.join(run_dir, 'metadata.json'), 'w') as f:
+        with open(os.path.join(run_dir, f'metadata_fold_{fold_id}.json'), 'w') as f:
             json.dump(metadata, f, indent=4)
+        print(f"✓ Fold {fold_id} model saved to {run_dir}")
 
+        # Evaluate on test sets
+        print("Evaluating on test1 set...")
+        test1_results = model.evaluate(test1_loader, verbose=1)
+        print(f"Test1 results: {test1_results}")
+        print("Evaluating on test2 set...")
+        test2_results = model.evaluate(test2_loader, verbose=1)
+        print(f"Test2 results: {test2_results}")
 
-    elif args.dataset_path:
-        for fold_id, (train_loader, val_loader) in enumerate(folds, start=1):
-            print(f'Training on fold {fold_id}/{len(folds)}')
-            tf.keras.backend.clear_session()
-            tf.random.set_seed(42)
-            np.random.seed(42)
-            print("########################### seq length: ", longest_peptide_seq_length)
-            model = build_custom_classifier(longest_peptide_seq_length, max_mhc_seq_length)
-            model.summary()
-
-            # print one sample
-            # print("Sample input shape:", next(iter(train_loader))[0][0].shape)
-            # print("Sample latent shape:", next(iter(train_loader))[0][1].shape)
-            # print("Sample label shape:", next(iter(train_loader))[1].shape)
-
-            # train one epoch at a time to resample (down-sample) differently each epoch
-            epoch_histories = []
-            for ep in range(1, args.epochs + 1):
-                print(f'Epoch {ep}/{args.epochs}')
-                np.random.seed(ep)
-                tf.random.set_seed(ep)
-                # rebuild training loader (applies down-sampling & shuffle) with new seed
-                train_loader = make_tf_dataset(
-                    train_path,
-                    longest_peptide_seq_length=longest_peptide_seq_length,
-                    max_mhc_seq_length=max_mhc_seq_length,
-                    batch=args.batch,
-                    shuffle=True,
-                    augmentation=args.augmentation,
-                    test_batches=args.test_batches
-                )
-
-                # Print an example batch shape
-                for (x_peps, x_mhc), y_labels in train_loader.take(1):
-                    print("Peptide tensor shape:", x_peps.shape)
-                    print("MHC tensor shape:", x_mhc.shape)
-                    print("Labels shape:", y_labels.shape)
-                    break
-
-
-                hist = model.fit(
-                    train_loader,
-                    validation_data=val_loader,
-                    epochs=1,
-                    callbacks=[ckpt_cb, early_cb]
-                )
-                epoch_histories.append(hist)
-            # optionally combine epoch_histories for plotting or analysis
-            print(f"✓ Fold {fold_id} training completed, {len(epoch_histories)} epochs recorded.")
-            # Combine histories into a single History object
-            combined_history = tf.keras.callbacks.History()
-            combined_history.history = {
-                key: np.concatenate([h.history[key] for h in epoch_histories])
-                for key in epoch_histories[0].history.keys()
-            }
-
-            # plot
-            plot_training_curve(combined_history, run_dir, fold_id, model, val_loader)
-
-            # save model and metadata
-            model.save(os.path.join(run_dir, f'model_fold_{fold_id}.h5'))
-            metadata = {
-                "fold_id": fold_id,
-                "epochs": args.epochs,
-                "batch_size": args.batch,
-                "seq_len": longest_peptide_seq_length,
-                "run_dir": run_dir
-            }
-            with open(os.path.join(run_dir, f'metadata_fold_{fold_id}.json'), 'w') as f:
-                json.dump(metadata, f, indent=4)
-            print(f"✓ Fold {fold_id} model saved to {run_dir}")
-
-            # Evaluate on test sets
-            print("Evaluating on test1 set...")
-            test1_results = model.evaluate(test1_loader, verbose=1)
-            print(f"Test1 results: {test1_results}")
-            print("Evaluating on test2 set...")
-            test2_results = model.evaluate(test2_loader, verbose=1)
-            print(f"Test2 results: {test2_results}")
-
-            # Plot ROC curve for test1
-            plot_test_metrics(model, test1_loader, run_dir, fold_id, string="Test1 - balanced alleles")
-            # Plot ROC curve for test2
-            plot_test_metrics(model, test2_loader, run_dir, fold_id, string="Test2 - rare alleles")
+        # Plot ROC curve for test1
+        plot_test_metrics(model, test1_loader, run_dir, fold_id, string="Test1 - balanced alleles")
+        # Plot ROC curve for test2
+        plot_test_metrics(model, test2_loader, run_dir, fold_id, string="Test2 - rare alleles")
 
 
 if __name__ == "__main__":
     main([
-        # "--parquet", "../data/Custom_dataset/NetMHCpan_dataset/mhc_2/mhc2_with_esm_embeddings.parquet",
         "--dataset_path", "../data/Custom_dataset/NetMHCpan_dataset/mhc_1",
-        "--epochs", "2", "--batch", "3200", "--augmentation", "down", "--test_batches", "10",
+        "--epochs", "3", "--batch", "64", "--test_batches", "20"
     ])
