@@ -2287,7 +2287,7 @@ def build_classifier(max_seq_len=50,
 # if __name__ == "__main__":
 #     SEQ_LEN = 15       # typical peptide length (adjust to your data)
 #
-#     model = build_classifier(seq_len=SEQ_LEN)
+#     model = build_classifier(max_seq_len=SEQ_LEN)
 #     model.summary()
 #
 #     # Training example (dummy):
