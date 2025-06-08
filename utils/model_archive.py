@@ -543,7 +543,7 @@ def build_custom_classifier(max_len_peptide: int,
     mhc_input = keras.Input(shape=(max_len_mhc, 1152),   name="mhc_input")
 
     # ----- peptide branch --------------------------------------------------
-    pep_mask = layers.Lambda(make_rf_mask, name="pep_mask")(pep_input)         # (B, RF)
+    pep_mask = layers.Lambda(make_rf_mask, output_shape=(None, None), name="pep_mask")(pep_input)  # (B, RF)
 
     pep_flat = layers.Reshape((RF_max, k * 21), name="pep_flat")(pep_input)    # (B, RF, k·21)
 
