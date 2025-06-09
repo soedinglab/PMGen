@@ -27,47 +27,20 @@ The script
 Author :  Amirreza (updated for cross‑attention, 2025‑05‑22)
 """
 from __future__ import annotations
-import os
-import sys
+
+import math
+import os, sys, argparse, datetime, pathlib, json
+from random import random
 
 print(sys.executable)
 
-# =============================================================================
-# CRITICAL: GPU Memory Configuration - MUST BE FIRST
-# =============================================================================
-import tensorflow as tf
-
-def configure_gpu_memory():
-    """Configure TensorFlow to use GPU memory efficiently"""
-    try:
-        gpus = tf.config.experimental.list_physical_devices('GPU')
-        if gpus:
-            print(f"Found {len(gpus)} GPU(s)")
-            for gpu in gpus:
-                tf.config.experimental.set_memory_growth(gpu, True)
-            print("✓ GPU memory growth enabled")
-        else:
-            print("No GPUs found - running on CPU")
-    except RuntimeError as e:
-        print(f"GPU configuration error: {e}")
-
-
-# Configure GPU immediately
-configure_gpu_memory()
-
-# Set memory-friendly environment variables
-os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
-os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
-os.environ["PYTHONHASHSEED"] = "42"
-os.environ["TF_DETERMINISTIC_OPS"] = "1"
-
-import math
-import argparse, datetime, pathlib, json
-import psutil
 import numpy as np
 import pandas as pd
+import tensorflow as tf
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 from tqdm import tqdm
+
 from model_archive import build_custom_classifier
 from sklearn.metrics import (
     confusion_matrix, roc_curve, auc, precision_score,
@@ -76,38 +49,6 @@ from sklearn.metrics import (
 import seaborn as sns
 import os
 import pyarrow.parquet as pq
-
-# =============================================================================
-# Memory monitoring functions
-# =============================================================================
-def monitor_memory():
-    """Monitor system memory usage"""
-    memory = psutil.virtual_memory()
-    print(f"System RAM: {memory.used / 1e9:.1f}GB / {memory.total / 1e9:.1f}GB ({memory.percent:.1f}% used)")
-
-    try:
-        # Try to get GPU memory info
-        from pynvml import nvmlInit, nvmlDeviceGetCount, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo
-        nvmlInit()
-        deviceCount = nvmlDeviceGetCount()
-        for i in range(deviceCount):
-            handle = nvmlDeviceGetHandleByIndex(i)
-            info = nvmlDeviceGetMemoryInfo(handle)
-            print(
-                f"GPU {i}: {info.used / 1e9:.1f}GB / {info.total / 1e9:.1f}GB ({100 * info.used / info.total:.1f}% used)")
-    except:
-        print("GPU memory monitoring not available")
-
-
-def check_memory():
-    """Check if memory usage is acceptable"""
-    memory = psutil.virtual_memory()
-    if memory.percent > 90:
-        print(f"⚠️  Critical RAM usage: {memory.percent:.1f}%")
-        return False
-    elif memory.percent > 80:
-        print(f"⚠️  High RAM usage: {memory.percent:.1f}%")
-    return True
 
 # ----------------------------------------------------------------------------
 # 1) Peptide → k‑mer one‑hot *inside* TF graph (GPU/TPU friendly)
@@ -160,58 +101,72 @@ def _read_embedding_file(path: str | os.PathLike) -> np.ndarray:
 # ----------------------------------------------------------------------------
 
 
-def _load_parquet_samples(parquet_path, seq_len, k=9):
-    """
-    FIXED: Generator that yields individual samples, not batches.
-    This prevents double-batching issues.
-    """
+def _load_parquet_rows(parquet_path, seq_len, k=9, test_batches=None):
     pq_file = pq.ParquetFile(parquet_path)
-    total_rows = _parquet_rowcount(parquet_path)
-    estimated_batches = math.ceil(total_rows / BUFFER)
-    for batch_df in tqdm(pq_file.iter_batches(batch_size=BUFFER),
-                         total=estimated_batches,
-                         desc="Loading batches",
-                         unit="batch"):
+    batch_counter = 0
+    for batch_df in pq_file.iter_batches(batch_size=2048):
+        if test_batches is not None and batch_counter >= test_batches:
+            break
         df = batch_df.to_pandas()
-        # Process each row individually
-        # Vectorized batch processing
-        seqs = tf.constant(df["long_mer"].tolist(), dtype=tf.string) # (N,)
-        labels = tf.constant(df["assigned_label"].values, dtype=tf.float32) # (N,)
-        # Load and stack all embeddings for the batch
-        embeddings = [_read_embedding_file(p) for p in df["mhc_embedding_path"]]
-        latents = tf.constant(np.stack(embeddings), dtype=tf.float32) # (N, 1152)
-        # One-hot encode all peptides in one go
-        x_peps = kmer_onehot_tensor(seqs, seq_len=seq_len, k=k) # (N, RF, k, 21)
-        # Yield individual samples
-        for x_pep, latent, label in zip(x_peps, latents, labels):
-            yield (x_pep, latent), tf.expand_dims(label, 0)
-        # Clean up DataFrame
-        del df
+
+        peps   = tf.constant(df["long_mer"].astype(str).values, dtype=tf.string)
+        x_pep  = kmer_onehot_tensor(peps, seq_len, k)  # tf.Tensor on GPU/CPU
+
+        if "mhc_embedding" in df.columns and df["mhc_embedding"].dtype != object:
+            latents = tf.constant(np.stack(df["mhc_embedding"]).astype("float32"))
+        else:
+            latents = tf.constant(np.stack([_read_embedding_file(p) for p in df["mhc_embedding_path"]]))
+
+        labels = tf.constant(df["assigned_label"].astype("float32").values[:, None])
+        batch_counter += 1
+        yield (x_pep, latents), labels
+
 
 def make_stream_dataset(
-        parquet_path: str,
-        max_pep_seq_len: int,
-        max_mhc_len: int,
-        k: int = 9,
+    parquet_path: str,
+    max_pep_seq_len: int,
+    max_mhc_len: int,
+    batch: int = 512,
+    shuffle: bool = True,
+    k: int = 9,
+    test_batches: int = None
 ) -> tf.data.Dataset:
-    """
-    FIXED: Memory-optimized dataset creation with proper batching.
-    """
+    """Replacement for the "path‐like" branch; optimized to avoid caching when using small test_batches."""
     rf = max_pep_seq_len - k + 1
-
-    # Output signature for individual samples (no batch dimension)
     output_signature = (
         (
-            tf.TensorSpec(shape=(rf, k, 21), dtype=tf.float32),  # No batch dim
-            tf.TensorSpec(shape=(max_mhc_len, 1152), dtype=tf.float32),  # No batch dim
+            tf.TensorSpec(shape=(None, rf, k, 21), dtype=tf.float32), # one-hot peptide tensor
+            tf.TensorSpec(shape=(None, max_mhc_len, 1152), dtype=tf.float32), # latent embeddings
         ),
-        tf.TensorSpec(shape=1, dtype=tf.float32),  # Scalar label
+        tf.TensorSpec(shape=(None, 1), dtype=tf.float32), # labels
     )
+
+    # Pass test_batches into generator to limit batches early
     ds = tf.data.Dataset.from_generator(
-        lambda: _load_parquet_samples(parquet_path, max_pep_seq_len, k),
+        lambda: _load_parquet_rows(parquet_path, max_pep_seq_len, k, test_batches),
         output_signature=output_signature,
     )
-    return ds
+
+    if shuffle:
+        ds = ds.shuffle(buffer_size=10 * batch, reshuffle_each_iteration=True)
+
+    # If test_batches is provided, limit dataset and batch after
+    if test_batches is not None:
+        return ds.prefetch(tf.data.AUTOTUNE)
+
+    # Batch *after* shuffle so that every epoch gets fresh mixes
+    return ds.cache().prefetch(tf.data.AUTOTUNE)
+
+# ----------------------------------------------------------------------------
+# 4) On‑the‑fly 1:1 class balancing without Pandas down‑sampling
+# ----------------------------------------------------------------------------
+
+def build_balanced_dataset(ds: tf.data.Dataset) -> tf.data.Dataset:
+    """Wrap a dataset so that every step yields a balanced positive/negative mini‑batch."""
+    pos = ds.filter(lambda x, y: tf.reduce_any(tf.equal(y, 1)))
+    neg = ds.filter(lambda x, y: tf.reduce_any(tf.equal(y, 0)))
+    balanced = tf.data.experimental.sample_from_datasets([pos, neg], weights=[0.5, 0.5])
+    return balanced
 
 # ---------------------------------------------------------------------------
 # Visualisation utility
@@ -248,16 +203,6 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
     plt.legend()
     plt.grid(True, alpha=0.3)
 
-    # Plot 2: Precision - Recall curve
-    # if "Precision" in hist and "Recall" in hist:
-    #     plt.subplot(1, 4, 2)
-    #     plt.plot(hist["Recall"], hist["Precision"], label="PR Curve", linewidth=2)
-    #     plt.xlabel("Recall")
-    #     plt.ylabel("Precision")
-    #     plt.title("Precision-Recall Curve")
-    #     plt.legend()
-    #     plt.grid(True, alpha=0.3)
-
     # Plot 2: Accuracy curve
     if "binary_accuracy" in hist and "val_binary_accuracy" in hist:
         plt.subplot(1, 4, 2)
@@ -279,7 +224,7 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
         plt.grid(True, alpha=0.3)
 
     # Plot 3: AUC curve
-    if "AUC" in hist and "val_AUC" in hist:
+    if "AUC" in hist and "val_auc" in hist:
         plt.subplot(1, 4, 3)
         plt.plot(hist["AUC"], label="train AUC", linewidth=2)
         plt.plot(hist["val_AUC"], label="val AUC", linewidth=2)
@@ -350,15 +295,15 @@ def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None, hi
     Returns: Dictionary containing evaluation metrics
     """
     # Collect predictions
-    print("Generating predictions...")
-    y_pred_proba = model.predict(test_dataset)
-    y_pred = (y_pred_proba > 0.5).astype(int).flatten()
-
     # Extract true labels
     y_true = []
     for _, labels in test_dataset:
         y_true.extend(labels.numpy())
     y_true = np.array(y_true).flatten()
+
+    print("Generating predictions...")
+    y_pred_proba = model.predict(test_dataset)
+    y_pred = (y_pred_proba > 0.5).astype(int).flatten()
 
     # Calculate ROC curve
     fpr, tpr, _ = roc_curve(y_true, y_pred_proba.flatten())
@@ -513,6 +458,8 @@ def main(argv=None):
     p.add_argument("--batch", type=int, default=128)
     p.add_argument("--outdir", default=None,
                    help="Output dir (default: runs/run_YYYYmmdd-HHMMSS)")
+    p.add_argument("--val_fraction", type=float, default=0.2,
+                   help="Fraction for train/val split")
     p.add_argument("--test_batches", type=int, default=None,
                    help="Limit to N batches for testing (default: None = use all data)")
 
@@ -522,16 +469,7 @@ def main(argv=None):
     pathlib.Path(run_dir).mkdir(parents=True, exist_ok=True)
     print(f"★ Outputs → {run_dir}\n")
 
-    # Set seeds for reproducibility
-    tf.random.set_seed(42)
-    np.random.seed(42)
-    print("Setting random seeds for reproducibility...")
-
     # ----------------------- Load & split ----------------------------------
-    # Find the longest peptide sequence across all datasets
-    longest_peptide_seq_length = 0
-    max_mhc_seq_length = 36  # TODO make dynamic later
-
     # Load test sets
     test1 = pd.read_parquet(args.dataset_path + "/test1.parquet")
     test2 = pd.read_parquet(args.dataset_path + "/test2.parquet")
@@ -542,6 +480,10 @@ def main(argv=None):
 
     fold_files = sorted([f for f in os.listdir(os.path.join(args.dataset_path, f'folds')) if f.endswith('.parquet')])
     n_folds = len(fold_files) // 2
+
+    # Find the longest peptide sequence across all datasets
+    longest_peptide_seq_length = 0
+    max_mhc_seq_length = 36 # TODO make dynamic later
 
     # Check test datasets
     if "long_mer" in test1.columns:
@@ -556,46 +498,44 @@ def main(argv=None):
     # Create fold datasets with consistent sequence length
     folds = []
     class_weights = []
+    # Check all fold files
     for i in range(1, n_folds + 1):
-        print(f"processing fold {i}")
         train_path = os.path.join(args.dataset_path, f'folds/fold_{i}_train.parquet')
         val_path = os.path.join(args.dataset_path, f'folds/fold_{i}_val.parquet')
 
-        train_ds = (make_stream_dataset(train_path, max_pep_seq_len=longest_peptide_seq_length,
-                                        max_mhc_len=max_mhc_seq_length)
-                    .shuffle(buffer_size=BUFFER, reshuffle_each_iteration=True)
-                    .batch(args.batch)
-                    .take(args.test_batches)
-                    .prefetch(tf.data.AUTOTUNE))
+        train_loader = make_stream_dataset(train_path, max_pep_seq_len=longest_peptide_seq_length, max_mhc_len=max_mhc_seq_length, batch=args.batch, shuffle=True, test_batches=args.test_batches)
+        val_loader = make_stream_dataset(val_path, max_pep_seq_len=longest_peptide_seq_length, max_mhc_len=max_mhc_seq_length, batch=args.batch, shuffle=False, test_batches=args.test_batches)
 
-        val_ds = (make_stream_dataset(val_path, max_pep_seq_len=longest_peptide_seq_length,
-                                      max_mhc_len=max_mhc_seq_length)
-                  .batch(args.batch)
-                  .take(args.test_batches)
-                  .prefetch(tf.data.AUTOTUNE))
+        # # 3) Shuffle + cache + repeat + prefetch for infinite, fresh-each-epoch stream
+        # train_ds = (train_loader
+        #             .shuffle(buffer_size=100_000, reshuffle_each_iteration=True)
+        #             .cache()  # or .cache("train.cache")
+        #             .repeat()  # infinite
+        #             .prefetch(tf.data.AUTOTUNE))
+        #
+        # # Validation can skip repeat() and caching if you prefer, but prefetch is still good:
+        # val_ds = (val_loader
+        #           .shuffle(buffer_size=20_000, reshuffle_each_iteration=True)
+        #           .cache()  # optional for val
+        #           .prefetch(tf.data.AUTOTUNE))
 
-        # Calculate class weights (unchanged)
+        # Calculate class weights for the current fold
         train_labels = pd.read_parquet(train_path)["assigned_label"].values.astype(int)
         counts = np.bincount(train_labels, minlength=2)
-        cw = {0: 1.0, 1: 1.0}
-        if counts[0] > 0 and counts[1] > 0:
+        cw = {0: 1.0, 1: 1.0}  # Default weights if one class is missing or data is empty
+        if counts[0] > 0 and counts[1] > 0:  # If both classes are present
             total = counts.sum()
             cw[0] = total / (2 * counts[0])
             cw[1] = total / (2 * counts[1])
 
-        folds.append((train_ds, val_ds))
+        folds.append((train_loader, val_loader))
         class_weights.append(cw)
 
-    # Test loaders
-    test1_ds = (make_stream_dataset(os.path.join(args.dataset_path, "test1.parquet"),
-                                    longest_peptide_seq_length, max_mhc_seq_length)
-                .batch(args.batch)
-                .prefetch(tf.data.AUTOTUNE))
-
-    test2_ds = (make_stream_dataset(os.path.join(args.dataset_path, "test2.parquet"),
-                                    longest_peptide_seq_length, max_mhc_seq_length)
-                .batch(args.batch)
-                .prefetch(tf.data.AUTOTUNE))
+    # Create test loaders with the same sequence length
+    test1_loader = make_stream_dataset(args.dataset_path + "/test1.parquet"
+    , max_pep_seq_len=longest_peptide_seq_length, max_mhc_len=max_mhc_seq_length, batch=128, shuffle=False)
+    test2_loader = make_stream_dataset(args.dataset_path + "/test2.parquet"
+    , max_pep_seq_len=longest_peptide_seq_length,max_mhc_len=max_mhc_seq_length, batch=128, shuffle=False)
 
     print(f"✓ loaded {len(test1):,} test1 samples, "
           f"{len(test2):,} test2 samples, "
@@ -604,11 +544,15 @@ def main(argv=None):
     # ----------------------- Model -----------------------------------------
     # clear GPU memory
     tf.keras.backend.clear_session()
-    print("Memory before fold processing:")
-    monitor_memory()
+    # set random seeds for reproducibility
+    os.environ["PYTHONHASHSEED"] = "42"
+    os.environ["TF_DETERMINISTIC_OPS"] = "1"
+    tf.random.set_seed(42)
+    np.random.seed(42)
+
     # ------------------------- TRAIN --------------------------------------
     ckpt_cb = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(run_dir, 'best.weights.h5'),
+        filepath=os.path.join(run_dir, 'best_weights.h5'),
         monitor='val_loss', save_best_only=True, mode='min')
     early_cb = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss', patience=10, restore_best_weights=True)
@@ -619,13 +563,12 @@ def main(argv=None):
         tf.random.set_seed(42)
         np.random.seed(42)
         print("########################### seq length: ", longest_peptide_seq_length)
-        print(f"redefining the model in each fold")
         model = build_custom_classifier(longest_peptide_seq_length, max_mhc_seq_length, pad_token=pad_token)
         model.summary()
 
-        # print shapes
-        for (x_pep, latents), labels in train_loader.take(1):
-            print(f"Input shapes: x_pep={x_pep.shape}, latents={latents.shape}, labels={labels.shape}")
+        # check dimension of the target
+        if train_loader.element_spec[1].shape[-1] != 1:
+            raise ValueError("Expected binary labels (shape should be (None, 1))")
 
         print("Training model...")
         hist = model.fit(
@@ -637,84 +580,11 @@ def main(argv=None):
             verbose=1,
         )
 
-
-        # Gradient Tape method
-        # optimizer = tf.keras.optimizers.Adam()
-        # loss_fn = tf.keras.losses.BinaryCrossentropy(
-        #     from_logits=False)  # Use from_logits=False if your model has a sigmoid output
-        #
-        # best_val_loss = float('inf')
-        # patience_counter = 0
-        # best_weights = None
-        #
-        # for epoch in range(args.epochs):
-        #     print(f"Epoch {epoch + 1}/{args.epochs}")
-        #
-        #     # Training loop
-        #     train_loss = 0.0
-        #     train_batches = 0
-        #     for (x_pep, latents), labels in train_loader:
-        #         with tf.GradientTape() as tape:
-        #             predictions = model([x_pep, latents], training=True)
-        #             # Apply class weights manually
-        #             sample_weights = tf.where(tf.equal(labels, 1),
-        #                                       class_weight[1],
-        #                                       class_weight[0])
-        #             loss_value = loss_fn(labels, predictions, sample_weight=sample_weights)
-        #
-        #         gradients = tape.gradient(loss_value, model.trainable_variables)
-        #         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-        #
-        #         train_loss += loss_value
-        #         train_batches += 1
-        #
-        #     avg_train_loss = train_loss / train_batches
-        #
-        #     # Validation loop
-        #     val_loss = 0.0
-        #     val_batches = 0
-        #     for (x_pep, latents), labels in val_loader:
-        #         predictions = model([x_pep, latents], training=False)
-        #         val_loss += loss_fn(labels, predictions)
-        #         val_batches += 1
-        #
-        #     avg_val_loss = val_loss / val_batches
-        #
-        #     # Print metrics
-        #     print(f"Training loss: {avg_train_loss:.4f}, Validation loss: {avg_val_loss:.4f}")
-        #
-        #     # Implement early stopping and model checkpoint
-        #     if avg_val_loss < best_val_loss:
-        #         best_val_loss = avg_val_loss
-        #         best_weights = model.get_weights()
-        #         patience_counter = 0
-        #         # Save checkpoint
-        #         model.save_weights(os.path.join(run_dir, 'best.weights.h5'))
-        #         print(f"✓ Saved best weights (val_loss: {best_val_loss:.4f})")
-        #     else:
-        #         patience_counter += 1
-        #         if patience_counter >= 10:  # Match early_cb patience
-        #             print(f"Early stopping triggered after {epoch + 1} epochs")
-        #             break
-        #
-        # # Restore best weights
-        # if best_weights is not None:
-        #     model.set_weights(best_weights)
-        #
-        # # Create history object with metrics for compatibility with other code
-        # hist = type('obj', (object,), {
-        #     'history': {
-        #         'loss': [0],  # Placeholder
-        #         'val_loss': [best_val_loss]
-        #     }
-        # })
-        ######################
-
         # plot
         plot_training_curve(hist, run_dir, fold_id, model, val_loader)
 
         # save model and metadata
-        model.save(os.path.join(run_dir, f'model_fold_{fold_id}.weights.h5'))
+        model.save(os.path.join(run_dir, f'model_fold_{fold_id}.h5'))
         metadata = {
             "fold_id": fold_id,
             "epochs": args.epochs,
@@ -728,32 +598,22 @@ def main(argv=None):
 
         # Evaluate on test sets
         print("Evaluating on test1 set...")
-
-        for (x_pep, latents), labels in test1_ds.take(1):
-            print(f"Test1 Input shapes: x_pep={x_pep.shape}, latents={latents.shape}, labels={labels.shape}")
-
-        test1_results = model.evaluate(test1_ds, verbose=1)
+        test1_results = model.evaluate(test1_loader, verbose=1)
         print(f"Test1 results: {test1_results}")
-        print("Evaluating on test2 set...")
-
-        for (x_pep, latents), labels in test2_ds.take(1):
-            print(x_pep.shape, latents.shape, labels.shape)
-
-        test2_results = model.evaluate(test2_ds, verbose=1)
-        print(f"Test2 results: {test2_results}")
 
         # Plot ROC curve for test1
-        plot_test_metrics(model, test1_ds, run_dir, fold_id, string="Test1 - balanced alleles")
-        # Plot ROC curve for test2
-        plot_test_metrics(model, test2_ds, run_dir, fold_id, string="Test2 - rare alleles")
+        plot_test_metrics(model, test1_loader, run_dir, fold_id, string="Test1 - balanced alleles")
 
-        # Aggressive cleanup
-        del model, hist, train_loader, val_loader
+        print("Evaluating on test2 set...")
+        test2_results = model.evaluate(test2_loader, verbose=1)
+        print(f"Test2 results: {test2_results}")
+
+        # Plot ROC curve for test2
+        plot_test_metrics(model, test2_loader, run_dir, fold_id, string="Test2 - rare alleles")
 
 
 if __name__ == "__main__":
-    BUFFER = 512
     main([
         "--dataset_path", "../data/Custom_dataset/NetMHCpan_dataset/mhc_1",
-        "--epochs", "3", "--batch", "128", "--test_batches", "5"
+        "--epochs", "3", "--batch", "128", "--test_batches", "3"
     ])
