@@ -185,6 +185,22 @@ class AttentionLayer(keras.layers.Layer):
         out *= mask_exp
         return (out, att) if self.return_att_weights else out
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'input_dim': self.input_dim,
+            'output_dim': self.output_dim,
+            'type': self.type,
+            'heads': self.heads,
+            'resnet': self.resnet,
+            'return_att_weights': self.return_att_weights,
+            'epsilon': self.epsilon,
+            'gate': self.gate,
+            'mask_token': self.mask_token,
+            'pad_token': self.pad_token,
+        })
+        return config
+
 
 class PositionalEncoding(keras.layers.Layer):
     """
@@ -201,7 +217,6 @@ class PositionalEncoding(keras.layers.Layer):
         self.embed_dim = embed_dim
         self.max_len = max_len
         self.mask_token = mask_token
-        self._name = name
         self.pad_token = pad_token
 
     def build(self, x):
@@ -235,64 +250,74 @@ class PositionalEncoding(keras.layers.Layer):
 
         return x + pe
 
-    @property
-    def name(self):
-        return self._name
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'embed_dim': self.embed_dim,
+            'max_len': self.max_len,
+            'mask_token': self.mask_token,
+            'pad_token': self.pad_token,
+        })
+        return config
 
-
-class RotaryPositionalEncoding(keras.layers.Layer):
-    """
-    Rotary Positional Encoding layer for transformer models.
-    Applies rotary embeddings to the last two dimensions of the input.
-    Args:
-        embed_dim (int): Embedding dimension (must be even).
-        max_len (int): Maximum sequence length.
-    """
-
-    def __init__(self, embed_dim, max_len: int = 100, mask_token: float = -1., pad_token: float = -2., name: str = 'rotary_positional_encoding'):
-        super().__init__(name=name)
-        assert embed_dim % 2 == 0, "embed_dim must be even for rotary encoding"
-        self.embed_dim = embed_dim
-        self.max_len = max_len
-        self.mask_token = mask_token
-        self.name = name
-        self.pad_token = pad_token
-
-    def build(self, x):
-        # Precompute rotary frequencies
-        pos = tf.range(self.max_len, dtype=tf.float32)[:, tf.newaxis]  # (max_len, 1)
-        dim = tf.range(self.embed_dim // 2, dtype=tf.float32)[tf.newaxis, :]  # (1, embed_dim//2)
-        inv_freq = 1.0 / (10000 ** (dim / (self.embed_dim // 2)))
-        freqs = pos * inv_freq  # (max_len, embed_dim//2)
-        self.cos_cached = tf.cast(tf.cos(freqs), tf.float32)  # (max_len, embed_dim//2)
-        self.sin_cached = tf.cast(tf.sin(freqs), tf.float32)  # (max_len, embed_dim//2)
-
-    def call(self, x, mask):
-        """
-        Args:
-            x: Input tensor of shape (B, N, D)
-            mask: Tensor of shape (B, N)
-        Returns:
-            Tensor with rotary positional encoding applied.
-        """
-        seq_len = tf.shape(x)[1]
-        cos = self.cos_cached[:seq_len, :]  # (N, D//2)
-        sin = self.sin_cached[:seq_len, :]  # (N, D//2)
-        cos = tf.expand_dims(cos, 0)  # (1, N, D//2)
-        sin = tf.expand_dims(sin, 0)  # (1, N, D//2)
-
-        x1, x2 = tf.split(x, 2, axis=-1)  # (B, N, D//2), (B, N, D//2)
-        x_rot = tf.concat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], axis=-1)  # (B, N, D)
-
-        mask = tf.cast(mask[:, :, tf.newaxis], tf.float32)  # (B, N, 1)
-        mask = tf.where(mask == self.pad_token, 0., 1.)
-        x_rot = x_rot * mask  # zero out positions where mask is 0
-
-        return x_rot
-
-    @property
-    def _name(self):
-        return self._name
+# class RotaryPositionalEncoding(keras.layers.Layer):
+#     """
+#     Rotary Positional Encoding layer for transformer models.
+#     Applies rotary embeddings to the last two dimensions of the input.
+#     Args:
+#         embed_dim (int): Embedding dimension (must be even).
+#         max_len (int): Maximum sequence length.
+#     """
+#
+#     def __init__(self, embed_dim, max_len: int = 100, mask_token: float = -1., pad_token: float = -2., name: str = 'rotary_positional_encoding'):
+#         super().__init__(name=name)
+#         assert embed_dim % 2 == 0, "embed_dim must be even for rotary encoding"
+#         self.embed_dim = embed_dim
+#         self.max_len = max_len
+#         self.mask_token = mask_token
+#         self.pad_token = pad_token
+#
+#     def build(self, x):
+#         # Precompute rotary frequencies
+#         pos = tf.range(self.max_len, dtype=tf.float32)[:, tf.newaxis]  # (max_len, 1)
+#         dim = tf.range(self.embed_dim // 2, dtype=tf.float32)[tf.newaxis, :]  # (1, embed_dim//2)
+#         inv_freq = 1.0 / (10000 ** (dim / (self.embed_dim // 2)))
+#         freqs = pos * inv_freq  # (max_len, embed_dim//2)
+#         self.cos_cached = tf.cast(tf.cos(freqs), tf.float32)  # (max_len, embed_dim//2)
+#         self.sin_cached = tf.cast(tf.sin(freqs), tf.float32)  # (max_len, embed_dim//2)
+#
+#     def call(self, x, mask):
+#         """
+#         Args:
+#             x: Input tensor of shape (B, N, D)
+#             mask: Tensor of shape (B, N)
+#         Returns:
+#             Tensor with rotary positional encoding applied.
+#         """
+#         seq_len = tf.shape(x)[1]
+#         cos = self.cos_cached[:seq_len, :]  # (N, D//2)
+#         sin = self.sin_cached[:seq_len, :]  # (N, D//2)
+#         cos = tf.expand_dims(cos, 0)  # (1, N, D//2)
+#         sin = tf.expand_dims(sin, 0)  # (1, N, D//2)
+#
+#         x1, x2 = tf.split(x, 2, axis=-1)  # (B, N, D//2), (B, N, D//2)
+#         x_rot = tf.concat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], axis=-1)  # (B, N, D)
+#
+#         mask = tf.cast(mask[:, :, tf.newaxis], tf.float32)  # (B, N, 1)
+#         mask = tf.where(mask == self.pad_token, 0., 1.)
+#         x_rot = x_rot * mask  # zero out positions where mask is 0
+#
+#         return x_rot
+#
+    # def get_config(self):
+    #     config = super().get_config()
+    #     config.update({
+    #         'embed_dim': self.embed_dim,
+    #         'max_len': self.max_len,
+    #         'mask_token': self.mask_token,
+    #         'pad_token': self.pad_token,
+    #     })
+    #     return config
 
 
 @tf.function
@@ -345,18 +370,13 @@ def select_indices(ind, n, m_range):
 
 
 class AnchorPositionExtractor(keras.layers.Layer):
-    @property
-    def name(self):
-        return self._name
-
     def __init__(self, num_anchors, dist_thr, name='anchor_extractor', project=True,
                  mask_token=-1., pad_token=-2., return_att_weights=False):
-        super().__init__()
+        super().__init__(name=name)
         assert isinstance(dist_thr, list) and len(dist_thr) == 2
         assert num_anchors > 0
         self.num_anchors = num_anchors
         self.dist_thr = dist_thr
-        self.name = name
         self.project = project
         self.mask_token = mask_token
         self.pad_token = pad_token
@@ -449,9 +469,17 @@ class AnchorPositionExtractor(keras.layers.Layer):
         sorted_selected_output = tf.gather(input, sorted_selected_inds, axis=1, batch_dims=1)  # (B,num_anchors,E)
         return sorted_selected_inds, sorted_selected_weights, sorted_selected_output
 
-    @name.setter
-    def name(self, value):
-        self._name = value
+    def get_config(self):
+        config = super().get_config()
+        config.update({
+            'num_anchors': self.num_anchors,
+            'dist_thr': self.dist_thr,
+            'project': self.project,
+            'mask_token': self.mask_token,
+            'pad_token': self.pad_token,
+            'return_att_weights': self.return_att_weights,
+        })
+        return config
 
 
 def generate_mhc(samples=1024, min_len=5, max_len=15, dim=16):
@@ -510,7 +538,7 @@ MASK_TOKEN = -1
 PAD_TOKEN  = -2.
 
 @tf.keras.utils.register_keras_serializable()
-def make_rf_mask(pep_batch: tf.Tensor) -> tf.Tensor:
+def make_rf_mask(pep_batch: tf.Tensor, MASK_TOKEN, PAD_TOKEN) -> tf.Tensor:
     """Return (B, RF) float mask for a peptide batch of shape *(B, RF,K,21)*.
 
     A slot is **1** when any (K,21) element is non‑zero, else **PAD_TOKEN**.
@@ -522,8 +550,8 @@ def make_rf_mask(pep_batch: tf.Tensor) -> tf.Tensor:
 
 #### define model
 # input layers
-def build_custom_classifier(max_len_peptide: int,
-                            max_len_mhc: int,
+def build_custom_classifier(max_len_peptide: int = 50,
+                            max_len_mhc: int = 200,
                             k: int = 9,
                             embed_dim_pep: int = 64,
                             embed_dim_mhc: int = 128,
@@ -543,7 +571,9 @@ def build_custom_classifier(max_len_peptide: int,
     mhc_input = keras.Input(shape=(max_len_mhc, 1152),   name="mhc_input")
 
     # ----- peptide branch --------------------------------------------------
-    pep_mask = layers.Lambda(make_rf_mask, output_shape=(None, None), name="pep_mask")(pep_input)  # (B, RF)
+    pep_mask = layers.Lambda(lambda x: make_rf_mask(x, MASK_TOKEN, PAD_TOKEN),
+                             output_shape=lambda input_shape: (input_shape[0], input_shape[1]),
+                             name="pep_mask")(pep_input)  # (B, RF)
 
     pep_flat = layers.Reshape((RF_max, k * 21), name="pep_flat")(pep_input)    # (B, RF, k·21)
 
@@ -551,7 +581,8 @@ def build_custom_classifier(max_len_peptide: int,
     pep_proj = layers.Dense(embed_dim_pep, activation="relu",
                             name="pep_proj1")(pep_flat)  # (B, RF, 64)
 
-    pep_pe = RotaryPositionalEncoding(embed_dim_pep, max_len=RF_max,
+    # Use Lambda to dynamically determine max_len from input shape
+    pep_pe = PositionalEncoding(embed_dim_pep, max_len=RF_max,
                                 mask_token=mask_token, pad_token=pad_token,
                                 name="pep_pos_enc")(pep_proj, pep_mask)
 
@@ -571,7 +602,7 @@ def build_custom_classifier(max_len_peptide: int,
     mhc_proj1 = layers.Dense(embed_dim_mhc, activation="relu",
                              name="mhc_proj1")(mhc_input)  # (B, L_mhc, D_mhc)
 
-    mhc_pe = RotaryPositionalEncoding(embed_dim=embed_dim_mhc,max_len=max_len_mhc,
+    mhc_pe = PositionalEncoding(embed_dim=embed_dim_mhc,max_len=max_len_mhc,
                                         mask_token=mask_token,pad_token=pad_token,
                                         name="mhc_pos_enc")(mhc_proj1, mhc_mask)
 
@@ -579,10 +610,9 @@ def build_custom_classifier(max_len_peptide: int,
                                type="self", heads=4, name="mhc_self_att1",
                                mask_token=mask_token, pad_token=pad_token)(
                     mhc_pe, mask=mhc_mask)
-    mhc_att2, att_w1 = AttentionLayer(input_dim=embed_dim_mhc, output_dim=embed_dim_mhc,
+    mhc_att2  = AttentionLayer(input_dim=embed_dim_mhc, output_dim=embed_dim_mhc,
                                  type="self", heads=4, name="mhc_self_att2",
-                                 resnet=False, mask_token=mask_token, pad_token=pad_token,
-                                 return_att_weights=True)(
+                                 resnet=False, mask_token=mask_token, pad_token=pad_token)(
                       mhc_att1, mask=mhc_mask)                                  # (B, L_mhc, D_mhc), att_weights
 
 
@@ -597,9 +627,9 @@ def build_custom_classifier(max_len_peptide: int,
                  pep_att1, mask=pep_mask,
                  context=mhc_to_D_pep, context_mask=mhc_mask)
 
-    cross_proj = layers.Dense(128, activation="relu", name="cross_proj")(cross_att)
+    cross_proj = layers.Dense(64, activation="relu", name="cross_proj")(cross_att)
 
-    final_att = AttentionLayer(input_dim=128, output_dim=128, type="self",
+    final_att = AttentionLayer(input_dim=64, output_dim=64, type="self",
                                heads=2, name="final_pep_self_att",
                                return_att_weights=True,
                                mask_token=mask_token, pad_token=pad_token)(
@@ -644,87 +674,90 @@ def build_custom_classifier(max_len_peptide: int,
     )
     return model
 
-def main():
-    max_len_peptide = 15
-    k = 9
-    max_len_mhc = 40
-    RF_max = max_len_peptide - k + 1
-
-    model = build_custom_classifier(max_len_peptide, max_len_mhc, k=k)
-    model.summary(line_length=110)
-
-    batch = 16
-    # pep_dummy = np.zeros((batch, RF_max, k, 21), dtype=np.float32)
-    # pep_dummy[:, :3] = np.random.rand(batch, 3, k, 21)
-    #
-    # mhc_dummy = np.zeros((batch, max_len_mhc, 1152), dtype=np.float32)
-    # mhc_dummy[:, :25] = np.random.rand(batch, 25, 1152)
-
-    pep_syn = generate_peptide(samples=1000, min_len=9, max_len=max_len_peptide, k=k)
-    mhc_syn, _, mhc_mask = generate_mhc(samples=1000, min_len=25, max_len=max_len_mhc, dim=1152)
-
-    y = np.random.randint(0, 2, size=(1000, 1)).astype(np.float32)
-
-    history = model.fit(x=[pep_syn, mhc_syn], y=y, epochs=10, batch_size=batch)
-
-    # save model
-    model_dir = pathlib.Path("model_output")
-    model_dir.mkdir(parents=True, exist_ok=True)
-    model_path = model_dir / "peptide_mhc_cross_attention_model.h5"
-    model.save(model_path)
-    print(f"Model saved to {model_path}")
-
-    print("Sanity‑check complete — no dimension errors.")
-
-    # PREDICT
-    preds = model.predict([pep_syn[:batch], mhc_syn[:batch]])
-    print("Predictions for first batch:")
-    for i, pred in enumerate(preds):
-        print(f"Sample {i + 1}: Anchor: {pred[0]:.4f}")
-    # Save model metadata
-    metadata = {
-        "max_len_peptide": max_len_peptide,
-        "k": k,
-        "max_len_mhc": max_len_mhc,
-        "RF_max": RF_max,
-        "embed_dim_pep": 64,
-        "embed_dim_mhc": 128,
-        "mask_token": MASK_TOKEN,
-        "pad_token": PAD_TOKEN
-    }
-    metadata_path = model_dir / "model_metadata.json"
-    with open(metadata_path, 'w') as f:
-        json.dump(metadata, f, indent=4)
-
-    print(f"Model metadata saved to {metadata_path}")
-
-    # plot metrics and confusion
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    import pandas as pd
-    history_df = pd.DataFrame(history.history)
-    print(f"Keys in history: {list(history_df.columns)}")
-
-    ## Plot metrics with error handling and saving to disk
-    metrics_dir = model_dir / "metrics"
-    metrics_dir.mkdir(parents=True, exist_ok=True)
-
-    # Plot binary accuracy
-    plt.figure(figsize=(10, 5))
-    sns.lineplot(data=history_df, x=history_df.index, y='binary_accuracy', label='Binary Accuracy')
-    plt.title('Binary Accuracy Over Epochs')
-    plt.xlabel('Epochs')
-    plt.ylabel('Binary Accuracy')
-    plt.legend()
-    plt.show()
-
-    # plot AUC
-    plt.figure(figsize=(10, 5))
-    sns.lineplot(data=history_df, x=history_df.index, y='AUC', label='AUC')
-    plt.title('AUC Over Epochs')
-    plt.xlabel('Epochs')
-    plt.ylabel('AUC')
-    plt.legend()
-    plt.show()
-if __name__ == "__main__":
-    main()
+# def main():
+#     max_len_peptide = 14
+#     k = 9
+#     max_len_mhc = 36
+#     RF_max = max_len_peptide - k + 1
+#
+#     model = build_custom_classifier(max_len_peptide, max_len_mhc, k=k)
+#     model.summary(line_length=110)
+#
+#     batch = 16
+#     # pep_dummy = np.zeros((batch, RF_max, k, 21), dtype=np.float32)
+#     # pep_dummy[:, :3] = np.random.rand(batch, 3, k, 21)
+#     #
+#     # mhc_dummy = np.zeros((batch, max_len_mhc, 1152), dtype=np.float32)
+#     # mhc_dummy[:, :25] = np.random.rand(batch, 25, 1152)
+#
+#     pep_syn = generate_peptide(samples=10, min_len=9, max_len=max_len_peptide, k=k)
+#     mhc_syn, _, mhc_mask = generate_mhc(samples=10, min_len=25, max_len=max_len_mhc, dim=1152)
+#
+#     y = np.random.randint(0, 2, size=(10, 1)).astype(np.float32)
+#
+#     history = model.fit(x=[pep_syn, mhc_syn], y=y, epochs=2, batch_size=batch)
+#
+#     # save model
+#     model_dir = pathlib.Path("model_output")
+#     model_dir.mkdir(parents=True, exist_ok=True)
+#     model_path = model_dir / "peptide_mhc_cross_attention_model.h5"
+#     model.save(model_path)
+#     print(f"Model saved to {model_path}")
+#
+#     print("Sanity‑check complete — no dimension errors.")
+#
+#     # PREDICT
+#     preds = model.predict([pep_syn[:batch], mhc_syn[:batch]])
+#     print("Predictions for first batch:")
+#     for i, pred in enumerate(preds):
+#         print(f"Sample {i + 1}: Anchor: {pred[0]:.4f}")
+#     # Save model metadata
+#     metadata = {
+#         "max_len_peptide": max_len_peptide,
+#         "k": k,
+#         "max_len_mhc": max_len_mhc,
+#         "RF_max": RF_max,
+#         "embed_dim_pep": 64,
+#         "embed_dim_mhc": 128,
+#         "mask_token": MASK_TOKEN,
+#         "pad_token": PAD_TOKEN
+#     }
+#     metadata_path = model_dir / "model_metadata.json"
+#     with open(metadata_path, 'w') as f:
+#         json.dump(metadata, f, indent=4)
+#
+#     print(f"Model metadata saved to {metadata_path}")
+#
+#     # plot metrics and confusion
+#     import matplotlib.pyplot as plt
+#     import seaborn as sns
+#     import pandas as pd
+#     history_df = pd.DataFrame(history.history)
+#     print(f"Keys in history: {list(history_df.columns)}")
+#
+#     ## Plot metrics with error handling and saving to disk
+#     metrics_dir = model_dir / "metrics"
+#     metrics_dir.mkdir(parents=True, exist_ok=True)
+#
+#     # Plot binary accuracy
+#     plt.figure(figsize=(10, 5))
+#     sns.lineplot(data=history_df, x=history_df.index, y='binary_accuracy', label='Binary Accuracy')
+#     plt.title('Binary Accuracy Over Epochs')
+#     plt.xlabel('Epochs')
+#     plt.ylabel('Binary Accuracy')
+#     plt.legend()
+#     # plt.show()
+#     plt.savefig("model_output/binary_accuracy_plot.png")
+#
+#     # plot AUC
+#     plt.figure(figsize=(10, 5))
+#     sns.lineplot(data=history_df, x=history_df.index, y='AUC', label='AUC')
+#     plt.title('AUC Over Epochs')
+#     plt.xlabel('Epochs')
+#     plt.ylabel('AUC')
+#     plt.legend()
+#     # plt.show()
+#     plt.savefig("model_output/auc_plot.png")
+#
+# if __name__ == "__main__":
+#     main()
