@@ -2098,10 +2098,10 @@ def build_classifier(max_seq_len=50,
 
     # --- Create attention masks ---------------------------------------------
     # Peptide mask: True where peptide has content (non-zero vectors)
-    pep_mask = tf.reduce_any(tf.abs(peptide_in) > 1e-6, axis=-1)  # (B, S)
+    pep_mask = layers.Lambda(lambda x: tf.reduce_any(tf.abs(x) > 1e-6, axis=-1))(peptide_in)  # (B, S)
 
     # Latent mask: True where latent has content (non-zero vectors)
-    latent_mask = tf.reduce_any(tf.abs(latent_in) > 1e-6, axis=-1)  # (B, R)
+    latent_mask = layers.Lambda(lambda x: tf.reduce_any(tf.abs(x) > 1e-6, axis=-1))(latent_in)  # (B, R)
 
     # --- Projections --------------------------------------------------------
     pep_proj = PeptideProj(max_seq_len, embed_dim, name="peptide_projection")(peptide_in)
@@ -2133,12 +2133,12 @@ def build_classifier(max_seq_len=50,
 
     # --- Aggregation and prediction head -----------------------------------
     # Global average pooling with masking
-    latent_mask_expanded = tf.expand_dims(tf.cast(latent_mask, tf.float32), -1)  # (B, R, 1)
+    latent_mask_expanded = layers.Lambda(lambda x: tf.expand_dims(tf.cast(x, tf.float32), -1))(latent_mask)  # (B, R, 1)
     masked_fused = fused * latent_mask_expanded  # Zero out padded positions
 
     # Compute mean only over valid positions
-    pooled = tf.reduce_sum(masked_fused, axis=1)  # (B, D)
-    valid_lengths = tf.reduce_sum(latent_mask_expanded, axis=1)  # (B, 1)
+    pooled = layers.Lambda(lambda x: tf.reduce_sum(x, axis=1))(masked_fused)  # (B, D)
+    valid_lengths = layers.Lambda(lambda x: tf.reduce_sum(x, axis=1))(latent_mask_expanded)  # (B, 1)
     pooled = pooled / (valid_lengths + 1e-8)  # Average over valid positions
 
     # Simpler classification head
