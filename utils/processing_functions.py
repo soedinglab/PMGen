@@ -1290,6 +1290,7 @@ def create_k_fold_leave_one_out_stratified_cv(
 
     folds = []
     for fold_idx, left_out_id in enumerate(left_out_ids, 1):
+        fold_seed = random_state + fold_idx
         mask_left_out = df[id_col] == left_out_id
         working_df = df.loc[~mask_left_out].copy()
 
@@ -1298,7 +1299,7 @@ def create_k_fold_leave_one_out_stratified_cv(
         #    (GroupShuffleSplit with test_size=1 group)
         # ---------------------------------------------------------------
         gss = GroupShuffleSplit(
-            n_splits=1, test_size=1, random_state=42
+            n_splits=1, test_size=1, random_state=fold_seed
         )
         (train_groups_idx, val_only_groups_idx), = gss.split(
             X=np.zeros(len(working_df)), y=None, groups=working_df[id_col]
@@ -1313,7 +1314,7 @@ def create_k_fold_leave_one_out_stratified_cv(
         # 2) stratified split of *eligible* rows
         # ---------------------------------------------------------------
         sss = StratifiedShuffleSplit(
-            n_splits=1, train_size=train_size, random_state=42
+            n_splits=1, train_size=train_size, random_state=fold_seed
         )
         train_idx, extra_val_idx = next(
             sss.split(df_eligible, df_eligible[target_col])
@@ -1328,19 +1329,19 @@ def create_k_fold_leave_one_out_stratified_cv(
         # ---------------------------------------------------------------
         # 3) balance train and val via down-sampling
         # ---------------------------------------------------------------
-        # def _balance_down_sampling(frame: pd.DataFrame) -> pd.DataFrame:
-        #     min_count = frame[target_col].value_counts().min()
-        #     print(f"Balancing {len(frame)} rows to {min_count} per class")
-        #     balanced_parts = [
-        #         resample(
-        #             frame[frame[target_col] == lbl],
-        #             replace=False,
-        #             n_samples=min_count,
-        #             random_state=rng,
-        #         )
-        #         for lbl in frame[target_col].unique()
-        #     ]
-        #     return pd.concat(balanced_parts, ignore_index=True)
+        def _balance_down_sampling(frame: pd.DataFrame) -> pd.DataFrame:
+            min_count = frame[target_col].value_counts().min()
+            print(f"Balancing {len(frame)} rows to {min_count} per class")
+            balanced_parts = [
+                resample(
+                    frame[frame[target_col] == lbl],
+                    replace=False,
+                    n_samples=min_count,
+                    random_state=fold_seed,
+                )
+                for lbl in frame[target_col].unique()
+            ]
+            return pd.concat(balanced_parts, ignore_index=True)
 
         def _balance_GNUSS(frame: pd.DataFrame) -> pd.DataFrame:
             """
@@ -1360,7 +1361,7 @@ def create_k_fold_leave_one_out_stratified_cv(
                 if count < max_count:
                     # Upsample with replacement
                     n_needed = max_count - count
-                    sampled = df_label.sample(n=n_needed, replace=True, random_state=rng)
+                    sampled = df_label.sample(n=n_needed, replace=True, random_state=fold_seed)
                     # Add Gaussian noise to numeric features
                     noise = pd.DataFrame(
                         rng.normal(loc=0, scale=1e-6, size=(n_needed, len(numeric_cols))),
@@ -1376,9 +1377,9 @@ def create_k_fold_leave_one_out_stratified_cv(
         if augmentation == "GNUSS":
             df_train_bal = _balance_GNUSS(df_train)
             df_val_bal   = _balance_GNUSS(df_val)
-        # elif augmentation == "down_sampling":  # default to down-sampling
-        #     df_train_bal = _balance_down_sampling(df_train)
-        #     df_val_bal   = _balance_down_sampling(df_val)
+        elif augmentation == "down_sampling":  # default to down-sampling
+            df_train_bal = _balance_down_sampling(df_train)
+            df_val_bal   = _balance_down_sampling(df_val)
         elif not augmentation:
             df_train_bal = df_train.copy()
             df_val_bal = df_val.copy()
@@ -1387,8 +1388,8 @@ def create_k_fold_leave_one_out_stratified_cv(
             raise ValueError(f"Unknown augmentation method: {augmentation}")
 
         # Shuffle both datasets to avoid any ordering bias
-        df_train_bal = df_train_bal.sample(frac=1.0, random_state=rng).reset_index(drop=True)
-        df_val_bal = df_val_bal.sample(frac=1.0, random_state=rng).reset_index(drop=True)
+        df_train_bal = df_train_bal.sample(frac=1.0, random_state=fold_seed).reset_index(drop=True)
+        df_val_bal = df_val_bal.sample(frac=1.0, random_state=fold_seed).reset_index(drop=True)
         folds.append((df_train_bal, df_val_bal, left_out_id))
 
         print(

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 """
-requires python3.10+
-Create a parquet dataset that combines NetMHCpan metadata with ESM-2 embeddings
-for each MHC-I allele.
+Create a parquet dataset that combines metadata with ESM-3 embeddings
+for each MHC allele.
 
-Usage:  python make_dataset.py
+Usage:  python create_dataset.py
 """
 
 import os
@@ -21,7 +20,7 @@ from utils.processing_functions import create_progressive_k_fold_cross_validatio
 # 1. CONFIGURATION – adjust if your paths change
 # ---------------------------------------------------------------------
 dataset_name = "NetMHCpan_dataset"
-mhc_class = 2
+mhc_class = 1
 CSV_PATH   = pathlib.Path(f"../data/{dataset_name}/combined_data_{mhc_class}.csv")
 NPZ_PATH   = pathlib.Path(
     f"../data/ESM/esmc_600m/NetMHCpan pseudoseqs/mhc{mhc_class}_encodings.npz"
@@ -36,7 +35,8 @@ EMB_OUT_DIR = pathlib.Path(
     f"../data/Custom_dataset/{dataset_name}/mhc_{mhc_class}/mhc{mhc_class}_encodings"
 )   # or `None` to embed directly
 
-AUGMENTATION = None  # "GNUSS", None
+AUGMENTATION = "down_sampling"  # "GNUSS", None
+K = 10  # Number of folds for cross-validation
 # ---------------------------------------------------------------------
 
 
@@ -304,7 +304,7 @@ def main() -> None:
     folds = create_k_fold_leave_one_out_stratified_cv(
         datasets['train'],
         target_col="assigned_label",
-        k=5,
+        k=K,
         id_col="allele",
         augmentation=AUGMENTATION,
     )
