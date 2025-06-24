@@ -30,7 +30,7 @@ model = load_model(
     'model_output/peptide_mhc_cross_attention_model.h5',
     custom_objects={
         'AttentionLayer': wrap_layer(AttentionLayer),
-        'RotaryPositionalEncoding': wrap_layer(RotaryPositionalEncoding),
+        'PositionalEncoding': wrap_layer(PositionalEncoding),
         'AnchorPositionExtractor': wrap_layer(AnchorPositionExtractor),
     }
 )

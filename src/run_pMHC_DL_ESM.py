@@ -748,5 +748,5 @@ if __name__ == "__main__":
     main([
         # "--parquet", "../data/Custom_dataset/NetMHCpan_dataset/mhc_2/mhc2_with_esm_embeddings.parquet",
         "--dataset_path", "../data/Custom_dataset/NetMHCpan_dataset/mhc_2",
-        "--epochs", "100", "--batch", "128"
+        "--epochs", "3", "--batch", "32"
     ])

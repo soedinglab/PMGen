@@ -759,5 +759,80 @@ def build_custom_classifier(max_len_peptide: int = 50,
 #     # plt.show()
 #     plt.savefig("model_output/auc_plot.png")
 #
+
+# def test1():
+#     import matplotlib.pyplot as plt
+#     import seaborn as sns
+#     import numpy as np
+#
+#     max_len_peptide = 50  # Maximum length of peptide sequences
+#     max_len_mhc = 200  # Maximum length of MHC sequences
+#     k = 9  # Length of peptide k-mers
+#     batch = 5  # Number of samples to generate
+#     RF_max = max_len_peptide - k + 1  # Number of RF tokens
+#
+#     # Build and summarize model
+#     model = build_custom_classifier(max_len_peptide, max_len_mhc, k=k,
+#                                     mask_token=MASK_TOKEN, pad_token=PAD_TOKEN)
+#     model.summary(line_length=110)
+#
+#     # Generate synthetic peptide input and MHC input
+#     pep_syn = generate_peptide(samples=batch, min_len=9, max_len=max_len_peptide, k=k)
+#     mhc_syn, _, _ = generate_mhc(samples=batch, min_len=25, max_len=max_len_mhc, dim=1152)
+#
+#     # For demonstration, we perform one prediction without training.
+#     # In practice, you would train the model and then run prediction.
+#     preds = model.predict([pep_syn, mhc_syn])
+#     print("Overall Predictions (binding probability) per sample:")
+#     for i, pred in enumerate(preds):
+#         print(f"Sample {i + 1}: Probability = {pred[0]:.4f}")
+#
+#     # ----- Extract attention weights from the final self-attention layer -----
+#     # We know that final self-attention is applied with return_att_weights=True
+#     # and its name is 'final_pep_self_att'
+#     # Its output is a tuple: (final_features, att_weights)
+#     # We create a new model with the same inputs but outputting the attention tuple.
+#     final_att_layer = model.get_layer("final_pep_self_att")
+#     att_model = keras.Model(inputs=model.inputs, outputs=final_att_layer.output)
+#
+#     # Run the synthetic data through the attention model
+#     # Note: Depending on your model, the layer returns a tuple.
+#     att_outputs = att_model.predict([pep_syn, mhc_syn])
+#     # att_outputs is a tuple: (final_features, att_weights)
+#     # final_features: shape (B, RF, output_dim)
+#     # att_weights: shape (heads, B, RF, RF)  [RF tokens attend to RF tokens]
+#     final_features, att_weights = att_outputs
+#     att_weights = np.array(att_weights)  # ensure numpy array
+#
+#     # Average attention weights over heads
+#     # New shape: (B, RF, RF)
+#     att_avg = np.mean(att_weights, axis=0)
+#
+#     # For each sample and each row in the RF dimension, determine the index that got the highest attention.
+#     print("\nAttention analysis per sample and per RF row:")
+#     for sample in range(batch):
+#         print(f"\nSample {sample + 1}:")
+#         for i in range(RF_max):
+#             att_row = att_avg[sample, i, :]
+#             # To ignore padded positions (if any), you might add a threshold. Here we just take argmax.
+#             max_ind = np.argmax(att_row)
+#             max_val = att_row[max_ind]
+#             print(f"  RF row {i}: highest attention on row {max_ind} (value = {max_val:.4f})")
+#
+#     # ----- Visualization -----
+#     # For one sample (say sample 0), plot a heatmap of the averaged attention matrix.
+#     sample_to_plot = 0
+#     plt.figure(figsize=(6, 5))
+#     sns.heatmap(att_avg[sample_to_plot], annot=True, cmap="viridis",
+#                 xticklabels=[f"r{j}" for j in range(RF_max)],
+#                 yticklabels=[f"r{i}" for i in range(RF_max)])
+#     plt.title("Averaged Attention Weights (over heads) for Sample 1")
+#     plt.xlabel("Attended RF row")
+#     plt.ylabel("Query RF row")
+#     plt.tight_layout()
+#     plt.savefig("model_output/attention_heatmap_sample1.png")
+#     plt.show()
+#     print("Attention heatmap saved to 'model_output/attention_heatmap_sample1.png'")
+
 # if __name__ == "__main__":
 #     main()

@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm                          # progress bars
 from typing import Dict
-from utils.processing_functions import create_progressive_k_fold_cross_validation, create_k_fold_leave_one_out_stratified_cv
+from processing_functions import create_progressive_k_fold_cross_validation, create_k_fold_leave_one_out_stratified_cv
 
 # ---------------------------------------------------------------------
 # 1. CONFIGURATION – adjust if your paths change
