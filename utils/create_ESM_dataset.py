@@ -14,16 +14,16 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm                          # progress bars
 from typing import Dict
-from processing_functions import create_progressive_k_fold_cross_validation, create_k_fold_leave_one_out_stratified_cv
+from processing_functions import create_progressive_k_fold_cross_validation, create_k_fold_leave_one_out_stratified_cv, normalize_netmhcpan_allele_to_pmgen
 
 # ---------------------------------------------------------------------
 # 1. CONFIGURATION – adjust if your paths change
 # ---------------------------------------------------------------------
-dataset_name = "NetMHCpan_dataset"
-mhc_class = 1
-CSV_PATH   = pathlib.Path(f"../data/{dataset_name}/combined_data_{mhc_class}.csv")
+dataset_name = "PMGen_sequences" # "NetMHCpan_dataset"
+mhc_class = 2
+CSV_PATH   = pathlib.Path(f"../data/NetMHCpan_dataset/combined_data_{mhc_class}.csv")
 NPZ_PATH   = pathlib.Path(
-    f"../data/ESM/esmc_600m/NetMHCpan pseudoseqs/mhc{mhc_class}_encodings.npz"
+    f"../data/ESM/esmc_600m/{dataset_name}/mhc{mhc_class}_encodings.npz"
 )
 OUT_PARQUET = pathlib.Path(
     f"../data/Custom_dataset/{dataset_name}/mhc_{mhc_class}/mhc{mhc_class}_with_esm_embeddings.parquet"
@@ -40,7 +40,7 @@ K = 10  # Number of folds for cross-validation
 # ---------------------------------------------------------------------
 
 
-def load_mhc1_embeddings(npz_path: pathlib.Path) -> Dict[str, np.ndarray]:
+def load_mhc_embeddings(npz_path: pathlib.Path) -> Dict[str, np.ndarray]:
     """
     Returns {allele_name: 187×1152 tensor}.
     """
@@ -56,7 +56,7 @@ def load_mhc1_embeddings(npz_path: pathlib.Path) -> Dict[str, np.ndarray]:
     return emb_dict
 
 
-def normalise_allele(a: str) -> str:
+def normalise_netmhcpan_allele(a: str) -> str:
     """
     Make the allele string format identical to the keys inside the NPZ.
     Tweak this if your formats differ!
@@ -86,6 +86,76 @@ def normalise_allele(a: str) -> str:
     return a
 
 
+# def normalise_allele2(a: str) -> tuple[str, str]:
+#     """
+#     Make the allele string format identical to the keys inside the NPZ.
+#     Tweak this if your formats differ!
+#     """
+#     # remove * and : from the allele name
+#     # and convert to upper case
+#     # e.g. "HLA-A*01:01" -> "HLA-A0101"
+#     # e.g. "HLA-A*01:01:01" -> "HLA-A010101"
+#     # remove spaces
+#     # e.g. "HLA-A 01:01" -> "HLA-A0101"
+#     a = a.strip()
+#     if "HLA-DRA/" in a:
+#         # eg. "HLA-DRA/HLA-DRB1_0401" -> a: "HLA-DRA1_0401" b: "HLA-DRB1_0401"
+#         # For heterodimers, take the second chain and format as e.g. DRB10101
+#         _, second = a.split("/", 1)
+#         b = second.replace("HLA-", "")
+#         a = b.replace("HLA-DRB1_", "HLA-DRA1_")
+#         return a, b
+#
+#     # TODO fix later
+#     # elif "mice-" in a:
+#     #     _, second = a.split("/", 1)
+#     #     a = second.replace("mice-", "")
+#     #     return a, a
+#
+#     else:
+#         a = a.replace("/HLA", "")
+#     # remove "*" and spaces
+#     a = a.replace("*", "").replace(" ", "")
+#     return a, None
+
+
+def normalise_allele_NetMHCPan_toPMGen(a: str) -> tuple[str, str]:
+    a = a.strip()
+    # remove : * _ from the allele name
+    # e.g. "HLA-A*01:01" -> "HLA-A0101"
+
+    #
+    if ":" in a:
+        # remove ":" from the allele name
+        # e.g. "HLA-A*01:01" -> "HLA-A0101"
+        a = a.replace(":", "")
+    if "HLA-DRA/" in a:
+        _, second = a.split("/", 1)
+        b = second.replace("HLA-", "").replace("*", "").replace(" ", "")
+        a1 = b.replace("HLA-DRB1_", "HLA-DRA1_")
+        return a1, b
+    if "_" in a:
+        name, digits = a.split("_", 1)
+        name = name.upper()
+        if not name.startswith("HLA-"):
+            name = f"HLA-{name}"
+        return f"{name}{digits}", None
+    if "BoLa-" in a:
+        # eg. "BoLa-1*04:01" -> "BOLA-10401"
+        prefix, rest = a.split("-", 1)
+        prefix = prefix.replace("BoLa", "BOLA").upper()
+        digits = rest.replace("*", "").replace(":", "")
+        return f"{prefix}{digits}", None
+    if "*" in a:
+        prefix, rest = a.split("*", 1)
+        prefix = prefix.upper()
+        digits = rest.replace(":", "")
+        return f"{prefix}{digits}", None
+
+    return a, None
+
+
+
 def attach_embeddings(
     df: pd.DataFrame,
     emb_dict: Dict[str, np.ndarray],
@@ -103,9 +173,72 @@ def attach_embeddings(
         out_dir.mkdir(parents=True, exist_ok=True)
 
     paths, embeds = [], []
-    for allele in tqdm(df["allele"], desc="Attaching embeddings"):
-        key = normalise_allele(allele)
+    # Extract unique alleles
+    unique_alleles = df["allele"].unique()
+    print(f"Processing {len(unique_alleles)} unique alleles...")
+    allele_to_key_map = {}
+    allele_to_emb_map = {}
+
+    # Process each unique allele once
+    for allele in tqdm(unique_alleles, desc="Creating allele mapping"):
+        key = normalise_netmhcpan_allele(allele)
         emb = emb_dict.get(key)
+
+        if emb is None:
+            if mhc_class == 2:
+                key1, key2 = normalize_netmhcpan_allele_to_pmgen(allele)
+                print(key1, key2)
+                emb1 = emb_dict.get(key1)
+                emb2 = emb_dict.get(key2)
+                if emb1 is not None and emb2 is not None:
+                    try:
+                        emb = np.concatenate([emb1, emb2], axis=0)
+                    except ValueError as e:
+                        print(f"Error concatenating embeddings for {allele}: {e}")
+                        emb = None
+                elif emb1 is not None:
+                    emb = emb1
+                elif emb2 is not None:
+                    emb = emb2
+                else:
+                    print(f"No embedding found for {allele} (keys tried: {key1}, {key2})")
+                    emb = None
+                # # Try to find the first chain
+                # prefix_matches1 = [k for k in emb_dict if k.startswith(key1)] if key1 else []
+                # if key2 is not None:
+                #     # Try to find the second chain
+                #     prefix_matches2 = [k for k in emb_dict if k.startswith(key2)]
+                #     if prefix_matches1 and prefix_matches2:
+                #         key = max(prefix_matches1, key=len)
+                #         print(f"{allele} -> {key}")
+                #         emb = emb_dict.get(key)
+                #         if emb is None:
+                #             key = max(prefix_matches2, key=len)
+                #             print(f"{allele} -> {key}")
+                #             emb = emb_dict.get(key)
+                #     else:
+                #         key = max(prefix_matches1, key=len) if prefix_matches1 else None
+                #         print(f"{allele} -> {key}")
+                #         emb = emb_dict.get(key)
+            else:
+                key1, _ = normalize_netmhcpan_allele_to_pmgen(allele)
+                print(key1)
+                # # find exact prefix matches for longer names
+                # prefix_matches = [k for k in emb_dict if k.startswith(key1)]
+                # if prefix_matches:
+                #     key = max(prefix_matches, key=len)
+                print(f"{allele} -> {key1}")
+                emb = emb_dict.get(key1)
+
+        allele_to_key_map[allele] = key
+        allele_to_emb_map[allele] = emb
+
+    # Now use the maps for all rows
+    paths, embeds = [], []
+    for allele in tqdm(df["allele"], desc="Attaching embeddings"):
+        key = allele_to_key_map.get(allele)
+        emb = allele_to_emb_map.get(allele)
+
         if emb is None:
             paths.append(None)
             embeds.append(None)
@@ -211,87 +344,93 @@ def create_test_set(df: pd.DataFrame, bench_df= pd.DataFrame, samples_per_label:
 
 
 def main() -> None:
-    # print("→ Loading cleaned NetMHCpan CSV")
-    # df = pd.read_csv(
-    #     CSV_PATH,
-    #     usecols=["long_mer", "assigned_label", "allele", "mhc_class"],
-    # )
-    #
-    # # filter out
-    # df = df[df["mhc_class"] == mhc_class]
-    #
-    # print(len(df), "rows in the dataset after filtering for MHC class", mhc_class)
-    #
-    # # drop mhc_class column
-    # df = df.drop(columns=["mhc_class"])
-    #
-    # print(f"→ Loading MHC class {mhc_class} embeddings")
-    # emb_dict = load_mhc1_embeddings(NPZ_PATH)
-    #
-    # print("→ Merging")
-    # df = attach_embeddings(df, emb_dict, EMB_OUT_DIR)
-    #
-    # print(len(df), "rows in the dataset after filtering for Mer")
-    #
-    # # print("→ Dropping duplicates and nones")
-    # df = df.drop_duplicates(subset=["long_mer", "allele"])
-    # df = df.dropna(subset=["long_mer"])
-    #
-    # print(len(df), "rows in the dataset after dropping duplicates and Nones")
-    #
-    # # move the label column to the end
-    # label_col = "assigned_label"
-    # cols = [col for col in df.columns if col != label_col] + [label_col]
-    # df = df[cols]
-    #
-    # print(len(df), "rows in the dataset after dropping duplicates and Nones")
-    #
-    # print(f"→ Writing parquet to {OUT_PARQUET}")
-    # df.to_parquet(OUT_PARQUET, engine="pyarrow", index=False, compression="zstd")
-    #
-    # print(f"→ Dataset shape: {df.shape}")
-    #
-    #
-    # # load benchmark datasets
-    # # bench_df1 = pd.read_csv(
-    # #     "../data/Custom_dataset/benchmark_Conbot.csv",
-    # #     usecols=["long_mer", "binding_label", "allele", "mhc_class"],
-    # #     # rename columns to match the main dataset
-    # #     dtype={"binding_label": "int8", "allele": "string", "mhc_class": "int8"},
-    # #     names=["long_mer", "assigned_label", "allele", "mhc_class"],
-    # #     # convert binding_label to assigned_label
-    # #     converters={"assigned_label": lambda x: 1 if x == "1" else 0},
-    # # )
+    print("→ Loading cleaned NetMHCpan CSV")
+    df = pd.read_csv(
+        CSV_PATH,
+        usecols=["long_mer", "assigned_label", "allele", "mhc_class"],
+    )
+
+    # filter out
+    df = df[df["mhc_class"] == mhc_class]
+
+    print(len(df), "rows in the dataset after filtering for MHC class", mhc_class)
+
+    # drop mhc_class column
+    df = df.drop(columns=["mhc_class"])
+
+    print(f"→ Loading MHC class {mhc_class} embeddings")
+    emb_dict = load_mhc_embeddings(NPZ_PATH)
+
+    # save keys to a text file
+    emb_keys_path = NPZ_PATH.parent / f"mhc{mhc_class}_emb_keys.txt"
+    with open(emb_keys_path, "w") as f:
+        for key in emb_dict.keys():
+            f.write(f"{key}\n")
+
+    print("→ Merging")
+    df = attach_embeddings(df, emb_dict, EMB_OUT_DIR)
+
+    print(len(df), "rows in the dataset after filtering for Mer")
+
+    # print("→ Dropping duplicates and nones")
+    df = df.drop_duplicates(subset=["long_mer", "allele"])
+    df = df.dropna(subset=["long_mer"])
+
+    print(len(df), "rows in the dataset after dropping duplicates and Nones")
+
+    # move the label column to the end
+    label_col = "assigned_label"
+    cols = [col for col in df.columns if col != label_col] + [label_col]
+    df = df[cols]
+
+    print(len(df), "rows in the dataset after dropping duplicates and Nones")
+
+    print(f"→ Writing parquet to {OUT_PARQUET}")
+    df.to_parquet(OUT_PARQUET, engine="pyarrow", index=False, compression="zstd")
+
+    print(f"→ Dataset shape: {df.shape}")
+
+
+    # load benchmark datasets
     # bench_df1 = pd.read_csv(
-    #     "../data/Custom_dataset/benchmark_Conbot.csv")
-    # # rename columns to match the main dataset
-    # bench_df1 = bench_df1.rename(columns={
-    #     "binding_label": "assigned_label",
-    # })
-    # # ensure the assigned_label is of type int
-    # bench_df1['assigned_label'] = bench_df1['assigned_label'].astype(int)
-    # # ensure the allele is of type string
-    # bench_df1['allele'] = bench_df1['allele'].astype(str)
-    # # convert II to 2 # and I to 1
-    # bench_df1['mhc_class'] = bench_df1['mhc_class'].replace({"II": 2, "I": 1})
-    #
-    # print(bench_df1.columns)
-    # # TODO process later
-    # bench_df2 = pd.read_csv(
-    #     "../data/Custom_dataset/benchmark_ConvNeXT.csv",
-    #     usecols=["allele"],
-    #
+    #     "../data/Custom_dataset/benchmark_Conbot.csv",
+    #     usecols=["long_mer", "binding_label", "allele", "mhc_class"],
+    #     # rename columns to match the main dataset
+    #     dtype={"binding_label": "int8", "allele": "string", "mhc_class": "int8"},
+    #     names=["long_mer", "assigned_label", "allele", "mhc_class"],
+    #     # convert binding_label to assigned_label
+    #     converters={"assigned_label": lambda x: 1 if x == "1" else 0},
     # )
-    #
-    # # combine benchmark datasets
-    # bench_df = pd.concat([bench_df1, bench_df2], ignore_index=True)
-    #
-    # print("→ Create and save test sets")
-    # datasets = create_test_set(df, bench_df)
-    # for name, subset in datasets.items():
-    #     print(f"{name.capitalize()} set shape: {subset.shape}")
-    #     if name != "train":
-    #         subset.to_parquet(OUT_PARQUET.parent / f"{name}.parquet", index=False, engine="pyarrow", compression="zstd")
+    bench_df1 = pd.read_csv(
+        "../data/Custom_dataset/benchmark_Conbot.csv")
+    # rename columns to match the main dataset
+    bench_df1 = bench_df1.rename(columns={
+        "binding_label": "assigned_label",
+    })
+    # ensure the assigned_label is of type int
+    bench_df1['assigned_label'] = bench_df1['assigned_label'].astype(int)
+    # ensure the allele is of type string
+    bench_df1['allele'] = bench_df1['allele'].astype(str)
+    # convert II to 2 # and I to 1
+    bench_df1['mhc_class'] = bench_df1['mhc_class'].replace({"II": 2, "I": 1})
+
+    print(bench_df1.columns)
+    # TODO process later
+    bench_df2 = pd.read_csv(
+        "../data/Custom_dataset/benchmark_ConvNeXT.csv",
+        usecols=["allele"],
+
+    )
+
+    # combine benchmark datasets
+    bench_df = pd.concat([bench_df1, bench_df2], ignore_index=True)
+
+    print("→ Create and save test sets")
+    datasets = create_test_set(df, bench_df)
+    for name, subset in datasets.items():
+        print(f"{name.capitalize()} set shape: {subset.shape}")
+        if name != "train":
+            subset.to_parquet(OUT_PARQUET.parent / f"{name}.parquet", index=False, engine="pyarrow", compression="zstd")
 
     ###
     # TODO remove later
@@ -299,6 +438,12 @@ def main() -> None:
     datasets = {}
     datasets['train'] = pd.read_parquet(OUT_PARQUET, engine="pyarrow")
     ###
+
+    # Drop NaNs before converting to int
+    print("→ number of rows in train set before normalization:", len(datasets['train']))
+    datasets['train'] = datasets['train'].dropna(subset=['assigned_label', 'allele'])
+    print("→ number of rows in train set after normalization:", len(datasets['train']))
+    datasets['train']['assigned_label'] = datasets['train']['assigned_label'].astype(int)
 
     print("→ Creating cross-validation folds")
     folds = create_k_fold_leave_one_out_stratified_cv(
