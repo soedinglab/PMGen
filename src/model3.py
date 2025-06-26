@@ -22,38 +22,14 @@ import seaborn as sns
 AA = "ACDEFGHIKLMNPQRSTVWY"
 AA_TO_INT = {a:i for i,a in enumerate(AA)}
 UNK = 20                                                                     # index for “unknown”
+PAD_TOKEN = -2 # set manually to avoid confusion with UNK
 
 def onehot(seq: str, max_len: int) -> np.ndarray:
     """Return (max_len,21) one-hot matrix."""
-    mat = np.zeros((max_len, 21), dtype=np.float32)
+    mat = np.full((max_len, 21), PAD_TOKEN, dtype=np.float32) # initialize padding with -2
     for i, aa in enumerate(seq[:max_len]):
         mat[i, AA_TO_INT.get(aa, UNK)] = 1.0
     return mat
-
-# def toy_batch(batch_size=32,
-#               pep_max=14,
-#               mhc_max=36,
-#               mhc_dim=1152):
-#     """Synthetic (peptide, mhc, label) batch."""
-#     peps, mhcs, labels = [], [], []
-#     for _ in range(batch_size):
-#         # random peptide -----------------------------------------------------
-#         Lp = np.random.randint(8, pep_max+1)
-#         pep = ''.join(np.random.choice(list(AA), Lp))
-#         peps.append(onehot(pep, pep_max))                                    # (pep_max,21)
-#
-#         # random MHC latent --------------------------------------------------
-#         Lm = np.random.randint(20, mhc_max+1)
-#         mhc_lat = np.random.randn(Lm, mhc_dim).astype(np.float32)
-#         pad_mhc = np.zeros((mhc_max, mhc_dim), dtype=np.float32)
-#         pad_mhc[:Lm] = mhc_lat
-#         mhcs.append(pad_mhc)                                                 # (mhc_max,1152)
-#
-#         # RANDOM label (replace by real NetMHCpan label in practice) ---------
-#         labels.append([np.random.randint(0,2)])
-#
-#     return (np.stack(peps), np.stack(mhcs), np.asarray(labels, np.float32))
-
 
 # --------------------------------------------------------------------------------
 # 2. Model building block: cross-attention with score output
@@ -78,6 +54,8 @@ import numpy as np
 # ---------------------------------------------------------------------
 def cross_att_block(query,                              # (B,pep_len,D)
                     context,                            # (B,mhc_len,D)
+                    query_mask=None,                   # (B,pep_len)
+                    context_mask=None,                 # (B,mhc_len)
                     heads=8,
                     name="xatt"):
     """
@@ -90,9 +68,16 @@ def cross_att_block(query,                              # (B,pep_len,D)
                                     key_dim=query.shape[-1],
                                     name=name)
 
+    # Create attention mask if both query_mask and context_mask are provided
+    if query_mask is not None and context_mask is not None:
+        attn_mask = query_mask[:, :, None] & context_mask[:, None, :]  # (B, pep_len, mhc_len)
+    else:
+        attn_mask = None
+
     att_out, att_scores = mha(query=query,
                               value=context,
                               key=context,
+                              attention_mask=attn_mask,
                               return_attention_scores=True)
     return att_out, att_scores
 
@@ -104,7 +89,6 @@ def build_classifier(max_pep_len      : int,
                      max_mhc_len      : int,
                      pep_emb_dim      : int = 64,
                      mhc_emb_dim      : int = 64,
-                     mhc_latent_dim   : int = 1152,
                      heads            : int = 8):
     """
     Returns
@@ -114,6 +98,10 @@ def build_classifier(max_pep_len      : int,
     # Inputs -----------------------------------------------------------
     inp_pep = keras.Input(shape=(max_pep_len, 21),    name="pep_onehot")
     inp_mhc = keras.Input(shape=(max_mhc_len,1152),   name="mhc_latent")
+
+    # Masks -----------------------------------------------------------
+    pep_mask = layers.Lambda(lambda x: tf.reduce_any(x != PAD_TOKEN, axis=-1), name="pep_mask")(inp_pep)
+    mhc_mask = layers.Lambda(lambda x: tf.reduce_any(x != 0, axis=-1), name="mhc_mask")(inp_mhc)
 
     # Linear projections ----------------------------------------------
     pep_emb = layers.Dense(pep_emb_dim, activation=None,
@@ -136,11 +124,27 @@ def build_classifier(max_pep_len      : int,
                             name="mhc_dim_reduction")(mhc_emb)  # (B,mhc_len,D)
 
     # Cross-attention --------------------------------------------------
-    att_pep, att_scores = cross_att_block(pep_emb, mhc_emb,
+    att_pep, att_scores = cross_att_block(pep_emb, mhc_emb, pep_mask, mhc_mask,
                                           heads=heads, name="pep2mhc")
 
     # Pool & classifier -----------------------------------------------
-    pooled = layers.GlobalAveragePooling1D()(att_pep)
+    # Mask out padding in peptide for pooling
+    masked_att_pep = layers.Lambda(
+        lambda inputs: inputs[0] * tf.expand_dims(tf.cast(inputs[1], tf.float32), axis=-1),
+        name="mask_pep"
+    )([att_pep, pep_mask])
+    sum_att_pep = layers.Lambda(
+        lambda x: tf.reduce_sum(x, axis=1),
+        name="sum_att_pep"
+    )(masked_att_pep)
+    num_non_pad = layers.Lambda(
+        lambda x: tf.reduce_sum(tf.cast(x, tf.float32), axis=1, keepdims=True),
+        name="num_non_pad"
+    )(pep_mask)
+    pooled = layers.Lambda(
+        lambda inputs: inputs[0] / (inputs[1] + 1e-8),
+        name="pooled"
+    )([sum_att_pep, num_non_pad])
     x      = layers.Dense(32, activation="relu")(pooled)
     out    = layers.Dense(1, activation="sigmoid", name="prob")(x)
 
@@ -153,7 +157,11 @@ def build_classifier(max_pep_len      : int,
     att_model = keras.Model([inp_pep, inp_mhc], att_scores,
                             name="PepMHC_attention")
 
-    return clf_model, att_model
+    # cross latent space projection model -----------------------------
+    cross_latent_model = keras.Model([inp_pep, inp_mhc], att_pep,
+                                        name="PepMHC_cross_latent")
+
+    return clf_model, att_model, cross_latent_model
 
 
 # --------------------------------------------------------------------------------
@@ -167,17 +175,17 @@ def build_classifier(max_pep_len      : int,
 #     BATCH    = 64
 #     STEPS    = 4              # keep tiny for a quick sanity run
 #
-#     model, att_model = build_classifier(max_pep_len=PEP_MAX, max_mhc_len=MHC_MAX)
+#     model, att_model, cross_latent_model = build_classifier(max_pep_len=PEP_MAX, max_mhc_len=MHC_MAX)
 #
 #     print(model.summary(line_length=110))
 #
 #     # quick dummy training --------------------------------------------------
 #     for step in range(STEPS):
-#         Xp, Xm, y = toy_batch(BATCH, pep_max=PEP_MAX, mhc_max=MHC_MAX)
+#         Xp, Xm, y = toy_batch_masked(BATCH, pep_max=PEP_MAX, mhc_max=MHC_MAX)
 #         model.train_on_batch([Xp,Xm], y)
 #
 #     # one inference batch & attention ---------------------------------------
-#     Xp_test, Xm_test, y_test = toy_batch(8, pep_max=PEP_MAX, mhc_max=MHC_MAX)
+#     Xp_test, Xm_test, y_test = toy_batch_masked(8, pep_max=PEP_MAX, mhc_max=MHC_MAX)
 #     preds      = model.predict([Xp_test, Xm_test])
 #     att_scores = att_model.predict([Xp_test, Xm_test])        # (B,heads,pep_len,mhc_len)
 #
