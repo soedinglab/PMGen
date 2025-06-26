@@ -112,14 +112,19 @@ def cleanup_memory():
 # ----------------------------------------------------------------------------
 AA = "ACDEFGHIKLMNPQRSTVWY"  # 20 standard AAs, order fixed
 AA_TO_IDX = {aa: i for i, aa in enumerate(AA)}
-UNK_IDX = 20  # index for unknown / padding
+UNK_IDX = 20  # index for unknown
+PAD_TOKEN = -2 # set manually to avoid confusion with UNK
 
 
 def peptides_to_onehot(sequence: str, max_seq_len: int) -> np.ndarray:
     """Convert peptide sequence to one-hot encoding"""
-    arr = np.zeros((max_seq_len, 21), dtype=np.float32)
+    arr = np.full((max_seq_len, 21), PAD_TOKEN, dtype=np.float32) # initialize padding with -2
     for j, aa in enumerate(sequence.upper()[:max_seq_len]):
         arr[j, AA_TO_IDX.get(aa, UNK_IDX)] = 1.0
+        # print number of UNKs in the sequence
+    num_unks = np.sum(arr[:, UNK_IDX])
+    if num_unks > 0:
+        print(f"Warning: {num_unks} unknown amino acids in sequence '{sequence}'")
     return arr
 
 
@@ -241,6 +246,15 @@ def _row_to_tensor_pack(row_dict: dict, max_pep_seq_len: int, max_mhc_len: int):
 
     # --- load MHC embedding --------------------------------------------
     mhc = _read_embedding_file(row_dict["mhc_embedding_path"])
+    # pad MHC to max_mhc_len if needed
+    if mhc.shape[0] < max_mhc_len:
+        pad_mhc = np.full((max_mhc_len, mhc.shape[1]), PAD_TOKEN, dtype=np.float32)
+        pad_mhc[:mhc.shape[0]] = mhc
+        mhc = pad_mhc
+    elif mhc.shape[0] > max_mhc_len:
+        raise ValueError(
+            f"MHC length {mhc.shape[0]} exceeds max_mhc_len {max_mhc_len} for row: {row_dict}")
+
     if mhc.shape[0] != max_mhc_len:               # sanity check
         raise ValueError(f"MHC length mismatch: {mhc.shape[0]} vs {max_mhc_len}")
 
@@ -280,8 +294,10 @@ def streaming_data_generator(
             # Parallel map; chunksize tuned for large batches
             results = pool.map(worker_fn, rows_iter, chunksize=64)
 
-            # Stream each converted sample back to the generator consumer
-            yield from results      # <-- keeps memory footprint tiny
+            # # Stream each converted sample back to the generator consumer
+            # yield from results      # <-- keeps memory footprint tiny
+            for result, sample_id in zip(results, dict_rows["allele"]):
+                yield result + (sample_id,)
 
             # explicit clean-up
             del batch_df, dict_rows, rows_iter, results
@@ -303,9 +319,11 @@ def create_streaming_dataset(parquet_path: str,
             tf.TensorSpec(shape=(max_mhc_len, 1152),    dtype=tf.float32),
         ),
         tf.TensorSpec(shape=(), dtype=tf.float32),
+        tf.TensorSpec(shape=(), dtype=tf.string),  # MHC allele ID
     )
 
-    ds = tf.data.Dataset.from_generator(
+    # Create raw dataset with features, label, and IDs
+    raw_ds = tf.data.Dataset.from_generator(
         lambda: streaming_data_generator(
             parquet_path,
             max_pep_seq_len,
@@ -314,17 +332,47 @@ def create_streaming_dataset(parquet_path: str,
         output_signature=output_signature,
     )
 
-    # ► Parallel interleave gives another speed-up if the Parquet file has
-    #   many row-groups – adjust cycle_length as needed.
-    ds = ds.interleave(
-        lambda x, y: tf.data.Dataset.from_tensors((x, y)),
+    # Parallel interleave for speed
+    raw_ds = raw_ds.interleave(
+        lambda feats, label, mhc_id: tf.data.Dataset.from_tensors((feats, label, mhc_id)),
         cycle_length=tf.data.AUTOTUNE,
         num_parallel_calls=tf.data.AUTOTUNE,
         deterministic=False,
     )
 
-    return ds
+    # Separate dataset and IDs
+    ds = raw_ds.map(lambda feats, label, _: (feats, label),
+                    num_parallel_calls=tf.data.AUTOTUNE)
+    ids_ds = raw_ds.map(lambda _, __, mhc_id: mhc_id,
+                     num_parallel_calls=tf.data.AUTOTUNE)
+    labels_only_ds = raw_ds.map(lambda _, label, __: label,
+                             num_parallel_calls=tf.data.AUTOTUNE)
 
+    return ds, ids_ds, labels_only_ds
+
+
+# ----------------------------------------------------------------------------
+# get cross latent npy
+# ----------------------------------------------------------------------------
+def save_cross_latent_npy(cross_latent_model, ds, run_dir: str, name: str = "cross_latents_fold_{fold_id}", mhc_ids: np.ndarray = None, labels_only: np.ndarray = None):
+    cross_latents = cross_latent_model.predict(ds, verbose=0)
+    save_path = os.path.join(run_dir, f'{name}.npz')
+    # Prepare data for saving
+    if mhc_ids is not None or labels_only is not None:
+        if isinstance(mhc_ids, tf.data.Dataset):
+            mhc_ids = np.array(list(mhc_ids.as_numpy_iterator()))
+        if isinstance(labels_only, tf.data.Dataset):
+            labels_only = np.array(list(labels_only.as_numpy_iterator()))
+        if isinstance(cross_latents, tf.Tensor):
+            cross_latents = cross_latents.numpy()
+        savez_kwargs = {'cross_latents': cross_latents}
+        if mhc_ids is not None:
+            savez_kwargs['mhc_ids'] = mhc_ids
+        if labels_only is not None:
+            savez_kwargs['labels'] = labels_only
+        np.savez(save_path, **savez_kwargs)
+    else:
+        np.save(save_path.replace('.npz', '.npy'), cross_latents)
 
 # ----------------------------------------------------------------------------
 # Visualization utilities (keeping the same as original)
@@ -377,7 +425,7 @@ def plot_training_curve(history: tf.keras.callbacks.History, run_dir: str, fold_
         # Sample a subset for confusion matrix to avoid memory issues
         sample_dataset = val_dataset.take(100)  # Take only 100 batches
         y_pred_proba = model.predict(sample_dataset, verbose=0)
-        y_pred = (y_pred_proba > 0.5).astype(int)
+        y_pred = (y_pred_proba > 0.8).astype(int)
 
         y_true = []
         for _, labels in sample_dataset:
@@ -413,13 +461,15 @@ def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None,
     y_pred_proba_list = []
 
     for batch_x, batch_y in test_dataset:
-        batch_pred = model.predict(batch_x, verbose=0)
-        y_true_list.append(batch_y.numpy())
-        y_pred_proba_list.append(batch_pred.flatten())
+        batch_pred = model.predict(batch_x, verbose=0).flatten()
+        batch_y_np = batch_y.numpy().flatten()
+        mask = ~np.isnan(batch_y_np)
+        y_true_list.append(batch_y_np[mask])
+        y_pred_proba_list.append(batch_pred[mask])
 
     y_true = np.concatenate(y_true_list).flatten()
     y_pred_proba = np.concatenate(y_pred_proba_list)
-    y_pred = (y_pred_proba > 0.5).astype(int)
+    y_pred = (y_pred_proba > 0.8).astype(int)
 
     # Calculate ROC curve
     fpr, tpr, _ = roc_curve(y_true, y_pred_proba)
@@ -510,13 +560,13 @@ def plot_test_metrics(model, test_dataset, run_dir: str, fold_id: int = None,
     }
 
 def plot_attn(att_model, val_loader, run_dir: str, fold_id: int = None):
+    """Generate and save attention heatmaps for 5 samples."""
     # -------------------------------------------------------------
-    # ATTENTION VISUALISATION  – take ONE batch from validation
+    # ATTENTION VISUALISATION – take ONE batch from validation
     # -------------------------------------------------------------
-    (pep_ex, mhc_ex), _ = next(iter(val_loader))  # first batch
+    (pep_ex, mhc_ex), labels = next(iter(val_loader))  # first batch
     att_scores = att_model.predict([pep_ex, mhc_ex], verbose=0)
     print("attn_scores", att_scores.shape)
-    print("attn_scores first 5 samples:", att_scores[:5])
     # save attention scores
     if fold_id is None:
         fold_id = 0
@@ -530,20 +580,49 @@ def plot_attn(att_model, val_loader, run_dir: str, fold_id: int = None):
     # att_scores shape : (B, heads, pep_len, mhc_len)
     att_mean = att_scores.mean(axis=1)  # (B,pep,mhc)
     print("att_mean shape:", att_mean.shape)
-    sample_id = 0
-    A = att_mean[sample_id]
-    A = A.transpose()
-    plt.figure(figsize=(8, 6))
-    sns.heatmap(A,
-    cmap = "viridis",
-    xticklabels = [f"P{j}" for j in range(A.shape[1])],
-    yticklabels = [f"M{i}" for i in range(A.shape[0])],
-    cbar_kws = {"label": "attention"})
-    plt.title(f"Fold {fold_id} – attention sample {sample_id}")
-    out_png = os.path.join(run_dir,f"attention_fold{fold_id}_sample{sample_id}.png")
-    plt.savefig(out_png, dpi=300, bbox_inches="tight")
-    plt.close()
-    print(f"✓ Attention heat-map saved to {out_png}")
+    # Find positive and negative samples
+    labels_np = labels.numpy().flatten()
+    pos_indices = np.where(labels_np == 1)[0]
+    neg_indices = np.where(labels_np == 0)[0]
+    # Select up to 5 samples (prioritize positive samples, then use negative if needed)
+    num_pos = min(5, len(pos_indices))
+    num_neg = min(5 - num_pos, len(neg_indices)) if num_pos < 5 else 0
+    selected_pos = pos_indices[:num_pos]
+    selected_neg = neg_indices[:num_neg] if num_neg > 0 else []
+    selected_samples = list(selected_pos) + list(selected_neg)
+    print(f"Plotting attention maps for {len(selected_pos)} positive and {len(selected_neg)} negative samples")
+    # Generate heatmaps for each selected sample
+    for i, sample_id in enumerate(selected_samples[:5]):
+        sample_type = "Positive" if sample_id in pos_indices else "Negative"
+        A = att_mean[sample_id]
+        A = A.transpose()
+        plt.figure(figsize=(8, 6))
+        ax = sns.heatmap(
+            A,
+            cmap="viridis",
+            xticklabels=[
+                AA[pep_ex[sample_id][j].numpy().argmax()] if float(tf.reduce_sum(pep_ex[sample_id][j])) > 0 else ""
+                for j in range(A.shape[1])
+            ],
+            yticklabels=[f"M{i}" for i in range(A.shape[0])],
+            cbar_kws={"label": "attention"},
+            linewidths=0.1,  # Add lines between cells
+            linecolor='black',  # White lines for better contrast
+            linestyle=':'  # Dashed lines
+        )
+        # Improve labels and title
+        plt.xlabel("Peptide Position (Amino Acid)")
+        plt.ylabel("MHC Position")
+        plt.title(f"Fold {fold_id} - Attention Heatmap\nSample {sample_id} ({sample_type} Example)")
+        # Add box around the entire heatmap
+        for _, spine in ax.spines.items():
+            spine.set_visible(True)
+            spine.set_linewidth(2)
+        out_png = os.path.join(run_dir, f"attention_fold{fold_id}_sample{sample_id}_{sample_type.lower()}.png")
+        plt.tight_layout()
+        plt.savefig(out_png, dpi=300, bbox_inches="tight")
+        plt.close()
+        print(f"✓ Attention heat-map {i+1}/5 saved to {out_png}")
 
 
 # ----------------------------------------------------------------------------
@@ -586,7 +665,7 @@ def main(argv=None):
 
     # Find maximum peptide length across all datasets
     max_peptide_length = 0
-    max_mhc_length = 36  # Fixed for now
+    max_mhc_length = 50
 
     print("Scanning datasets for maximum peptide length...")
     all_parquet_files = [
@@ -625,36 +704,54 @@ def main(argv=None):
         print(f"  Class weights: {cw}")
 
         # Create streaming datasets
-        train_ds = (create_streaming_dataset(train_path, max_peptide_length, max_mhc_length,
+        train_ds, val_ids, train_labels_copy = create_streaming_dataset(train_path, max_peptide_length, max_mhc_length,
                                              buffer_size=args.buffer_size)
+        train_ds = (train_ds
                     .shuffle(buffer_size=args.buffer_size, reshuffle_each_iteration=True)
                     .batch(args.batch)
                     .take(args.test_batches)
                     .prefetch(tf.data.AUTOTUNE))
 
-        val_ds =   (create_streaming_dataset(val_path, max_peptide_length, max_mhc_length,
+        train_ids = np.asarray(val_ids)
+        train_labels_copy = np.asarray(train_labels_copy)
+
+
+        val_ds, val_ids, val_labels_copy =   create_streaming_dataset(val_path, max_peptide_length, max_mhc_length,
                                            buffer_size=args.buffer_size)
-                    .batch(args.batch)
-                    .take(args.test_batches)
-                    .prefetch(tf.data.AUTOTUNE))
+        val_ds = (val_ds
+                  .batch(args.batch)
+                  .take(args.test_batches)
+                  .prefetch(tf.data.AUTOTUNE))
+
 
         folds.append((train_ds, val_ds))
         class_weights.append(cw)
+
+        val_ids = np.asarray(val_ids)
+        val_labels_copy = np.asarray(val_labels_copy)
 
         # Force cleanup
         cleanup_memory()
 
     # Create test datasets
     print("Creating test datasets...")
-    test1_ds = (create_streaming_dataset(os.path.join(args.dataset_path, "test1.parquet"),
+    test1_ds, test1_ids, test1_labels_copy = create_streaming_dataset(os.path.join(args.dataset_path, "test1.parquet"),
                                          max_peptide_length, max_mhc_length, buffer_size=args.buffer_size)
+    test1_ds = (test1_ds
                 .batch(args.batch)
                 .prefetch(tf.data.AUTOTUNE))
 
-    test2_ds = (create_streaming_dataset(os.path.join(args.dataset_path, "test2.parquet"),
+    test1_ids = np.array(list(test1_ids.as_numpy_iterator()))
+    test1_labels_copy = np.array(list(test1_labels_copy.as_numpy_iterator()))
+
+    test2_ds, test2_ids, test2_labels_copy = create_streaming_dataset(os.path.join(args.dataset_path, "test2.parquet"),
                                          max_peptide_length, max_mhc_length, buffer_size=args.buffer_size)
+    test2_ds = (test2_ds
                 .batch(args.batch)
                 .prefetch(tf.data.AUTOTUNE))
+
+    test2_ids = np.array(list(test2_ids.as_numpy_iterator()))
+    test2_labels_copy = np.array(list(test2_labels_copy.as_numpy_iterator()))
 
     print(f"✓ Created {n_folds} fold datasets and 2 test datasets")
     print("Memory after dataset creation:")
@@ -673,7 +770,7 @@ def main(argv=None):
 
         # Build fresh model for each fold
         print("Building model...")
-        model, attn_model = build_classifier(max_peptide_length,max_mhc_length)
+        model, attn_model, cross_latent_model = build_classifier(max_peptide_length,max_mhc_length)
         model.summary()
 
         # Callbacks
@@ -735,6 +832,10 @@ def main(argv=None):
         print("Evaluating on test2 (rare alleles)...")
         plot_test_metrics(model, test2_ds, run_dir, fold_id, string="Test2_rare_alleles")
 
+        # save cross_latents for test1 and test2
+        save_cross_latent_npy(cross_latent_model, test1_ds, run_dir, name=f"cross_latent_test1_fold_{fold_id}", mhc_ids=test1_ids, labels_only=test1_labels_copy)
+        save_cross_latent_npy(cross_latent_model, test2_ds, run_dir, name=f"cross_latent_test2_fold_{fold_id}", mhc_ids=test2_ids, labels_only=test2_labels_copy)
+
         print(f"✅ Fold {fold_id} completed successfully")
 
         # Cleanup
@@ -747,12 +848,12 @@ def main(argv=None):
 
 if __name__ == "__main__":
     BUFFER = 8192  # Reduced buffer size for memory efficiency
-    MHC_CLASS = 2
-    dataset_path = f"../data/Custom_dataset/NetMHCpan_dataset/mhc_{MHC_CLASS}"
+    MHC_CLASS = 1
+    dataset_path = f"../data/Custom_dataset/PMGen_sequences/mhc_{MHC_CLASS}"
     main([
         "--dataset_path", dataset_path,
-        "--epochs", "10",
-        "--batch", "32",
+        "--epochs", "3",
+        "--batch", "128",
         "--buffer_size", "8192",
-        "--test_batches", "500",
+        "--test_batches", "1000",
     ])
