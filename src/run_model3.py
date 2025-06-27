@@ -848,12 +848,12 @@ def main(argv=None):
 
 if __name__ == "__main__":
     BUFFER = 8192  # Reduced buffer size for memory efficiency
-    MHC_CLASS = 1
+    MHC_CLASS = 2
     dataset_path = f"../data/Custom_dataset/PMGen_sequences/mhc_{MHC_CLASS}"
     main([
         "--dataset_path", dataset_path,
-        "--epochs", "3",
+        "--epochs", "5",
         "--batch", "128",
         "--buffer_size", "8192",
-        "--test_batches", "1000",
+        "--test_batches", "2000",
     ])
