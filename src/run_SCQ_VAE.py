@@ -359,8 +359,12 @@ def plot_cluster_distribution(soft_cluster_probs, save_path=None, visualize=True
         plt.close()
     return used_clusters, usage_percentage
 
-def plot_tsne_umap(cross_latents, mhc_ids, labels, save_path=None):
+def plot_tsne_umap(cross_latents, mhc_ids, labels, save_path=None, visualize=True):
     """Plot t-SNE and UMAP visualizations of the cross-latents."""
+    # Handle dimensions if cross_latents is 3D (reshape to 2D)
+    if cross_latents.ndim > 2:
+        cross_latents = cross_latents.reshape(cross_latents.shape[0], -1)
+
     # Standardize the data
     scaler = StandardScaler()
     cross_latents_scaled = scaler.fit_transform(cross_latents)
@@ -369,25 +373,70 @@ def plot_tsne_umap(cross_latents, mhc_ids, labels, save_path=None):
     tsne = TSNE(n_components=2, random_state=random_state)
     tsne_results = tsne.fit_transform(cross_latents_scaled)
 
-    # Plotting
-    import matplotlib.pyplot as plt
+    # UMAP
+    reducer = umap.UMAP(random_state=random_state)
+    umap_results = reducer.fit_transform(cross_latents_scaled)
 
-    plt.figure(figsize=(12, 6))
+    # Plotting
+    plt.figure(figsize=(18, 9))
+
+    # Determine color source
+    color_source = labels
+    color_label = 'Labels'
+
+    if labels is None or (isinstance(labels, np.ndarray) and len(labels) == 0):
+        if mhc_ids is not None and len(mhc_ids) > 0:
+            # Convert string MHC IDs to categorical indices if needed
+            if isinstance(mhc_ids[0], (str, bytes)):
+                unique_mhcs = np.unique(mhc_ids)
+                mhc_to_index = {mhc: i for i, mhc in enumerate(unique_mhcs)}
+                color_source = np.array([mhc_to_index[mhc] for mhc in mhc_ids])
+            else:
+                color_source = mhc_ids
+            color_label = 'MHC IDs'
+        else:
+            # No coloring available
+            color_source = None
 
     # t-SNE plot
     plt.subplot(1, 2, 1)
-    plt.scatter(tsne_results[:, 0], tsne_results[:, 1], c=labels, cmap='viridis', s=5)
+    if color_source is not None:
+        sc = plt.scatter(tsne_results[:, 0], tsne_results[:, 1], c=color_source, cmap='viridis', s=5, alpha=0.7)
+        plt.colorbar(sc, label=color_label)
+    else:
+        plt.scatter(tsne_results[:, 0], tsne_results[:, 1], s=5, alpha=0.7)
+
     plt.title('t-SNE Visualization')
-    plt.colorbar(label='Labels')
+    plt.xlabel('t-SNE Component 1')
+    plt.ylabel('t-SNE Component 2')
+    plt.grid(True, linestyle='--', alpha=0.7)
+
+    # UMAP plot
+    plt.subplot(1, 2, 2)
+    if color_source is not None:
+        sc = plt.scatter(umap_results[:, 0], umap_results[:, 1], c=color_source, cmap='viridis', s=5, alpha=0.7)
+        plt.colorbar(sc, label=color_label)
+    else:
+        plt.scatter(umap_results[:, 0], umap_results[:, 1], s=5, alpha=0.7)
+
+    plt.title('UMAP Visualization')
+    plt.xlabel('UMAP Component 1')
+    plt.ylabel('UMAP Component 2')
+    plt.grid(True, linestyle='--', alpha=0.7)
+
+    plt.tight_layout()
 
     if save_path:
-        plt.savefig(save_path)
+        plt.savefig(save_path, dpi=150, bbox_inches='tight')
         print(f"Plots saved to {save_path}")
 
-    plt.show()
+    if visualize:
+        plt.show()
+    else:
+        plt.close()
 
 
-def plot_PCA(cross_latents, mhc_ids=None, labels=None, save_path=None):
+def plot_PCA(cross_latents, mhc_ids=None, labels=None, save_path=None, color_map_name="MHC IDs"):
     """Plot PCA visualization of the cross-latents with optional label highlighting."""
 
     # reduce dimensions if necessary
@@ -417,7 +466,7 @@ def plot_PCA(cross_latents, mhc_ids=None, labels=None, save_path=None):
 
         # Plot using the numeric encoding
         sc = plt.scatter(pca_results[:, 0], pca_results[:, 1], c=numeric_mhc_ids, cmap='viridis', s=5)
-        plt.colorbar(sc, label='MHC IDs')
+        plt.colorbar(sc, label=color_map_name)
 
         # If not too many unique MHCs, add a legend
         if len(unique_mhcs) <= 20:
@@ -449,7 +498,7 @@ def plot_PCA(cross_latents, mhc_ids=None, labels=None, save_path=None):
 
                 # Add a legend entry for positive labels
                 plt.legend(loc='upper right')
-                plt.title('PCA Visualization (Red circles: Positive Labels)')
+                plt.title('PCA Visualization (orange circles: Positive Labels)')
             else:
                 plt.title('PCA Visualization (No positive labels found)')
         else:
@@ -475,6 +524,7 @@ def process_and_save(dataset: tf.data.Dataset,
     Quantize `dataset` through `model`, assemble into a DataFrame,
     save to parquet, and plot distributions with split-specific filenames.
     """
+    original = []
     quantized_latents = []
     cluster_indices_soft = []
     cluster_indices_hard = []
@@ -487,6 +537,8 @@ def process_and_save(dataset: tf.data.Dataset,
         cluster_indices_soft.append(out_P_proj.numpy())
         cluster_indices_hard.append(tf.argmax(out_P_proj, axis=-1).numpy())
         labels.append(batch_y.numpy())
+        # Store original sequences if available
+        original.append(batch_X.numpy())
 
     # Concatenate across batches
     quantized_latent = np.concatenate(quantized_latents, axis=0)
@@ -529,8 +581,8 @@ def process_and_save(dataset: tf.data.Dataset,
     print(f"[{split_name}] saved parquet → {parquet_path}")
 
     # Plot distributions
-    plot_cluster_distribution(soft_probs,
-                              save_path=os.path.join(output_dir, f'cluster_distribution_soft_{split_name}.png'))
+    # plot_cluster_distribution(soft_probs,
+    #                           save_path=os.path.join(output_dir, f'cluster_distribution_soft_{split_name}.png'))
     plot_codebook_usage(hard_assign, num_embeddings,
                         save_path=os.path.join(output_dir, f'codebook_usage_{split_name}.png'))
     plot_soft_cluster_distribution(soft_probs, 20,
@@ -543,7 +595,7 @@ def process_and_save(dataset: tf.data.Dataset,
     plot_PCA(quantized_latent,
              save_path=os.path.join(output_dir, f'quantized_latents_pca_{split_name}.png'),
              mhc_ids=mhc_ids,
-             labels=labels)  # Add labels parameter
+             labels=labels,)  # Add labels parameter
 
 
 
@@ -551,8 +603,20 @@ def process_and_save(dataset: tf.data.Dataset,
     plot_PCA(quantized_latent,
              save_path=os.path.join(output_dir, f'quantized_latents_pca_hard_{split_name}.png'),
              mhc_ids=hard_assign.flatten(),
-             labels=labels)  # Add labels parameter
+             labels=labels,
+             color_map_name="Cluster IDs")  # Add labels parameter
 
+    # visualize t-SNE and UMAP
+    plot_tsne_umap(quantized_latent, mhc_ids=hard_assign.flatten(), labels=labels,
+                   save_path=os.path.join(output_dir, f'quantized_latents_tsne_umap_{split_name}.png'))
+    print(f"[{split_name}] processed and saved quantized outputs with {len(df)} records.")
+
+    # visualize reconstructions
+    plot_reconstructions(quantized_latents[0][:5],  # First 5 samples)
+                         original[0][:5],  # First 5 samples
+                         n_samples=5,
+                         save_path=os.path.join(output_dir, f'reconstructions_{split_name}.png'),
+                         visualize=False)  # Set visualize to False to save without showing
 
 
 def main():
@@ -575,15 +639,17 @@ def main():
     print("Cross-latents shape:", cross_latents.shape)
     # flatten the cross_latents to ensure they are 2D (N, seq_length * embedding_dim)
     cross_latents = cross_latents.reshape(cross_latents.shape[0], -1)  # Flatten to (N, seq_length * embedding_dim)
+    # cross_latents = cross_latents.mean(axis=1)  # Average across the sequence length dimension
     seq_length = cross_latents.shape[1]  # Length of the sequences
 
     val_latents, val_mhc_ids, val_labels = load_cross_latents_data(val_file)
     if val_latents is not None:
         print("Validation cross-latents shape:", val_latents.shape)
-        val_latents = val_latents.reshape(val_latents.shape[0], -1)
+        val_data = val_latents.reshape(val_latents.shape[0], -1)
+        # val_data = val_latents.mean(axis=1)
     else:
         print("No validation data found, proceeding without validation set.")
-        val_latents, val_mhc_ids, val_labels = None, None, None
+        val_data, val_mhc_ids, val_labels = None, None, None
 
 
     # --- Create TensorFlow Dataset ---
@@ -604,6 +670,8 @@ def main():
     print("Visualizing raw cross-latents data with PCA...")
     plot_PCA(cross_latents, mhc_ids, save_path=os.path.join(save_dir, 'cross_latents_pca.png'), labels=labels)
     print("Visualizing cross-latents data with t-SNE and UMAP...")
+    plot_tsne_umap(cross_latents, mhc_ids, labels, save_path=os.path.join(save_dir, 'cross_latents_tsne_umap.png'))
+    print("Cross-latents data visualization completed.")
 
     # --- Initialize Codebook ---
     print("Initializing codebook with k-means...")
@@ -628,6 +696,7 @@ def main():
         num_embeddings=num_embeddings,
         embedding_dim=embedding_dim,
         commitment_beta=commitment_beta,
+        initial_codebook=codebook_init,
         scq_params={
             'lambda_reg': 1.0,
             'discrete_loss': False,
@@ -646,7 +715,7 @@ def main():
     start_time = time.time()
     history = model.fit(
         dataset_train,
-        validation_data=val_latents,
+        validation_data=val_data,
         epochs=epochs,
     )
     end_time = time.time()
@@ -658,27 +727,19 @@ def main():
     model.save(model_save_path)
     print("Model saved successfully.")
 
-    # --- Evaluate the Model ---
+    # --- Visualize Results ---
     print("Evaluating the model...")
-    val_latents = None
-    val_dataset = None
-    if val_latents is not None:
-        val_dataset = create_dataset(val_latents, val_labels).batch(batch_size)
+    process_and_save(dataset, 'train', model, save_dir, num_embeddings, mhc_ids)
+    if val_data is not None:
+        val_dataset = create_dataset(val_data, val_labels).batch(batch_size)
         evaluation_results = model.evaluate(val_dataset)
         print(f"Validation Loss: {evaluation_results[0]}, Validation Accuracy: {evaluation_results[1]}")
+        print("Visualizing results...")
+        process_and_save(val_dataset, 'val', model, save_dir, num_embeddings, val_mhc_ids)
     else:
         print("No validation data provided, skipping evaluation.")
     print("Model evaluation completed.")
 
-    # --- Visualize Results ---
-    print("Visualizing results...")
-    process_and_save(dataset, 'train', model, save_dir, num_embeddings, mhc_ids)
-    if val_dataset is not None:
-        process_and_save(val_dataset, 'val', model, save_dir, num_embeddings, val_mhc_ids)
-
-    print("Results visualization is not implemented yet.")
-    print("End-to-end training completed successfully.")
-    print("You can now proceed with further analysis or visualization of the model outputs.")
     # --- End of Main Function ---
 
 if __name__ == "__main__":
