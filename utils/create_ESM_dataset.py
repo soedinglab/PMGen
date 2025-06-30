@@ -19,14 +19,18 @@ from processing_functions import create_progressive_k_fold_cross_validation, cre
 # ---------------------------------------------------------------------
 # 1. CONFIGURATION – adjust if your paths change
 # ---------------------------------------------------------------------
-dataset_name = "PMGen_sequences" # "NetMHCpan_dataset"
-mhc_class = 2
-CSV_PATH   = pathlib.Path(f"../data/NetMHCpan_dataset/combined_data_{mhc_class}.csv")
+dataset_name = "NetMHCpan_dataset" # "PMGen_sequences" # "NetMHCpan_dataset"
+mhc_class = 1
+CSV_PATH   = pathlib.Path(f"../data/NetMHCpan_dataset/combined_data_{mhc_class}.csv") # Training dataset
 NPZ_PATH   = pathlib.Path(
     f"../data/ESM/esmc_600m/{dataset_name}/mhc{mhc_class}_encodings.npz"
 )
 OUT_PARQUET = pathlib.Path(
     f"../data/Custom_dataset/{dataset_name}/mhc_{mhc_class}/mhc{mhc_class}_with_esm_embeddings.parquet"
+) # Training dataset with ESM embeddings
+
+BENCHMARKS_PATH = pathlib.Path(
+    f"../data/Custom_dataset/benchmarks/mhc_{mhc_class}"
 )
 
 # If you want to *save* each array as its own .npy rather than store the
@@ -392,15 +396,27 @@ def main() -> None:
 
 
     # load benchmark datasets
-    # bench_df1 = pd.read_csv(
-    #     "../data/Custom_dataset/benchmark_Conbot.csv",
-    #     usecols=["long_mer", "binding_label", "allele", "mhc_class"],
-    #     # rename columns to match the main dataset
-    #     dtype={"binding_label": "int8", "allele": "string", "mhc_class": "int8"},
-    #     names=["long_mer", "assigned_label", "allele", "mhc_class"],
-    #     # convert binding_label to assigned_label
-    #     converters={"assigned_label": lambda x: 1 if x == "1" else 0},
-    # )
+    # for folder in path and for file in folder read them, then save them in (OUT_PARQUET.parent / "benchmarks").mkdir(parents=True, exist_ok=True)
+    # with benchmark_{file_name}.parquet
+
+    # load and save benchmark datasets
+    benchmarks_dir = OUT_PARQUET.parent / "benchmarks"
+    benchmarks_dir.mkdir(parents=True, exist_ok=True)
+
+    for folder in BENCHMARKS_PATH.iterdir():
+        if not folder.is_dir():
+            continue
+        for csv_file in folder.glob("*.csv"):
+            print(f"Loading benchmark dataset {csv_file.name}")
+            tmp = pd.read_csv(csv_file, usecols=["long_mer", "assigned_label", "allele", "mhc_class"])
+            tmp["assigned_label"] = tmp["assigned_label"].astype(int)
+            tmp["allele"] = tmp["allele"].astype(str)
+            tmp["long_mer"] = tmp["long_mer"].astype(str)
+            tmp = attach_embeddings(tmp, emb_dict, EMB_OUT_DIR)
+            out_path = benchmarks_dir / f"benchmark_{csv_file.stem}.parquet"
+            tmp.to_parquet(out_path, index=False, engine="pyarrow", compression="zstd")
+            print(f"Saved benchmark to {out_path}")
+
     bench_df1 = pd.read_csv(
         "../data/Custom_dataset/benchmark_Conbot.csv")
     # rename columns to match the main dataset
@@ -474,6 +490,13 @@ def main() -> None:
            ids_str = str(validation_ids)
        with open(held_out_ids_path, "a") as f:
            f.write(f"Fold {fold_id}: {ids_str}\n")
+
+
+    # save only positive labels to a separate file
+    pos_labels = datasets['train'][datasets['train']['assigned_label'] == 1]
+    pos_labels_path = OUT_PARQUET.parent / "folds" / "positive_labels.parquet"
+    pos_labels.to_parquet(pos_labels_path, index=False, engine="pyarrow", compression="zstd")
+    print(f"Saved positive labels to {pos_labels_path}")
 
     print("✓ Done")
 
