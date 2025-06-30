@@ -28,7 +28,6 @@ import numpy as np
 import pandas as pd
 import tqdm
 import csv
-
 ###############################################################################
 # ---------------------------  I/O utilities  ---------------------------------
 ###############################################################################
@@ -54,19 +53,21 @@ def read_dat(path: str) -> List[Tuple[str, str]]:
     return seqs
 
 
-def read_csv(path: str = [0, 1]) -> List[Tuple[str, ...]]:
+def read_csv(path: str, mhc_class: int):
     seqs: List[Tuple[str, ...]] = []
-    selected_cols = ["simple_allele", "sequence", "mhc_types"]
+    selected_cols = ["simple_allele", "sequence", "mhc_types", "repres_pseudo_positions"]
     file = pd.read_csv(path, sep=",", usecols=selected_cols)
-    file = file[file["mhc_types"] == 1]
+    file = file[file["mhc_types"] == mhc_class]
     print(file.columns)
     # convert simple allele, remove * and : to mtach with netmhcpan
     file[selected_cols[0]] = file[selected_cols[0]].str.replace("*", "")
     file[selected_cols[0]] = file[selected_cols[0]].str.replace(":", "")
+    # convert pseudosequence positions to list of integers (convert string to list split by ;)
+    pseudoseq_indices = file[selected_cols[3]].apply(lambda x: [int(i) for i in x.split(";") if i.isdigit()])
     # return as list of tuples
     for index, row in file.iterrows():
         seqs.append((row[selected_cols[0]], row[selected_cols[1]]))
-    return seqs
+    return seqs, pseudoseq_indices.tolist()
 
 ###############################################################################
 # -------------  Local model loader (ESM-C, ESM-2, ESM3-open)  ----------------
@@ -210,21 +211,32 @@ def main(**local_args):
         parser.add_argument("--pooling", choices=["mean", "cls"], default="mean")
         parser.add_argument("--remote", action="store_true", help="Use cloud API")
         parser.add_argument("--api_token", default=os.getenv("ESM_API_TOKEN"), help="Forge/NIM token")
+        parser.add_argument("--mhc_class", type=int, default=1, help="MHC class (1 or 2) for CSV input")
+        parser.add_argument("--filter_ps", action="store_true", help="Filter out pseudosequence positions")
+        parser.add_argument("--noise_augmentation", choices=["Gaussian", None], default=None,
+                            help="Add Gaussian noise to embeddings (10% of std_dev)")
         args = parser.parse_args()
 
     seqs = None
+    pseudoseq_indices = None
     if args.input.endswith(".csv"):
-        seqs = read_csv(args.input)
+        seqs, pseudoseq_indices = read_csv(args.input, mhc_class=args.mhc_class)
     elif args.input.endswith(".dat"):
         seqs = read_dat(args.input)
     if not seqs:
         sys.exit("No sequences found!")
 
+    # Generate embeddings and filter out pseudosequence positions if needed
     if args.remote:
         if args.api_token is None:
             sys.exit("Provide --api_token or set ESM_API_TOKEN")
         client = load_remote_client(args.model, args.api_token)
         embeddings = embed_remote(client, seqs, args.batch_size, args.pooling)
+        if args.filter_ps:
+            print("Filtering out pseudosequence positions...")
+            # select embedding indexes equal to the values in the pseudosequence positions
+            #TODO
+
         print("embeddings with", args.model)
         sequences = {seq_id: seq for seq_id, seq in seqs}
     else:
@@ -235,13 +247,35 @@ def main(**local_args):
         # print first 5 sequences
         print("First 5 sequences:", seqs[:5])
         embeddings = {}
-        for seq_id, seq in tqdm.tqdm(seqs, desc="Embedding sequences"):
-            embeddings[seq_id] = embed_one(seq)
+        for idx, (seq_id, seq) in enumerate(tqdm.tqdm(seqs, desc="Embedding sequences")):
+            emb = embed_one(seq)
+            if noise_augmentation is not None:
+                if noise_augmentation == "Gaussian":
+                    # determine the noise based on the embeddings value range
+                    # calculate the standard deviation of the embedding
+                    std_dev = np.std(emb)
+                    noise = np.random.normal(0, std_dev * 0.1, emb.shape)  # 10% of std_dev
+                    emb += noise
+                else:
+                    raise ValueError(f"Unknown noise augmentation: {noise_augmentation}")
+            embeddings[seq_id] = emb
+            # print shape of the embedding
+            # print(f"Embedding shape for {seq_id}: {embeddings[seq_id].shape}") # (sequence_length, embedding_dim)
+            if args.filter_ps:
+                print("Filtering out pseudosequence positions...")
+                # select embedding indexes equal to the values in the pseudosequence positions
+                if pseudoseq_indices:
+                    # filter out positions in the sequence that are in the pseudosequence positions
+                    embeddings[seq_id] = embeddings[seq_id][pseudoseq_indices[idx]]
+                print("Filtered embedding shape for", seq_id, ":", embeddings[seq_id].shape)
+
         sequences = {seq_id: seq for seq_id, seq in seqs}
 
 
     # ------------------  save ------------------
     out_path = pathlib.Path(args.outfile)
+    # make directory if it does not exist
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     if out_path.suffix == ".npz":
         np.savez_compressed(out_path, **embeddings)
         # create a .csv file and save the sequences
@@ -263,16 +297,21 @@ def main(**local_args):
 
 
 if __name__ == "__main__":
-    # example run
-    model = "esmc_600m"  # "esm3-98b-2024-08" "esm3_sm_open_v1", "esm3-open"
-    # dat_path = "data/NetMHCpan_dataset/NetMHCpan_train/MHC_pseudo.dat"
-    dat_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/pseudosequence.2016.all.X.dat"
-    # dat_path = "data/HLA_alleles/pseudoseqs/PMGen_pseudoseq.csv"
-    out_path = "data/ESM/mhc2_encodings.npz"
+    # Config:
+    mhc_class = 1  # 1 for MHC-I, 2 for MHC-II
+    model = "esmc_600m"  # "esm3-98b-2024-08" "esm3_sm_open_v1", "esm3-open", "esmc_300m", "esmc_600m"
+    filter_out_pseudoseq_positions = False  # filter out positions with pseudosequence in MHC-I and MHC-II
+    noise_augmentation = "Gaussian" # None
+    # Input:
+    dat_path = "data/NetMHCpan_dataset/NetMHCpan_train/MHC_pseudo.dat" # for MHC-I
+    # dat_path = "data/NetMHCpan_dataset/NetMHCIIpan_train/pseudosequence.2016.all.X.dat" # for MHC-II
+    # dat_path = "data/HLA_alleles/pseudoseqs/PMGen_pseudoseq.csv" # for both MHC-I and MHC-II
+    out_path = "data/ESM/NetMHCpan_dataset/esmc_600m/mhc1_encodings.npz"
     remote = False
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     batch_size = 1
     pooling = "mean"
     # run the script
     main(input=dat_path, model=model, outfile=out_path, remote=remote,
-         device=device, batch_size=batch_size, pooling=pooling)
+         device=device, batch_size=batch_size, pooling=pooling, mhc_class=mhc_class, filter_ps=filter_out_pseudoseq_positions,
+         noise_augmentation=noise_augmentation)
