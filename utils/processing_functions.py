@@ -1301,6 +1301,7 @@ def alignment_to_string(alignment):
     return ";".join(mapping), q_idx, t_idx
 
 def alignment_to_df(no_modelling_output_dict, output_dir):
+    '''runs in case of no-modelling, when we have no pandora output'''
     template_pdbfile = []
     target_to_template_alignstring = []
     identities = []

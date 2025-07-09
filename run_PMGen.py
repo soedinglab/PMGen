@@ -1,6 +1,6 @@
 import argparse
 import pandas as pd
-from run_utils import run_PMGen_wrapper, run_PMGen_modeling, run_proteinmpnn, run_single_proteinmpnn, protein_mpnn_wrapper, MultipleAnchors, get_best_structres
+from run_utils import run_PMGen_wrapper, run_PMGen_modeling, protein_mpnn_wrapper, MultipleAnchors, get_best_structres, retrieve_anchors_and_fixed_positions
 from Bio import SeqIO
 import warnings
 import os
@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--run', choices=['parallel', 'single'], required=False, default='parallel',
                         help='Run mode: parallel or single (one by one). parallel only works if --mode wrapper')
     parser.add_argument('--mode', choices=['wrapper', 'modeling'], required=False, default='wrapper',
-                        help='Recommended. Select wrapper or modeling mode')
+                        help=' wrapper mode Recommended. wrapper for multiple sample prediction, modeling for single sample prediction')
 
     # Required arguments for modeling mode
     parser.add_argument('--peptide', type=str, help='Peptide sequence')
@@ -77,6 +77,8 @@ def main():
     parser.add_argument('--batch_size', type=int, default=1, help='ProteinMPNN batch size.')
     parser.add_argument('--hot_spot_thr', type=float, default=6.0, help='Distance threshold to peptide, to define hot-spots on mhc.')
     parser.add_argument('--binder_pred', action='store_true', help='Enables binder prediction from ProteinMPNN generated peptides.')
+    parser.add_argument("--fix_anchors", action='store_true', help='If set, does not design anchor positions in peptide generation')
+    parser.add_argument("--peptide_random_fix_fraction", type=float, default=0., help="Disables design for a random fraction of amino acids in peptide")
 
     # Setting to Run only a part:
     parser.add_argument('--no_alphafold', action='store_false', help='does not run alphafold.')
@@ -120,7 +122,7 @@ def main():
                                        fine_tuned_model_path=args.fine_tuned_model_path,
                                        benchmark=args.benchmark, best_n_templates=args.best_n_templates,
                                        n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora,
-                                        no_modelling=args.initial_guess)
+                                        no_modelling=args.initial_guess, return_all_outputs=args.return_all_outputs)
         if args.run == 'parallel' and not args.only_protein_mpnn:
             runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
         elif args.run == 'single' and not args.only_protein_mpnn:
@@ -152,7 +154,9 @@ def main():
                                         models=args.models, alphafold_param_folder=args.alphafold_param_folder,
                                         fine_tuned_model_path=args.fine_tuned_model_path,
                                         benchmark=args.benchmark, best_n_templates=args.best_n_templates,
-                                        n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora)
+                                        n_homology_models=args.n_homology_models, 
+                                        pandora_force_run=args.no_pandora, 
+                                        return_all_outputs=args.return_all_outputs)
         if not args.only_protein_mpnn:
             runner.run_PMGen(run_alphafold=args.no_alphafold)
         else:
@@ -168,7 +172,10 @@ def main():
         print('Alphafold Runs Skipped!')
     # get the pdb outputs for listing them and protmpnn
 
-
+    if args.fix_anchors:
+        anchor_and_peptide = retrieve_anchors_and_fixed_positions(args, peptide_random_fix_fraction=args.peptide_random_fix_fraction)
+    else:
+        anchor_and_peptide = None
     if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design or args.protein_mpnn_dryrun:
         if args.protein_mpnn_dryrun:
             args.peptide_design = False
@@ -177,7 +184,7 @@ def main():
             print("Running ProteinMPNN Dry-Run")
         print("### Start ProteinMPNN runs ###")
         print('files:\n', output_pdbs_dict)
-        protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, mode=args.run)
+        protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, anchor_and_peptide=anchor_and_peptide, mode=args.run)
 
 if __name__ == "__main__":
     main()

@@ -43,8 +43,10 @@ Source-PANDORA: https://github.com/X-lab-3D/PANDORA
 ## Modifications to PANDORA
 'PANDORA/PANDORA/pandora_modifs.py' and 'PANDORA/PANDORA/Modelling_functions' , added netmhcipan_path, netmhciipan_path paths
 'PANDORA/PANDORA/Modelling_functions' minimum modifications in anchor prediction and saving anchors.
+'PANDORA/PANDORA/Modelling_functions' keep not only max score template, but all and sort them based on scores.
 'PANDORA/PANDORA/PMHC/PMHC.py' modified to handle  not only the top similar MHC allele, but also the lower ranks
     in case of no similar one by adding arg `Target(max_num_rank=20)` checks up to 20 similar cases one by one.
     If NetMHCpan could predict anchor for any, uses that anchor. If not, uses canonical anchors.
+  
 
 
