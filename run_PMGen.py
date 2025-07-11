@@ -1,6 +1,7 @@
 import argparse
 import pandas as pd
-from run_utils import run_PMGen_wrapper, run_PMGen_modeling, protein_mpnn_wrapper, MultipleAnchors, get_best_structres, retrieve_anchors_and_fixed_positions
+from run_utils import run_PMGen_wrapper, run_PMGen_modeling, protein_mpnn_wrapper, MultipleAnchors, get_best_structres, retrieve_anchors_and_fixed_positions, assert_iterative_mode, collect_generated_binders, create_new_input_and_fixed_positions
+import shutil
 from Bio import SeqIO
 import warnings
 import os
@@ -87,104 +88,143 @@ def main():
     parser.add_argument('--protein_mpnn_dryrun', action='store_true', help='Overwrites all proteinMPNN flags and just dry run. hotspots are saved.')
     parser.add_argument('--return_all_outputs', action='store_true', help='If active, returns all alphafold outputs')
 
+    # Setting to run iterative peptide generation
+    parser.add_argument('--iterative_peptide_gen', type=int, default=0, help='If used, the iterative peptide generation is performed, defines the number of iterations.')
+
     args = parser.parse_args()
+    for iteration in range(args.iterative_peptide_gen + 1):
+        fixed_positions_path = None #only for iter > 0 in iteration mode
+        # if we have entered the iterative generation mode
+        if args.iterative_peptide_gen > 0:
+            print(f"***** Entering Iterative Peptide Generation Mode: Iter {iteration} *****")
+            assert_iterative_mode(args)
+            if f"iter_{iteration-1}" in args.output_dir.split("/") or f"iter_{iteration-1}/" in args.output_dir.split("/"):
+                args.output_dir = "/".join(args.output_dir.split("/")[:-1]) # handle outputdir/iter_0/iter_1 issue
+            args.output_dir = os.path.join(args.output_dir, f"iter_{iteration}")
+            os.makedirs(args.output_dir, exist_ok=True)
+            input_path_iter = os.path.join(args.output_dir, f"input_df_{iteration}.tsv")
+            if iteration == 0:
+                shutil.copy(args.df, input_path_iter)
+            elif iteration > 0:
+                if collected_generated_binders_path: # to replace inputs of new iter with outputs of last iter
+                    if args.fix_anchors:
+                        prev_outpath = os.path.join("/".join(args.output_dir.split("/")[:-1]), f"iter_{iteration-1}")
+                        fixed_positions_path = os.path.join(prev_outpath, "fixed_positions.tsv")
+                    else: fixed_positions_path = None
+                    print(f"#################### {iteration}: collected_generated_binders_path: {collected_generated_binders_path} \n"
+                          f"fixed_positions_path: {fixed_positions_path}")
+                    create_new_input_and_fixed_positions(args=args,
+                                                         best_generated_peptides_path=collected_generated_binders_path,
+                                                         iter=iteration,
+                                                         fixed_positions_path=fixed_positions_path)
+                else:
+                    raise ValueError(f"collected_generated_binders_path does not exist, so iteration {iteration} can not happen:"
+                                     f"\n Debugging message: args.fix_anchors: {args.fix_anchors}")
+            args.df = input_path_iter
 
-    # Validation for modeling mode
-    if args.mode == 'modeling':
-        if not args.mhc_seq and not args.mhc_allele:
-            raise ValueError("Either --mhc_seq or --mhc_allele must be provided for modeling mode.")
-        if not args.id:
-            args.id = args.peptide  # Use peptide as ID if not provided
+        # Validation for modeling mode
+        if args.mode == 'modeling':
+            if not args.mhc_seq and not args.mhc_allele:
+                raise ValueError("Either --mhc_seq or --mhc_allele must be provided for modeling mode.")
+            if not args.id:
+                args.id = args.peptide  # Use peptide as ID if not provided
 
-    # Run wrapper mode
-    if args.mode == 'wrapper':
-        if not args.df:
-            raise ValueError("--df is required for wrapper mode")
-        df = pd.read_csv(args.df, sep='\t')
-        df['mhc_seq'] = [i.replace('-', '') for i in df.mhc_seq.tolist()]  # remove gaps from df:
-        if args.multiple_anchors:
-            L1 = len(df)
-            ma = MultipleAnchors(args, args.dirty_mode)
-            df = ma.process()
-            L2 = len(df)
-            print(f'New DataFrame has {L2} rows, {L2 - L1} difference with original df')
+        # Run wrapper mode
+        if args.mode == 'wrapper':
+            if not args.df:
+                raise ValueError("--df is required for wrapper mode")
+            df = pd.read_csv(args.df, sep='\t')
+            df['mhc_seq'] = [i.replace('-', '') for i in df.mhc_seq.tolist()]  # remove gaps from df:
+            if args.multiple_anchors:
+                L1 = len(df)
+                ma = MultipleAnchors(args, args.dirty_mode)
+                df = ma.process()
+                L2 = len(df)
+                print(f'New DataFrame has {L2} rows, {L2 - L1} difference with original df')
 
 
-        # outputs for proteinmpnn later
-        tmp_pdb_dict = {}
-        for i, row in df.iterrows():
-            out_alphafold = os.path.join(args.output_dir, 'alphafold', row['id'])
-            tmp_pdb_dict[row['id']] = out_alphafold
+            # outputs for proteinmpnn later
+            tmp_pdb_dict = {}
+            for i, row in df.iterrows():
+                out_alphafold = os.path.join(args.output_dir, 'alphafold', row['id'])
+                tmp_pdb_dict[row['id']] = out_alphafold
 
-        runner = run_PMGen_wrapper(df=df, output_dir=args.output_dir, num_templates=args.num_templates,
-                                       num_recycles=args.num_recycles, models=args.models,
-                                       alphafold_param_folder=args.alphafold_param_folder,
-                                       fine_tuned_model_path=args.fine_tuned_model_path,
-                                       benchmark=args.benchmark, best_n_templates=args.best_n_templates,
-                                       n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora,
-                                        no_modelling=args.initial_guess, return_all_outputs=args.return_all_outputs)
-        if args.run == 'parallel' and not args.only_protein_mpnn:
-            runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
-        elif args.run == 'single' and not args.only_protein_mpnn:
-            runner.run_wrapper(run_alphafold=args.no_alphafold)
-        else:
-            print('--Warning!-- Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
-        # check outputs if they exist:
-        output_pdbs_dict = {}
-        for key, value in tmp_pdb_dict.items():
-            # {'id':[out1, out2], 'id2':[out1, out2], ...}
-            output_pdbs_dict[key] = [os.path.join(value, i) for i in os.listdir(value) if i.endswith('.pdb') and 'model_' in i and not i.endswith('.npy')]
-        if args.best_structures: # get best structure out of multiple models and multiple predicted anchors:
-            _ = get_best_structres(args.output_dir, df, args.multiple_anchors)
-    # Run modeling mode
-    elif args.mode == 'modeling':
-        sequences = []
-        if not args.mhc_seq:
-            for record in SeqIO.parse(args.mhc_fasta, "fasta"):
-                sequences.append(str(record.seq))
-            if args.mhc_type == 1:
-                sequence = sequences[0]
-            elif args.mhc_type == 2: sequence = sequences[0] + "/" + sequences[1]
-        else:
-            sequence = args.mhc_seq
-        runner = run_PMGen_modeling(peptide=args.peptide, mhc_seq=sequence, mhc_type=args.mhc_type,
-                                        id=args.id, output_dir=args.output_dir, anchors=args.anchors,
-                                        mhc_allele=args.mhc_allele, predict_anchor=args.predict_anchor,
-                                        num_templates=args.num_templates, num_recycles=args.num_recycles,
-                                        models=args.models, alphafold_param_folder=args.alphafold_param_folder,
-                                        fine_tuned_model_path=args.fine_tuned_model_path,
-                                        benchmark=args.benchmark, best_n_templates=args.best_n_templates,
-                                        n_homology_models=args.n_homology_models, 
-                                        pandora_force_run=args.no_pandora, 
-                                        return_all_outputs=args.return_all_outputs)
+            runner = run_PMGen_wrapper(df=df, output_dir=args.output_dir, num_templates=args.num_templates,
+                                           num_recycles=args.num_recycles, models=args.models,
+                                           alphafold_param_folder=args.alphafold_param_folder,
+                                           fine_tuned_model_path=args.fine_tuned_model_path,
+                                           benchmark=args.benchmark, best_n_templates=args.best_n_templates,
+                                           n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora,
+                                            no_modelling=args.initial_guess, return_all_outputs=args.return_all_outputs)
+            if args.run == 'parallel' and not args.only_protein_mpnn:
+                runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
+            elif args.run == 'single' and not args.only_protein_mpnn:
+                runner.run_wrapper(run_alphafold=args.no_alphafold)
+            else:
+                print('--Warning!-- Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
+            # check outputs if they exist:
+            output_pdbs_dict = {}
+            for key, value in tmp_pdb_dict.items():
+                # {'id':[out1, out2], 'id2':[out1, out2], ...}
+                output_pdbs_dict[key] = [os.path.join(value, i) for i in os.listdir(value) if i.endswith('.pdb') and
+                                         'model_' in i and not i.endswith('.npy')]
+            if args.best_structures: # get best structure out of multiple models and multiple predicted anchors:
+                _ = get_best_structres(args.output_dir, df, args.multiple_anchors)
+        # Run modeling mode
+        elif args.mode == 'modeling':
+            sequences = []
+            if not args.mhc_seq:
+                for record in SeqIO.parse(args.mhc_fasta, "fasta"):
+                    sequences.append(str(record.seq))
+                if args.mhc_type == 1:
+                    sequence = sequences[0]
+                elif args.mhc_type == 2: sequence = sequences[0] + "/" + sequences[1]
+            else:
+                sequence = args.mhc_seq
+            runner = run_PMGen_modeling(peptide=args.peptide, mhc_seq=sequence, mhc_type=args.mhc_type,
+                                            id=args.id, output_dir=args.output_dir, anchors=args.anchors,
+                                            mhc_allele=args.mhc_allele, predict_anchor=args.predict_anchor,
+                                            num_templates=args.num_templates, num_recycles=args.num_recycles,
+                                            models=args.models, alphafold_param_folder=args.alphafold_param_folder,
+                                            fine_tuned_model_path=args.fine_tuned_model_path,
+                                            benchmark=args.benchmark, best_n_templates=args.best_n_templates,
+                                            n_homology_models=args.n_homology_models,
+                                            pandora_force_run=args.no_pandora,
+                                            return_all_outputs=args.return_all_outputs)
+            if not args.only_protein_mpnn:
+                runner.run_PMGen(run_alphafold=args.no_alphafold)
+            else:
+                print('--Warning!-- Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
+            output_pdbs_dict = {}
+            out_alphafold = os.path.join(args.output_dir, 'alphafold', args.id)
+            output_pdbs_dict[args.id] = [os.path.join(out_alphafold, i) for i in os.listdir(out_alphafold) if
+                                         i.endswith('.pdb') and 'model_' in i and not i.endswith('.npy')]
+            # {'id':[output1, output2, ...]}
+
         if not args.only_protein_mpnn:
-            runner.run_PMGen(run_alphafold=args.no_alphafold)
+            print("Alphafold Runs completed.")
         else:
-            print('--Warning!-- Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
-        output_pdbs_dict = {}
-        out_alphafold = os.path.join(args.output_dir, 'alphafold', args.id)
-        output_pdbs_dict[args.id] = [os.path.join(out_alphafold, i) for i in os.listdir(out_alphafold) if i.endswith('.pdb') and 'model_' in i and not i.endswith('.npy')]
-        # {'id':[output1, output2, ...]}
+            print('Alphafold Runs Skipped!')
+        # get the pdb outputs for listing them and protmpnn
 
-    if not args.only_protein_mpnn:
-        print("Alphafold Runs completed.")
-    else:
-        print('Alphafold Runs Skipped!')
-    # get the pdb outputs for listing them and protmpnn
-
-    if args.fix_anchors:
-        anchor_and_peptide = retrieve_anchors_and_fixed_positions(args, peptide_random_fix_fraction=args.peptide_random_fix_fraction)
-    else:
-        anchor_and_peptide = None
-    if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design or args.protein_mpnn_dryrun:
-        if args.protein_mpnn_dryrun:
-            args.peptide_design = False
-            args.only_pseudo_sequence_design = False
-            args.mhc_design = False
-            print("Running ProteinMPNN Dry-Run")
-        print("### Start ProteinMPNN runs ###")
-        print('files:\n', output_pdbs_dict)
-        protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, anchor_and_peptide=anchor_and_peptide, mode=args.run)
+        if args.fix_anchors:
+            anchor_and_peptide = retrieve_anchors_and_fixed_positions(args,
+                                  peptide_random_fix_fraction=args.peptide_random_fix_fraction,
+                                  fixed_positions_path=fixed_positions_path)
+        else:
+            anchor_and_peptide = None
+        if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design or args.protein_mpnn_dryrun:
+            if args.protein_mpnn_dryrun:
+                args.peptide_design = False
+                args.only_pseudo_sequence_design = False
+                args.mhc_design = False
+                print("Running ProteinMPNN Dry-Run")
+            print("### Start ProteinMPNN runs ###")
+            print('files:\n', output_pdbs_dict)
+            protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, anchor_and_peptide=anchor_and_peptide, mode=args.run)
+            if args.peptide_design and args.mode == "wrapper":
+                print("Collecting the best binders")
+                collected_generated_binders_path = collect_generated_binders(args, df, iteration)
 
 if __name__ == "__main__":
     main()

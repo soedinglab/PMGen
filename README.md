@@ -264,6 +264,22 @@ python run_PMGen.py \
    --num_sequences_mhc 50 \
    --batch_size 5
 ```
+9. Iterative Peptide Generation in Wrapper mode with fixed anchors:
+
+```bash
+python run_PMGen.py \
+  --run parallel \
+  --mode wrapper \
+  --output_dir outputs/juliane_dataset \
+  --df "data/example/wrapper_input_example.tsv" \
+  --peptide_design \
+  --num_sequences_peptide 10 \
+  --binder_pred \
+  --fix_anchors \
+  --peptide_random_fix_fraction 0 \
+  --iterative_peptide_gen 50
+```
+
 ### Output
 
 Results are saved in --output_dir with the following structure:

@@ -4,6 +4,10 @@ import concurrent.futures
 import sys
 from multiprocessing import Pool, cpu_count
 import contextlib
+import ast
+
+from numpy.core.defchararray import endswith
+
 sys.path.append("PANDORA")
 import os
 import json
@@ -119,7 +123,7 @@ class run_PMGen_modeling():
         self.output_pdbs_dict = {}
         if run_alphafold:
             print('## To run Alphafold Please Make Sure GPU is Available and can be found ##')
-            self.run_alphafold(input_file=self.alphafold_input_file, output_prefix=self.alphafold_out + '/')
+            self.run_alphafold(input_file=self.alphafold_input_file, output_prefix=self.alphafold_out + f'/{self.id}/')
             # get the paths for proteinmpnn
             self.output_pdbs_dict[self.id] = [os.path.join(self.alphafold_out, i) for i in os.listdir(self.alphafold_out) if i.endswith('.pdb') and 'model_' in i and not i.endswith('.npy')]
 
@@ -1034,7 +1038,27 @@ def fixed_anchor_pos(peptide, peptide_random_fix_fraction, anchors):
     fixed_non_anchors = list([int(i) for i in np.random.choice(non_anchors, size=sizen, replace=False)])
     return fixed_non_anchors
 
-def retrieve_anchors_and_fixed_positions(args, save_anchors=True, peptide_random_fix_fraction=0.0):
+
+def load_final_dict_from_df(df_path):
+    """
+    Load the 'final' dictionary from a saved DataFrame TSV file.
+    Args:
+        df_path (str): Path to the 'fixed_positions.tsv' file.
+    Returns:
+        dict: A dictionary where keys are IDs and values are [anchor list, peptide string].
+    """
+    df = pd.read_csv(df_path, sep='\t')
+
+    final = {}
+    for _, row in df.iterrows():
+        id_ = row['id']
+        anchor = ast.literal_eval(row['anchor']) if isinstance(row['anchor'], str) else row['anchor']
+        peptide = row['peptide']
+        final[id_] = [anchor, peptide]
+    return final
+
+
+def retrieve_anchors_and_fixed_positions(args, save_anchors=True, peptide_random_fix_fraction=0.0, fixed_positions_path=None):
     '''
     Three conditions exist for retrieving anchors:
     1. User has given anchor:
@@ -1043,6 +1067,10 @@ def retrieve_anchors_and_fixed_positions(args, save_anchors=True, peptide_random
        -> Retrieved from 'args.output_dir/pandora/<id>/anchors.json'
     3. Anchor predicted in initial guess model:
        -> Retrieved from 'args.output_dir/pandora/<id>/no_modelling_output_dict.json'
+
+    params:
+    fixed_positions_path: if fixed positions already exist, provide the path
+    should be a file
     Returns:
         If modeling mode: list of anchors
         If wrapper mode: dict {<id>: anchors}
@@ -1053,55 +1081,188 @@ def retrieve_anchors_and_fixed_positions(args, save_anchors=True, peptide_random
         data = open_json(file_path)
         return data[key][0] if key == 'target_anchors' else data[key]  # [0] only for 'target_anchors'
     final = None
-    # MODE 1: Modeling mode
-    if args.mode == 'modeling':
-        if args.anchors:
-            # Case 1: User has provided anchors manually
-            fixed_non_anchors = fixed_anchor_pos(args.peptide, peptide_random_fix_fraction, args.anchors)
-            final = {args.id: [list(args.anchors) + fixed_non_anchors, args.peptide]}
-        else:
-            # Case 2 or 3: Anchors should be read from model output
-            file_name = 'no_modelling_output_dict.json' #if args.initial_guess else 'anchors.json'
-            key = 'target_anchors' #if args.initial_guess else 'anchors'
-            file_path = os.path.join(args.output_dir, 'pandora', args.id, file_name)
-            anchors = load_anchors_from_file(file_path, key)
-            # Ensure that returned anchors are in list format
-            assert isinstance(anchors, list), "Anchors must be a list."
-            fixed_non_anchors = fixed_anchor_pos(args.peptide, peptide_random_fix_fraction, anchors)
-            final = {args.id: [anchors + fixed_non_anchors, args.peptide]}
-    # MODE 2: Wrapper mode — for processing multiple inputs in batch
-    elif args.mode == 'wrapper':
-        # Determine which file to read:
-        # Case A: args.multiple_anchors enabled → read from 'Multiple_Anchors_input.tsv'
-        # Case B: otherwise → read from args.df (input file provided by user)
-        file = (
-            os.path.join(args.output_dir, 'Multiple_Anchors_input.tsv')
-            if args.multiple_anchors else args.df
-        )
-        assert isinstance(file, str), "Input file path must be a string."
-        # Read TSV or CSV file
-        df = pd.read_csv(file, sep='\t' if file.endswith('.tsv') else ',')
-        # Ensure required columns exist
-        assert 'id' in df.columns, f"'id' column is required in input file \n {df}"
-        assert 'anchors' in df.columns, f"'anchors' column is required in input file \n {df}"
-        final = {}
-        # Iterate over each entry (row) in the file
-        for _, row in df.iterrows():
-            id_ = row['id']
-            anchor = row['anchors']
-            peptide = row['peptide']
-            # If anchor is not available in file, retrieve from modeling outputs
-            if pd.isna(anchor) or anchor in ('None', ''):
+    if not fixed_positions_path:
+        # MODE 1: Modeling mode
+        if args.mode == 'modeling':
+            if args.anchors:
+                # Case 1: User has provided anchors manually
+                fixed_non_anchors = fixed_anchor_pos(args.peptide, peptide_random_fix_fraction, args.anchors)
+                final = {args.id: [list(args.anchors) + fixed_non_anchors, args.peptide]}
+            else:
+                # Case 2 or 3: Anchors should be read from model output
                 file_name = 'no_modelling_output_dict.json' #if args.initial_guess else 'anchors.json'
                 key = 'target_anchors' #if args.initial_guess else 'anchors'
-                file_path = os.path.join(args.output_dir, 'pandora', id_, file_name)
-                anchor = load_anchors_from_file(file_path, key)
-            # Store anchor in dictionary
-            if not isinstance(anchor, list): anchor = list(anchor)
-            fixed_non_anchors = fixed_anchor_pos(peptide, peptide_random_fix_fraction, anchor)
-            final[id_] = [anchor + fixed_non_anchors, peptide]  # {id1: anchor1, id2: anchor2, ...}
-    if not isinstance(final, dict): raise ValueError('No anchor could be retrieved: unrecognized mode.')
-    if save_anchors:
-        pd.DataFrame(final).to_csv(os.path.join(args.output_dir, 'fixed_positions.tsv'), sep='\t')
+                file_path = os.path.join(args.output_dir, 'pandora', args.id, file_name)
+                anchors = load_anchors_from_file(file_path, key)
+                # Ensure that returned anchors are in list format
+                assert isinstance(anchors, list), "Anchors must be a list."
+                fixed_non_anchors = fixed_anchor_pos(args.peptide, peptide_random_fix_fraction, anchors)
+                final = {args.id: [anchors + fixed_non_anchors, args.peptide]}
+        # MODE 2: Wrapper mode — for processing multiple inputs in batch
+        elif args.mode == 'wrapper':
+            # Determine which file to read:
+            # Case A: args.multiple_anchors enabled → read from 'Multiple_Anchors_input.tsv'
+            # Case B: otherwise → read from args.df (input file provided by user)
+            file = (
+                os.path.join(args.output_dir, 'Multiple_Anchors_input.tsv')
+                if args.multiple_anchors else args.df
+            )
+            assert isinstance(file, str), "Input file path must be a string."
+            # Read TSV or CSV file
+            df = pd.read_csv(file, sep='\t' if file.endswith('.tsv') else ',')
+            # Ensure required columns exist
+            assert 'id' in df.columns, f"'id' column is required in input file \n {df}"
+            assert 'anchors' in df.columns, f"'anchors' column is required in input file \n {df}"
+            final = {}
+            # Iterate over each entry (row) in the file
+            for _, row in df.iterrows():
+                id_ = row['id']
+                anchor = row['anchors']
+                peptide = row['peptide']
+                # If anchor is not available in file, retrieve from modeling outputs
+                if pd.isna(anchor) or anchor in ('None', ''):
+                    file_name = 'no_modelling_output_dict.json' #if args.initial_guess else 'anchors.json'
+                    key = 'target_anchors' #if args.initial_guess else 'anchors'
+                    file_path = os.path.join(args.output_dir, 'pandora', id_, file_name)
+                    anchor = load_anchors_from_file(file_path, key)
+                # Store anchor in dictionary
+                if not isinstance(anchor, list): anchor = list(anchor)
+                fixed_non_anchors = fixed_anchor_pos(peptide, peptide_random_fix_fraction, anchor)
+                final[id_] = [anchor + fixed_non_anchors, peptide]  # {id1: anchor1, id2: anchor2, ...}
+        if not isinstance(final, dict): raise ValueError('No anchor could be retrieved: unrecognized mode.')
+        if save_anchors:
+            rows = [{"id": id_, "anchor": value[0], "peptide": value[1]} for id_, value in final.items()]
+            df = pd.DataFrame(rows)
+            df.to_csv(os.path.join(args.output_dir, 'fixed_positions.tsv'), sep='\t', index=False)
+    else:
+        final = load_final_dict_from_df(fixed_positions_path) #if user provides fixed_position_path it will read final. used in iterative mode.
     return final
+
+
+def assert_iterative_mode(args):
+    assert isinstance(args.iterative_peptide_gen, int), f"Flag:iterative_peptide_gen must be an int, found {args.iterative_peptide_gen}"
+    if args.iterative_peptide_gen > 0:
+        assert args.mode == "wrapper", f"When using iterative_peptide_gen, '--mode wrapper' must be set, found {args.mode}"
+        assert args.peptide_design == True, f"When using iterative_peptide_gen, '--peptide_design' flag must be used."
+        assert args.df, f"When using iterative_peptide_gen, --df must be given"
+        assert args.df.endswith('.tsv'), (f"When using iterative_peptide_gen, please make sure your "
+                                          f"--df file endswith '.tsv' and is a tab separated file, found {args.df}")
+        assert args.binder_pred == True, f"When using iterative_peptide_gen, --binder_pred flag must be used."
+        assert len(args.models) == 1, (f"When using iterative_peptide_gen, only one model must be used, found {args.models}"
+                                      f"and len(): {len(args.models)}")
+        if not args.fix_anchors: print("Warning, You have chosen iterative mode, "
+                                       "and it is better to also set 'fix_anchors flag'"
+                                       "for better results.")
+
+
+def swap_columns(df, col1, col2):
+    """
+    Swap the positions of two columns in a DataFrame without changing their content.
+    Args:
+        df (pd.DataFrame): The original DataFrame.
+        col1 (str): Name of the first column.
+        col2 (str): Name of the second column.
+    Returns:
+        pd.DataFrame: New DataFrame with col1 and col2 swapped.
+    """
+    cols = list(df.columns)
+    idx1, idx2 = cols.index(col1), cols.index(col2)
+    cols[idx1], cols[idx2] = cols[idx2], cols[idx1]
+    return df[cols]
+
+
+def collect_generated_binders(args, df, iter, debugging=True):
+    protmpnn_path = os.path.join(args.output_dir, "protienmpnn")
+    id_paths = os.listdir(protmpnn_path)
+    DF = []
+    for id in id_paths:
+        idp = os.path.join(protmpnn_path, id)
+        if os.path.isdir(idp):
+            model_folders = os.listdir(idp)
+            if len(model_folders) > 0:
+                try:
+                    if len(model_folders) > 1:
+                        model_folder = next(
+                            i for i in model_folders
+                            if "model_" in i and "peptide_design" in os.listdir(os.path.join(idp, i))
+                        )
+                    else:
+                        model_folder = model_folders[0]
+                    netmhcpan_out = os.path.join(idp, model_folder, "peptide_design", "binder_pred", "netmhcpan_out.csv")
+                    if not os.path.exists(netmhcpan_out):
+                        continue
+                    data = pd.read_csv(netmhcpan_out)
+                    # Handling missing expected columns safely
+                    if "Identity" not in data.columns or "Peptide" not in data.columns:
+                        continue
+                    id_original_peptide = data["Identity"].tolist()[0]
+                    original_filtered = data[data["Identity"]==id_original_peptide]
+                    best_original_data = original_filtered.loc[original_filtered["%Rank_EL"].idxmin()]
+                    best_original_peptide = max(
+                        original_filtered[original_filtered["Identity"] == id_original_peptide]["Peptide"],
+                        key=len
+                    )
+
+                    data_filtered = data[data["Identity"] != id_original_peptide]
+                    if data_filtered.empty:
+                        continue
+                    best_iden_data = data_filtered.loc[data_filtered["%Rank_EL"].idxmin()]
+                    best_iden = best_iden_data["Identity"]
+                    best_peptide = max(
+                        data_filtered[data_filtered["Identity"] == best_iden]["Peptide"],
+                        key=len
+                    )
+                    assert len(best_original_peptide) == len(best_peptide), (f"original peptide: {best_original_peptide}, \n"
+                                                                             f"generated peptide: {best_peptide}")
+                    # Flexible affinity column name
+                    aff_col = "Affinity(nM)" if "Affinity(nM)" in best_iden_data else "Aff(nM)"
+                    best_peptide_dict = pd.DataFrame({
+                        "id": [id],
+                        f"generated_peptide_{iter}": [best_peptide],
+                        f"generated_affinity_{iter}": [best_iden_data[aff_col]],
+                        f"original_affinity_{iter}": [best_original_data[aff_col]]
+                    })
+                    DF.append(best_peptide_dict)
+                except (IndexError, StopIteration, FileNotFoundError, KeyError, ValueError):
+                    continue  # skip malformed entries safely
+    if not DF:
+        if debugging:
+            raise ValueError(f"No valid binder prediction outputs found.\n"
+                         f"Debugginh message:\n"
+                         f"id_paths: {id_paths}, \n"
+                         f"model_folders: {model_folders}\n")
+        else:
+            raise ValueError(f"No valid binder prediction outputs found.")
+    DF = pd.concat(DF, ignore_index=True)
+    final = pd.merge(df, DF, on=['id'], how='inner')
+    p = os.path.join(args.output_dir, f"best_generated_peptides_{iter}.tsv")
+    final.to_csv(p, sep="\t", index=False)
+    print(f"Best binders saved in {p}")
+    return p
+
+
+def create_new_input_and_fixed_positions(args, best_generated_peptides_path, iter, fixed_positions_path=None):
+    bgp_df = pd.read_csv(best_generated_peptides_path, sep='\t', header=0)
+    bgp_df = swap_columns(bgp_df, col1=f"generated_peptide_{iter-1}", col2="peptide")
+    bgp_df = bgp_df.drop(["peptide", f"original_affinity_{iter-1}", f"generated_affinity_{iter-1}"], axis=1)
+    bgp_df = bgp_df.rename(columns={f"generated_peptide_{iter-1}": "peptide"})
+    outpath = os.path.join(args.output_dir, f"input_df_{iter}.tsv")
+    bgp_df.to_csv(outpath, sep='\t', index=False) # new input generated
+    # now fixed positions should be kept in new input as well
+    if fixed_positions_path: # if user has used fix_positions it should be saved in iter, with new peptides
+        fp_df = pd.read_csv(fixed_positions_path, sep="\t", header=0)
+        fp_df = fp_df.drop("peptide", axis=1)
+        fp_df = fp_df.rename(columns={"anchor": "fixed_pos"})
+        fp_df = pd.merge(fp_df, bgp_df, on=["id"])
+        print(fp_df)
+        fp_df = fp_df[["id","peptide","fixed_pos"]]
+        fp_df = fp_df.rename(columns={"fixed_pos": "anchor"})
+        outpath = outpath.replace(f"input_df_{iter}.tsv", "fixed_positions.tsv")
+        fp_df.to_csv(outpath, sep="\t", index=False)
+
+
+
+
+
+
 
