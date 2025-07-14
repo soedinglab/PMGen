@@ -714,7 +714,9 @@ class run_proteinmpnn():
             "--seed", "37",
             "--batch_size", f'{self.batch_size}',
             "--save_probs", "1",
-            "--save_score", "1"
+            "--save_score", "1",
+            "--omit_AAs", "X",
+            "--sampling_temp", "1.5"
         ]
         if self.fix_anchors:# to fix anchors, fixed_pdbs file and design_only_positions should be generated
             # we have anchors, we need to define designable positions which are non-anchor positions
