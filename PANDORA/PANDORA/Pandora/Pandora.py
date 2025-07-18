@@ -10,8 +10,8 @@ from Bio import pairwise2
 ######### added by Amir from here
 def constrained_alignment(seq1, seq2, pos_seq1, pos_seq2, match=1, mismatch=-1, gap=-2):
     # Convert to 0-based indexing if input is 1-based
-    pos_seq1 = [p - 1 for p in pos_seq1]
-    pos_seq2 = [p - 1 for p in pos_seq2]
+    #pos_seq1 = [p - 1 for p in pos_seq1]
+    #pos_seq2 = [p - 1 for p in pos_seq2]
 
     # Split sequences into segments
     segments = []
@@ -33,7 +33,7 @@ def constrained_alignment(seq1, seq2, pos_seq1, pos_seq2, match=1, mismatch=-1, 
         else:  # Anchor point
             result1 += s1
             result2 += s2
-
+    print('DEEEEEEEEEEBUG:','seq1:', seq1, 'seq2:', seq2, pos_seq1, pos_seq2, result1, result2)
     return result1, result2
 
 

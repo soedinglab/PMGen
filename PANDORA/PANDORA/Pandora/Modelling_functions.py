@@ -627,8 +627,9 @@ def find_template(target, database, best_n_templates=1, benchmark=False,
         max_score = list(putative_templates.values())[0][class_variables[2]]
     except IndexError:
         raise Exception('Putative templates list empty.')
+    # modified by Amir, keep not only max score ones, but also the rest and sort them in the end.
     putative_templates = {x: putative_templates[x] for x in putative_templates
-                          if putative_templates[x][class_variables[2]] == max_score}
+                          if putative_templates[x][class_variables[2]] >= max_score - 20}
 
     # Find the putative template with the best matching peptide
     pos_list = []
