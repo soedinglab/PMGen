@@ -222,9 +222,7 @@ def predict_structure(
 
     metric_tags = 'plddt ptm predicted_aligned_error'.split()
     if return_all_outputs:
-        metric_tags = ['distogram', 'masked_msa', 'predicted_aligned_error', 'predicted_lddt',
-                       'structure_module', 'plddt', 'aligned_confidence_probs',
-                       'max_predicted_aligned_error', 'ptm', 'representations']
+        metric_tags = 'plddt ptm predicted_aligned_error representations'.split() # added by Amir
     all_metrics = {} # eventual return value
 
     metrics = {} # stupid duplication
@@ -247,12 +245,11 @@ def predict_structure(
                                                    template_sequence=None, aln=aln, anchors=anchors,
                                                    peptide_seq=peptide_seq) #added by https://github.com/AmirAsgary/
             prediction_result = model_runner.predict(processed_feature_dict, initial_guess,
-                                                     return_representations=return_representations) #added by https://github.com/AmirAsgary/
+                                                     return_representations=return_all_outputs) #added by https://github.com/AmirAsgary/
         else:
-            prediction_result = model_runner.predict(processed_feature_dict, return_representations=return_representations) #added by https://github.com/AmirAsgary/
+            prediction_result = model_runner.predict(processed_feature_dict, return_representations=return_all_outputs) #added by https://github.com/AmirAsgary/
         
         ###
-        print('DEBUUUUUUUUUUUUG: \n',prediction_result.keys(), '\n ----------------------------')
         unrelaxed_protein = protein.from_prediction(
             processed_feature_dict, prediction_result)
         unrelaxed_pdb_lines.append(protein.to_pdb(unrelaxed_protein))
@@ -282,13 +279,16 @@ def predict_structure(
 
 
         #plddts_ranked[f"model_{n+1}"] = plddts[r]
-
         if dump_metrics:
             metrics_prefix = f'{prefix}_model_{n+1}_{model_names[r]}'
             for tag in metric_tags:
                 m = metrics[tag][r]
                 if m is not None:
-                    np.save(f'{metrics_prefix}_{tag}.npy', m)
+                    if tag != 'representations': # added by Amir
+                        np.save(f'{metrics_prefix}_{tag}.npy', m)
+                    else:
+                        with open(f'{metrics_prefix}_{tag}.pkl', 'wb') as f:
+                            pickle.dump(m, f)
 
     return all_metrics
 
@@ -348,7 +348,7 @@ def load_model_runners(
                 model_name=model_name, data_dir=data_dir)
 
         model_runners[model_name] = model.RunModel(
-            model_config, model_params)
+            model_config, model_params, args.return_all_outputs) #return_all_outputs added by https://github.com/AmirAsgary
     return model_runners
 
 

@@ -242,6 +242,11 @@ def get_atom_positions_from_pdb(pdb_file_path: str, aligned_sequences: tuple[str
     if pep_len and anchors:
         mhc_len = all_positions.shape[0] - pep_len
         full_anchors = [i - 1 + mhc_len for i in anchors] #(2-1) + 180 = 181
+        full_anchors = sorted(full_anchors)
+        if len(full_anchors) == 2: # in case of MHC-I distance between two anchors is long and distrubs the folding, therefore, we add two other positions
+            full_anchors = [full_anchors[0], full_anchors[0]+2,  full_anchors[1]-2, full_anchors[1]]
+            print('mhc_1 anchor initial guess for positions:', full_anchors)
+            all_positions *= 0. # zero for mhc 1
         core_region = [i for i in range(mhc_len, mhc_len + pep_len) if i not in full_anchors] # (i in (180, 189) if not anchor)
         mask = np.ones([num_res_query, residue_constants.atom_type_num, 3], dtype=np.float32)
         mask[core_region] = 0.

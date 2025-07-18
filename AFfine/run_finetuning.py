@@ -74,7 +74,7 @@ flags.DEFINE_string('data_dir', "/home/pbradley/csdat/alphafold/data/",
                     'data.get_model_haiku_params; should contain params/ subfolder')
 
 flags.DEFINE_bool('only_fit_binder', False, help='if True, dont fit alphafold params')
-flags.DEFINE_bool('freeze_binder', False, help='if True, dont fit binder params')
+flags.DEFINE_bool('freeze_binder', False, help='if True, dont fit binder params') # binder means --> logistic regression part
 flags.DEFINE_bool('freeze_everything', False, help='if True, dont fit anything')
 flags.DEFINE_bool('no_ramp', False, help='if True, dont ramp')
 flags.DEFINE_bool('no_valid', False, help='if True, dont compute valid stats')

@@ -51,7 +51,8 @@ class RunModel:
 
   def __init__(self,
                config: ml_collections.ConfigDict,
-               params: Optional[Mapping[str, Mapping[str, np.ndarray]]] = None):
+               params: Optional[Mapping[str, Mapping[str, np.ndarray]]] = None,
+               return_representations: bool = False): # added by https://github.com/AmirAsgary
     self.config = config
     self.params = params
 
@@ -73,7 +74,10 @@ class RunModel:
     self.apply = jax.jit(hk.transform(partial(_forward_fn, is_training=True, compute_loss=True)).apply)
     self.init = jax.jit(hk.transform(partial(_forward_fn, is_training=True, compute_loss=False)).init)
     self.apply_infer = jax.jit(hk.transform(partial(_forward_fn, is_training=False, compute_loss=True)).apply)
-    self.apply_predict = jax.jit(hk.transform(partial(_forward_fn, is_training=False, compute_loss=False)).apply)
+    #self.apply_predict = jax.jit(hk.transform(partial(_forward_fn, is_training=False, compute_loss=False)).apply)
+    self.apply_predict = jax.jit(hk.transform(partial(_forward_fn, is_training=False, compute_loss=False, 
+        return_representations=return_representations)).apply, static_argnames=("return_representations",) # added by https://github.com/AmirAsgary
+      )
   def init_params(self, feat: features.FeatureDict, random_seed: int = 0):
     """Initializes the model parameters.
 

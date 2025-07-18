@@ -70,6 +70,7 @@ parser.add_argument('--num_templates', type=int, nargs='*', default=4, help='num
 
 parser.add_argument('--no_initial_guess', action='store_true', default=False, help='When active, no intial guess is used to direct modeling and only template is used.')
 parser.add_argument('--return_all_outputs', action='store_true', default=False, help='Save all alphafold outputs including evoformer output')
+parser.add_argument('--use_msa', action='store_true', default=False, help='If Enabled, use MSA for prediction. If not, only template is used.')
 args = parser.parse_args()
 
 import os
@@ -117,6 +118,9 @@ for counter, targetl in targets.iterrows():
         template_pdb_dict = targetl.template_pdb_dict
         with open(template_pdb_dict, 'r') as f:
             template_pdb_dict = json.load(f)
+    else: # added by Amir for initial guess condition and getting dict from input tsv
+        template_pdb_dict = None
+            
 
     print(alignfile)
     assert exists(alignfile)
@@ -173,11 +177,21 @@ for counter, targetl in targets.iterrows():
         )
         template_features_list.append(template_features)
 
+
+
     all_template_features = predict_utils.compile_template_features(
         template_features_list)
 
-    msa=[query_sequence]
-    deletion_matrix=[[0]*len(query_sequence)]
+    if not args.use_msa: # added by Amir for using msa or not
+        # if we are not using MSA, we need to set the deletion matrix
+        msa=[query_sequence]
+        deletion_matrix=[[0]*len(query_sequence)]
+    else: # added by Amir for using msa or not
+        # generate arbeitary msa from input sequence
+        msa = [query_sequence] + msa
+        
+
+   
 
     all_metrics = predict_utils.run_alphafold_prediction(
         query_sequence=query_sequence,
