@@ -1,7 +1,7 @@
 # PMGen
 
 **PMGen** (Peptide-MHC Predictive, Modeling and Generative) is a powerful and flexible framework 
-for Peptide-MHC (pMHC) complex modeling, binding prediction, and protein design. It integrates 
+for Peptide-MHC (pMHC) complex modeling, binding prediction, and neoantigen design. It integrates 
 cutting-edge tools such as **PANDORA** for template generation, **AlphaFold (via AFfine)** for 
 structural prediction, and **ProteinMPNN** for sequence design, enabling researchers to model
 pMHC complexes, predict binding interactions, and engineer novel peptide or MHC 
@@ -30,7 +30,7 @@ Follow these steps to set up PMGen on your system:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/AmirAsgary/PMGen.git
+   git clone https://github.com/soedinglab/PMGen.git
    cd PMGen
    bash -l install.sh
    conda activate PMGen
@@ -40,7 +40,7 @@ Follow these steps to set up PMGen on your system:
 
     
 1. **Customize setting file (Optional but Recommended)**:
-
+Install netMHCpan's latest version.
 Edit `user_setting.py` to adjust netMHCpan and netMHCIIpan installation paths.
 
 
