@@ -103,14 +103,15 @@ pandora-fetch
 echo "✔ Downloading AFfine data ..."
 cd "$CURRENT_DIR"
 
-if [ ! -d "$AFFINE_FOLDER" ]; then
-    if [ ! -f "$AFFINE_ZIP_NAME" ]; then
-        wget -O "$AFFINE_ZIP_NAME" "$AFFINE_ZIP_URL"
-    fi
-    unzip -o "$AFFINE_ZIP_NAME"
-    echo "✔ AFfine data extracted."
+if [ -d "$AFFINE_FOLDER" ]; then
+    echo "✔ AFfine folder found."
+    # Download zip to AFfine/
+    wget -O "$AFFINE_ZIP_NAME" "$AFFINE_ZIP_URL"
+    # Unzip into AFfine/, creating AFfine/af_params/
+    unzip -o "$AFFINE_ZIP_NAME" -d "$AFFINE_FOLDER"
+    echo "✔ AFfine data extracted into '$AFFINE_FOLDER/af_params/'."
 else
-    echo "✔ AFfine folder already exists. Skipping download."
+    echo "❌ AFfine folder not found. Please clone the git repository properly."
 fi
 
 # Step 10: Dowlnload modified files for PANDORA

@@ -270,7 +270,7 @@ python run_PMGen.py \
 python run_PMGen.py \
   --run parallel \
   --mode wrapper \
-  --output_dir outputs/juliane_dataset \
+  --output_dir outputs/iterative_dataset \
   --df "data/example/wrapper_input_example.tsv" \
   --peptide_design \
   --num_sequences_peptide 10 \
