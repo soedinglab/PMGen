@@ -1,9 +1,10 @@
 import argparse
 import pandas as pd
-from run_utils import run_PMGen_wrapper, run_PMGen_modeling, protein_mpnn_wrapper, MultipleAnchors, get_best_structres, retrieve_anchors_and_fixed_positions, assert_iterative_mode, collect_generated_binders, create_new_input_and_fixed_positions
+from run_utils import run_PMGen_wrapper, run_PMGen_modeling, protein_mpnn_wrapper, bioemu_assertions, MultipleAnchors, get_best_structres, retrieve_anchors_and_fixed_positions, assert_iterative_mode, collect_generated_binders, create_new_input_and_fixed_positions
 import shutil
 from Bio import SeqIO
 import warnings
+import subprocess
 import os
 from Bio import BiopythonDeprecationWarning
 warnings.filterwarnings("ignore", category=BiopythonDeprecationWarning)
@@ -74,12 +75,24 @@ def main():
     parser.add_argument('--mhc_design', action='store_true', help='Enables whole mhc design. we recommend to use only_pseudo_sequence_design mode.')
     parser.add_argument('--num_sequences_peptide', type=int, default=10, help='Number of peptide sequences to be generated. Works only with --peptide_design')
     parser.add_argument('--num_sequences_mhc', type=int, default=10, help='Number of mhc sequences to be generated. Works only with --only_pseudo_sequence_design or --mhc_design')
-    parser.add_argument('--sampling_temp', type=float, default=0.1, help='ProteinMPNN sampling temperature.')
+    parser.add_argument('--sampling_temp', type=float, default=1.5, help='ProteinMPNN sampling temperature.')
     parser.add_argument('--batch_size', type=int, default=1, help='ProteinMPNN batch size.')
     parser.add_argument('--hot_spot_thr', type=float, default=6.0, help='Distance threshold to peptide, to define hot-spots on mhc.')
     parser.add_argument('--binder_pred', action='store_true', help='Enables binder prediction from ProteinMPNN generated peptides.')
     parser.add_argument("--fix_anchors", action='store_true', help='If set, does not design anchor positions in peptide generation')
     parser.add_argument("--peptide_random_fix_fraction", type=float, default=0., help="Disables design for a random fraction of amino acids in peptide")
+
+    # BioEmu Argumetns
+    parser.add_argument('--run_bioemu', action='store_true', help='Enables bioemu pMHC sampling.')
+    parser.add_argument('--bioemu_num_samples', type=int, default=100, help='Sampling rounds in bioemu. You might get lower number of structures'
+                                                                           'if --filter_samples is active')
+    parser.add_argument('--bioemu_batch_size_100', type=int, default=10, help='Batch size you use for a sequence of length 100. The batch size '
+                                                                              'will be calculated from this, assuming that the memory requirement to compute '
+                                                                              'each sample scales quadratically with the sequence length.')
+    parser.add_argument('--bioemu_filter_samples', action='store_true', help='Filter out unphysical samples with e.g. long bond distances or steric clashes.')
+    parser.add_argument('--bioemu_run_on_iter', type=int, default=None, help='Optional, only works when iterative_peptide_gen > 0. Runs bioemu on the structure taken'
+                                                                             'from the iteration number given by user. If not set, runs on the 0 iteration by default.')
+
 
     # Setting to Run only a part:
     parser.add_argument('--no_alphafold', action='store_false', help='does not run alphafold.')
@@ -92,6 +105,7 @@ def main():
     parser.add_argument('--iterative_peptide_gen', type=int, default=0, help='If used, the iterative peptide generation is performed, defines the number of iterations.')
 
     args = parser.parse_args()
+    bioemu_assertions(args)
     for iteration in range(args.iterative_peptide_gen + 1):
         fixed_positions_path = None #only for iter > 0 in iteration mode
         # if we have entered the iterative generation mode
@@ -225,6 +239,45 @@ def main():
             if args.peptide_design and args.mode == "wrapper":
                 print("Collecting the best binders")
                 collected_generated_binders_path = collect_generated_binders(args, df, iteration)
+
+    if args.run_bioemu:
+        print('**BioEmu runs initiating**')
+
+        output_dir = args.output_dir
+        bioemu_input_df_path = args.df
+
+        if args.iterative_peptide_gen > 0: #iterative mode --> which iteration to run bioemu on? only one can be used.
+            bioemu_run_on_iter = 0
+            if args.bioemu_run_on_iter:
+                assert args.bioemu_run_on_iter <= args.iterative_peptide_gen, f'Please make sure --iterative_peptide_gen is less or equal to  --iterative_peptide_gen'
+                bioemu_run_on_iter = args.bioemu_run_on_iter
+            output_dir = os.path.join("/".join(args.output_dir.split("/")[:-1]), f"iter_{bioemu_run_on_iter}") # outputdir/
+            bioemu_input_df_path = os.path.join(output_dir, f'input_df_{bioemu_run_on_iter}.tsv')
+
+        bioemu_output_dir = os.path.join(output_dir, 'bioemu')
+        cache_embeds_dir = os.path.join(output_dir, 'alphafold')
+        os.makedirs(bioemu_output_dir, exist_ok=True)
+        assert os.path.isdir(cache_embeds_dir), f'{cache_embeds_dir} not found'
+        assert os.path.isdir(bioemu_output_dir), f'{bioemu_output_dir} not found'
+        assert os.path.isfile(bioemu_input_df_path), f'{bioemu_input_df_path} not found'
+        print(f'Running on cache_embeds_dir: {cache_embeds_dir}')
+
+        bioemu_df = pd.read_csv(bioemu_input_df_path, sep='\t')
+        for i, row in bioemu_df.iterrows():
+            sequence = str(row['mhc_seq'].replace('/','') + row['peptide'])
+            id = str(row['id'])
+            bioemu_output_dir_id = os.path.join(bioemu_output_dir, id)
+            cmd = ['./run_bioemu.sh', '--sequence', sequence, '--id', id, '--output_dir', bioemu_output_dir_id,
+                   '--cache_embeds_dir', cache_embeds_dir, '--bioemu_num_samples', args.bioemu_num_samples,
+                   '--bioemu_batch_size_100', args.bioemu_batch_size_100, '--bioemu_filter_samples', args.bioemu_filter_samples]
+            print(f"🌀 Starting iteration {i}: {' '.join(cmd)}")
+            try:
+                result = subprocess.run(cmd, check=True)
+                print(f"✅ Bioemurun-> Iteration {i}, id {id}, outpath {bioemu_output_dir_id} completed successfully\n")
+            except subprocess.CalledProcessError as e:
+                print(f"❌ Bioemurun-> Iteration {i}, id {id}, outpath {bioemu_output_dir_id} failed with error code {e.returncode}")
+                # Optional: stop if a command fails
+
 
 if __name__ == "__main__":
     main()

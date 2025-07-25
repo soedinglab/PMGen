@@ -1,5 +1,5 @@
 # PMGen
-## Still under development, mino bugs and issues might happen
+## Still under development, minor bugs and issues might happen
 **PMGen** (Peptide-MHC Predictive, Modeling and Generative) is a powerful and flexible framework 
 for Peptide-MHC (pMHC) complex modeling, binding prediction, and neoantigen design. It integrates 
 cutting-edge tools such as **PANDORA** for template generation, **AlphaFold (via AFfine)** for 
@@ -279,7 +279,25 @@ python run_PMGen.py \
   --peptide_random_fix_fraction 0 \
   --iterative_peptide_gen 50
 ```
-
+10. BioEmu sampling on the final iteration in  Iterative Peptide Generation.
+```bash
+python run_PMGen.py \
+  --mode wrapper \
+  --run single \
+  --df data/example/bioemu_exmple.tsv \
+  --no_pandora \
+  --output_dir outputs/bioemu_mhcreps_forpaper \
+  --bioemu_batch_size_100 30 \
+  --iterative_peptide_gen 5 \
+  --return_all_outputs \
+  --fix_anchors \
+  --peptide_random_fix_fraction 0.6 \
+  --batch_size 2 \
+  --peptide_design \
+  --binder_pred \
+  --bioemu_run_on_iter 5 \
+  --run_bioemu
+```
 ### Output
 
 Results are saved in --output_dir with the following structure:

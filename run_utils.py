@@ -585,7 +585,7 @@ class run_proteinmpnn():
                  num_sequences_peptide=10, num_sequences_mhc=3,
                 peptide_chain='P', mhc_design=True, peptide_design=True,
                  only_pseudo_sequence_design=True, anchor_pred=True,
-                 sampling_temp=0.05, batch_size=1, hot_spot_thr=6.0,
+                 sampling_temp=1.5, batch_size=1, hot_spot_thr=6.0,
                  save_hotspots=True, binder_pred=False, fix_anchors=False,
                  anchor_and_peptide=None):
         '''
@@ -718,7 +718,6 @@ class run_proteinmpnn():
             "--save_probs", "1",
             "--save_score", "1",
             "--omit_AAs", "X",
-            "--sampling_temp", "1.5"
         ]
         if self.fix_anchors:# to fix anchors, fixed_pdbs file and design_only_positions should be generated
             # we have anchors, we need to define designable positions which are non-anchor positions
@@ -1267,6 +1266,13 @@ def create_new_input_and_fixed_positions(args, best_generated_peptides_path, ite
 
 
 
+def bioemu_assertions(args):
+    if args.run_bioemu:
+        args.return_all_outputs = True  # make sure AF2 outputs are returned
+        assert args.mode == 'wrapper', f'Bioemu is availabe only in wrapper mode: use --mode wrapper'
+        if args.iterative_peptide_gen > 0: #iterative mode --> which iteration to run bioemu on? only one can be used.
+            if args.bioemu_run_on_iter:
+                assert args.bioemu_run_on_iter <= args.iterative_peptide_gen, f'Please make sure --iterative_peptide_gen is less or equal to  --iterative_peptide_gen'
 
 
 
