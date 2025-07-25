@@ -921,7 +921,10 @@ def parse_netmhcpan_file(file_path):
                 df = df.sort_values(["Affinity(nM)", "Score_EL"], ascending=[True, False])
             itis_header = False # after data, again refresh the header and search for next table
             tables.append(df)
-    return pd.concat(tables)
+    try:
+        return pd.concat(tables)
+    except:
+        raise ValueError(f"debugging message: {file_path} could not be parsed by parse_netmhcpan_file")
     
 
 def find_similar_strings(a: str, file_path: str, num_matches=100):

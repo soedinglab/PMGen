@@ -476,7 +476,8 @@ class run_PMGen_wrapper():
                                         models=self.models, alphafold_param_folder=self.alphafold_param_folder,
                                         fine_tuned_model_path=self.fine_tuned_model_path, benchmark=self.benchmark,
                                         n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates,
-                                        pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling)
+                                        pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling,
+                                        return_all_outputs=self.return_all_outputs)
         runner.run_PMGen(run_alphafold=False)
         input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
         input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])]  # id/id
@@ -531,7 +532,8 @@ class run_PMGen_wrapper():
                                             anchors=anchors, mhc_allele=mhc_allele, predict_anchor=predict_anchor,
                                             num_templates=self.num_templates, num_recycles=self.num_recycles,
                                             models=self.models, alphafold_param_folder=self.alphafold_param_folder,
-                                            fine_tuned_model_path=self.fine_tuned_model_path, no_modelling=self.no_modelling)
+                                            fine_tuned_model_path=self.fine_tuned_model_path, no_modelling=self.no_modelling,
+                                            return_all_outputs=self.return_all_outputs)
         if run_alphafold:
             runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
 
