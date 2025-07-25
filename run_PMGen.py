@@ -100,6 +100,7 @@ def main():
     parser.add_argument('--no_pandora', action='store_false', help='does not run pandora')
     parser.add_argument('--protein_mpnn_dryrun', action='store_true', help='Overwrites all proteinMPNN flags and just dry run. hotspots are saved.')
     parser.add_argument('--return_all_outputs', action='store_true', help='If active, returns all alphafold outputs')
+    parser.add_argument('--no_protein_mpnn', action='store_true', help='If enabled, skips ProteinMPNN. Useful when want to run bioemu.')
 
     # Setting to run iterative peptide generation
     parser.add_argument('--iterative_peptide_gen', type=int, default=0, help='If used, the iterative peptide generation is performed, defines the number of iterations.')
@@ -227,18 +228,19 @@ def main():
                                   fixed_positions_path=fixed_positions_path)
         else:
             anchor_and_peptide = None
-        if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design or args.protein_mpnn_dryrun:
-            if args.protein_mpnn_dryrun:
-                args.peptide_design = False
-                args.only_pseudo_sequence_design = False
-                args.mhc_design = False
-                print("Running ProteinMPNN Dry-Run")
-            print("### Start ProteinMPNN runs ###")
-            print('files:\n', output_pdbs_dict)
-            protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, anchor_and_peptide=anchor_and_peptide, mode=args.run)
-            if args.peptide_design and args.mode == "wrapper":
-                print("Collecting the best binders")
-                collected_generated_binders_path = collect_generated_binders(args, df, iteration)
+        if not args.no_protein_mpnn:
+            if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design or args.protein_mpnn_dryrun:
+                if args.protein_mpnn_dryrun:
+                    args.peptide_design = False
+                    args.only_pseudo_sequence_design = False
+                    args.mhc_design = False
+                    print("Running ProteinMPNN Dry-Run")
+                print("### Start ProteinMPNN runs ###")
+                print('files:\n', output_pdbs_dict)
+                protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, anchor_and_peptide=anchor_and_peptide, mode=args.run)
+                if args.peptide_design and args.mode == "wrapper":
+                    print("Collecting the best binders")
+                    collected_generated_binders_path = collect_generated_binders(args, df, iteration)
 
     if args.run_bioemu:
         print('**BioEmu runs initiating**')
@@ -268,9 +270,10 @@ def main():
             id = str(row['id'])
             bioemu_output_dir_id = os.path.join(bioemu_output_dir, id)
             cmd = ['./run_bioemu.sh', '--sequence', sequence, '--id', id, '--output_dir', bioemu_output_dir_id,
-                   '--cache_embeds_dir', cache_embeds_dir, '--bioemu_num_samples', args.bioemu_num_samples,
-                   '--bioemu_batch_size_100', args.bioemu_batch_size_100, '--bioemu_filter_samples', args.bioemu_filter_samples]
-            print(f"🌀 Starting iteration {i}: {' '.join(cmd)}")
+                   '--cache_embeds_dir', cache_embeds_dir, '--bioemu_num_samples', str(args.bioemu_num_samples),
+                   '--bioemu_batch_size_100', str(args.bioemu_batch_size_100)]
+            cmd = cmd + ['--bioemu_filter_samples'] if args.bioemu_filter_samples else cmd
+            print(f"🌀 Starting iteration {i}: {cmd}")
             try:
                 result = subprocess.run(cmd, check=True)
                 print(f"✅ Bioemurun-> Iteration {i}, id {id}, outpath {bioemu_output_dir_id} completed successfully\n")
