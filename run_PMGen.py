@@ -1,6 +1,8 @@
 import argparse
 import pandas as pd
-from run_utils import run_PMGen_wrapper, run_PMGen_modeling, protein_mpnn_wrapper, bioemu_assertions, MultipleAnchors, get_best_structres, retrieve_anchors_and_fixed_positions, assert_iterative_mode, collect_generated_binders, create_new_input_and_fixed_positions
+from run_utils import (run_PMGen_wrapper, run_PMGen_modeling, protein_mpnn_wrapper, bioemu_assertions,
+                       MultipleAnchors, get_best_structres, retrieve_anchors_and_fixed_positions, assert_iterative_mode,
+                       collect_generated_binders, create_new_input_and_fixed_positions, create_fixed_positions_if_given)
 import shutil
 from Bio import SeqIO
 import warnings
@@ -81,6 +83,9 @@ def main():
     parser.add_argument('--binder_pred', action='store_true', help='Enables binder prediction from ProteinMPNN generated peptides.')
     parser.add_argument("--fix_anchors", action='store_true', help='If set, does not design anchor positions in peptide generation')
     parser.add_argument("--peptide_random_fix_fraction", type=float, default=0., help="Disables design for a random fraction of amino acids in peptide")
+    parser.add_argument('--fixed_positions_given', action='store_true', help="Optional, I enabled, it uses the fixed positions given by user in --df."
+                                                                             "Fixed positions should be provided as a list for each row in --df, and the columnname should be"
+                                                                             "'fixed_positions'.")
 
     # BioEmu Argumetns
     parser.add_argument('--run_bioemu', action='store_true', help='Enables bioemu pMHC sampling.')
@@ -108,7 +113,7 @@ def main():
     args = parser.parse_args()
     bioemu_assertions(args)
     for iteration in range(args.iterative_peptide_gen + 1):
-        fixed_positions_path = None #only for iter > 0 in iteration mode
+        fixed_positions_path = create_fixed_positions_if_given(args) if iteration == 0 else None
         # if we have entered the iterative generation mode
         if args.iterative_peptide_gen > 0:
             print(f"***** Entering Iterative Peptide Generation Mode: Iter {iteration} *****")

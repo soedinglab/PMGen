@@ -1142,6 +1142,23 @@ def retrieve_anchors_and_fixed_positions(args, save_anchors=True, peptide_random
     return final
 
 
+def create_fixed_positions_if_given(args):
+    if args.fixed_positions_given:
+        if args.iterative_peptide_gen > 0:
+            outpath = os.path.join(args.output_dir, 'iter_0')
+        else:
+            outpath = os.path.join(args.output_dir)
+        os.makedirs(outpath, exist_ok=True)
+        df = pd.read_csv(args.df, sep='\t')
+        anchor = df['fixed_positions'].tolist()
+        id = df.id.tolist()
+        peptide = df.peptide.tolist()
+        final = pd.DataFrame({'id':id, 'anchor':anchor, 'peptide':peptide})
+        o = os.path.join(str(outpath), 'fixed_positions.tsv')
+        final.to_csv(o, sep='\t', index=False)
+        return o
+    else: return None
+
 def assert_iterative_mode(args):
     assert isinstance(args.iterative_peptide_gen, int), f"Flag:iterative_peptide_gen must be an int, found {args.iterative_peptide_gen}"
     if args.iterative_peptide_gen > 0:

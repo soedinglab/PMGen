@@ -1331,5 +1331,31 @@ def alignment_to_df(no_modelling_output_dict, output_dir):
 
 
 
+def mutate_peptide(peptide: str, positions: list, k: int) -> list:
+    """
+    Randomly mutate amino acids at specified positions in a peptide sequence.
+
+    Args:
+        peptide (str): Original peptide sequence.
+        positions (list): List of 0-based indices to mutate.
+        k (int): Number of mutated peptide sequences to generate.
+
+    Returns:
+        list: List of `k` mutated peptide sequences.
+    """
+    amino_acids = list("ACDEFGHIKLMNPQRSTVWY")
+    mutated_peptides = []
+
+    for _ in range(k):
+        peptide_list = list(peptide)
+        for pos in positions:
+            if 0 <= pos < len(peptide):
+                original = peptide_list[pos]
+                choices = [aa for aa in amino_acids if aa != original]
+                peptide_list[pos] = random.choice(choices)
+        mutated_peptides.append("".join(peptide_list))
+
+    return mutated_peptides
+
 
 
