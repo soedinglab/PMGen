@@ -585,7 +585,7 @@ class run_proteinmpnn():
                  num_sequences_peptide=10, num_sequences_mhc=3,
                 peptide_chain='P', mhc_design=True, peptide_design=True,
                  only_pseudo_sequence_design=True, anchor_pred=True,
-                 sampling_temp=1.5, batch_size=1, hot_spot_thr=6.0,
+                 sampling_temp=5, batch_size=1, hot_spot_thr=6.0,
                  save_hotspots=True, binder_pred=False, fix_anchors=False,
                  anchor_and_peptide=None):
         '''
@@ -1149,8 +1149,12 @@ def create_fixed_positions_if_given(args):
         else:
             outpath = os.path.join(args.output_dir)
         os.makedirs(outpath, exist_ok=True)
-        df = pd.read_csv(args.df, sep='\t')
-        anchor = df['fixed_positions'].tolist()
+        try:
+            df = pd.read_csv(args.df, sep='\t')
+            anchor = df['fixed_positions'].tolist()
+        except:
+            df = pd.read_csv(args.df)
+            anchor = df['fixed_positions'].tolist()
         id = df.id.tolist()
         peptide = df.peptide.tolist()
         final = pd.DataFrame({'id':id, 'anchor':anchor, 'peptide':peptide})

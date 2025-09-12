@@ -80,7 +80,7 @@ def main():
     parser.add_argument('--sampling_temp', type=float, default=1.5, help='ProteinMPNN sampling temperature.')
     parser.add_argument('--batch_size', type=int, default=1, help='ProteinMPNN batch size.')
     parser.add_argument('--hot_spot_thr', type=float, default=6.0, help='Distance threshold to peptide, to define hot-spots on mhc.')
-    parser.add_argument('--binder_pred', action='store_true', help='Enables binder prediction from ProteinMPNN generated peptides.')
+    parser.add_argument('--binder_pred', action='store_true', help='Enables binder prediction from ProteinMPNN generated peptides. It then extracts and reports the best binders.')
     parser.add_argument("--fix_anchors", action='store_true', help='If set, does not design anchor positions in peptide generation')
     parser.add_argument("--peptide_random_fix_fraction", type=float, default=0., help="Disables design for a random fraction of amino acids in peptide")
     parser.add_argument('--fixed_positions_given', action='store_true', help="Optional, I enabled, it uses the fixed positions given by user in --df."
@@ -106,6 +106,9 @@ def main():
     parser.add_argument('--protein_mpnn_dryrun', action='store_true', help='Overwrites all proteinMPNN flags and just dry run. hotspots are saved.')
     parser.add_argument('--return_all_outputs', action='store_true', help='If active, returns all alphafold outputs')
     parser.add_argument('--no_protein_mpnn', action='store_true', help='If enabled, skips ProteinMPNN. Useful when want to run bioemu.')
+    parser.add_argument('--only_collect_generated_binders', action='store_true', help='Use it only if you have a previous run with generated binders and you do not want'
+                                                                                      'to run proteinmpnn again, and instead you want to predict and collect binders using BA predictions.'
+                                                                                      'Overwrites all proteinmpnn flags.')
 
     # Setting to run iterative peptide generation
     parser.add_argument('--iterative_peptide_gen', type=int, default=0, help='If used, the iterative peptide generation is performed, defines the number of iterations.')
@@ -153,8 +156,12 @@ def main():
         if args.mode == 'wrapper':
             if not args.df:
                 raise ValueError("--df is required for wrapper mode")
-            df = pd.read_csv(args.df, sep='\t')
-            df['mhc_seq'] = [i.replace('-', '') for i in df.mhc_seq.tolist()]  # remove gaps from df:
+            try:
+                df = pd.read_csv(args.df, sep='\t')
+                df['mhc_seq'] = [i.replace('-', '') for i in df.mhc_seq.tolist()]  # remove gaps from df:
+            except:
+                df = pd.read_csv(args.df)
+                df['mhc_seq'] = [i.replace('-', '') for i in df.mhc_seq.tolist()]  # remove gaps from df:
             if args.multiple_anchors:
                 L1 = len(df)
                 ma = MultipleAnchors(args, args.dirty_mode)
@@ -234,16 +241,22 @@ def main():
         else:
             anchor_and_peptide = None
         if not args.no_protein_mpnn:
-            if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design or args.protein_mpnn_dryrun:
+            if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design or args.protein_mpnn_dryrun or args.only_collect_generated_binders:
                 if args.protein_mpnn_dryrun:
                     args.peptide_design = False
                     args.only_pseudo_sequence_design = False
                     args.mhc_design = False
                     print("Running ProteinMPNN Dry-Run")
+                if args.only_collect_generated_binders:
+                    args.peptide_design = False
+                    args.only_pseudo_sequence_design = False
+                    args.mhc_design = False
+                    args.binder_pred = True
+                    print("Predicting Only Binders")
                 print("### Start ProteinMPNN runs ###")
                 print('files:\n', output_pdbs_dict)
                 protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, anchor_and_peptide=anchor_and_peptide, mode=args.run)
-                if args.peptide_design and args.mode == "wrapper":
+                if (args.peptide_design and args.mode and args.binder_pred == "wrapper") or args.only_collect_generated_binders:
                     print("Collecting the best binders")
                     collected_generated_binders_path = collect_generated_binders(args, df, iteration)
 
