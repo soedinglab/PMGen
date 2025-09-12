@@ -3,6 +3,9 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.getcwd()))))
+from pathlib import Path
+script_dir = Path(__file__).parent.resolve()
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(script_dir))))
 from user_setting import netmhcipan_path, netmhciipan_path
 from Bio.Align import substitution_matrices
 import traceback
