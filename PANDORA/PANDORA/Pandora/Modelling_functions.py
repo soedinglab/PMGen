@@ -374,7 +374,7 @@ def predict_anchors_netMHCpan(peptide, allele_type, output_dir, verbose=True, rm
         print(pept2)
 
     # Find the anchors by finding the first non dash from the left and from the right
-    # Define chanonical ancors as starting list
+    # Define chanonical anchors as starting list
     predicted_anchors = [2, len(peptide)]
 
     # Find the first anchor

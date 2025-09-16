@@ -308,14 +308,17 @@ class Target(PMHC):
         self.top_rank_num = 0
         success = False
         given_by_user = False
+        top_ids = self.fill_allele_seq_info(use_templ_seq=use_templ_seq, top_rank_num=self.top_rank_num)
         while self.top_rank_num <= self.max_num_rank:
             print(success, anchors, len(anchors), '\n')
-            self.fill_allele_seq_info(use_templ_seq=use_templ_seq, top_rank_num=self.top_rank_num)
             if MHC_class == 'I' and len(anchors) < 2:
-                print('WARNING: no anchor positions provided. Pandora will predict them using NetMHCpan, : anchors', anchors)
+                print('WARNING: no anchor positions provided. Pandora will predict them using NetMHCpan, : anchors', anchors, self.allele_type)
                 try:
-                    self.fill_allele_seq_info(use_templ_seq=use_templ_seq, top_rank_num=self.top_rank_num)
-                    print('Predicting Anchors for:', self.allele_type[self.top_rank_num], self.top_rank_num)
+                    print(top_ids[:5])
+                    top_id = top_ids[self.top_rank_num][0]  # blast_results is a list of top ids as tuples
+                    print('###############################DDDDD', top_ids[self.top_rank_num][0])
+                    self.allele_type = [top_id]
+                    print('Predicting Anchors for:', self.allele_type, self.top_rank_num)
                     self.anchors = Modelling_functions.predict_anchors_netMHCpan(
                         self.peptide, self.allele_type, self.output_dir, rm_netmhcpan_output=rm_netmhcpan_output
                     )
@@ -327,13 +330,15 @@ class Target(PMHC):
                     success = True
                     break  # Exit loop if successful
                 except Exception as e:
-                    print(
-                        f'Error: Something went wrong when predicting the anchors using NetMHCpan (top_rank_num={self.top_rank_num})')
+                    print(f"Error: Something went wrong when predicting the anchors using NetMHCpan "
+                          f"(top_rank_num={self.top_rank_num}) - {e}")
 
             elif MHC_class == 'II' and len(anchors) < 4:
                 print('WARNING: no anchor positions provided. Pandora will predict them using netMHCIIpan. anchors:', anchors)
                 try:
-                    self.fill_allele_seq_info(use_templ_seq=use_templ_seq, top_rank_num=self.top_rank_num)
+                    print(top_ids[:5])
+                    top_id = top_ids[0][1]
+                    self.allele_type.extend([x[0] for x in top_ids if x[1] == top_id])
                     print('Predicting Anchors For:', self.allele_type[self.top_rank_num], self.top_rank_num)
                     self.anchors = Modelling_functions.predict_anchors_netMHCIIpan(
                         self.peptide, self.allele_type, self.output_dir, rm_netmhcpan_output=rm_netmhcpan_output
@@ -532,6 +537,7 @@ class Target(PMHC):
         if self.allele_type:
             # Check allele name
             self.check_allele_name()
+        top_ids = None
 
 
         #Check if there are allele name for each MHC chain
@@ -586,9 +592,9 @@ class Target(PMHC):
                                                                   chain='M',
                                                                   blastdb=PANDORA.PANDORA_data + '/BLAST_databases/refseq_blast_db/refseq_blast_db')
                 #Take only the allele names with the highest id score
-                top_id = blast_results[self.top_rank_num][0]
+                top_id = blast_results[self.top_rank_num][0] # blast_results is a list of top ids as tuples
+                top_ids = blast_results
                 self.allele_type = [top_id]
-                print('############## DEBUG', self.allele_type)
                 #self.allele_type.extend([x[0] for x in blast_results if x[0] == top_id])
 
             except:
@@ -629,10 +635,12 @@ class Target(PMHC):
                                                                   blastdb=PANDORA.PANDORA_data + '/BLAST_databases/refseq_blast_db/refseq_blast_db')
                 #Take only the allele names with the highest id score
                 top_id = blast_results[0][1]
+                top_ids = blast_results
                 self.allele_type.extend([x[0] for x in blast_results if x[1] == top_id])
             except:
                 print('\nWARNING: something went wrong when trying to retrieve chain M allele')
                 print('with blast. Is blastp properly installed as working as "/bin/bash blastp"?')
+        return top_ids
 
     def make_output_dir(self):
         ''' Create an output directory and move the template pdb there
