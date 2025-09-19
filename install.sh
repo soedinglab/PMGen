@@ -2,6 +2,22 @@
 
 set -e  # Exit immediately if a command fails
 
+# Default flag value
+cpu=0
+
+# Parse command-line arguments
+for arg in "$@"; do
+    case $arg in
+        --cpu)
+        cpu=1
+        shift
+        ;;
+        *)
+        # ignore other arguments
+        ;;
+    esac
+done
+
 # Define an error handler function
 error_handler() {
     echo "========================================="
@@ -19,6 +35,10 @@ trap 'error_handler' ERR
 CURRENT_DIR=$(pwd)
 ENV_NAME="PMGen"
 ENV_FILE="PMGen.yml"
+if [ "$cpu" -eq 1 ]; then
+    echo "⚡ CPU-only mode activated"
+    ENV_FILE="PMGen-cpuonly.yml"
+fi
 AFFINE_ZIP_URL="https://owncloud.gwdg.de/index.php/s/M1YQOgKxLbVjO0G/download"
 AFFINE_FOLDER="AFfine"
 AFFINE_ZIP_NAME="$AFFINE_FOLDER/AFfine.zip"
