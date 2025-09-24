@@ -88,7 +88,7 @@ crop_size = max(lens)
 
 if args.verbose:
     import jax
-    from os import popen # just to get hostname for logging, not necessary
+    from os import popen # just to get hostname forr logging, not necessary
     # print some logging info
     platform = jax.local_devices()[0].platform
     hostname = popen('hostname').readlines()[0].strip()

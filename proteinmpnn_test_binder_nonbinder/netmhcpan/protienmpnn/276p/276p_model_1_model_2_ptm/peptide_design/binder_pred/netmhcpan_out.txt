@@ -1,0 +1,543 @@
+# NetMHCIIpan version 4.3f
+
+# Input is in FASTA format
+
+# Peptide length 9,10,11,12,13,14,15,16,17,18
+
+# Prediction Mode: EL+BA
+
+# Threshold for Strong binding peptides (%Rank)  1.00%
+# Threshold for Weak binding peptides (%Rank)    5.00%
+
+# H-2-IAd : Distance to training data  0.000 (using nearest neighbor H-2-IAd)
+
+# Allele: H-2-IAd
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   6           H-2-IAd      VVKIEPLGVAPTKAK    3   IEPLGVAPT     0.720        0 multichain_276p      0.682726     0.93        NA      0.625242     0.64         57.67   <= SB
+   7           H-2-IAd       VKIEPLGVAPTKAK    2   IEPLGVAPT     0.560        0 multichain_276p      0.634209     1.19        NA      0.577032     1.47         97.17   <= WB
+   5           H-2-IAd     KVVKIEPLGVAPTKAK    4   IEPLGVAPT     0.720        0 multichain_276p      0.601349     1.39        NA      0.667102     0.27         36.67   <= WB
+   8           H-2-IAd        KIEPLGVAPTKAK    3   PLGVAPTKA     0.700        0 multichain_276p      0.549893     1.75        NA      0.439752     8.83        429.13   <= WB
+   4           H-2-IAd    YKVVKIEPLGVAPTKAK    5   IEPLGVAPT     0.750        0 multichain_276p      0.485076     2.38        NA      0.663308     0.29         38.20   <= WB
+   7           H-2-IAd        VKIEPLGVAPTKA    2   IEPLGVAPT     0.750        0 multichain_276p      0.430013     2.99        NA      0.448544     8.04        390.19   <= WB
+   3           H-2-IAd       KYKVVKIEPLGVAP    3   VVKIEPLGV     0.900        0 multichain_276p      0.379589     3.72        NA      0.599295     1.01         76.37   <= WB
+   3           H-2-IAd      KYKVVKIEPLGVAPT    3   VVKIEPLGV     0.920        0 multichain_276p      0.352045     4.18        NA      0.633402     0.55         52.80   <= WB
+   3           H-2-IAd   KYKVVKIEPLGVAPTKAK    6   IEPLGVAPT     0.690        0 multichain_276p      0.350401     4.22        NA      0.652904     0.38         42.76   <= WB
+   3           H-2-IAd     KYKVVKIEPLGVAPTK    3   VVKIEPLGV     0.610        0 multichain_276p      0.343901     4.34        NA      0.680971     0.19         31.56   <= WB
+   3           H-2-IAd        KYKVVKIEPLGVA    3   VVKIEPLGV     0.800        0 multichain_276p      0.288882     5.55        NA      0.509176     3.99        202.47
+   7           H-2-IAd         VKIEPLGVAPTK    2   IEPLGVAPT     1.000        0 multichain_276p      0.287439     5.59        NA      0.469330     6.39        311.60
+   9           H-2-IAd         IEPLGVAPTKAK    2   PLGVAPTKA     0.970        0 multichain_276p      0.259706     6.38        NA      0.414058    11.43        566.66
+   1           H-2-IAd      LYKYKVVKIEPLGVA    3   YKVVKIEPL     0.530        0 multichain_276p      0.258627     6.42        NA      0.628618     0.60         55.60
+   2           H-2-IAd    YKYKVVKIEPLGVAPTK    4   VVKIEPLGV     0.650        0 multichain_276p      0.245187     6.84        NA      0.661261     0.31         39.06
+   2           H-2-IAd        YKYKVVKIEPLGV    2   YKVVKIEPL     0.600        0 multichain_276p      0.182211     9.52        NA      0.470392     6.32        308.04
+   1           H-2-IAd       LYKYKVVKIEPLGV    3   YKVVKIEPL     0.720        0 multichain_276p      0.180621     9.61        NA      0.567961     1.70        107.19
+   1           H-2-IAd   LYKYKVVKIEPLGVAPTK    5   VVKIEPLGV     0.700        0 multichain_276p      0.157396    11.01        NA      0.647120     0.42         45.52
+   3           H-2-IAd         KYKVVKIEPLGV    3   VVKIEPLGV     0.620        0 multichain_276p      0.118751    14.13        NA      0.532748     2.91        156.89
+   2           H-2-IAd         YKYKVVKIEPLG    2   YKVVKIEPL     1.000        0 multichain_276p      0.116924    14.33        NA      0.346939    20.96       1171.42
+   8           H-2-IAd          KIEPLGVAPTK    1   IEPLGVAPT     1.000        0 multichain_276p      0.070132    20.98        NA      0.386845    14.82        760.67
+  10           H-2-IAd          EPLGVAPTKAK    1   PLGVAPTKA     0.990        0 multichain_276p      0.066219    21.84        NA      0.220476    50.11       4602.14
+   3           H-2-IAd          KYKVVKIEPLG    1   YKVVKIEPL     1.000        0 multichain_276p      0.035111    31.48        NA      0.290628    32.13       2154.36
+   5           H-2-IAd          KVVKIEPLGVA    1   VVKIEPLGV     0.990        0 multichain_276p      0.023255    38.34        NA      0.411703    11.71        581.29
+  10           H-2-IAd           EPLGVAPTKA    1   PLGVAPTKA     1.000        0 multichain_276p      0.008946    54.42        NA      0.154653    69.49       9381.24
+   8           H-2-IAd           KIEPLGVAPT    1   IEPLGVAPT     1.000        0 multichain_276p      0.004143    66.30        NA      0.285906    33.18       2267.29
+   3           H-2-IAd           KYKVVKIEPL    1   YKVVKIEPL     1.000        0 multichain_276p      0.003366    69.11        NA      0.253756    41.12       3210.54
+   5           H-2-IAd           KVVKIEPLGV    1   VVKIEPLGV     1.000        0 multichain_276p      0.002380    73.64        NA      0.326825    24.73       1456.23
+   1           H-2-IAd          LYKYKVVKIEP    1   YKYKVVKIE     0.790        0 multichain_276p      0.000207    94.09        NA      0.165433    66.24       8348.44
+   4           H-2-IAd            YKVVKIEPL    0   YKVVKIEPL     1.000        0 multichain_276p      0.000032    99.00        NA      0.168961    65.17       8035.77
+   6           H-2-IAd            VVKIEPLGV    0   VVKIEPLGV     1.000        0 multichain_276p      0.000026    99.19        NA      0.208403    53.65       5244.34
+   1           H-2-IAd           LYKYKVVKIE    0   LYKYKVVKI     0.340        0 multichain_276p      0.000015    99.53        NA      0.136757    74.73      11385.52
+  11           H-2-IAd            PLGVAPTKA    0   PLGVAPTKA     1.000        0 multichain_276p      0.000004    99.88        NA      0.096251    85.99      17647.75
+   9           H-2-IAd            IEPLGVAPT    0   IEPLGVAPT     1.000        0 multichain_276p      0.000004    99.88        NA      0.167770    65.53       8139.99
+   2           H-2-IAd           YKYKVVKIEP    0   YKYKVVKIE     0.690        0 multichain_276p      0.000004    99.88        NA      0.064053    93.38      25002.70
+   7           H-2-IAd           VKIEPLGVAP    1   KIEPLGVAP     0.450        0 multichain_276p      0.000002    99.94        NA      0.107373    83.04      15646.87
+  12           H-2-IAd            LGVAPTKAK    0   LGVAPTKAK     1.000        0 multichain_276p      0.000000   100.00        NA      0.037707    96.65      33249.57
+  10           H-2-IAd            EPLGVAPTK    0   EPLGVAPTK     1.000        0 multichain_276p      0.000000   100.00        NA      0.009701    99.14      45017.90
+   8           H-2-IAd            KIEPLGVAP    0   KIEPLGVAP     1.000        0 multichain_276p      0.000000   100.00        NA      0.038287    96.60      33041.57
+   7           H-2-IAd            VKIEPLGVA    0   VKIEPLGVA     1.000        0 multichain_276p      0.000000   100.00        NA      0.057486    94.76      26843.86
+   5           H-2-IAd            KVVKIEPLG    0   KVVKIEPLG     1.000        0 multichain_276p      0.000000   100.00        NA      0.019842    98.24      40339.72
+   3           H-2-IAd            KYKVVKIEP    0   KYKVVKIEP     1.000        0 multichain_276p      0.000000   100.00        NA      0.016599    98.53      41780.32
+   2           H-2-IAd            YKYKVVKIE    0   YKYKVVKIE     1.000        0 multichain_276p      0.000000   100.00        NA      0.038551    96.58      32947.32
+   1           H-2-IAd            LYKYKVVKI    0   LYKYKVVKI     1.000        0 multichain_276p      0.000000   100.00        NA      0.092681    86.88      18342.77
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 1 Number of weak binders: 9
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       SRLVRDIQPLRLPE    3   VRDIQPLRL     1.000        0 T_0_1_sample_1_      0.395840     3.47        NA      0.344466    21.41       1203.19   <= WB
+   2           H-2-IAd      ESRLVRDIQPLRLPE    4   VRDIQPLRL     1.000        0 T_0_1_sample_1_      0.342221     4.37        NA      0.371734    16.96        895.78   <= WB
+   3           H-2-IAd        SRLVRDIQPLRLP    3   VRDIQPLRL     1.000        0 T_0_1_sample_1_      0.308419     5.07        NA      0.266694    37.85       2791.15
+   1           H-2-IAd     SESRLVRDIQPLRLPE    5   VRDIQPLRL     1.000        0 T_0_1_sample_1_      0.279850     5.79        NA      0.380618    15.68        813.69
+   4           H-2-IAd         RLVRDIQPLRLP    2   VRDIQPLRL     1.000        0 T_0_1_sample_1_      0.181876     9.54        NA      0.315470    26.96       1646.59
+   1           H-2-IAd    SESRLVRDIQPLRLPEL    5   VRDIQPLRL     1.000        0 T_0_1_sample_1_      0.170308    10.20        NA      0.382407    15.43        798.09
+   1           H-2-IAd   SESRLVRDIQPLRLPELP    5   VRDIQPLRL     0.990        0 T_0_1_sample_1_      0.095759    16.82        NA      0.347112    20.93       1169.23
+   6           H-2-IAd      VRDIQPLRLPELPPE    3   IQPLRLPEL     0.990        0 T_0_1_sample_1_      0.071572    20.68        NA      0.308351    28.36       1778.43
+   5           H-2-IAd     LVRDIQPLRLPELPPE    4   IQPLRLPEL     0.710        0 T_0_1_sample_1_      0.052634    25.14        NA      0.349697    20.51       1136.98
+   6           H-2-IAd       VRDIQPLRLPELPP    3   IQPLRLPEL     0.970        0 T_0_1_sample_1_      0.046948    26.88        NA      0.268878    37.29       2725.97
+   4           H-2-IAd          RLVRDIQPLRL    2   VRDIQPLRL     1.000        0 T_0_1_sample_1_      0.028722    34.77        NA      0.271475    36.65       2650.44
+   6           H-2-IAd        VRDIQPLRLPELP    3   IQPLRLPEL     0.870        0 T_0_1_sample_1_      0.023537    38.14        NA      0.211208    52.83       5087.57
+   7           H-2-IAd         RDIQPLRLPELP    2   IQPLRLPEL     1.000        0 T_0_1_sample_1_      0.009818    52.99        NA      0.171174    64.52       7845.64
+   5           H-2-IAd           LVRDIQPLRL    1   VRDIQPLRL     1.000        0 T_0_1_sample_1_      0.002525    72.93        NA      0.218888    50.58       4681.90
+   9           H-2-IAd         IQPLRLPELPPE    3   LRLPELPPE     0.640        0 T_0_1_sample_1_      0.000928    83.88        NA      0.127950    77.28      12523.82
+   8           H-2-IAd          DIQPLRLPELP    1   IQPLRLPEL     1.000        0 T_0_1_sample_1_      0.000646    87.05        NA      0.134527    75.38      11663.58
+   1           H-2-IAd        SESRLVRDIQPLR    2   SRLVRDIQP     0.520        0 T_0_1_sample_1_      0.000279    92.70        NA      0.078210    90.42      21451.79
+  10           H-2-IAd          QPLRLPELPPE    2   LRLPELPPE     0.890        0 T_0_1_sample_1_      0.000203    94.17        NA      0.046842    95.84      30120.41
+   1           H-2-IAd         SESRLVRDIQPL    2   SRLVRDIQP     0.560        0 T_0_1_sample_1_      0.000079    97.53        NA      0.086842    88.34      19538.99
+   2           H-2-IAd         ESRLVRDIQPLR    3   LVRDIQPLR     0.260        0 T_0_1_sample_1_      0.000076    97.62        NA      0.099657    85.13      17009.23
+   8           H-2-IAd           DIQPLRLPEL    1   IQPLRLPEL     0.990        0 T_0_1_sample_1_      0.000030    99.06        NA      0.111578    81.89      14950.94
+   1           H-2-IAd          SESRLVRDIQP    1   ESRLVRDIQ     0.550        0 T_0_1_sample_1_      0.000028    99.12        NA      0.042866    96.19      31444.45
+   6           H-2-IAd            VRDIQPLRL    0   VRDIQPLRL     1.000        0 T_0_1_sample_1_      0.000018    99.44        NA      0.144617    72.44      10457.29
+  11           H-2-IAd           PLRLPELPPE    1   LRLPELPPE     0.970        0 T_0_1_sample_1_      0.000015    99.53        NA      0.034096    96.97      34574.34
+   3           H-2-IAd          SRLVRDIQPLR    2   LVRDIQPLR     0.500        0 T_0_1_sample_1_      0.000008    99.75        NA      0.077133    90.64      21703.23
+   2           H-2-IAd          ESRLVRDIQPL    1   SRLVRDIQP     0.590        0 T_0_1_sample_1_      0.000003    99.91        NA      0.071398    91.84      23092.60
+   1           H-2-IAd           SESRLVRDIQ    1   ESRLVRDIQ     0.860        0 T_0_1_sample_1_      0.000001    99.97        NA      0.019253    98.29      40597.63
+  12           H-2-IAd            LRLPELPPE    0   LRLPELPPE     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.018844    98.33      40777.69
+  11           H-2-IAd            PLRLPELPP    0   PLRLPELPP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.007917    99.30      45895.31
+  10           H-2-IAd            QPLRLPELP    0   QPLRLPELP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.003996    99.65      47884.27
+   9           H-2-IAd            IQPLRLPEL    0   IQPLRLPEL     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.076219    90.84      21918.92
+   8           H-2-IAd            DIQPLRLPE    0   DIQPLRLPE     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.003505    99.69      48139.34
+   7           H-2-IAd            RDIQPLRLP    0   RDIQPLRLP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.012317    98.91      43761.56
+   5           H-2-IAd            LVRDIQPLR    0   LVRDIQPLR     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.019115    98.30      40658.31
+   4           H-2-IAd            RLVRDIQPL    0   RLVRDIQPL     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.028856    97.44      36591.20
+   3           H-2-IAd            SRLVRDIQP    0   SRLVRDIQP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.013406    98.81      43248.96
+   2           H-2-IAd            ESRLVRDIQ    0   ESRLVRDIQ     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.008608    99.24      45553.46
+   1           H-2-IAd            SESRLVRDI    0   SESRLVRDI     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.009150    99.19      45287.08
+  10           H-2-IAd           QPLRLPELPP    1   PLRLPELPP     0.940        0 T_0_1_sample_1_      0.000000   100.00        NA      0.015115    98.66      42456.57
+   7           H-2-IAd           RDIQPLRLPE    1   DIQPLRLPE     0.770        0 T_0_1_sample_1_      0.000000   100.00        NA      0.017593    98.44      41333.38
+   4           H-2-IAd           RLVRDIQPLR    1   LVRDIQPLR     0.710        0 T_0_1_sample_1_      0.000000   100.00        NA      0.051031    95.47      28785.71
+   3           H-2-IAd           SRLVRDIQPL    1   RLVRDIQPL     0.790        0 T_0_1_sample_1_      0.000000   100.00        NA      0.052491    95.34      28334.55
+   2           H-2-IAd           ESRLVRDIQP    1   SRLVRDIQP     0.780        0 T_0_1_sample_1_      0.000000   100.00        NA      0.028091    97.51      36895.31
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       ARRVRDIQPLRLPE    3   VRDIQPLRL     1.000        0 T_0_1_sample_2_      0.467793     2.57        NA      0.348339    20.73       1153.81   <= WB
+   2           H-2-IAd      EARRVRDIQPLRLPE    4   VRDIQPLRL     1.000        0 T_0_1_sample_2_      0.417331     3.16        NA      0.375244    16.45        862.40   <= WB
+   3           H-2-IAd        ARRVRDIQPLRLP    3   VRDIQPLRL     1.000        0 T_0_1_sample_2_      0.384427     3.64        NA      0.271399    36.66       2652.61   <= WB
+   1           H-2-IAd     SEARRVRDIQPLRLPE    5   VRDIQPLRL     1.000        0 T_0_1_sample_2_      0.354849     4.13        NA      0.384663    15.12        778.84   <= WB
+   4           H-2-IAd         RRVRDIQPLRLP    2   VRDIQPLRL     1.000        0 T_0_1_sample_2_      0.248658     6.73        NA      0.317764    26.50       1606.22
+   1           H-2-IAd    SEARRVRDIQPLRLPEL    5   VRDIQPLRL     1.000        0 T_0_1_sample_2_      0.241295     6.97        NA      0.386416    14.88        764.21
+   1           H-2-IAd   SEARRVRDIQPLRLPELP    5   VRDIQPLRL     0.990        0 T_0_1_sample_2_      0.144794    11.94        NA      0.353718    19.85       1088.58
+   6           H-2-IAd      VRDIQPLRLPELPEP    3   IQPLRLPEL     0.970        0 T_0_1_sample_2_      0.071579    20.68        NA      0.307401    28.55       1796.81
+   5           H-2-IAd     RVRDIQPLRLPELPEP    4   IQPLRLPEL     0.600        0 T_0_1_sample_2_      0.058236    23.66        NA      0.354740    19.68       1076.61
+   4           H-2-IAd          RRVRDIQPLRL    2   VRDIQPLRL     1.000        0 T_0_1_sample_2_      0.050045    25.88        NA      0.277462    35.16       2484.19
+   6           H-2-IAd       VRDIQPLRLPELPE    3   IQPLRLPEL     0.960        0 T_0_1_sample_2_      0.042574    28.47        NA      0.268856    37.30       2726.61
+   6           H-2-IAd        VRDIQPLRLPELP    3   IQPLRLPEL     0.870        0 T_0_1_sample_2_      0.023537    38.14        NA      0.211208    52.83       5087.57
+   7           H-2-IAd         RDIQPLRLPELP    2   IQPLRLPEL     1.000        0 T_0_1_sample_2_      0.009818    52.99        NA      0.171174    64.52       7845.64
+   5           H-2-IAd           RVRDIQPLRL    1   VRDIQPLRL     1.000        0 T_0_1_sample_2_      0.006241    60.19        NA      0.224730    48.93       4395.12
+   1           H-2-IAd        SEARRVRDIQPLR    2   ARRVRDIQP     0.710        0 T_0_1_sample_2_      0.000650    87.00        NA      0.071622    91.80      23036.70
+   8           H-2-IAd          DIQPLRLPELP    1   IQPLRLPEL     1.000        0 T_0_1_sample_2_      0.000646    87.05        NA      0.134527    75.38      11663.58
+   9           H-2-IAd         IQPLRLPELPEP    3   LRLPELPEP     0.350        0 T_0_1_sample_2_      0.000634    87.21        NA      0.124681    78.22      12974.71
+   1           H-2-IAd         SEARRVRDIQPL    2   ARRVRDIQP     0.750        0 T_0_1_sample_2_      0.000264    92.99        NA      0.082780    89.36      20416.88
+  10           H-2-IAd          QPLRLPELPEP    2   LRLPELPEP     0.580        0 T_0_1_sample_2_      0.000088    97.25        NA      0.037883    96.64      33186.31
+   1           H-2-IAd          SEARRVRDIQP    2   ARRVRDIQP     0.940        0 T_0_1_sample_2_      0.000048    98.50        NA      0.036819    96.73      33570.57
+   8           H-2-IAd           DIQPLRLPEL    1   IQPLRLPEL     0.990        0 T_0_1_sample_2_      0.000030    99.06        NA      0.111578    81.89      14950.94
+   6           H-2-IAd            VRDIQPLRL    0   VRDIQPLRL     1.000        0 T_0_1_sample_2_      0.000018    99.44        NA      0.144617    72.44      10457.29
+   3           H-2-IAd          ARRVRDIQPLR    1   RRVRDIQPL     0.530        0 T_0_1_sample_2_      0.000004    99.88        NA      0.068367    92.48      23862.48
+  11           H-2-IAd           PLRLPELPEP    1   LRLPELPEP     0.860        0 T_0_1_sample_2_      0.000003    99.91        NA      0.026223    97.67      37648.61
+  10           H-2-IAd           QPLRLPELPE    1   PLRLPELPE     0.960        0 T_0_1_sample_2_      0.000002    99.94        NA      0.016008    98.58      42048.34
+   2           H-2-IAd           EARRVRDIQP    1   ARRVRDIQP     0.970        0 T_0_1_sample_2_      0.000002    99.94        NA      0.022700    97.98      39111.40
+  12           H-2-IAd            LRLPELPEP    0   LRLPELPEP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.012733    98.87      43565.04
+  11           H-2-IAd            PLRLPELPE    0   PLRLPELPE     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.008949    99.21      45385.70
+  10           H-2-IAd            QPLRLPELP    0   QPLRLPELP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.003996    99.65      47884.27
+   9           H-2-IAd            IQPLRLPEL    0   IQPLRLPEL     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.076219    90.84      21918.92
+   8           H-2-IAd            DIQPLRLPE    0   DIQPLRLPE     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.003505    99.69      48139.34
+   7           H-2-IAd            RDIQPLRLP    0   RDIQPLRLP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.012317    98.91      43761.56
+   5           H-2-IAd            RVRDIQPLR    0   RVRDIQPLR     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.011842    98.95      43987.04
+   4           H-2-IAd            RRVRDIQPL    0   RRVRDIQPL     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.030346    97.31      36006.02
+   3           H-2-IAd            ARRVRDIQP    0   ARRVRDIQP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.012177    98.92      43827.90
+   2           H-2-IAd            EARRVRDIQ    0   EARRVRDIQ     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.003805    99.66      47983.34
+   1           H-2-IAd            SEARRVRDI    0   SEARRVRDI     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.009371    99.17      45178.94
+   7           H-2-IAd           RDIQPLRLPE    1   DIQPLRLPE     0.770        0 T_0_1_sample_2_      0.000000   100.00        NA      0.017593    98.44      41333.38
+   4           H-2-IAd           RRVRDIQPLR    1   RVRDIQPLR     0.570        0 T_0_1_sample_2_      0.000000   100.00        NA      0.045514    95.96      30556.33
+   3           H-2-IAd           ARRVRDIQPL    1   RRVRDIQPL     0.680        0 T_0_1_sample_2_      0.000000   100.00        NA      0.048801    95.67      29488.70
+   1           H-2-IAd           SEARRVRDIQ    1   EARRVRDIQ     0.470        0 T_0_1_sample_2_      0.000000   100.00        NA      0.014365    98.72      42802.51
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       SREVRDIQPRRLPE    3   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.500221     2.22        NA      0.257321    40.23       3089.06   <= WB
+   2           H-2-IAd      SSREVRDIQPRRLPE    4   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.463304     2.62        NA      0.285018    33.38       2289.18   <= WB
+   3           H-2-IAd        SREVRDIQPRRLP    3   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.411375     3.25        NA      0.197630    56.82       5892.68   <= WB
+   1           H-2-IAd     SSSREVRDIQPRRLPE    5   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.369445     3.88        NA      0.282848    33.88       2343.56   <= WB
+   1           H-2-IAd    SSSREVRDIQPRRLPEL    5   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.264214     6.24        NA      0.288532    32.59       2203.77
+   4           H-2-IAd         REVRDIQPRRLP    2   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.263805     6.26        NA      0.237685    45.37       3820.28
+   1           H-2-IAd   SSSREVRDIQPRRLPELP    5   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.154329    11.23        NA      0.250977    41.84       3308.54
+   5           H-2-IAd          EVRDIQPRRLP    1   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.058763    23.53        NA      0.195322    57.50       6041.68
+   8           H-2-IAd        DIQPRRLPELPAP    3   PRRLPELPA     0.920        0 T_0_1_sample_3_      0.011863    49.66        NA      0.079475    90.15      21160.18
+   7           H-2-IAd       RDIQPRRLPELPAP    4   PRRLPELPA     0.840        0 T_0_1_sample_3_      0.010502    51.86        NA      0.115592    80.80      14315.50
+   6           H-2-IAd      VRDIQPRRLPELPAP    5   PRRLPELPA     0.660        0 T_0_1_sample_3_      0.008331    55.58        NA      0.205451    54.52       5414.54
+   9           H-2-IAd         IQPRRLPELPAP    2   PRRLPELPA     0.920        0 T_0_1_sample_3_      0.006175    60.38        NA      0.097080    85.78      17490.17
+   5           H-2-IAd           EVRDIQPRRL    1   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.005884    61.18        NA      0.165346    66.26       8356.30
+  10           H-2-IAd          QPRRLPELPAP    1   PRRLPELPA     0.880        0 T_0_1_sample_3_      0.001955    76.00        NA      0.060866    94.05      25879.89
+   1           H-2-IAd        SSSREVRDIQPRR    2   SREVRDIQP     0.800        0 T_0_1_sample_3_      0.001081    82.50        NA      0.032119    97.15      35321.89
+   1           H-2-IAd         SSSREVRDIQPR    2   SREVRDIQP     0.800        0 T_0_1_sample_3_      0.000200    94.23        NA      0.045774    95.94      30470.49
+   7           H-2-IAd         RDIQPRRLPELP    2   IQPRRLPEL     0.830        0 T_0_1_sample_3_      0.000040    98.75        NA      0.064133    93.37      24981.07
+   6           H-2-IAd            VRDIQPRRL    0   VRDIQPRRL     1.000        0 T_0_1_sample_3_      0.000016    99.50        NA      0.106084    83.39      15866.62
+   2           H-2-IAd          SSREVRDIQPR    1   SREVRDIQP     0.700        0 T_0_1_sample_3_      0.000010    99.69        NA      0.035316    96.86      34120.96
+  10           H-2-IAd           QPRRLPELPA    1   PRRLPELPA     0.990        0 T_0_1_sample_3_      0.000009    99.72        NA      0.036575    96.75      33659.30
+   7           H-2-IAd          RDIQPRRLPEL    2   IQPRRLPEL     0.840        0 T_0_1_sample_3_      0.000007    99.78        NA      0.054875    95.13      27613.02
+   3           H-2-IAd          SREVRDIQPRR    2   EVRDIQPRR     0.460        0 T_0_1_sample_3_      0.000005    99.84        NA      0.030309    97.31      36020.43
+  11           H-2-IAd           PRRLPELPAP    1   RRLPELPAP     0.550        0 T_0_1_sample_3_      0.000001    99.97        NA      0.036582    96.75      33656.76
+  12           H-2-IAd            RRLPELPAP    0   RRLPELPAP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.011989    98.94      43917.14
+  11           H-2-IAd            PRRLPELPA    0   PRRLPELPA     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.019655    98.26      40421.44
+  10           H-2-IAd            QPRRLPELP    0   QPRRLPELP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.003484    99.69      48150.27
+   9           H-2-IAd            IQPRRLPEL    0   IQPRRLPEL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.029357    97.39      36393.37
+   8           H-2-IAd            DIQPRRLPE    0   DIQPRRLPE     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.002914    99.74      48448.14
+   7           H-2-IAd            RDIQPRRLP    0   RDIQPRRLP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.005497    99.51      47112.90
+   5           H-2-IAd            EVRDIQPRR    0   EVRDIQPRR     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.003286    99.71      48253.54
+   4           H-2-IAd            REVRDIQPR    0   REVRDIQPR     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.015340    98.64      42353.37
+   3           H-2-IAd            SREVRDIQP    0   SREVRDIQP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.008118    99.28      45795.61
+   2           H-2-IAd            SSREVRDIQ    0   SSREVRDIQ     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.002953    99.74      48427.71
+   1           H-2-IAd            SSSREVRDI    0   SSSREVRDI     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.005440    99.52      47141.96
+   8           H-2-IAd           DIQPRRLPEL    1   IQPRRLPEL     0.950        0 T_0_1_sample_3_      0.000000   100.00        NA      0.043010    96.18      31395.49
+   7           H-2-IAd           RDIQPRRLPE    1   DIQPRRLPE     0.920        0 T_0_1_sample_3_      0.000000   100.00        NA      0.008614    99.24      45550.49
+   4           H-2-IAd           REVRDIQPRR    1   EVRDIQPRR     0.770        0 T_0_1_sample_3_      0.000000   100.00        NA      0.018557    98.35      40904.51
+   3           H-2-IAd           SREVRDIQPR    1   REVRDIQPR     0.670        0 T_0_1_sample_3_      0.000000   100.00        NA      0.026466    97.65      37549.75
+   2           H-2-IAd           SSREVRDIQP    1   SREVRDIQP     0.930        0 T_0_1_sample_3_      0.000000   100.00        NA      0.014379    98.72      42796.02
+   1           H-2-IAd           SSSREVRDIQ    1   SSREVRDIQ     0.440        0 T_0_1_sample_3_      0.000000   100.00        NA      0.009351    99.17      45188.70
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       SRLVRDIQPLRLPE    3   VRDIQPLRL     1.000        0 T_0_1_sample_4_      0.395840     3.47        NA      0.344466    21.41       1203.19   <= WB
+   2           H-2-IAd      ESRLVRDIQPLRLPE    4   VRDIQPLRL     1.000        0 T_0_1_sample_4_      0.342221     4.37        NA      0.371734    16.96        895.78   <= WB
+   3           H-2-IAd        SRLVRDIQPLRLP    3   VRDIQPLRL     1.000        0 T_0_1_sample_4_      0.308419     5.07        NA      0.266694    37.85       2791.15
+   1           H-2-IAd     SESRLVRDIQPLRLPE    5   VRDIQPLRL     1.000        0 T_0_1_sample_4_      0.279850     5.79        NA      0.380618    15.68        813.69
+   4           H-2-IAd         RLVRDIQPLRLP    2   VRDIQPLRL     1.000        0 T_0_1_sample_4_      0.181876     9.54        NA      0.315470    26.96       1646.59
+   1           H-2-IAd    SESRLVRDIQPLRLPEL    5   VRDIQPLRL     1.000        0 T_0_1_sample_4_      0.170308    10.20        NA      0.382407    15.43        798.09
+   1           H-2-IAd   SESRLVRDIQPLRLPELP    5   VRDIQPLRL     0.990        0 T_0_1_sample_4_      0.095759    16.82        NA      0.347112    20.93       1169.23
+   6           H-2-IAd      VRDIQPLRLPELPPE    3   IQPLRLPEL     0.990        0 T_0_1_sample_4_      0.071572    20.68        NA      0.308351    28.36       1778.43
+   5           H-2-IAd     LVRDIQPLRLPELPPE    4   IQPLRLPEL     0.710        0 T_0_1_sample_4_      0.052634    25.14        NA      0.349697    20.51       1136.98
+   6           H-2-IAd       VRDIQPLRLPELPP    3   IQPLRLPEL     0.970        0 T_0_1_sample_4_      0.046948    26.88        NA      0.268878    37.29       2725.97
+   4           H-2-IAd          RLVRDIQPLRL    2   VRDIQPLRL     1.000        0 T_0_1_sample_4_      0.028722    34.77        NA      0.271475    36.65       2650.44
+   6           H-2-IAd        VRDIQPLRLPELP    3   IQPLRLPEL     0.870        0 T_0_1_sample_4_      0.023537    38.14        NA      0.211208    52.83       5087.57
+   7           H-2-IAd         RDIQPLRLPELP    2   IQPLRLPEL     1.000        0 T_0_1_sample_4_      0.009818    52.99        NA      0.171174    64.52       7845.64
+   5           H-2-IAd           LVRDIQPLRL    1   VRDIQPLRL     1.000        0 T_0_1_sample_4_      0.002525    72.93        NA      0.218888    50.58       4681.90
+   9           H-2-IAd         IQPLRLPELPPE    3   LRLPELPPE     0.640        0 T_0_1_sample_4_      0.000928    83.88        NA      0.127950    77.28      12523.82
+   8           H-2-IAd          DIQPLRLPELP    1   IQPLRLPEL     1.000        0 T_0_1_sample_4_      0.000646    87.05        NA      0.134527    75.38      11663.58
+   1           H-2-IAd        SESRLVRDIQPLR    2   SRLVRDIQP     0.520        0 T_0_1_sample_4_      0.000279    92.70        NA      0.078210    90.42      21451.79
+  10           H-2-IAd          QPLRLPELPPE    2   LRLPELPPE     0.890        0 T_0_1_sample_4_      0.000203    94.17        NA      0.046842    95.84      30120.41
+   1           H-2-IAd         SESRLVRDIQPL    2   SRLVRDIQP     0.560        0 T_0_1_sample_4_      0.000079    97.53        NA      0.086842    88.34      19538.99
+   2           H-2-IAd         ESRLVRDIQPLR    3   LVRDIQPLR     0.260        0 T_0_1_sample_4_      0.000076    97.62        NA      0.099657    85.13      17009.23
+   8           H-2-IAd           DIQPLRLPEL    1   IQPLRLPEL     0.990        0 T_0_1_sample_4_      0.000030    99.06        NA      0.111578    81.89      14950.94
+   1           H-2-IAd          SESRLVRDIQP    1   ESRLVRDIQ     0.550        0 T_0_1_sample_4_      0.000028    99.12        NA      0.042866    96.19      31444.45
+   6           H-2-IAd            VRDIQPLRL    0   VRDIQPLRL     1.000        0 T_0_1_sample_4_      0.000018    99.44        NA      0.144617    72.44      10457.29
+  11           H-2-IAd           PLRLPELPPE    1   LRLPELPPE     0.970        0 T_0_1_sample_4_      0.000015    99.53        NA      0.034096    96.97      34574.34
+   3           H-2-IAd          SRLVRDIQPLR    2   LVRDIQPLR     0.500        0 T_0_1_sample_4_      0.000008    99.75        NA      0.077133    90.64      21703.23
+   2           H-2-IAd          ESRLVRDIQPL    1   SRLVRDIQP     0.590        0 T_0_1_sample_4_      0.000003    99.91        NA      0.071398    91.84      23092.60
+   1           H-2-IAd           SESRLVRDIQ    1   ESRLVRDIQ     0.860        0 T_0_1_sample_4_      0.000001    99.97        NA      0.019253    98.29      40597.63
+  12           H-2-IAd            LRLPELPPE    0   LRLPELPPE     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.018844    98.33      40777.69
+  11           H-2-IAd            PLRLPELPP    0   PLRLPELPP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.007917    99.30      45895.31
+  10           H-2-IAd            QPLRLPELP    0   QPLRLPELP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.003996    99.65      47884.27
+   9           H-2-IAd            IQPLRLPEL    0   IQPLRLPEL     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.076219    90.84      21918.92
+   8           H-2-IAd            DIQPLRLPE    0   DIQPLRLPE     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.003505    99.69      48139.34
+   7           H-2-IAd            RDIQPLRLP    0   RDIQPLRLP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.012317    98.91      43761.56
+   5           H-2-IAd            LVRDIQPLR    0   LVRDIQPLR     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.019115    98.30      40658.31
+   4           H-2-IAd            RLVRDIQPL    0   RLVRDIQPL     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.028856    97.44      36591.20
+   3           H-2-IAd            SRLVRDIQP    0   SRLVRDIQP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.013406    98.81      43248.96
+   2           H-2-IAd            ESRLVRDIQ    0   ESRLVRDIQ     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.008608    99.24      45553.46
+   1           H-2-IAd            SESRLVRDI    0   SESRLVRDI     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.009150    99.19      45287.08
+  10           H-2-IAd           QPLRLPELPP    1   PLRLPELPP     0.940        0 T_0_1_sample_4_      0.000000   100.00        NA      0.015115    98.66      42456.57
+   7           H-2-IAd           RDIQPLRLPE    1   DIQPLRLPE     0.770        0 T_0_1_sample_4_      0.000000   100.00        NA      0.017593    98.44      41333.38
+   4           H-2-IAd           RLVRDIQPLR    1   LVRDIQPLR     0.710        0 T_0_1_sample_4_      0.000000   100.00        NA      0.051031    95.47      28785.71
+   3           H-2-IAd           SRLVRDIQPL    1   RLVRDIQPL     0.790        0 T_0_1_sample_4_      0.000000   100.00        NA      0.052491    95.34      28334.55
+   2           H-2-IAd           ESRLVRDIQP    1   SRLVRDIQP     0.780        0 T_0_1_sample_4_      0.000000   100.00        NA      0.028091    97.51      36895.31
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       SRTVRDIAPRRLPE    3   VRDIAPRRL     1.000        0 T_0_1_sample_5_      0.394351     3.49        NA      0.243070    43.89       3604.05   <= WB
+   2           H-2-IAd      SSRTVRDIAPRRLPE    4   VRDIAPRRL     0.990        0 T_0_1_sample_5_      0.353801     4.15        NA      0.284697    33.46       2297.14   <= WB
+   3           H-2-IAd        SRTVRDIAPRRLP    3   VRDIAPRRL     1.000        0 T_0_1_sample_5_      0.304331     5.17        NA      0.185902    60.27       6689.94
+   1           H-2-IAd     SSSRTVRDIAPRRLPE    5   VRDIAPRRL     1.000        0 T_0_1_sample_5_      0.267613     6.14        NA      0.281850    34.11       2369.00
+   1           H-2-IAd    SSSRTVRDIAPRRLPEL    5   VRDIAPRRL     1.000        0 T_0_1_sample_5_      0.180889     9.59        NA      0.270426    36.90       2680.69
+   4           H-2-IAd         RTVRDIAPRRLP    2   VRDIAPRRL     1.000        0 T_0_1_sample_5_      0.174713     9.93        NA      0.224067    49.11       4426.76
+   1           H-2-IAd   SSSRTVRDIAPRRLPELP    5   VRDIAPRRL     0.990        0 T_0_1_sample_5_      0.101600    16.02        NA      0.243647    43.73       3581.63
+   5           H-2-IAd          TVRDIAPRRLP    1   VRDIAPRRL     1.000        0 T_0_1_sample_5_      0.036945    30.70        NA      0.181899    61.43       6986.06
+   5           H-2-IAd           TVRDIAPRRL    1   VRDIAPRRL     1.000        0 T_0_1_sample_5_      0.006808    58.91        NA      0.161953    67.29       8668.78
+   1           H-2-IAd        SSSRTVRDIAPRR    2   SRTVRDIAP     0.700        0 T_0_1_sample_5_      0.005290    62.82        NA      0.082701    89.38      20434.34
+   7           H-2-IAd       RDIAPRRLPELPVP    4   PRRLPELPV     0.660        0 T_0_1_sample_5_      0.003432    68.87        NA      0.097409    85.70      17428.02
+   8           H-2-IAd        DIAPRRLPELPVP    3   PRRLPELPV     0.770        0 T_0_1_sample_5_      0.003412    68.95        NA      0.063375    93.52      25186.79
+   6           H-2-IAd      VRDIAPRRLPELPVP    5   PRRLPELPV     0.430        0 T_0_1_sample_5_      0.001463    79.30        NA      0.195962    57.31       5999.99
+   1           H-2-IAd         SSSRTVRDIAPR    2   SRTVRDIAP     0.770        0 T_0_1_sample_5_      0.001272    80.78        NA      0.101211    84.72      16725.63
+   2           H-2-IAd         SSRTVRDIAPRR    3   TVRDIAPRR     0.350        0 T_0_1_sample_5_      0.000879    84.32        NA      0.105155    83.64      16026.91
+   9           H-2-IAd         IAPRRLPELPVP    2   PRRLPELPV     0.800        0 T_0_1_sample_5_      0.000839    84.68        NA      0.083366    89.21      20287.84
+   7           H-2-IAd         RDIAPRRLPELP    2   IAPRRLPEL     0.780        0 T_0_1_sample_5_      0.000324    91.83        NA      0.063044    93.59      25277.15
+   1           H-2-IAd          SSSRTVRDIAP    2   SRTVRDIAP     0.640        0 T_0_1_sample_5_      0.000155    95.16        NA      0.053880    95.22      27911.91
+   7           H-2-IAd          RDIAPRRLPEL    1   DIAPRRLPE     0.270        0 T_0_1_sample_5_      0.000101    96.84        NA      0.054071    95.20      27854.28
+  10           H-2-IAd          APRRLPELPVP    1   PRRLPELPV     0.730        0 T_0_1_sample_5_      0.000088    97.25        NA      0.051780    95.40      28553.37
+   3           H-2-IAd          SRTVRDIAPRR    2   TVRDIAPRR     0.680        0 T_0_1_sample_5_      0.000073    97.72        NA      0.075184    91.05      22165.76
+   8           H-2-IAd          DIAPRRLPELP    1   IAPRRLPEL     0.900        0 T_0_1_sample_5_      0.000037    98.84        NA      0.048769    95.67      29498.91
+   6           H-2-IAd            VRDIAPRRL    0   VRDIAPRRL     1.000        0 T_0_1_sample_5_      0.000012    99.62        NA      0.103583    84.07      16301.84
+   2           H-2-IAd           SSRTVRDIAP    1   SRTVRDIAP     0.890        0 T_0_1_sample_5_      0.000011    99.66        NA      0.036475    96.76      33695.75
+   7           H-2-IAd           RDIAPRRLPE    1   DIAPRRLPE     0.970        0 T_0_1_sample_5_      0.000006    99.81        NA      0.012572    98.88      43640.99
+   4           H-2-IAd           RTVRDIAPRR    1   TVRDIAPRR     0.900        0 T_0_1_sample_5_      0.000006    99.81        NA      0.048908    95.66      29454.58
+  10           H-2-IAd           APRRLPELPV    1   PRRLPELPV     1.000        0 T_0_1_sample_5_      0.000002    99.94        NA      0.031137    97.24      35699.18
+   8           H-2-IAd           DIAPRRLPEL    1   IAPRRLPEL     0.890        0 T_0_1_sample_5_      0.000002    99.94        NA      0.042103    96.26      31705.11
+  11           H-2-IAd           PRRLPELPVP    1   RRLPELPVP     0.640        0 T_0_1_sample_5_      0.000001    99.97        NA      0.034637    96.93      34372.56
+   3           H-2-IAd           SRTVRDIAPR    1   RTVRDIAPR     0.630        0 T_0_1_sample_5_      0.000001    99.97        NA      0.057389    94.78      26872.04
+  12           H-2-IAd            RRLPELPVP    0   RRLPELPVP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.012873    98.86      43499.09
+  11           H-2-IAd            PRRLPELPV    0   PRRLPELPV     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.017861    98.41      41213.71
+  10           H-2-IAd            APRRLPELP    0   APRRLPELP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.002895    99.74      48458.11
+   9           H-2-IAd            IAPRRLPEL    0   IAPRRLPEL     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.027602    97.55      37091.04
+   8           H-2-IAd            DIAPRRLPE    0   DIAPRRLPE     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.004935    99.56      47400.23
+   7           H-2-IAd            RDIAPRRLP    0   RDIAPRRLP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.007329    99.35      46188.23
+   5           H-2-IAd            TVRDIAPRR    0   TVRDIAPRR     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.018127    98.39      41095.25
+   4           H-2-IAd            RTVRDIAPR    0   RTVRDIAPR     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.032494    97.12      35178.85
+   3           H-2-IAd            SRTVRDIAP    0   SRTVRDIAP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.018379    98.37      40983.38
+   2           H-2-IAd            SSRTVRDIA    0   SSRTVRDIA     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.008109    99.28      45800.07
+   1           H-2-IAd            SSSRTVRDI    0   SSSRTVRDI     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.008119    99.28      45795.11
+   1           H-2-IAd           SSSRTVRDIA    1   SSRTVRDIA     0.760        0 T_0_1_sample_5_      0.000000   100.00        NA      0.019331    98.28      40563.40
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       SRTVKDIQPLRLPE    3   VKDIQPLRL     1.000        0 T_0_1_sample_6_      0.473519     2.50        NA      0.325110    25.07       1483.50   <= WB
+   2           H-2-IAd      SSRTVKDIQPLRLPE    4   VKDIQPLRL     1.000        0 T_0_1_sample_6_      0.415304     3.19        NA      0.352184    20.10       1106.80   <= WB
+   3           H-2-IAd        SRTVKDIQPLRLP    3   VKDIQPLRL     1.000        0 T_0_1_sample_6_      0.390649     3.55        NA      0.248795    42.40       3387.58   <= WB
+   1           H-2-IAd     SSSRTVKDIQPLRLPE    5   VKDIQPLRL     1.000        0 T_0_1_sample_6_      0.352564     4.17        NA      0.359595    18.89       1021.51   <= WB
+   4           H-2-IAd         RTVKDIQPLRLP    2   VKDIQPLRL     1.000        0 T_0_1_sample_6_      0.253092     6.59        NA      0.299026    30.26       1967.23
+   1           H-2-IAd    SSSRTVKDIQPLRLPEL    5   VKDIQPLRL     0.990        0 T_0_1_sample_6_      0.238087     7.08        NA      0.368033    17.54        932.38
+   1           H-2-IAd   SSSRTVKDIQPLRLPELP    5   VKDIQPLRL     0.990        0 T_0_1_sample_6_      0.147322    11.75        NA      0.339028    22.43       1276.11
+   5           H-2-IAd      TVKDIQPLRLPELPV    4   IQPLRLPEL     0.420        0 T_0_1_sample_6_      0.056110    24.19        NA      0.349586    20.52       1138.35
+   5           H-2-IAd          TVKDIQPLRLP    1   VKDIQPLRL     1.000        0 T_0_1_sample_6_      0.052374    25.21        NA      0.244554    43.49       3546.65
+   5           H-2-IAd     TVKDIQPLRLPELPVE    4   IQPLRLPEL     0.590        0 T_0_1_sample_6_      0.048143    26.49        NA      0.343118    21.66       1220.87
+   6           H-2-IAd       VKDIQPLRLPELPV    3   IQPLRLPEL     0.960        0 T_0_1_sample_6_      0.035820    31.17        NA      0.270203    36.95       2687.16
+   6           H-2-IAd        VKDIQPLRLPELP    3   IQPLRLPEL     0.910        0 T_0_1_sample_6_      0.029386    34.40        NA      0.197541    56.84       5898.35
+   7           H-2-IAd         KDIQPLRLPELP    2   IQPLRLPEL     1.000        0 T_0_1_sample_6_      0.012972    48.18        NA      0.172737    64.07       7714.08
+   5           H-2-IAd           TVKDIQPLRL    1   VKDIQPLRL     1.000        0 T_0_1_sample_6_      0.003606    68.25        NA      0.206541    54.20       5351.06
+   1           H-2-IAd        SSSRTVKDIQPLR    2   SRTVKDIQP     0.630        0 T_0_1_sample_6_      0.002010    75.63        NA      0.067855    92.59      23995.04
+   7           H-2-IAd          KDIQPLRLPEL    2   IQPLRLPEL     0.980        0 T_0_1_sample_6_      0.000723    86.05        NA      0.143744    72.69      10556.53
+   9           H-2-IAd         IQPLRLPELPVE    3   LRLPELPVE     0.530        0 T_0_1_sample_6_      0.000703    86.31        NA      0.156441    68.95       9201.50
+   1           H-2-IAd         SSSRTVKDIQPL    2   SRTVKDIQP     0.670        0 T_0_1_sample_6_      0.000549    88.31        NA      0.086287    88.48      19656.67
+   2           H-2-IAd         SSRTVKDIQPLR    2   RTVKDIQPL     0.440        0 T_0_1_sample_6_      0.000393    90.50        NA      0.086796    88.35      19548.72
+  10           H-2-IAd          QPLRLPELPVE    2   LRLPELPVE     0.670        0 T_0_1_sample_6_      0.000157    95.09        NA      0.076623    90.75      21823.31
+   1           H-2-IAd          SSSRTVKDIQP    2   SRTVKDIQP     0.730        0 T_0_1_sample_6_      0.000133    95.84        NA      0.035898    96.81      33906.78
+   9           H-2-IAd          IQPLRLPELPV    2   PLRLPELPV     0.520        0 T_0_1_sample_6_      0.000031    99.03        NA      0.123885    78.45      13086.94
+   8           H-2-IAd           DIQPLRLPEL    1   IQPLRLPEL     0.990        0 T_0_1_sample_6_      0.000030    99.06        NA      0.111578    81.89      14950.94
+   3           H-2-IAd          SRTVKDIQPLR    1   RTVKDIQPL     0.770        0 T_0_1_sample_6_      0.000015    99.53        NA      0.065121    93.16      24715.44
+   6           H-2-IAd            VKDIQPLRL    0   VKDIQPLRL     1.000        0 T_0_1_sample_6_      0.000011    99.66        NA      0.133265    75.74      11823.93
+   2           H-2-IAd           SSRTVKDIQP    1   SRTVKDIQP     0.920        0 T_0_1_sample_6_      0.000010    99.69        NA      0.023260    97.94      38875.14
+  11           H-2-IAd           PLRLPELPVE    1   LRLPELPVE     0.920        0 T_0_1_sample_6_      0.000009    99.72        NA      0.057511    94.75      26836.61
+   3           H-2-IAd           SRTVKDIQPL    1   RTVKDIQPL     0.840        0 T_0_1_sample_6_      0.000002    99.94        NA      0.050618    95.51      28914.62
+  10           H-2-IAd           QPLRLPELPV    1   PLRLPELPV     0.980        0 T_0_1_sample_6_      0.000001    99.97        NA      0.033824    97.00      34676.23
+  12           H-2-IAd            LRLPELPVE    0   LRLPELPVE     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.032936    97.08      35011.03
+  11           H-2-IAd            PLRLPELPV    0   PLRLPELPV     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.019338    98.28      40560.31
+  10           H-2-IAd            QPLRLPELP    0   QPLRLPELP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.003996    99.65      47884.27
+   9           H-2-IAd            IQPLRLPEL    0   IQPLRLPEL     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.076219    90.84      21918.92
+   8           H-2-IAd            DIQPLRLPE    0   DIQPLRLPE     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.003505    99.69      48139.34
+   7           H-2-IAd            KDIQPLRLP    0   KDIQPLRLP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.009957    99.12      44893.38
+   5           H-2-IAd            TVKDIQPLR    0   TVKDIQPLR     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.007046    99.37      46329.88
+   4           H-2-IAd            RTVKDIQPL    0   RTVKDIQPL     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.030623    97.28      35898.26
+   3           H-2-IAd            SRTVKDIQP    0   SRTVKDIQP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.010812    99.04      44480.00
+   2           H-2-IAd            SSRTVKDIQ    0   SSRTVKDIQ     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.006075    99.46      46819.16
+   1           H-2-IAd            SSSRTVKDI    0   SSSRTVKDI     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.006657    99.41      46525.27
+   7           H-2-IAd           KDIQPLRLPE    1   DIQPLRLPE     0.800        0 T_0_1_sample_6_      0.000000   100.00        NA      0.014602    98.70      42692.89
+   1           H-2-IAd           SSSRTVKDIQ    1   SSRTVKDIQ     0.790        0 T_0_1_sample_6_      0.000000   100.00        NA      0.014499    98.71      42740.50
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       SRLVKDIQPLRLPE    3   VKDIQPLRL     1.000        0 T_0_1_sample_7_      0.395951     3.47        NA      0.329501    24.21       1414.67   <= WB
+   2           H-2-IAd      ESRLVKDIQPLRLPE    4   VKDIQPLRL     1.000        0 T_0_1_sample_7_      0.336724     4.48        NA      0.353535    19.87       1090.74   <= WB
+   3           H-2-IAd        SRLVKDIQPLRLP    3   VKDIQPLRL     1.000        0 T_0_1_sample_7_      0.315414     4.91        NA      0.252011    41.58       3271.73   <= WB
+   1           H-2-IAd     SESRLVKDIQPLRLPE    5   VKDIQPLRL     1.000        0 T_0_1_sample_7_      0.277816     5.85        NA      0.366672    17.75        946.21
+   4           H-2-IAd         RLVKDIQPLRLP    2   VKDIQPLRL     1.000        0 T_0_1_sample_7_      0.192395     9.01        NA      0.301842    29.67       1908.20
+   1           H-2-IAd    SESRLVKDIQPLRLPEL    5   VKDIQPLRL     1.000        0 T_0_1_sample_7_      0.168748    10.30        NA      0.369839    17.26        914.34
+   1           H-2-IAd   SESRLVKDIQPLRLPELP    5   VKDIQPLRL     0.980        0 T_0_1_sample_7_      0.099995    16.24        NA      0.342782    21.72       1225.31
+   6           H-2-IAd      VKDIQPLRLPELPPE    3   IQPLRLPEL     0.990        0 T_0_1_sample_7_      0.087108    17.96        NA      0.295666    31.02       2040.07
+   5           H-2-IAd     LVKDIQPLRLPELPPE    4   IQPLRLPEL     0.750        0 T_0_1_sample_7_      0.062536    22.65        NA      0.334817    23.22       1335.60
+   6           H-2-IAd       VKDIQPLRLPELPP    3   IQPLRLPEL     1.000        0 T_0_1_sample_7_      0.059266    23.41        NA      0.260175    39.51       2995.13
+   4           H-2-IAd    RLVKDIQPLRLPELPPE    5   IQPLRLPEL     0.450        0 T_0_1_sample_7_      0.054468    24.64        NA      0.344395    21.43       1204.12
+   6           H-2-IAd        VKDIQPLRLPELP    3   IQPLRLPEL     0.910        0 T_0_1_sample_7_      0.029386    34.40        NA      0.197541    56.84       5898.35
+   5           H-2-IAd          LVKDIQPLRLP    1   VKDIQPLRL     1.000        0 T_0_1_sample_7_      0.028159    35.09        NA      0.248203    42.55       3409.35
+   7           H-2-IAd         KDIQPLRLPELP    2   IQPLRLPEL     1.000        0 T_0_1_sample_7_      0.012972    48.18        NA      0.172737    64.07       7714.08
+   5           H-2-IAd           LVKDIQPLRL    1   VKDIQPLRL     1.000        0 T_0_1_sample_7_      0.001573    78.56        NA      0.207993    53.77       5267.65
+   1           H-2-IAd        SESRLVKDIQPLR    2   SRLVKDIQP     0.450        0 T_0_1_sample_7_      0.001128    82.08        NA      0.079791    90.09      21087.95
+   9           H-2-IAd         IQPLRLPELPPE    3   LRLPELPPE     0.640        0 T_0_1_sample_7_      0.000928    83.88        NA      0.127950    77.28      12523.82
+   7           H-2-IAd          KDIQPLRLPEL    2   IQPLRLPEL     0.980        0 T_0_1_sample_7_      0.000723    86.05        NA      0.143744    72.69      10556.53
+   1           H-2-IAd         SESRLVKDIQPL    2   SRLVKDIQP     0.510        0 T_0_1_sample_7_      0.000225    93.75        NA      0.088897    87.83      19109.34
+  10           H-2-IAd          QPLRLPELPPE    2   LRLPELPPE     0.890        0 T_0_1_sample_7_      0.000203    94.17        NA      0.046842    95.84      30120.41
+   2           H-2-IAd         ESRLVKDIQPLR    2   RLVKDIQPL     0.430        0 T_0_1_sample_7_      0.000135    95.78        NA      0.098080    85.53      17301.95
+   1           H-2-IAd          SESRLVKDIQP    1   ESRLVKDIQ     0.490        0 T_0_1_sample_7_      0.000046    98.56        NA      0.039852    96.46      32486.77
+   8           H-2-IAd           DIQPLRLPEL    1   IQPLRLPEL     0.990        0 T_0_1_sample_7_      0.000030    99.06        NA      0.111578    81.89      14950.94
+  11           H-2-IAd           PLRLPELPPE    1   LRLPELPPE     0.970        0 T_0_1_sample_7_      0.000015    99.53        NA      0.034096    96.97      34574.34
+   2           H-2-IAd          ESRLVKDIQPL    2   RLVKDIQPL     0.460        0 T_0_1_sample_7_      0.000015    99.53        NA      0.072602    91.59      22793.74
+   6           H-2-IAd            VKDIQPLRL    0   VKDIQPLRL     1.000        0 T_0_1_sample_7_      0.000011    99.66        NA      0.133265    75.74      11823.93
+   1           H-2-IAd           SESRLVKDIQ    1   ESRLVKDIQ     0.910        0 T_0_1_sample_7_      0.000002    99.94        NA      0.020295    98.20      40142.49
+   3           H-2-IAd           SRLVKDIQPL    1   RLVKDIQPL     0.850        0 T_0_1_sample_7_      0.000001    99.97        NA      0.053490    95.25      28029.94
+   2           H-2-IAd           ESRLVKDIQP    1   SRLVKDIQP     0.790        0 T_0_1_sample_7_      0.000001    99.97        NA      0.026321    97.66      37608.71
+  12           H-2-IAd            LRLPELPPE    0   LRLPELPPE     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.018844    98.33      40777.69
+  11           H-2-IAd            PLRLPELPP    0   PLRLPELPP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.007917    99.30      45895.31
+  10           H-2-IAd            QPLRLPELP    0   QPLRLPELP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.003996    99.65      47884.27
+   9           H-2-IAd            IQPLRLPEL    0   IQPLRLPEL     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.076219    90.84      21918.92
+   8           H-2-IAd            DIQPLRLPE    0   DIQPLRLPE     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.003505    99.69      48139.34
+   7           H-2-IAd            KDIQPLRLP    0   KDIQPLRLP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.009957    99.12      44893.38
+   5           H-2-IAd            LVKDIQPLR    0   LVKDIQPLR     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.019120    98.30      40656.11
+   4           H-2-IAd            RLVKDIQPL    0   RLVKDIQPL     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.032011    97.16      35363.19
+   3           H-2-IAd            SRLVKDIQP    0   SRLVKDIQP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.012742    98.87      43560.80
+   2           H-2-IAd            ESRLVKDIQ    0   ESRLVKDIQ     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.009412    99.16      45158.90
+   1           H-2-IAd            SESRLVKDI    0   SESRLVKDI     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.008299    99.26      45706.01
+  10           H-2-IAd           QPLRLPELPP    1   PLRLPELPP     0.940        0 T_0_1_sample_7_      0.000000   100.00        NA      0.015115    98.66      42456.57
+   7           H-2-IAd           KDIQPLRLPE    1   DIQPLRLPE     0.800        0 T_0_1_sample_7_      0.000000   100.00        NA      0.014602    98.70      42692.89
+   4           H-2-IAd           RLVKDIQPLR    1   LVKDIQPLR     0.560        0 T_0_1_sample_7_      0.000000   100.00        NA      0.053046    95.29      28164.92
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       SRTVRDIAPRRLPE    3   VRDIAPRRL     1.000        0 T_0_1_sample_8_      0.394351     3.49        NA      0.243070    43.89       3604.05   <= WB
+   2           H-2-IAd      SSRTVRDIAPRRLPE    4   VRDIAPRRL     0.990        0 T_0_1_sample_8_      0.353801     4.15        NA      0.284697    33.46       2297.14   <= WB
+   3           H-2-IAd        SRTVRDIAPRRLP    3   VRDIAPRRL     1.000        0 T_0_1_sample_8_      0.304331     5.17        NA      0.185902    60.27       6689.94
+   2           H-2-IAd     SSRTVRDIAPRRLPEI    4   VRDIAPRRL     1.000        0 T_0_1_sample_8_      0.282061     5.73        NA      0.297179    30.68       2006.94
+   1           H-2-IAd    SSSRTVRDIAPRRLPEI    5   VRDIAPRRL     1.000        0 T_0_1_sample_8_      0.207099     8.30        NA      0.272805    36.32       2612.57
+   4           H-2-IAd         RTVRDIAPRRLP    2   VRDIAPRRL     1.000        0 T_0_1_sample_8_      0.174713     9.93        NA      0.224067    49.11       4426.76
+   1           H-2-IAd   SSSRTVRDIAPRRLPEIP    5   VRDIAPRRL     1.000        0 T_0_1_sample_8_      0.118729    14.13        NA      0.244640    43.47       3543.35
+   5           H-2-IAd          TVRDIAPRRLP    1   VRDIAPRRL     1.000        0 T_0_1_sample_8_      0.036945    30.70        NA      0.181899    61.43       6986.06
+   5           H-2-IAd           TVRDIAPRRL    1   VRDIAPRRL     1.000        0 T_0_1_sample_8_      0.006808    58.91        NA      0.161953    67.29       8668.78
+   1           H-2-IAd        SSSRTVRDIAPRR    2   SRTVRDIAP     0.700        0 T_0_1_sample_8_      0.005290    62.82        NA      0.082701    89.38      20434.34
+   8           H-2-IAd        DIAPRRLPEIPPE    4   RRLPEIPPE     0.500        0 T_0_1_sample_8_      0.001381    79.85        NA      0.049313    95.62      29325.79
+   6           H-2-IAd      VRDIAPRRLPEIPPE    6   RRLPEIPPE     0.190        0 T_0_1_sample_8_      0.001335    80.21        NA      0.187186    59.90       6597.64
+   9           H-2-IAd         IAPRRLPEIPPE    3   RRLPEIPPE     0.720        0 T_0_1_sample_8_      0.001310    80.43        NA      0.070018    92.13      23440.00
+   1           H-2-IAd         SSSRTVRDIAPR    2   SRTVRDIAP     0.770        0 T_0_1_sample_8_      0.001272    80.78        NA      0.101211    84.72      16725.63
+   7           H-2-IAd       RDIAPRRLPEIPPE    5   RRLPEIPPE     0.310        0 T_0_1_sample_8_      0.001094    82.38        NA      0.077917    90.48      21519.91
+   2           H-2-IAd         SSRTVRDIAPRR    3   TVRDIAPRR     0.350        0 T_0_1_sample_8_      0.000879    84.32        NA      0.105155    83.64      16026.91
+   7           H-2-IAd        RDIAPRRLPEIPP    2   IAPRRLPEI     0.660        0 T_0_1_sample_8_      0.000478    89.23        NA      0.045993    95.92      30398.38
+   7           H-2-IAd         RDIAPRRLPEIP    1   DIAPRRLPE     0.210        0 T_0_1_sample_8_      0.000316    91.99        NA      0.067749    92.61      24022.56
+  10           H-2-IAd          APRRLPEIPPE    2   RRLPEIPPE     0.740        0 T_0_1_sample_8_      0.000294    92.41        NA      0.038665    96.57      32906.70
+   1           H-2-IAd          SSSRTVRDIAP    2   SRTVRDIAP     0.640        0 T_0_1_sample_8_      0.000155    95.16        NA      0.053880    95.22      27911.91
+   8           H-2-IAd         DIAPRRLPEIPP    1   IAPRRLPEI     0.590        0 T_0_1_sample_8_      0.000096    97.00        NA      0.060463    94.13      25992.98
+   7           H-2-IAd          RDIAPRRLPEI    1   DIAPRRLPE     0.280        0 T_0_1_sample_8_      0.000087    97.28        NA      0.056115    95.02      27245.02
+   3           H-2-IAd          SRTVRDIAPRR    2   TVRDIAPRR     0.680        0 T_0_1_sample_8_      0.000073    97.72        NA      0.075184    91.05      22165.76
+   8           H-2-IAd          DIAPRRLPEIP    1   IAPRRLPEI     0.920        0 T_0_1_sample_8_      0.000021    99.34        NA      0.052195    95.37      28425.44
+   6           H-2-IAd            VRDIAPRRL    0   VRDIAPRRL     1.000        0 T_0_1_sample_8_      0.000012    99.62        NA      0.103583    84.07      16301.84
+   2           H-2-IAd           SSRTVRDIAP    1   SRTVRDIAP     0.890        0 T_0_1_sample_8_      0.000011    99.66        NA      0.036475    96.76      33695.75
+  11           H-2-IAd           PRRLPEIPPE    1   RRLPEIPPE     0.910        0 T_0_1_sample_8_      0.000010    99.69        NA      0.029024    97.42      36524.73
+   7           H-2-IAd           RDIAPRRLPE    1   DIAPRRLPE     0.970        0 T_0_1_sample_8_      0.000006    99.81        NA      0.012572    98.88      43640.99
+   4           H-2-IAd           RTVRDIAPRR    1   TVRDIAPRR     0.900        0 T_0_1_sample_8_      0.000006    99.81        NA      0.048908    95.66      29454.58
+   9           H-2-IAd          IAPRRLPEIPP    2   PRRLPEIPP     0.670        0 T_0_1_sample_8_      0.000003    99.91        NA      0.045549    95.96      30544.76
+   3           H-2-IAd           SRTVRDIAPR    1   RTVRDIAPR     0.630        0 T_0_1_sample_8_      0.000001    99.97        NA      0.057389    94.78      26872.04
+  12           H-2-IAd            RRLPEIPPE    0   RRLPEIPPE     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.017194    98.47      41512.23
+  11           H-2-IAd            PRRLPEIPP    0   PRRLPEIPP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.006817    99.39      46444.81
+  10           H-2-IAd            APRRLPEIP    0   APRRLPEIP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.002921    99.74      48444.49
+   9           H-2-IAd            IAPRRLPEI    0   IAPRRLPEI     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.029892    97.35      36183.31
+   8           H-2-IAd            DIAPRRLPE    0   DIAPRRLPE     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.004935    99.56      47400.23
+   7           H-2-IAd            RDIAPRRLP    0   RDIAPRRLP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.007329    99.35      46188.23
+   5           H-2-IAd            TVRDIAPRR    0   TVRDIAPRR     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.018127    98.39      41095.25
+   4           H-2-IAd            RTVRDIAPR    0   RTVRDIAPR     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.032494    97.12      35178.85
+   3           H-2-IAd            SRTVRDIAP    0   SRTVRDIAP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.018379    98.37      40983.38
+   2           H-2-IAd            SSRTVRDIA    0   SSRTVRDIA     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.008109    99.28      45800.07
+   1           H-2-IAd            SSSRTVRDI    0   SSSRTVRDI     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.008119    99.28      45795.11
+  10           H-2-IAd           APRRLPEIPP    1   PRRLPEIPP     0.970        0 T_0_1_sample_8_      0.000000   100.00        NA      0.012295    98.91      43771.97
+   9           H-2-IAd           IAPRRLPEIP    0   IAPRRLPEI     0.890        0 T_0_1_sample_8_      0.000000   100.00        NA      0.036904    96.72      33539.71
+   1           H-2-IAd           SSSRTVRDIA    1   SSRTVRDIA     0.760        0 T_0_1_sample_8_      0.000000   100.00        NA      0.019331    98.28      40563.40
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       SRVVRDIQPRRLPD    3   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.480239     2.43        NA      0.266613    37.87       2793.60   <= WB
+   2           H-2-IAd      SSRVVRDIQPRRLPD    4   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.441207     2.86        NA      0.295851    30.98       2035.99   <= WB
+   3           H-2-IAd        SRVVRDIQPRRLP    3   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.358809     4.05        NA      0.209918    53.21       5159.07   <= WB
+   1           H-2-IAd     SSSRVVRDIQPRRLPD    5   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.347663     4.27        NA      0.294323    31.31       2069.93   <= WB
+   1           H-2-IAd    SSSRVVRDIQPRRLPDL    5   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.244958     6.85        NA      0.299432    30.17       1958.61
+   4           H-2-IAd         RVVRDIQPRRLP    2   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.219523     7.76        NA      0.250497    41.97       3325.77
+   1           H-2-IAd   SSSRVVRDIQPRRLPDLP    5   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.139708    12.32        NA      0.261495    39.17       2952.66
+   5           H-2-IAd          VVRDIQPRRLP    1   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.043368    28.16        NA      0.203887    54.98       5506.95
+   8           H-2-IAd        DIQPRRLPDLPVP    3   PRRLPDLPV     0.920        0 T_0_1_sample_9_      0.009416    53.65        NA      0.061665    93.88      25657.13
+   7           H-2-IAd       RDIQPRRLPDLPVP    4   PRRLPDLPV     0.880        0 T_0_1_sample_9_      0.006673    59.21        NA      0.094622    86.39      17961.56
+   6           H-2-IAd      VRDIQPRRLPDLPVP    5   PRRLPDLPV     0.620        0 T_0_1_sample_9_      0.004399    65.38        NA      0.191295    58.69       6310.74
+   5           H-2-IAd           VVRDIQPRRL    1   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.003906    67.16        NA      0.171148    64.53       7847.85
+   9           H-2-IAd         IQPRRLPDLPVP    2   PRRLPDLPV     0.920        0 T_0_1_sample_9_      0.003781    67.61        NA      0.080855    89.84      20846.58
+   1           H-2-IAd        SSSRVVRDIQPRR    2   SRVVRDIQP     0.700        0 T_0_1_sample_9_      0.000972    83.48        NA      0.059715    94.29      26204.21
+   1           H-2-IAd         SSSRVVRDIQPR    2   SRVVRDIQP     0.720        0 T_0_1_sample_9_      0.000329    91.74        NA      0.071480    91.83      23072.13
+  10           H-2-IAd          QPRRLPDLPVP    1   PRRLPDLPV     0.860        0 T_0_1_sample_9_      0.000202    94.19        NA      0.055108    95.11      27543.50
+   1           H-2-IAd          SSSRVVRDIQP    1   SSRVVRDIQ     0.380        0 T_0_1_sample_9_      0.000031    99.03        NA      0.043180    96.17      31337.80
+   7           H-2-IAd         RDIQPRRLPDLP    2   IQPRRLPDL     0.820        0 T_0_1_sample_9_      0.000020    99.38        NA      0.047462    95.79      29919.03
+   2           H-2-IAd          SSRVVRDIQPR    1   SRVVRDIQP     0.730        0 T_0_1_sample_9_      0.000017    99.47        NA      0.055333    95.09      27476.53
+   6           H-2-IAd            VRDIQPRRL    0   VRDIQPRRL     1.000        0 T_0_1_sample_9_      0.000016    99.50        NA      0.106084    83.39      15866.62
+  10           H-2-IAd           QPRRLPDLPV    1   PRRLPDLPV     1.000        0 T_0_1_sample_9_      0.000009    99.72        NA      0.037377    96.68      33368.49
+   3           H-2-IAd          SRVVRDIQPRR    2   VVRDIQPRR     0.550        0 T_0_1_sample_9_      0.000006    99.81        NA      0.057722    94.71      26775.41
+   7           H-2-IAd          RDIQPRRLPDL    2   IQPRRLPDL     0.790        0 T_0_1_sample_9_      0.000004    99.88        NA      0.039575    96.49      32584.30
+   1           H-2-IAd           SSSRVVRDIQ    1   SSRVVRDIQ     0.740        0 T_0_1_sample_9_      0.000001    99.97        NA      0.023955    97.87      38583.91
+  12           H-2-IAd            RRLPDLPVP    0   RRLPDLPVP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.011947    98.94      43937.11
+  11           H-2-IAd            PRRLPDLPV    0   PRRLPDLPV     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.023913    97.88      38601.43
+  10           H-2-IAd            QPRRLPDLP    0   QPRRLPDLP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.001820    99.84      49025.02
+   9           H-2-IAd            IQPRRLPDL    0   IQPRRLPDL     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.019406    98.28      40530.48
+   8           H-2-IAd            DIQPRRLPD    0   DIQPRRLPD     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.002543    99.77      48643.04
+   7           H-2-IAd            RDIQPRRLP    0   RDIQPRRLP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.005497    99.51      47112.90
+   5           H-2-IAd            VVRDIQPRR    0   VVRDIQPRR     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.014165    98.74      42895.25
+   4           H-2-IAd            RVVRDIQPR    0   RVVRDIQPR     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.024615    97.81      38309.36
+   3           H-2-IAd            SRVVRDIQP    0   SRVVRDIQP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.012572    98.88      43640.99
+   2           H-2-IAd            SSRVVRDIQ    0   SSRVVRDIQ     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.008795    99.22      45461.36
+   1           H-2-IAd            SSSRVVRDI    0   SSSRVVRDI     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.012279    98.91      43779.57
+   8           H-2-IAd           DIQPRRLPDL    1   IQPRRLPDL     0.940        0 T_0_1_sample_9_      0.000000   100.00        NA      0.029245    97.40      36437.50
+   7           H-2-IAd           RDIQPRRLPD    1   DIQPRRLPD     0.910        0 T_0_1_sample_9_      0.000000   100.00        NA      0.008347    99.26      45682.29
+   4           H-2-IAd           RVVRDIQPRR    1   VVRDIQPRR     0.840        0 T_0_1_sample_9_      0.000000   100.00        NA      0.038803    96.56      32857.61
+   3           H-2-IAd           SRVVRDIQPR    1   RVVRDIQPR     0.620        0 T_0_1_sample_9_      0.000000   100.00        NA      0.039291    96.51      32684.56
+   2           H-2-IAd           SSRVVRDIQP    1   SRVVRDIQP     0.790        0 T_0_1_sample_9_      0.000000   100.00        NA      0.027108    97.59      37289.82
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos               MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3           H-2-IAd       SRRVRDIAPRRLPD    3   VRDIAPRRL     1.000        0 T_0_1_sample_10      0.422098     3.09        NA      0.243735    43.71       3578.22   <= WB
+   2           H-2-IAd      ESRRVRDIAPRRLPD    4   VRDIAPRRL     1.000        0 T_0_1_sample_10      0.382532     3.67        NA      0.276184    35.48       2518.78   <= WB
+   3           H-2-IAd        SRRVRDIAPRRLP    3   VRDIAPRRL     1.000        0 T_0_1_sample_10      0.301305     5.24        NA      0.189372    59.25       6443.42
+   1           H-2-IAd     SESRRVRDIAPRRLPD    5   VRDIAPRRL     0.990        0 T_0_1_sample_10      0.293623     5.43        NA      0.278695    34.86       2451.27
+   1           H-2-IAd    SESRRVRDIAPRRLPDL    5   VRDIAPRRL     0.980        0 T_0_1_sample_10      0.201146     8.58        NA      0.268660    37.35       2732.40
+   4           H-2-IAd         RRVRDIAPRRLP    2   VRDIAPRRL     1.000        0 T_0_1_sample_10      0.172917    10.04        NA      0.232844    46.69       4025.72
+   1           H-2-IAd   SESRRVRDIAPRRLPDLP    5   VRDIAPRRL     0.970        0 T_0_1_sample_10      0.113890    14.65        NA      0.245009    43.37       3529.23
+   4           H-2-IAd          RRVRDIAPRRL    2   VRDIAPRRL     0.990        0 T_0_1_sample_10      0.035940    31.12        NA      0.208003    53.77       5267.08
+   8           H-2-IAd        DIAPRRLPDLPAP    3   PRRLPDLPA     0.990        0 T_0_1_sample_10      0.018826    41.86        NA      0.066553    92.86      24335.46
+   7           H-2-IAd       RDIAPRRLPDLPAP    4   PRRLPDLPA     0.910        0 T_0_1_sample_10      0.015050    45.65        NA      0.101242    84.71      16720.02
+   6           H-2-IAd      VRDIAPRRLPDLPAP    5   PRRLPDLPA     0.700        0 T_0_1_sample_10      0.010679    51.57        NA      0.190461    58.93       6367.95
+   9           H-2-IAd         IAPRRLPDLPAP    2   PRRLPDLPA     0.970        0 T_0_1_sample_10      0.009845    52.94        NA      0.089500    87.68      18985.07
+   5           H-2-IAd           RVRDIAPRRL    1   VRDIAPRRL     1.000        0 T_0_1_sample_10      0.006534    59.51        NA      0.164503    66.52       8432.87
+   1           H-2-IAd        SESRRVRDIAPRR    2   SRRVRDIAP     0.630        0 T_0_1_sample_10      0.003298    69.36        NA      0.073198    91.47      22647.21
+  10           H-2-IAd          APRRLPDLPAP    1   PRRLPDLPA     0.960        0 T_0_1_sample_10      0.001117    82.18        NA      0.061155    93.99      25799.09
+   2           H-2-IAd         ESRRVRDIAPRR    3   RVRDIAPRR     0.460        0 T_0_1_sample_10      0.001095    82.37        NA      0.094911    86.32      17905.49
+   1           H-2-IAd         SESRRVRDIAPR    2   SRRVRDIAP     0.790        0 T_0_1_sample_10      0.000793    85.14        NA      0.082307    89.48      20521.63
+   7           H-2-IAd         RDIAPRRLPDLP    2   IAPRRLPDL     0.670        0 T_0_1_sample_10      0.000115    96.41        NA      0.046641    95.86      30185.99
+   3           H-2-IAd          SRRVRDIAPRR    2   RVRDIAPRR     0.720        0 T_0_1_sample_10      0.000103    96.78        NA      0.076729    90.73      21798.30
+  10           H-2-IAd           APRRLPDLPA    1   PRRLPDLPA     1.000        0 T_0_1_sample_10      0.000051    98.41        NA      0.040449    96.41      32277.60
+   2           H-2-IAd          ESRRVRDIAPR    1   SRRVRDIAP     0.740        0 T_0_1_sample_10      0.000017    99.47        NA      0.066345    92.90      24390.29
+   7           H-2-IAd          RDIAPRRLPDL    2   IAPRRLPDL     0.620        0 T_0_1_sample_10      0.000015    99.53        NA      0.041307    96.33      31979.36
+   6           H-2-IAd            VRDIAPRRL    0   VRDIAPRRL     1.000        0 T_0_1_sample_10      0.000012    99.62        NA      0.103583    84.07      16301.84
+   4           H-2-IAd           RRVRDIAPRR    1   RVRDIAPRR     0.960        0 T_0_1_sample_10      0.000008    99.75        NA      0.059324    94.37      26315.29
+  11           H-2-IAd            PRRLPDLPA    0   PRRLPDLPA     1.000        0 T_0_1_sample_10      0.000001    99.97        NA      0.023271    97.93      38870.50
+   8           H-2-IAd           DIAPRRLPDL    1   IAPRRLPDL     0.860        0 T_0_1_sample_10      0.000001    99.97        NA      0.030567    97.29      35920.02
+   3           H-2-IAd           SRRVRDIAPR    1   RRVRDIAPR     0.660        0 T_0_1_sample_10      0.000001    99.97        NA      0.051573    95.42      28617.40
+   2           H-2-IAd           ESRRVRDIAP    1   SRRVRDIAP     0.950        0 T_0_1_sample_10      0.000001    99.97        NA      0.024633    97.81      38301.90
+  12           H-2-IAd            RRLPDLPAP    0   RRLPDLPAP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.011009    99.02      44385.30
+  10           H-2-IAd            APRRLPDLP    0   APRRLPDLP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.001645    99.85      49117.93
+   9           H-2-IAd            IAPRRLPDL    0   IAPRRLPDL     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.019926    98.23      40303.08
+   8           H-2-IAd            DIAPRRLPD    0   DIAPRRLPD     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.004932    99.56      47401.79
+   7           H-2-IAd            RDIAPRRLP    0   RDIAPRRLP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.007329    99.35      46188.23
+   5           H-2-IAd            RVRDIAPRR    0   RVRDIAPRR     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.025040    97.78      38133.59
+   4           H-2-IAd            RRVRDIAPR    0   RRVRDIAPR     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.034436    96.94      34447.39
+   3           H-2-IAd            SRRVRDIAP    0   SRRVRDIAP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.013466    98.80      43220.89
+   2           H-2-IAd            ESRRVRDIA    0   ESRRVRDIA     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.004395    99.61      47678.00
+   1           H-2-IAd            SESRRVRDI    0   SESRRVRDI     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.007492    99.33      46106.83
+   7           H-2-IAd           RDIAPRRLPD    1   DIAPRRLPD     0.970        0 T_0_1_sample_10      0.000000   100.00        NA      0.012615    98.88      43620.68
+   1           H-2-IAd           SESRRVRDIA    0   SESRRVRDI     0.430        0 T_0_1_sample_10      0.000000   100.00        NA      0.013137    98.83      43375.02
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------

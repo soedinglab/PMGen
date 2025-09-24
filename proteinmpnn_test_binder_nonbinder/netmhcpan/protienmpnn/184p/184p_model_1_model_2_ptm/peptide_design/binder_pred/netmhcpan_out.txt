@@ -1,0 +1,619 @@
+# NetMHCIIpan version 4.3f
+
+# Input is in FASTA format
+
+# Peptide length 9,10,11,12,13,14,15,16,17,18
+
+# Prediction Mode: EL+BA
+
+# Threshold for Strong binding peptides (%Rank)  1.00%
+# Threshold for Weak binding peptides (%Rank)    5.00%
+
+# HLA-DPA10103-DPB110101 : Distance to training data  0.020 (using nearest neighbor HLA-DPA10103-DPB10201)
+
+# Allele: HLA-DPA10103-DPB110101
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      YRTFVATFGAASNKA    3   FVATFGAAS     0.900        0 multichain_184p      0.108179     6.63        NA      0.560431     4.97        116.28
+   2  HLA-DPA10103-DPB110101     KYRTFVATFGAASNKA    4   FVATFGAAS     0.860        0 multichain_184p      0.087560     7.81        NA      0.596812     3.12         78.45
+   3  HLA-DPA10103-DPB110101       YRTFVATFGAASNK    3   FVATFGAAS     0.900        0 multichain_184p      0.086371     7.89        NA      0.546237     5.86        135.59
+   1  HLA-DPA10103-DPB110101    DKYRTFVATFGAASNKA    5   FVATFGAAS     0.830        0 multichain_184p      0.058011    10.62        NA      0.589495     3.45         84.91
+   4  HLA-DPA10103-DPB110101        RTFVATFGAASNK    2   FVATFGAAS     0.860        0 multichain_184p      0.057909    10.63        NA      0.447399    15.40        395.05
+   1  HLA-DPA10103-DPB110101   DKYRTFVATFGAASNKAF    5   FVATFGAAS     0.830        0 multichain_184p      0.022736    19.34        NA      0.514337     8.28        191.48
+   4  HLA-DPA10103-DPB110101         RTFVATFGAASN    2   FVATFGAAS     0.870        0 multichain_184p      0.018083    22.04        NA      0.465229    13.16        325.74
+   1  HLA-DPA10103-DPB110101       DKYRTFVATFGAAS    2   YRTFVATFG     0.660        0 multichain_184p      0.014507    24.91        NA      0.503673     9.17        214.89
+   1  HLA-DPA10103-DPB110101        DKYRTFVATFGAA    2   YRTFVATFG     0.840        0 multichain_184p      0.014122    25.28        NA      0.371635    27.41        896.74
+   7  HLA-DPA10103-DPB110101       VATFGAASNKAFAE    3   FGAASNKAF     0.820        0 multichain_184p      0.009261    31.33        NA      0.294961    43.42       2055.69
+   5  HLA-DPA10103-DPB110101     TFVATFGAASNKAFAE    5   FGAASNKAF     0.460        0 multichain_184p      0.008335    32.92        NA      0.467912    12.84        316.42
+   6  HLA-DPA10103-DPB110101      FVATFGAASNKAFAE    4   FGAASNKAF     0.760        0 multichain_184p      0.007922    33.69        NA      0.401799    22.19        647.04
+   1  HLA-DPA10103-DPB110101         DKYRTFVATFGA    2   YRTFVATFG     0.890        0 multichain_184p      0.006072    37.87        NA      0.424659    18.59        505.25
+   7  HLA-DPA10103-DPB110101        VATFGAASNKAFA    3   FGAASNKAF     0.860        0 multichain_184p      0.005807    38.57        NA      0.229831    59.14       4159.12
+   8  HLA-DPA10103-DPB110101         ATFGAASNKAFA    2   FGAASNKAF     0.840        0 multichain_184p      0.003209    48.09        NA      0.256958    52.53       3101.22
+   5  HLA-DPA10103-DPB110101          TFVATFGAASN    1   FVATFGAAS     0.870        0 multichain_184p      0.001471    61.00        NA      0.381749    25.65        803.79
+   6  HLA-DPA10103-DPB110101         FVATFGAASNKA    1   VATFGAASN     0.640        0 multichain_184p      0.000788    70.48        NA      0.382360    25.54        798.49
+   1  HLA-DPA10103-DPB110101          DKYRTFVATFG    2   YRTFVATFG     0.810        0 multichain_184p      0.000380    79.89        NA      0.378343    26.24        833.96
+   9  HLA-DPA10103-DPB110101          TFGAASNKAFA    1   FGAASNKAF     0.950        0 multichain_184p      0.000302    82.62        NA      0.224465    60.46       4407.74
+   5  HLA-DPA10103-DPB110101           TFVATFGAAS    1   FVATFGAAS     0.980        0 multichain_184p      0.000128    90.19        NA      0.327258    36.14       1449.42
+   3  HLA-DPA10103-DPB110101          YRTFVATFGAA    2   TFVATFGAA     0.560        0 multichain_184p      0.000052    95.19        NA      0.339365    33.61       1271.46
+   7  HLA-DPA10103-DPB110101          VATFGAASNKA    2   TFGAASNKA     0.460        0 multichain_184p      0.000038    96.48        NA      0.136049    81.95      11473.07
+   2  HLA-DPA10103-DPB110101           KYRTFVATFG    1   YRTFVATFG     0.950        0 multichain_184p      0.000026    97.59        NA      0.347990    31.89       1158.18
+  10  HLA-DPA10103-DPB110101          FGAASNKAFAE    2   AASNKAFAE     0.630        0 multichain_184p      0.000021    98.06        NA      0.198379    66.95       5845.12
+   9  HLA-DPA10103-DPB110101           TFGAASNKAF    1   FGAASNKAF     0.900        0 multichain_184p      0.000012    98.89        NA      0.173218    73.14       7674.03
+   4  HLA-DPA10103-DPB110101           RTFVATFGAA    1   TFVATFGAA     0.870        0 multichain_184p      0.000005    99.54        NA      0.166522    74.77       8250.65
+   7  HLA-DPA10103-DPB110101           VATFGAASNK    0   VATFGAASN     0.680        0 multichain_184p      0.000004    99.63        NA      0.107939    87.87      15551.34
+  10  HLA-DPA10103-DPB110101           FGAASNKAFA    1   GAASNKAFA     0.530        0 multichain_184p      0.000003    99.72        NA      0.179882    71.52       7140.19
+   1  HLA-DPA10103-DPB110101           DKYRTFVATF    1   KYRTFVATF     0.730        0 multichain_184p      0.000003    99.72        NA      0.266060    50.30       2810.36
+   6  HLA-DPA10103-DPB110101            FVATFGAAS    0   FVATFGAAS     1.000        0 multichain_184p      0.000002    99.81        NA      0.251437    53.88       3292.12
+   7  HLA-DPA10103-DPB110101            VATFGAASN    0   VATFGAASN     1.000        0 multichain_184p      0.000001    99.91        NA      0.074228    93.79      22396.23
+   3  HLA-DPA10103-DPB110101            YRTFVATFG    0   YRTFVATFG     1.000        0 multichain_184p      0.000001    99.91        NA      0.213805    63.11       4946.60
+  11  HLA-DPA10103-DPB110101           GAASNKAFAE    1   AASNKAFAE     0.900        0 multichain_184p      0.000001    99.91        NA      0.047468    96.45      29917.08
+   8  HLA-DPA10103-DPB110101           ATFGAASNKA    1   TFGAASNKA     0.890        0 multichain_184p      0.000001    99.91        NA      0.049006    96.34      29423.37
+  12  HLA-DPA10103-DPB110101            AASNKAFAE    0   AASNKAFAE     1.000        0 multichain_184p      0.000000   100.00        NA      0.029631    97.79      36285.64
+  11  HLA-DPA10103-DPB110101            GAASNKAFA    0   GAASNKAFA     1.000        0 multichain_184p      0.000000   100.00        NA      0.024377    98.18      38408.14
+  10  HLA-DPA10103-DPB110101            FGAASNKAF    0   FGAASNKAF     1.000        0 multichain_184p      0.000000   100.00        NA      0.131408    82.99      12063.90
+   9  HLA-DPA10103-DPB110101            TFGAASNKA    0   TFGAASNKA     1.000        0 multichain_184p      0.000000   100.00        NA      0.028571    97.86      36704.20
+   8  HLA-DPA10103-DPB110101            ATFGAASNK    0   ATFGAASNK     1.000        0 multichain_184p      0.000000   100.00        NA      0.022919    98.29      39018.84
+   5  HLA-DPA10103-DPB110101            TFVATFGAA    0   TFVATFGAA     1.000        0 multichain_184p      0.000000   100.00        NA      0.081234    92.63      20761.27
+   4  HLA-DPA10103-DPB110101            RTFVATFGA    0   RTFVATFGA     1.000        0 multichain_184p      0.000000   100.00        NA      0.091424    90.95      18593.94
+   2  HLA-DPA10103-DPB110101            KYRTFVATF    0   KYRTFVATF     1.000        0 multichain_184p      0.000000   100.00        NA      0.206540    64.91       5351.12
+   1  HLA-DPA10103-DPB110101            DKYRTFVAT    0   DKYRTFVAT     1.000        0 multichain_184p      0.000000   100.00        NA      0.082994    92.34      20369.66
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      KPTIKTTQPADMSLG    3   IKTTQPADM     0.930        0 T_0_1_sample_1_      0.010002    30.17        NA      0.192327    68.45       6240.67
+   3  HLA-DPA10103-DPB110101        KPTIKTTQPADMS    3   IKTTQPADM     0.950        0 T_0_1_sample_1_      0.009023    31.72        NA      0.137553    81.61      11287.89
+   3  HLA-DPA10103-DPB110101       KPTIKTTQPADMSL    3   IKTTQPADM     0.910        0 T_0_1_sample_1_      0.008115    33.33        NA      0.200462    66.43       5714.85
+   2  HLA-DPA10103-DPB110101     PKPTIKTTQPADMSLG    4   IKTTQPADM     0.860        0 T_0_1_sample_1_      0.006944    35.78        NA      0.208180    64.50       5257.00
+   4  HLA-DPA10103-DPB110101       PTIKTTQPADMSLG    3   KTTQPADMS     0.160        0 T_0_1_sample_1_      0.004181    43.79        NA      0.163280    75.55       8545.20
+   1  HLA-DPA10103-DPB110101    SPKPTIKTTQPADMSLG    5   IKTTQPADM     0.800        0 T_0_1_sample_1_      0.003699    45.74        NA      0.189824    69.08       6411.99
+   4  HLA-DPA10103-DPB110101         PTIKTTQPADMS    2   IKTTQPADM     0.940        0 T_0_1_sample_1_      0.003299    47.61        NA      0.156626    77.15       9183.10
+   4  HLA-DPA10103-DPB110101      PTIKTTQPADMSLGA    3   KTTQPADMS     0.210        0 T_0_1_sample_1_      0.003039    49.03        NA      0.166632    74.75       8240.84
+   1  HLA-DPA10103-DPB110101   SPKPTIKTTQPADMSLGA    5   IKTTQPADM     0.750        0 T_0_1_sample_1_      0.001826    57.53        NA      0.155605    77.39       9285.10
+   4  HLA-DPA10103-DPB110101     PTIKTTQPADMSLGAL    3   KTTQPADMS     0.220        0 T_0_1_sample_1_      0.001386    62.01        NA      0.184782    70.33       6771.50
+   5  HLA-DPA10103-DPB110101        TIKTTQPADMSLG    2   KTTQPADMS     0.200        0 T_0_1_sample_1_      0.001178    64.49        NA      0.120033    85.47      13643.90
+   1  HLA-DPA10103-DPB110101        SPKPTIKTTQPAD    3   PTIKTTQPA     0.840        0 T_0_1_sample_1_      0.001071    65.99        NA      0.038082    97.15      33114.93
+   5  HLA-DPA10103-DPB110101         TIKTTQPADMSL    2   KTTQPADMS     0.210        0 T_0_1_sample_1_      0.001012    66.90        NA      0.167264    74.59       8184.68
+   4  HLA-DPA10103-DPB110101    PTIKTTQPADMSLGALP    3   KTTQPADMS     0.200        0 T_0_1_sample_1_      0.000699    72.27        NA      0.173931    72.97       7615.06
+   5  HLA-DPA10103-DPB110101          TIKTTQPADMS    1   IKTTQPADM     0.900        0 T_0_1_sample_1_      0.000313    82.23        NA      0.136693    81.80      11393.41
+   2  HLA-DPA10103-DPB110101         PKPTIKTTQPAD    2   PTIKTTQPA     0.880        0 T_0_1_sample_1_      0.000260    84.11        NA      0.048040    96.41      29732.51
+   6  HLA-DPA10103-DPB110101          IKTTQPADMSL    1   KTTQPADMS     0.360        0 T_0_1_sample_1_      0.000094    92.40        NA      0.124971    84.43      12934.06
+   7  HLA-DPA10103-DPB110101       KTTQPADMSLGALP    4   PADMSLGAL     0.560        0 T_0_1_sample_1_      0.000091    92.60        NA      0.112731    86.92      14765.58
+   8  HLA-DPA10103-DPB110101        TTQPADMSLGALP    3   PADMSLGAL     0.720        0 T_0_1_sample_1_      0.000070    93.96        NA      0.082706    92.39      20433.23
+   7  HLA-DPA10103-DPB110101        KTTQPADMSLGAL    3   LSMDAPQTT     0.480        1 T_0_1_sample_1_      0.000062    94.48        NA      0.077539    93.24      21608.11
+   7  HLA-DPA10103-DPB110101         KTTQPADMSLGA    2   LSMDAPQTT     0.730        1 T_0_1_sample_1_      0.000044    95.93        NA      0.071700    94.21      23017.28
+   5  HLA-DPA10103-DPB110101           TIKTTQPADM    1   IKTTQPADM     1.000        0 T_0_1_sample_1_      0.000035    96.76        NA      0.117789    85.92      13979.22
+   9  HLA-DPA10103-DPB110101         TQPADMSLGALP    2   PADMSLGAL     0.690        0 T_0_1_sample_1_      0.000033    96.94        NA      0.104575    88.53      16127.81
+   2  HLA-DPA10103-DPB110101          PKPTIKTTQPA    2   PTIKTTQPA     0.760        0 T_0_1_sample_1_      0.000022    97.96        NA      0.039345    97.06      32665.47
+   7  HLA-DPA10103-DPB110101          KTTQPADMSLG    1   TTQPADMSL     0.500        0 T_0_1_sample_1_      0.000012    98.89        NA      0.059299    95.57      26322.42
+   1  HLA-DPA10103-DPB110101          SPKPTIKTTQP    2   KPTIKTTQP     0.590        0 T_0_1_sample_1_      0.000011    98.98        NA      0.031244    97.66      35657.88
+  10  HLA-DPA10103-DPB110101          QPADMSLGALP    2   ADMSLGALP     0.160        0 T_0_1_sample_1_      0.000009    99.17        NA      0.090306    91.13      18820.23
+   6  HLA-DPA10103-DPB110101           IKTTQPADMS    1   KTTQPADMS     0.360        0 T_0_1_sample_1_      0.000007    99.35        NA      0.101308    89.18      16708.09
+   8  HLA-DPA10103-DPB110101          TTQPADMSLGA    2   LSMDAPQTT     0.500        1 T_0_1_sample_1_      0.000005    99.54        NA      0.052711    96.06      28267.18
+  11  HLA-DPA10103-DPB110101           PADMSLGALP    1   ADMSLGALP     0.620        0 T_0_1_sample_1_      0.000003    99.72        NA      0.076693    93.38      21806.80
+   6  HLA-DPA10103-DPB110101            IKTTQPADM    0   IKTTQPADM     1.000        0 T_0_1_sample_1_      0.000002    99.81        NA      0.088305    91.46      19232.13
+   3  HLA-DPA10103-DPB110101           KPTIKTTQPA    1   PTIKTTQPA     0.960        0 T_0_1_sample_1_      0.000002    99.81        NA      0.031448    97.65      35579.25
+   9  HLA-DPA10103-DPB110101          TQPADMSLGAL    2   PADMSLGAL     0.880        0 T_0_1_sample_1_      0.000002    99.81        NA      0.079748    92.88      21097.78
+   8  HLA-DPA10103-DPB110101           TTQPADMSLG    1   LSMDAPQTT     0.900        1 T_0_1_sample_1_      0.000001    99.91        NA      0.040171    97.00      32374.83
+   2  HLA-DPA10103-DPB110101           PKPTIKTTQP    1   KPTIKTTQP     0.850        0 T_0_1_sample_1_      0.000001    99.91        NA      0.023419    98.25      38808.31
+  12  HLA-DPA10103-DPB110101            ADMSLGALP    0   ADMSLGALP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.042367    96.83      31614.68
+  11  HLA-DPA10103-DPB110101            PADMSLGAL    0   PADMSLGAL     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.045905    96.57      30427.33
+  10  HLA-DPA10103-DPB110101            QPADMSLGA    0   QPADMSLGA     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.014941    98.88      42536.60
+   9  HLA-DPA10103-DPB110101            TQPADMSLG    0   TQPADMSLG     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.022457    98.32      39214.37
+   8  HLA-DPA10103-DPB110101            TTQPADMSL    0   LSMDAPQTT     1.000        1 T_0_1_sample_1_      0.000000   100.00        NA      0.023804    98.22      38646.99
+   7  HLA-DPA10103-DPB110101            KTTQPADMS    0   KTTQPADMS     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.023642    98.23      38714.79
+   5  HLA-DPA10103-DPB110101            TIKTTQPAD    0   TIKTTQPAD     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.012930    99.03      43472.28
+   4  HLA-DPA10103-DPB110101            PTIKTTQPA    0   PTIKTTQPA     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.017104    98.72      41552.64
+   3  HLA-DPA10103-DPB110101            KPTIKTTQP    0   KPTIKTTQP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.015898    98.81      42098.42
+   2  HLA-DPA10103-DPB110101            PKPTIKTTQ    0   PKPTIKTTQ     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.012394    99.07      43725.11
+   1  HLA-DPA10103-DPB110101            SPKPTIKTT    0   TTKITPKPS     1.000        1 T_0_1_sample_1_      0.000000   100.00        NA      0.007349    99.45      46178.22
+  10  HLA-DPA10103-DPB110101           QPADMSLGAL    1   PADMSLGAL     0.900        0 T_0_1_sample_1_      0.000000   100.00        NA      0.064016    95.22      25012.71
+   9  HLA-DPA10103-DPB110101           TQPADMSLGA    1   QPADMSLGA     0.760        0 T_0_1_sample_1_      0.000000   100.00        NA      0.034926    97.39      34265.24
+   1  HLA-DPA10103-DPB110101           SPKPTIKTTQ    1   PKPTIKTTQ     0.860        0 T_0_1_sample_1_      0.000000   100.00        NA      0.020492    98.47      40057.02
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      KPTILTTLPADSSLG    3   ILTTLPADS     0.940        0 T_0_1_sample_2_      0.026942    17.48        NA      0.288290    45.03       2209.55
+   3  HLA-DPA10103-DPB110101       KPTILTTLPADSSL    3   ILTTLPADS     0.980        0 T_0_1_sample_2_      0.016801    22.93        NA      0.294162    43.62       2073.54
+   2  HLA-DPA10103-DPB110101     PKPTILTTLPADSSLG    4   ILTTLPADS     0.970        0 T_0_1_sample_2_      0.015451    24.06        NA      0.296712    43.01       2017.11
+   3  HLA-DPA10103-DPB110101        KPTILTTLPADSS    3   ILTTLPADS     0.990        0 T_0_1_sample_2_      0.015098    24.37        NA      0.207271    64.73       5308.97
+   1  HLA-DPA10103-DPB110101    GPKPTILTTLPADSSLG    5   ILTTLPADS     0.930        0 T_0_1_sample_2_      0.009535    30.89        NA      0.285177    45.75       2285.24
+   1  HLA-DPA10103-DPB110101   GPKPTILTTLPADSSLGA    5   ILTTLPADS     0.890        0 T_0_1_sample_2_      0.003847    45.11        NA      0.228018    59.58       4241.51
+   4  HLA-DPA10103-DPB110101         PTILTTLPADSS    2   ILTTLPADS     0.910        0 T_0_1_sample_2_      0.003786    45.37        NA      0.216655    62.40       4796.39
+   4  HLA-DPA10103-DPB110101     PTILTTLPADSSLGAP    3   LTTLPADSS     0.390        0 T_0_1_sample_2_      0.003138    48.48        NA      0.248027    54.71       3415.85
+   5  HLA-DPA10103-DPB110101       TILTTLPADSSLGA    2   LTTLPADSS     0.490        0 T_0_1_sample_2_      0.001990    56.04        NA      0.215685    62.64       4847.00
+   4  HLA-DPA10103-DPB110101    PTILTTLPADSSLGAPP    3   LTTLPADSS     0.340        0 T_0_1_sample_2_      0.001496    60.70        NA      0.233685    58.21       3989.25
+   1  HLA-DPA10103-DPB110101        GPKPTILTTLPAD    3   PTILTTLPA     0.600        0 T_0_1_sample_2_      0.000619    73.88        NA      0.128054    83.74      12509.73
+   6  HLA-DPA10103-DPB110101      ILTTLPADSSLGAPP    4   LPADSSLGA     0.430        0 T_0_1_sample_2_      0.000460    77.75        NA      0.173609    73.05       7641.64
+   7  HLA-DPA10103-DPB110101       LTTLPADSSLGAPP    3   LPADSSLGA     0.490        0 T_0_1_sample_2_      0.000433    78.48        NA      0.108487    87.76      15459.41
+   5  HLA-DPA10103-DPB110101          TILTTLPADSS    1   ILTTLPADS     0.900        0 T_0_1_sample_2_      0.000417    78.90        NA      0.181066    71.23       7049.30
+   6  HLA-DPA10103-DPB110101        ILTTLPADSSLGA    1   LTTLPADSS     0.560        0 T_0_1_sample_2_      0.000243    84.72        NA      0.132094    82.83      11974.69
+   6  HLA-DPA10103-DPB110101         ILTTLPADSSLG    1   LTTLPADSS     0.640        0 T_0_1_sample_2_      0.000221    85.67        NA      0.166848    74.69       8221.60
+   2  HLA-DPA10103-DPB110101         PKPTILTTLPAD    2   PTILTTLPA     0.460        0 T_0_1_sample_2_      0.000152    88.99        NA      0.160668    76.18       8790.14
+   7  HLA-DPA10103-DPB110101        LTTLPADSSLGAP    3   LSSDAPLTT     0.820        1 T_0_1_sample_2_      0.000148    89.18        NA      0.079885    92.85      21066.52
+   8  HLA-DPA10103-DPB110101        TTLPADSSLGAPP    2   LPADSSLGA     0.340        0 T_0_1_sample_2_      0.000131    90.00        NA      0.059179    95.58      26356.62
+   8  HLA-DPA10103-DPB110101         TTLPADSSLGAP    2   GLSSDAPLT     0.420        1 T_0_1_sample_2_      0.000123    90.52        NA      0.076468    93.42      21859.95
+   1  HLA-DPA10103-DPB110101         GPKPTILTTLPA    2   KPTILTTLP     0.330        0 T_0_1_sample_2_      0.000095    92.34        NA      0.160509    76.22       8805.28
+   9  HLA-DPA10103-DPB110101         TLPADSSLGAPP    1   LPADSSLGA     0.460        0 T_0_1_sample_2_      0.000062    94.48        NA      0.065135    95.13      24711.70
+   6  HLA-DPA10103-DPB110101          ILTTLPADSSL    1   LTTLPADSS     0.600        0 T_0_1_sample_2_      0.000052    95.19        NA      0.159418    76.48       8909.83
+   7  HLA-DPA10103-DPB110101         LTTLPADSSLGA    2   LSSDAPLTT     0.580        1 T_0_1_sample_2_      0.000033    96.94        NA      0.101507    89.14      16672.15
+   5  HLA-DPA10103-DPB110101           TILTTLPADS    1   ILTTLPADS     0.990        0 T_0_1_sample_2_      0.000022    97.96        NA      0.137349    81.65      11312.83
+   9  HLA-DPA10103-DPB110101          TLPADSSLGAP    1   LPADSSLGA     0.590        0 T_0_1_sample_2_      0.000017    98.43        NA      0.053449    96.01      28042.38
+   3  HLA-DPA10103-DPB110101          KPTILTTLPAD    1   PTILTTLPA     0.560        0 T_0_1_sample_2_      0.000016    98.52        NA      0.115220    86.42      14373.24
+   1  HLA-DPA10103-DPB110101          GPKPTILTTLP    1   PKPTILTTL     0.860        0 T_0_1_sample_2_      0.000013    98.80        NA      0.127375    83.89      12601.98
+   6  HLA-DPA10103-DPB110101           ILTTLPADSS    1   LTTLPADSS     0.450        0 T_0_1_sample_2_      0.000008    99.26        NA      0.123780    84.69      13101.81
+   8  HLA-DPA10103-DPB110101          TTLPADSSLGA    2   LSSDAPLTT     0.750        1 T_0_1_sample_2_      0.000007    99.35        NA      0.063290    95.27      25209.96
+  10  HLA-DPA10103-DPB110101          LPADSSLGAPP    1   PADSSLGAP     0.330        0 T_0_1_sample_2_      0.000003    99.72        NA      0.048102    96.41      29712.56
+   7  HLA-DPA10103-DPB110101          LTTLPADSSLG    1   LSSDAPLTT     0.460        1 T_0_1_sample_2_      0.000003    99.72        NA      0.083024    92.34      20363.04
+   6  HLA-DPA10103-DPB110101            ILTTLPADS    0   ILTTLPADS     1.000        0 T_0_1_sample_2_      0.000001    99.91        NA      0.093445    90.61      18191.76
+   9  HLA-DPA10103-DPB110101           TLPADSSLGA    1   LPADSSLGA     0.950        0 T_0_1_sample_2_      0.000001    99.91        NA      0.042801    96.80      31466.56
+   8  HLA-DPA10103-DPB110101           TTLPADSSLG    1   LSSDAPLTT     0.950        1 T_0_1_sample_2_      0.000001    99.91        NA      0.044105    96.70      31025.73
+   4  HLA-DPA10103-DPB110101           PTILTTLPAD    1   TILTTLPAD     0.740        0 T_0_1_sample_2_      0.000001    99.91        NA      0.084351    92.12      20072.76
+   3  HLA-DPA10103-DPB110101           KPTILTTLPA    1   PTILTTLPA     0.970        0 T_0_1_sample_2_      0.000001    99.91        NA      0.088609    91.41      19168.98
+   2  HLA-DPA10103-DPB110101           PKPTILTTLP    1   KPTILTTLP     0.610        0 T_0_1_sample_2_      0.000001    99.91        NA      0.103955    88.65      16236.35
+   1  HLA-DPA10103-DPB110101           GPKPTILTTL    1   PKPTILTTL     0.890        0 T_0_1_sample_2_      0.000001    99.91        NA      0.098065    89.82      17304.75
+  12  HLA-DPA10103-DPB110101            ADSSLGAPP    0   ADSSLGAPP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.016419    98.77      41861.78
+  11  HLA-DPA10103-DPB110101            PADSSLGAP    0   PADSSLGAP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.011075    99.17      44353.59
+  10  HLA-DPA10103-DPB110101            LPADSSLGA    0   LPADSSLGA     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.029955    97.76      36158.65
+   9  HLA-DPA10103-DPB110101            TLPADSSLG    0   TLPADSSLG     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.018832    98.59      40782.97
+   8  HLA-DPA10103-DPB110101            TTLPADSSL    0   LSSDAPLTT     1.000        1 T_0_1_sample_2_      0.000000   100.00        NA      0.032066    97.60      35342.14
+   7  HLA-DPA10103-DPB110101            LTTLPADSS    0   LTTLPADSS     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.047256    96.47      29985.79
+   5  HLA-DPA10103-DPB110101            TILTTLPAD    0   TILTTLPAD     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.049040    96.33      29412.53
+   4  HLA-DPA10103-DPB110101            PTILTTLPA    0   PTILTTLPA     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.055443    95.86      27443.85
+   3  HLA-DPA10103-DPB110101            KPTILTTLP    0   KPTILTTLP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.037901    97.17      33179.85
+   2  HLA-DPA10103-DPB110101            PKPTILTTL    0   PKPTILTTL     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.079247    92.96      21212.45
+   1  HLA-DPA10103-DPB110101            GPKPTILTT    0   TTLITPKPG     1.000        1 T_0_1_sample_2_      0.000000   100.00        NA      0.010620    99.21      44572.50
+  10  HLA-DPA10103-DPB110101           LPADSSLGAP    1   PADSSLGAP     0.600        0 T_0_1_sample_2_      0.000000   100.00        NA      0.037154    97.22      33449.10
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      KPTILTSLPASSSLG    3   ILTSLPASS     0.960        0 T_0_1_sample_3_      0.046206    12.42        NA      0.348061    31.88       1157.29
+   2  HLA-DPA10103-DPB110101     SKPTILTSLPASSSLG    4   ILTSLPASS     0.950        0 T_0_1_sample_3_      0.035141    14.88        NA      0.354314    30.68       1081.58
+   3  HLA-DPA10103-DPB110101        KPTILTSLPASSS    3   ILTSLPASS     0.990        0 T_0_1_sample_3_      0.033935    15.21        NA      0.276591    47.74       2507.71
+   3  HLA-DPA10103-DPB110101       KPTILTSLPASSSL    3   ILTSLPASS     0.970        0 T_0_1_sample_3_      0.033351    15.37        NA      0.351205    31.28       1118.58
+   1  HLA-DPA10103-DPB110101    GSKPTILTSLPASSSLG    5   ILTSLPASS     0.950        0 T_0_1_sample_3_      0.021845    19.79        NA      0.351512    31.22       1114.87
+   4  HLA-DPA10103-DPB110101         PTILTSLPASSS    2   ILTSLPASS     0.960        0 T_0_1_sample_3_      0.009200    31.43        NA      0.275737    47.94       2530.99
+   1  HLA-DPA10103-DPB110101   GSKPTILTSLPASSSLGL    5   ILTSLPASS     0.940        0 T_0_1_sample_3_      0.008134    33.29        NA      0.292165    44.09       2118.83
+   1  HLA-DPA10103-DPB110101        GSKPTILTSLPAS    3   PTILTSLPA     0.580        0 T_0_1_sample_3_      0.000929    68.19        NA      0.161601    75.96       8701.85
+   4  HLA-DPA10103-DPB110101          PTILTSLPASS    2   ILTSLPASS     0.960        0 T_0_1_sample_3_      0.000704    72.17        NA      0.225215    60.27       4372.11
+   8  HLA-DPA10103-DPB110101        TSLPASSSLGLLP    3   PASSSLGLL     0.700        0 T_0_1_sample_3_      0.000301    82.66        NA      0.174520    72.83       7566.69
+   1  HLA-DPA10103-DPB110101         GSKPTILTSLPA    2   KPTILTSLP     0.350        0 T_0_1_sample_3_      0.000289    83.09        NA      0.170102    73.90       7937.17
+   7  HLA-DPA10103-DPB110101       LTSLPASSSLGLLP    4   PASSSLGLL     0.780        0 T_0_1_sample_3_      0.000239    84.86        NA      0.237188    57.35       3840.88
+   6  HLA-DPA10103-DPB110101      ILTSLPASSSLGLLP    4   LPASSSLGL     0.390        0 T_0_1_sample_3_      0.000187    87.31        NA      0.294856    43.45       2058.02
+   2  HLA-DPA10103-DPB110101         SKPTILTSLPAS    3   TILTSLPAS     0.520        0 T_0_1_sample_3_      0.000180    87.64        NA      0.192088    68.51       6256.83
+   6  HLA-DPA10103-DPB110101        ILTSLPASSSLGL    1   LTSLPASSS     0.460        0 T_0_1_sample_3_      0.000171    88.08        NA      0.199516    66.66       5773.65
+   6  HLA-DPA10103-DPB110101       ILTSLPASSSLGLL    3   SLPASSSLG     0.310        0 T_0_1_sample_3_      0.000167    88.27        NA      0.268984    49.58       2722.84
+   6  HLA-DPA10103-DPB110101         ILTSLPASSSLG    1   LTSLPASSS     0.650        0 T_0_1_sample_3_      0.000138    89.66        NA      0.216884    62.34       4784.52
+   7  HLA-DPA10103-DPB110101        LTSLPASSSLGLL    3   LPASSSLGL     0.610        0 T_0_1_sample_3_      0.000116    90.97        NA      0.190936    68.80       6335.31
+   9  HLA-DPA10103-DPB110101         SLPASSSLGLLP    2   PASSSLGLL     0.850        0 T_0_1_sample_3_      0.000084    93.05        NA      0.203869    65.58       5508.02
+   7  HLA-DPA10103-DPB110101         LTSLPASSSLGL    2   LSSSAPLST     0.620        1 T_0_1_sample_3_      0.000061    94.55        NA      0.181373    71.16       7025.93
+   5  HLA-DPA10103-DPB110101           TILTSLPASS    1   ILTSLPASS     0.980        0 T_0_1_sample_3_      0.000055    94.94        NA      0.193582    68.14       6156.50
+   6  HLA-DPA10103-DPB110101          ILTSLPASSSL    1   LTSLPASSS     0.600        0 T_0_1_sample_3_      0.000028    97.41        NA      0.209323    64.22       5192.39
+   1  HLA-DPA10103-DPB110101          GSKPTILTSLP    1   SKPTILTSL     0.890        0 T_0_1_sample_3_      0.000019    98.24        NA      0.134036    82.40      11725.70
+   3  HLA-DPA10103-DPB110101          KPTILTSLPAS    2   TILTSLPAS     0.510        0 T_0_1_sample_3_      0.000017    98.43        NA      0.150901    78.52       9769.91
+   2  HLA-DPA10103-DPB110101          SKPTILTSLPA    2   PTILTSLPA     0.690        0 T_0_1_sample_3_      0.000016    98.52        NA      0.145510    79.81      10356.73
+  10  HLA-DPA10103-DPB110101          LPASSSLGLLP    2   ASSSLGLLP     0.240        0 T_0_1_sample_3_      0.000013    98.80        NA      0.176289    72.39       7423.23
+   8  HLA-DPA10103-DPB110101          TSLPASSSLGL    2   LSSSAPLST     0.890        1 T_0_1_sample_3_      0.000013    98.80        NA      0.136168    81.92      11458.31
+   9  HLA-DPA10103-DPB110101          SLPASSSLGLL    2   PASSSLGLL     0.630        0 T_0_1_sample_3_      0.000010    99.07        NA      0.186546    69.89       6643.49
+   7  HLA-DPA10103-DPB110101          LTSLPASSSLG    1   LSSSAPLST     0.580        1 T_0_1_sample_3_      0.000010    99.07        NA      0.122449    84.99      13291.87
+  11  HLA-DPA10103-DPB110101           PASSSLGLLP    1   ASSSLGLLP     0.390        0 T_0_1_sample_3_      0.000003    99.72        NA      0.096199    90.16      17657.69
+  10  HLA-DPA10103-DPB110101           LPASSSLGLL    1   PASSSLGLL     0.950        0 T_0_1_sample_3_      0.000003    99.72        NA      0.157493    76.94       9097.36
+   8  HLA-DPA10103-DPB110101           TSLPASSSLG    1   LSSSAPLST     0.980        1 T_0_1_sample_3_      0.000002    99.81        NA      0.065793    95.08      24536.40
+   6  HLA-DPA10103-DPB110101            ILTSLPASS    0   ILTSLPASS     1.000        0 T_0_1_sample_3_      0.000001    99.91        NA      0.122821    84.91      13238.47
+   9  HLA-DPA10103-DPB110101           SLPASSSLGL    1   LPASSSLGL     0.900        0 T_0_1_sample_3_      0.000001    99.91        NA      0.105295    88.39      16002.65
+   7  HLA-DPA10103-DPB110101           LTSLPASSSL    0   LTSLPASSS     0.780        0 T_0_1_sample_3_      0.000001    99.91        NA      0.104428    88.56      16153.48
+   4  HLA-DPA10103-DPB110101           PTILTSLPAS    1   TILTSLPAS     0.780        0 T_0_1_sample_3_      0.000001    99.91        NA      0.113692    86.73      14612.84
+   3  HLA-DPA10103-DPB110101           KPTILTSLPA    1   PTILTSLPA     0.950        0 T_0_1_sample_3_      0.000001    99.91        NA      0.096859    90.05      17532.04
+   2  HLA-DPA10103-DPB110101           SKPTILTSLP    1   KPTILTSLP     0.660        0 T_0_1_sample_3_      0.000001    99.91        NA      0.104267    88.59      16181.64
+   1  HLA-DPA10103-DPB110101           GSKPTILTSL    1   SKPTILTSL     0.870        0 T_0_1_sample_3_      0.000001    99.91        NA      0.105497    88.35      15967.71
+  12  HLA-DPA10103-DPB110101            ASSSLGLLP    0   ASSSLGLLP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.030657    97.71      35885.06
+  11  HLA-DPA10103-DPB110101            PASSSLGLL    0   PASSSLGLL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.080859    92.69      20845.68
+  10  HLA-DPA10103-DPB110101            LPASSSLGL    0   LPASSSLGL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.080090    92.82      21019.85
+   9  HLA-DPA10103-DPB110101            SLPASSSLG    0   SLPASSSLG     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.028058    97.90      36908.50
+   8  HLA-DPA10103-DPB110101            TSLPASSSL    0   LSSSAPLST     1.000        1 T_0_1_sample_3_      0.000000   100.00        NA      0.040059    97.01      32414.11
+   7  HLA-DPA10103-DPB110101            LTSLPASSS    0   LTSLPASSS     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.067410    94.92      24110.85
+   5  HLA-DPA10103-DPB110101            TILTSLPAS    0   TILTSLPAS     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.074444    93.75      22343.95
+   4  HLA-DPA10103-DPB110101            PTILTSLPA    0   PTILTSLPA     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.059531    95.55      26256.43
+   3  HLA-DPA10103-DPB110101            KPTILTSLP    0   KPTILTSLP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.044313    96.69      30955.97
+   2  HLA-DPA10103-DPB110101            SKPTILTSL    0   SKPTILTSL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.081814    92.54      20631.39
+   1  HLA-DPA10103-DPB110101            GSKPTILTS    0   GSKPTILTS     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.019769    98.52      40371.61
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      VPTILTSQPASSSLG    3   ILTSQPASS     0.860        0 T_0_1_sample_4_      0.019299    21.26        NA      0.229826    59.14       4159.34
+   2  HLA-DPA10103-DPB110101     PVPTILTSQPASSSLG    4   ILTSQPASS     0.890        0 T_0_1_sample_4_      0.013473    25.92        NA      0.233485    58.25       3997.89
+   3  HLA-DPA10103-DPB110101       VPTILTSQPASSSL    3   ILTSQPASS     0.920        0 T_0_1_sample_4_      0.011759    27.82        NA      0.227119    59.80       4282.97
+   3  HLA-DPA10103-DPB110101        VPTILTSQPASSS    3   ILTSQPASS     0.980        0 T_0_1_sample_4_      0.011108    28.68        NA      0.172164    73.40       7762.05
+   1  HLA-DPA10103-DPB110101    SPVPTILTSQPASSSLG    5   ILTSQPASS     0.880        0 T_0_1_sample_4_      0.009236    31.37        NA      0.228380    59.50       4224.93
+   4  HLA-DPA10103-DPB110101      PTILTSQPASSSLGA    3   LTSQPASSS     0.540        0 T_0_1_sample_4_      0.005853    38.45        NA      0.192973    68.29       6197.20
+   1  HLA-DPA10103-DPB110101   SPVPTILTSQPASSSLGA    5   ILTSQPASS     0.780        0 T_0_1_sample_4_      0.003758    45.49        NA      0.178194    71.93       7271.80
+   4  HLA-DPA10103-DPB110101         PTILTSQPASSS    2   ILTSQPASS     0.930        0 T_0_1_sample_4_      0.003276    47.73        NA      0.168984    74.17       8033.77
+   4  HLA-DPA10103-DPB110101     PTILTSQPASSSLGAA    3   LTSQPASSS     0.540        0 T_0_1_sample_4_      0.002668    51.25        NA      0.191162    68.74       6319.83
+   4  HLA-DPA10103-DPB110101    PTILTSQPASSSLGAAP    3   LTSQPASSS     0.460        0 T_0_1_sample_4_      0.001467    61.05        NA      0.182642    70.85       6930.12
+   5  HLA-DPA10103-DPB110101       TILTSQPASSSLGA    2   LTSQPASSS     0.680        0 T_0_1_sample_4_      0.001181    64.45        NA      0.166342    74.82       8266.73
+   5  HLA-DPA10103-DPB110101        TILTSQPASSSLG    2   LTSQPASSS     0.450        0 T_0_1_sample_4_      0.000886    68.85        NA      0.134596    82.27      11654.87
+   6  HLA-DPA10103-DPB110101       ILTSQPASSSLGAA    3   LSSSAPQST     0.610        1 T_0_1_sample_4_      0.000289    83.09        NA      0.136048    81.95      11473.20
+   6  HLA-DPA10103-DPB110101      ILTSQPASSSLGAAP    4   QPASSSLGA     0.450        0 T_0_1_sample_4_      0.000282    83.33        NA      0.142129    80.58      10742.62
+   4  HLA-DPA10103-DPB110101          PTILTSQPASS    2   ILTSQPASS     0.980        0 T_0_1_sample_4_      0.000249    84.50        NA      0.133229    82.58      11828.53
+   1  HLA-DPA10103-DPB110101        SPVPTILTSQPAS    3   PTILTSQPA     0.550        0 T_0_1_sample_4_      0.000238    84.89        NA      0.114066    86.65      14553.83
+   7  HLA-DPA10103-DPB110101       LTSQPASSSLGAAP    4   PASSSLGAA     0.930        0 T_0_1_sample_4_      0.000236    84.96        NA      0.103663    88.71      16287.74
+   7  HLA-DPA10103-DPB110101        LTSQPASSSLGAA    3   LSSSAPQST     0.700        1 T_0_1_sample_4_      0.000211    86.15        NA      0.071729    94.20      23010.05
+   8  HLA-DPA10103-DPB110101        TSQPASSSLGAAP    3   PASSSLGAA     0.680        0 T_0_1_sample_4_      0.000175    87.88        NA      0.063843    95.23      25059.57
+   6  HLA-DPA10103-DPB110101         ILTSQPASSSLG    1   LTSQPASSS     0.810        0 T_0_1_sample_4_      0.000125    90.39        NA      0.124542    84.52      12994.24
+   2  HLA-DPA10103-DPB110101         PVPTILTSQPAS    2   PTILTSQPA     0.910        0 T_0_1_sample_4_      0.000106    91.62        NA      0.140055    81.05      10986.41
+   7  HLA-DPA10103-DPB110101         LTSQPASSSLGA    2   LSSSAPQST     0.870        1 T_0_1_sample_4_      0.000087    92.86        NA      0.082193    92.47      20546.96
+   8  HLA-DPA10103-DPB110101         TSQPASSSLGAA    3   LSSSAPQST     0.900        1 T_0_1_sample_4_      0.000080    93.31        NA      0.078711    93.05      21335.81
+   9  HLA-DPA10103-DPB110101         SQPASSSLGAAP    2   PASSSLGAA     0.900        0 T_0_1_sample_4_      0.000039    96.39        NA      0.072298    94.11      22868.83
+   6  HLA-DPA10103-DPB110101          ILTSQPASSSL    1   LTSQPASSS     0.720        0 T_0_1_sample_4_      0.000028    97.41        NA      0.120828    85.31      13527.04
+   5  HLA-DPA10103-DPB110101           TILTSQPASS    1   ILTSQPASS     1.000        0 T_0_1_sample_4_      0.000020    98.15        NA      0.106185    88.21      15849.29
+   8  HLA-DPA10103-DPB110101          TSQPASSSLGA    2   LSSSAPQST     0.830        1 T_0_1_sample_4_      0.000018    98.33        NA      0.050818    96.20      28852.11
+   3  HLA-DPA10103-DPB110101          VPTILTSQPAS    1   PTILTSQPA     0.520        0 T_0_1_sample_4_      0.000015    98.61        NA      0.119137    85.65      13776.82
+   7  HLA-DPA10103-DPB110101          LTSQPASSSLG    1   LSSSAPQST     0.700        1 T_0_1_sample_4_      0.000014    98.70        NA      0.067414    94.92      24109.80
+   6  HLA-DPA10103-DPB110101           ILTSQPASSS    1   LTSQPASSS     0.520        0 T_0_1_sample_4_      0.000006    99.44        NA      0.096874    90.05      17529.20
+  10  HLA-DPA10103-DPB110101          QPASSSLGAAP    1   PASSSLGAA     0.940        0 T_0_1_sample_4_      0.000006    99.44        NA      0.059321    95.57      26316.16
+   1  HLA-DPA10103-DPB110101          SPVPTILTSQP    1   PVPTILTSQ     0.750        0 T_0_1_sample_4_      0.000006    99.44        NA      0.096832    90.05      17537.17
+   8  HLA-DPA10103-DPB110101           TSQPASSSLG    1   LSSSAPQST     0.990        1 T_0_1_sample_4_      0.000003    99.72        NA      0.037726    97.18      33242.73
+   3  HLA-DPA10103-DPB110101           VPTILTSQPA    1   PTILTSQPA     0.980        0 T_0_1_sample_4_      0.000002    99.81        NA      0.092279    90.81      18422.72
+  10  HLA-DPA10103-DPB110101           QPASSSLGAA    1   PASSSLGAA     0.990        0 T_0_1_sample_4_      0.000001    99.91        NA      0.046730    96.51      30156.94
+   1  HLA-DPA10103-DPB110101           SPVPTILTSQ    1   PVPTILTSQ     0.920        0 T_0_1_sample_4_      0.000001    99.91        NA      0.068441    94.75      23843.37
+  12  HLA-DPA10103-DPB110101            ASSSLGAAP    0   ASSSLGAAP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.017868    98.66      41210.59
+  11  HLA-DPA10103-DPB110101            PASSSLGAA    0   PASSSLGAA     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.030889    97.69      35795.11
+  10  HLA-DPA10103-DPB110101            QPASSSLGA    0   QPASSSLGA     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.015430    98.85      42312.14
+   9  HLA-DPA10103-DPB110101            SQPASSSLG    0   SQPASSSLG     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.018923    98.59      40742.86
+   8  HLA-DPA10103-DPB110101            TSQPASSSL    0   LSSSAPQST     1.000        1 T_0_1_sample_4_      0.000000   100.00        NA      0.023811    98.22      38644.07
+   7  HLA-DPA10103-DPB110101            LTSQPASSS    0   LTSQPASSS     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.038108    97.15      33105.62
+   6  HLA-DPA10103-DPB110101            ILTSQPASS    0   ILTSQPASS     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.071581    94.23      23046.93
+   5  HLA-DPA10103-DPB110101            TILTSQPAS    0   TILTSQPAS     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.031249    97.66      35655.95
+   4  HLA-DPA10103-DPB110101            PTILTSQPA    0   PTILTSQPA     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.038480    97.12      32972.64
+   3  HLA-DPA10103-DPB110101            VPTILTSQP    0   PQSTLITPV     1.000        1 T_0_1_sample_4_      0.000000   100.00        NA      0.054787    95.91      27639.34
+   2  HLA-DPA10103-DPB110101            PVPTILTSQ    0   PVPTILTSQ     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.047387    96.46      29943.32
+   1  HLA-DPA10103-DPB110101            SPVPTILTS    0   SPVPTILTS     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.020770    98.45      39936.71
+   9  HLA-DPA10103-DPB110101           SQPASSSLGA    1   QPASSSLGA     0.900        0 T_0_1_sample_4_      0.000000   100.00        NA      0.028643    97.86      36675.61
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      RPTILTSLPADSSRG    3   ILTSLPADS     0.840        0 T_0_1_sample_5_      0.031102    16.02        NA      0.268652    49.66       2732.64
+   3  HLA-DPA10103-DPB110101       RPTILTSLPADSSR    3   ILTSLPADS     0.900        0 T_0_1_sample_5_      0.023109    19.15        NA      0.284045    46.01       2313.40
+   2  HLA-DPA10103-DPB110101     GRPTILTSLPADSSRG    4   ILTSLPADS     0.850        0 T_0_1_sample_5_      0.020440    20.57        NA      0.287295    45.26       2233.47
+   4  HLA-DPA10103-DPB110101      PTILTSLPADSSRGA    3   LTSLPADSS     0.600        0 T_0_1_sample_5_      0.016636    23.06        NA      0.234649    57.97       3947.86
+   1  HLA-DPA10103-DPB110101    GGRPTILTSLPADSSRG    5   ILTSLPADS     0.850        0 T_0_1_sample_5_      0.013815    25.58        NA      0.275732    47.94       2531.12
+   4  HLA-DPA10103-DPB110101        PTILTSLPADSSR    2   ILTSLPADS     0.690        0 T_0_1_sample_5_      0.010109    30.00        NA      0.202721    65.86       5576.86
+   4  HLA-DPA10103-DPB110101     PTILTSLPADSSRGAA    3   LTSLPADSS     0.590        0 T_0_1_sample_5_      0.007823    33.87        NA      0.241718    56.25       3657.16
+   1  HLA-DPA10103-DPB110101   GGRPTILTSLPADSSRGA    5   ILTSLPADS     0.790        0 T_0_1_sample_5_      0.006095    37.81        NA      0.232200    58.57       4053.86
+   5  HLA-DPA10103-DPB110101       TILTSLPADSSRGA    2   LTSLPADSS     0.700        0 T_0_1_sample_5_      0.004766    41.71        NA      0.213976    63.06       4937.45
+   5  HLA-DPA10103-DPB110101        TILTSLPADSSRG    2   LTSLPADSS     0.530        0 T_0_1_sample_5_      0.004205    43.71        NA      0.175591    72.56       7479.51
+   4  HLA-DPA10103-DPB110101    PTILTSLPADSSRGAAP    3   LTSLPADSS     0.580        0 T_0_1_sample_5_      0.003639    46.00        NA      0.227321    59.75       4273.61
+   4  HLA-DPA10103-DPB110101         PTILTSLPADSS    2   ILTSLPADS     0.850        0 T_0_1_sample_5_      0.003582    46.26        NA      0.218882    61.85       4682.20
+   6  HLA-DPA10103-DPB110101         ILTSLPADSSRG    1   LTSLPADSS     0.780        0 T_0_1_sample_5_      0.000702    72.21        NA      0.161964    75.87       8667.74
+   1  HLA-DPA10103-DPB110101        GGRPTILTSLPAD    3   PTILTSLPA     0.540        0 T_0_1_sample_5_      0.000451    77.99        NA      0.126832    84.01      12676.23
+   4  HLA-DPA10103-DPB110101          PTILTSLPADS    2   ILTSLPADS     0.900        0 T_0_1_sample_5_      0.000412    79.04        NA      0.165509    75.02       8341.58
+   1  HLA-DPA10103-DPB110101         GGRPTILTSLPA    2   RPTILTSLP     0.240        0 T_0_1_sample_5_      0.000154    88.89        NA      0.170387    73.83       7912.73
+   6  HLA-DPA10103-DPB110101          ILTSLPADSSR    1   LTSLPADSS     0.690        0 T_0_1_sample_5_      0.000124    90.45        NA      0.158605    76.67       8988.56
+   7  HLA-DPA10103-DPB110101       LTSLPADSSRGAAP    3   LPADSSRGA     0.490        0 T_0_1_sample_5_      0.000106    91.62        NA      0.093195    90.65      18241.03
+   2  HLA-DPA10103-DPB110101         GRPTILTSLPAD    3   TILTSLPAD     0.450        0 T_0_1_sample_5_      0.000086    92.92        NA      0.158085    76.80       9039.27
+   8  HLA-DPA10103-DPB110101        TSLPADSSRGAAP    2   LPADSSRGA     0.460        0 T_0_1_sample_5_      0.000076    93.57        NA      0.042620    96.81      31528.25
+   1  HLA-DPA10103-DPB110101          GGRPTILTSLP    1   GRPTILTSL     0.900        0 T_0_1_sample_5_      0.000027    97.50        NA      0.135093    82.16      11592.37
+   5  HLA-DPA10103-DPB110101           TILTSLPADS    1   ILTSLPADS     0.980        0 T_0_1_sample_5_      0.000025    97.69        NA      0.135457    82.08      11546.80
+   7  HLA-DPA10103-DPB110101         LTSLPADSSRGA    2   SLPADSSRG     0.390        0 T_0_1_sample_5_      0.000024    97.78        NA      0.087884    91.53      19319.94
+   8  HLA-DPA10103-DPB110101         TSLPADSSRGAA    2   LPADSSRGA     0.520        0 T_0_1_sample_5_      0.000022    97.96        NA      0.055713    95.84      27363.79
+   3  HLA-DPA10103-DPB110101          RPTILTSLPAD    1   PTILTSLPA     0.540        0 T_0_1_sample_5_      0.000012    98.89        NA      0.116168    86.24      14226.56
+   6  HLA-DPA10103-DPB110101           ILTSLPADSS    1   LTSLPADSS     0.510        0 T_0_1_sample_5_      0.000009    99.17        NA      0.127761    83.80      12549.46
+   1  HLA-DPA10103-DPB110101           GGRPTILTSL    1   GRPTILTSL     0.880        0 T_0_1_sample_5_      0.000003    99.72        NA      0.108693    87.72      15424.99
+   8  HLA-DPA10103-DPB110101          TSLPADSSRGA    2   RSSDAPLST     0.710        1 T_0_1_sample_5_      0.000003    99.72        NA      0.042598    96.82      31535.76
+   9  HLA-DPA10103-DPB110101          SLPADSSRGAA    1   LPADSSRGA     0.590        0 T_0_1_sample_5_      0.000002    99.81        NA      0.040084    97.00      32405.33
+   6  HLA-DPA10103-DPB110101            ILTSLPADS    0   ILTSLPADS     1.000        0 T_0_1_sample_5_      0.000001    99.91        NA      0.089924    91.19      18898.18
+   4  HLA-DPA10103-DPB110101           PTILTSLPAD    1   TILTSLPAD     0.710        0 T_0_1_sample_5_      0.000001    99.91        NA      0.083476    92.26      20263.70
+   3  HLA-DPA10103-DPB110101           RPTILTSLPA    1   PTILTSLPA     0.970        0 T_0_1_sample_5_      0.000001    99.91        NA      0.098181    89.80      17283.05
+   2  HLA-DPA10103-DPB110101           GRPTILTSLP    1   RPTILTSLP     0.580        0 T_0_1_sample_5_      0.000001    99.91        NA      0.110957    87.27      15051.72
+  12  HLA-DPA10103-DPB110101            ADSSRGAAP    0   ADSSRGAAP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.013003    99.03      43437.95
+  11  HLA-DPA10103-DPB110101            PADSSRGAA    0   PADSSRGAA     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.006935    99.48      46385.54
+  10  HLA-DPA10103-DPB110101            LPADSSRGA    0   LPADSSRGA     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.018107    98.65      41104.16
+   9  HLA-DPA10103-DPB110101            SLPADSSRG    0   SLPADSSRG     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.016260    98.78      41933.84
+   8  HLA-DPA10103-DPB110101            TSLPADSSR    0   RSSDAPLST     1.000        1 T_0_1_sample_5_      0.000000   100.00        NA      0.015939    98.81      42079.75
+   7  HLA-DPA10103-DPB110101            LTSLPADSS    0   LTSLPADSS     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.052428    96.08      28353.87
+   5  HLA-DPA10103-DPB110101            TILTSLPAD    0   TILTSLPAD     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.044654    96.66      30841.97
+   4  HLA-DPA10103-DPB110101            PTILTSLPA    0   PTILTSLPA     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.059531    95.55      26256.43
+   3  HLA-DPA10103-DPB110101            RPTILTSLP    0   PLSTLITPR     1.000        1 T_0_1_sample_5_      0.000000   100.00        NA      0.048550    96.37      29568.89
+   2  HLA-DPA10103-DPB110101            GRPTILTSL    0   GRPTILTSL     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.082812    92.37      20409.80
+   1  HLA-DPA10103-DPB110101            GGRPTILTS    0   GGRPTILTS     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.015693    98.83      42191.89
+  11  HLA-DPA10103-DPB110101           PADSSRGAAP    1   ADSSRGAAP     0.730        0 T_0_1_sample_5_      0.000000   100.00        NA      0.020498    98.47      40054.44
+   9  HLA-DPA10103-DPB110101           SLPADSSRGA    1   LPADSSRGA     0.910        0 T_0_1_sample_5_      0.000000   100.00        NA      0.029397    97.80      36377.62
+   8  HLA-DPA10103-DPB110101           TSLPADSSRG    1   RSSDAPLST     0.910        1 T_0_1_sample_5_      0.000000   100.00        NA      0.028675    97.86      36662.91
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      KPTIRTSLPASSSLG    3   IRTSLPASS     0.940        0 T_0_1_sample_6_      0.043434    12.93        NA      0.291246    44.32       2140.00
+   2  HLA-DPA10103-DPB110101     PKPTIRTSLPASSSLG    4   IRTSLPASS     0.960        0 T_0_1_sample_6_      0.035003    14.91        NA      0.294755    43.47       2060.27
+   3  HLA-DPA10103-DPB110101       KPTIRTSLPASSSL    3   IRTSLPASS     0.950        0 T_0_1_sample_6_      0.034072    15.17        NA      0.290233    44.56       2163.58
+   3  HLA-DPA10103-DPB110101        KPTIRTSLPASSS    3   IRTSLPASS     0.990        0 T_0_1_sample_6_      0.032801    15.53        NA      0.217680    62.14       4743.49
+   1  HLA-DPA10103-DPB110101    SPKPTIRTSLPASSSLG    5   IRTSLPASS     0.940        0 T_0_1_sample_6_      0.021856    19.78        NA      0.282257    46.41       2358.59
+   4  HLA-DPA10103-DPB110101         PTIRTSLPASSS    2   IRTSLPASS     0.950        0 T_0_1_sample_6_      0.010108    30.00        NA      0.222825    60.87       4486.65
+   1  HLA-DPA10103-DPB110101   SPKPTIRTSLPASSSLGA    5   IRTSLPASS     0.920        0 T_0_1_sample_6_      0.008517    32.60        NA      0.240066    56.65       3723.12
+   4  HLA-DPA10103-DPB110101          PTIRTSLPASS    2   IRTSLPASS     0.990        0 T_0_1_sample_6_      0.001208    64.13        NA      0.179097    71.71       7201.10
+   5  HLA-DPA10103-DPB110101     TIRTSLPASSSLGAPP    4   SLPASSSLG     0.420        0 T_0_1_sample_6_      0.000862    69.23        NA      0.240944    56.44       3687.92
+   6  HLA-DPA10103-DPB110101       IRTSLPASSSLGAP    3   LSSSAPLST     0.690        1 T_0_1_sample_6_      0.000703    72.19        NA      0.193913    68.06       6134.49
+   7  HLA-DPA10103-DPB110101        RTSLPASSSLGAP    3   LSSSAPLST     0.950        1 T_0_1_sample_6_      0.000558    75.13        NA      0.100687    89.30      16820.72
+   6  HLA-DPA10103-DPB110101      IRTSLPASSSLGAPP    4   LSSSAPLST     0.850        1 T_0_1_sample_6_      0.000522    76.10        NA      0.200352    66.45       5721.66
+   7  HLA-DPA10103-DPB110101       RTSLPASSSLGAPP    4   LSSSAPLST     0.670        1 T_0_1_sample_6_      0.000433    78.48        NA      0.132075    82.84      11977.15
+   6  HLA-DPA10103-DPB110101        IRTSLPASSSLGA    2   LSSSAPLST     0.530        1 T_0_1_sample_6_      0.000356    80.71        NA      0.160537    76.21       8802.61
+   1  HLA-DPA10103-DPB110101        SPKPTIRTSLPAS    3   PTIRTSLPA     0.710        0 T_0_1_sample_6_      0.000189    87.21        NA      0.087835    91.54      19330.18
+   7  HLA-DPA10103-DPB110101         RTSLPASSSLGA    2   LSSSAPLST     0.850        1 T_0_1_sample_6_      0.000166    88.32        NA      0.126780    84.02      12683.36
+   6  HLA-DPA10103-DPB110101         IRTSLPASSSLG    1   RTSLPASSS     0.660        0 T_0_1_sample_6_      0.000151    89.04        NA      0.186411    69.93       6653.19
+   8  HLA-DPA10103-DPB110101        TSLPASSSLGAPP    4   ASSSLGAPP     0.430        0 T_0_1_sample_6_      0.000118    90.84        NA      0.079736    92.88      21100.51
+   5  HLA-DPA10103-DPB110101           TIRTSLPASS    1   IRTSLPASS     0.990        0 T_0_1_sample_6_      0.000092    92.53        NA      0.158568    76.68       8992.15
+   8  HLA-DPA10103-DPB110101         TSLPASSSLGAP    3   LSSSAPLST     0.690        1 T_0_1_sample_6_      0.000079    93.38        NA      0.102629    88.92      16470.98
+   2  HLA-DPA10103-DPB110101         PKPTIRTSLPAS    3   TIRTSLPAS     0.500        0 T_0_1_sample_6_      0.000070    93.96        NA      0.116621    86.15      14157.00
+   1  HLA-DPA10103-DPB110101         SPKPTIRTSLPA    2   KPTIRTSLP     0.300        0 T_0_1_sample_6_      0.000042    96.11        NA      0.093860    90.54      18110.25
+   6  HLA-DPA10103-DPB110101          IRTSLPASSSL    1   RTSLPASSS     0.490        0 T_0_1_sample_6_      0.000028    97.41        NA      0.179427    71.63       7175.43
+   7  HLA-DPA10103-DPB110101          RTSLPASSSLG    1   LSSSAPLST     0.780        1 T_0_1_sample_6_      0.000019    98.24        NA      0.102748    88.89      16449.79
+   9  HLA-DPA10103-DPB110101         SLPASSSLGAPP    1   LPASSSLGA     0.550        0 T_0_1_sample_6_      0.000014    98.70        NA      0.078141    93.14      21467.82
+   8  HLA-DPA10103-DPB110101          TSLPASSSLGA    2   LSSSAPLST     0.880        1 T_0_1_sample_6_      0.000013    98.80        NA      0.089750    91.22      18933.79
+   3  HLA-DPA10103-DPB110101          KPTIRTSLPAS    2   TIRTSLPAS     0.550        0 T_0_1_sample_6_      0.000009    99.17        NA      0.102235    88.99      16541.34
+   2  HLA-DPA10103-DPB110101          PKPTIRTSLPA    2   PTIRTSLPA     0.730        0 T_0_1_sample_6_      0.000007    99.35        NA      0.079543    92.91      21144.62
+  10  HLA-DPA10103-DPB110101          LPASSSLGAPP    1   PASSSLGAP     0.410        0 T_0_1_sample_6_      0.000004    99.63        NA      0.059292    95.57      26324.41
+   9  HLA-DPA10103-DPB110101          SLPASSSLGAP    1   LPASSSLGA     0.660        0 T_0_1_sample_6_      0.000004    99.63        NA      0.067383    94.92      24117.89
+   1  HLA-DPA10103-DPB110101          SPKPTIRTSLP    1   PKPTIRTSL     0.660        0 T_0_1_sample_6_      0.000003    99.72        NA      0.068574    94.72      23809.09
+   8  HLA-DPA10103-DPB110101           TSLPASSSLG    1   LSSSAPLST     0.980        1 T_0_1_sample_6_      0.000002    99.81        NA      0.065793    95.08      24536.40
+   6  HLA-DPA10103-DPB110101            IRTSLPASS    0   IRTSLPASS     1.000        0 T_0_1_sample_6_      0.000001    99.91        NA      0.111067    87.25      15033.83
+  10  HLA-DPA10103-DPB110101           LPASSSLGAP    1   PASSSLGAP     0.580        0 T_0_1_sample_6_      0.000001    99.91        NA      0.049347    96.31      29315.01
+   4  HLA-DPA10103-DPB110101           PTIRTSLPAS    1   TIRTSLPAS     0.790        0 T_0_1_sample_6_      0.000001    99.91        NA      0.072437    94.09      22834.46
+   3  HLA-DPA10103-DPB110101           KPTIRTSLPA    1   PTIRTSLPA     0.950        0 T_0_1_sample_6_      0.000001    99.91        NA      0.059035    95.59      26397.71
+  12  HLA-DPA10103-DPB110101            ASSSLGAPP    0   ASSSLGAPP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.020004    98.50      40269.10
+  11  HLA-DPA10103-DPB110101            PASSSLGAP    0   PASSSLGAP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.017518    98.69      41366.95
+  10  HLA-DPA10103-DPB110101            LPASSSLGA    0   LPASSSLGA     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.035236    97.37      34150.50
+   9  HLA-DPA10103-DPB110101            SLPASSSLG    0   SLPASSSLG     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.028058    97.90      36908.50
+   8  HLA-DPA10103-DPB110101            TSLPASSSL    0   LSSSAPLST     1.000        1 T_0_1_sample_6_      0.000000   100.00        NA      0.040059    97.01      32414.11
+   7  HLA-DPA10103-DPB110101            RTSLPASSS    0   RTSLPASSS     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.046236    96.54      30318.56
+   5  HLA-DPA10103-DPB110101            TIRTSLPAS    0   TIRTSLPAS     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.050739    96.21      28876.80
+   4  HLA-DPA10103-DPB110101            PTIRTSLPA    0   PTIRTSLPA     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.026229    98.04      37646.15
+   3  HLA-DPA10103-DPB110101            KPTIRTSLP    0   KPTIRTSLP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.033342    97.51      34857.55
+   2  HLA-DPA10103-DPB110101            PKPTIRTSL    0   PKPTIRTSL     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.035532    97.34      34041.30
+   1  HLA-DPA10103-DPB110101            SPKPTIRTS    0   STRITPKPS     1.000        1 T_0_1_sample_6_      0.000000   100.00        NA      0.008274    99.38      45718.36
+   9  HLA-DPA10103-DPB110101           SLPASSSLGA    1   LPASSSLGA     0.960        0 T_0_1_sample_6_      0.000000   100.00        NA      0.055189    95.88      27519.37
+   7  HLA-DPA10103-DPB110101           RTSLPASSSL    0   RTSLPASSS     0.830        0 T_0_1_sample_6_      0.000000   100.00        NA      0.081551    92.58      20690.18
+   2  HLA-DPA10103-DPB110101           PKPTIRTSLP    1   KPTIRTSLP     0.720        0 T_0_1_sample_6_      0.000000   100.00        NA      0.055959    95.82      27291.06
+   1  HLA-DPA10103-DPB110101           SPKPTIRTSL    1   PKPTIRTSL     0.840        0 T_0_1_sample_6_      0.000000   100.00        NA      0.047669    96.44      29852.10
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      RPTILTSLPASSSLG    3   ILTSLPASS     0.950        0 T_0_1_sample_7_      0.035204    14.86        NA      0.342353    32.99       1231.02
+   2  HLA-DPA10103-DPB110101     GRPTILTSLPASSSLG    4   ILTSLPASS     0.940        0 T_0_1_sample_7_      0.026837    17.52        NA      0.347279    32.02       1167.12
+   3  HLA-DPA10103-DPB110101        RPTILTSLPASSS    3   ILTSLPASS     0.970        0 T_0_1_sample_7_      0.026644    17.60        NA      0.271347    48.99       2654.11
+   3  HLA-DPA10103-DPB110101       RPTILTSLPASSSL    3   ILTSLPASS     0.950        0 T_0_1_sample_7_      0.025528    18.05        NA      0.344250    32.62       1206.01
+   1  HLA-DPA10103-DPB110101    GGRPTILTSLPASSSLG    5   ILTSLPASS     0.940        0 T_0_1_sample_7_      0.016441    23.22        NA      0.341165    33.24       1246.94
+   4  HLA-DPA10103-DPB110101         PTILTSLPASSS    2   ILTSLPASS     0.960        0 T_0_1_sample_7_      0.009200    31.43        NA      0.275737    47.94       2530.99
+   1  HLA-DPA10103-DPB110101   GGRPTILTSLPASSSLGA    5   ILTSLPASS     0.870        0 T_0_1_sample_7_      0.005964    38.15        NA      0.285221    45.73       2284.15
+   4  HLA-DPA10103-DPB110101          PTILTSLPASS    2   ILTSLPASS     0.960        0 T_0_1_sample_7_      0.000704    72.17        NA      0.225215    60.27       4372.11
+   8  HLA-DPA10103-DPB110101        TSLPASSSLGAVP    3   PASSSLGAV     0.740        0 T_0_1_sample_7_      0.000454    77.91        NA      0.109819    87.49      15238.21
+   7  HLA-DPA10103-DPB110101       LTSLPASSSLGAVP    4   PASSSLGAV     0.900        0 T_0_1_sample_7_      0.000374    80.07        NA      0.176316    72.39       7421.07
+   1  HLA-DPA10103-DPB110101        GGRPTILTSLPAS    3   PTILTSLPA     0.480        0 T_0_1_sample_7_      0.000341    81.24        NA      0.155582    77.40       9287.41
+   6  HLA-DPA10103-DPB110101      ILTSLPASSSLGAVP    5   PASSSLGAV     0.500        0 T_0_1_sample_7_      0.000329    81.67        NA      0.243407    55.84       3590.94
+   6  HLA-DPA10103-DPB110101       ILTSLPASSSLGAV    3   SLPASSSLG     0.420        0 T_0_1_sample_7_      0.000297    82.80        NA      0.232350    58.53       4047.29
+   6  HLA-DPA10103-DPB110101        ILTSLPASSSLGA    1   LTSLPASSS     0.510        0 T_0_1_sample_7_      0.000272    83.69        NA      0.187788    69.59       6554.81
+   7  HLA-DPA10103-DPB110101        LTSLPASSSLGAV    3   LSSSAPLST     0.630        1 T_0_1_sample_7_      0.000219    85.77        NA      0.131167    83.04      12095.40
+   1  HLA-DPA10103-DPB110101         GGRPTILTSLPA    2   RPTILTSLP     0.240        0 T_0_1_sample_7_      0.000154    88.89        NA      0.170387    73.83       7912.73
+   6  HLA-DPA10103-DPB110101         ILTSLPASSSLG    1   LTSLPASSS     0.650        0 T_0_1_sample_7_      0.000138    89.66        NA      0.216884    62.34       4784.52
+   9  HLA-DPA10103-DPB110101         SLPASSSLGAVP    2   PASSSLGAV     0.850        0 T_0_1_sample_7_      0.000127    90.26        NA      0.120377    85.40      13593.21
+   2  HLA-DPA10103-DPB110101         GRPTILTSLPAS    3   TILTSLPAS     0.460        0 T_0_1_sample_7_      0.000090    92.66        NA      0.190333    68.95       6376.77
+   7  HLA-DPA10103-DPB110101         LTSLPASSSLGA    2   LSSSAPLST     0.700        1 T_0_1_sample_7_      0.000081    93.25        NA      0.146906    79.48      10201.48
+   5  HLA-DPA10103-DPB110101           TILTSLPASS    1   ILTSLPASS     0.980        0 T_0_1_sample_7_      0.000055    94.94        NA      0.193582    68.14       6156.50
+   6  HLA-DPA10103-DPB110101          ILTSLPASSSL    1   LTSLPASSS     0.600        0 T_0_1_sample_7_      0.000028    97.41        NA      0.209323    64.22       5192.39
+   1  HLA-DPA10103-DPB110101          GGRPTILTSLP    1   GRPTILTSL     0.900        0 T_0_1_sample_7_      0.000027    97.50        NA      0.135093    82.16      11592.37
+  10  HLA-DPA10103-DPB110101          LPASSSLGAVP    1   PASSSLGAV     0.910        0 T_0_1_sample_7_      0.000016    98.52        NA      0.097072    90.01      17491.68
+   3  HLA-DPA10103-DPB110101          RPTILTSLPAS    2   TILTSLPAS     0.510        0 T_0_1_sample_7_      0.000014    98.70        NA      0.148790    79.03       9995.63
+   8  HLA-DPA10103-DPB110101          TSLPASSSLGA    2   LSSSAPLST     0.880        1 T_0_1_sample_7_      0.000013    98.80        NA      0.089750    91.22      18933.79
+   7  HLA-DPA10103-DPB110101          LTSLPASSSLG    1   LSSSAPLST     0.580        1 T_0_1_sample_7_      0.000010    99.07        NA      0.122449    84.99      13291.87
+   2  HLA-DPA10103-DPB110101          GRPTILTSLPA    2   PTILTSLPA     0.690        0 T_0_1_sample_7_      0.000009    99.17        NA      0.147619    79.31      10123.08
+   1  HLA-DPA10103-DPB110101           GGRPTILTSL    1   GRPTILTSL     0.880        0 T_0_1_sample_7_      0.000003    99.72        NA      0.108693    87.72      15424.99
+   8  HLA-DPA10103-DPB110101           TSLPASSSLG    1   LSSSAPLST     0.980        1 T_0_1_sample_7_      0.000002    99.81        NA      0.065793    95.08      24536.40
+   6  HLA-DPA10103-DPB110101            ILTSLPASS    0   ILTSLPASS     1.000        0 T_0_1_sample_7_      0.000001    99.91        NA      0.122821    84.91      13238.47
+  10  HLA-DPA10103-DPB110101           LPASSSLGAV    1   PASSSLGAV     0.930        0 T_0_1_sample_7_      0.000001    99.91        NA      0.081709    92.55      20654.84
+   7  HLA-DPA10103-DPB110101           LTSLPASSSL    0   LTSLPASSS     0.780        0 T_0_1_sample_7_      0.000001    99.91        NA      0.104428    88.56      16153.48
+   4  HLA-DPA10103-DPB110101           PTILTSLPAS    1   TILTSLPAS     0.780        0 T_0_1_sample_7_      0.000001    99.91        NA      0.113692    86.73      14612.84
+   3  HLA-DPA10103-DPB110101           RPTILTSLPA    1   PTILTSLPA     0.970        0 T_0_1_sample_7_      0.000001    99.91        NA      0.098181    89.80      17283.05
+   2  HLA-DPA10103-DPB110101           GRPTILTSLP    1   RPTILTSLP     0.580        0 T_0_1_sample_7_      0.000001    99.91        NA      0.110957    87.27      15051.72
+  12  HLA-DPA10103-DPB110101            ASSSLGAVP    0   ASSSLGAVP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.022788    98.30      39074.18
+  11  HLA-DPA10103-DPB110101            PASSSLGAV    0   PASSSLGAV     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.044030    96.71      31050.91
+  10  HLA-DPA10103-DPB110101            LPASSSLGA    0   LPASSSLGA     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.035236    97.37      34150.50
+   9  HLA-DPA10103-DPB110101            SLPASSSLG    0   SLPASSSLG     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.028058    97.90      36908.50
+   8  HLA-DPA10103-DPB110101            TSLPASSSL    0   LSSSAPLST     1.000        1 T_0_1_sample_7_      0.000000   100.00        NA      0.040059    97.01      32414.11
+   7  HLA-DPA10103-DPB110101            LTSLPASSS    0   LTSLPASSS     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.067410    94.92      24110.85
+   5  HLA-DPA10103-DPB110101            TILTSLPAS    0   TILTSLPAS     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.074444    93.75      22343.95
+   4  HLA-DPA10103-DPB110101            PTILTSLPA    0   PTILTSLPA     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.059531    95.55      26256.43
+   3  HLA-DPA10103-DPB110101            RPTILTSLP    0   PLSTLITPR     1.000        1 T_0_1_sample_7_      0.000000   100.00        NA      0.048550    96.37      29568.89
+   2  HLA-DPA10103-DPB110101            GRPTILTSL    0   GRPTILTSL     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.082812    92.37      20409.80
+   1  HLA-DPA10103-DPB110101            GGRPTILTS    0   GGRPTILTS     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.015693    98.83      42191.89
+   9  HLA-DPA10103-DPB110101           SLPASSSLGA    1   LPASSSLGA     0.960        0 T_0_1_sample_7_      0.000000   100.00        NA      0.055189    95.88      27519.37
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      KPTILTSLPASSSLG    3   ILTSLPASS     0.960        0 T_0_1_sample_8_      0.046206    12.42        NA      0.348061    31.88       1157.29
+   2  HLA-DPA10103-DPB110101     GKPTILTSLPASSSLG    4   ILTSLPASS     0.950        0 T_0_1_sample_8_      0.035141    14.88        NA      0.350900    31.34       1122.28
+   3  HLA-DPA10103-DPB110101        KPTILTSLPASSS    3   ILTSLPASS     0.990        0 T_0_1_sample_8_      0.033935    15.21        NA      0.276591    47.74       2507.71
+   3  HLA-DPA10103-DPB110101       KPTILTSLPASSSL    3   ILTSLPASS     0.970        0 T_0_1_sample_8_      0.033351    15.37        NA      0.351205    31.28       1118.58
+   1  HLA-DPA10103-DPB110101    SGKPTILTSLPASSSLG    5   ILTSLPASS     0.950        0 T_0_1_sample_8_      0.021845    19.79        NA      0.348976    31.70       1145.89
+   4  HLA-DPA10103-DPB110101         PTILTSLPASSS    2   ILTSLPASS     0.960        0 T_0_1_sample_8_      0.009200    31.43        NA      0.275737    47.94       2530.99
+   1  HLA-DPA10103-DPB110101   SGKPTILTSLPASSSLGE    5   ILTSLPASS     0.900        0 T_0_1_sample_8_      0.008229    33.12        NA      0.285169    45.75       2285.44
+   4  HLA-DPA10103-DPB110101          PTILTSLPASS    2   ILTSLPASS     0.960        0 T_0_1_sample_8_      0.000704    72.17        NA      0.225215    60.27       4372.11
+   1  HLA-DPA10103-DPB110101        SGKPTILTSLPAS    3   PTILTSLPA     0.520        0 T_0_1_sample_8_      0.000329    81.67        NA      0.161372    76.01       8723.44
+   8  HLA-DPA10103-DPB110101        TSLPASSSLGELP    3   PASSSLGEL     0.770        0 T_0_1_sample_8_      0.000324    81.84        NA      0.108537    87.75      15451.04
+   6  HLA-DPA10103-DPB110101        ILTSLPASSSLGE    1   LTSLPASSS     0.520        0 T_0_1_sample_8_      0.000283    83.30        NA      0.183825    70.56       6841.98
+   6  HLA-DPA10103-DPB110101       ILTSLPASSSLGEL    3   SLPASSSLG     0.380        0 T_0_1_sample_8_      0.000266    83.90        NA      0.232160    58.58       4055.62
+   7  HLA-DPA10103-DPB110101       LTSLPASSSLGELP    4   PASSSLGEL     0.920        0 T_0_1_sample_8_      0.000262    84.04        NA      0.178014    71.97       7285.97
+   6  HLA-DPA10103-DPB110101      ILTSLPASSSLGELP    4   LPASSSLGE     0.310        0 T_0_1_sample_8_      0.000259    84.15        NA      0.239892    56.70       3730.14
+   7  HLA-DPA10103-DPB110101        LTSLPASSSLGEL    3   LSSSAPLST     0.620        1 T_0_1_sample_8_      0.000179    87.69        NA      0.130163    83.26      12227.51
+   1  HLA-DPA10103-DPB110101         SGKPTILTSLPA    2   KPTILTSLP     0.250        0 T_0_1_sample_8_      0.000178    87.74        NA      0.176250    72.40       7426.37
+   6  HLA-DPA10103-DPB110101         ILTSLPASSSLG    1   LTSLPASSS     0.650        0 T_0_1_sample_8_      0.000138    89.66        NA      0.216884    62.34       4784.52
+   2  HLA-DPA10103-DPB110101         GKPTILTSLPAS    3   TILTSLPAS     0.490        0 T_0_1_sample_8_      0.000129    90.13        NA      0.185814    70.08       6696.31
+   7  HLA-DPA10103-DPB110101         LTSLPASSSLGE    2   LSSSAPLST     0.750        1 T_0_1_sample_8_      0.000087    92.86        NA      0.139632    81.14      11036.81
+   9  HLA-DPA10103-DPB110101         SLPASSSLGELP    2   PASSSLGEL     0.910        0 T_0_1_sample_8_      0.000084    93.05        NA      0.125381    84.34      12876.82
+   5  HLA-DPA10103-DPB110101           TILTSLPASS    1   ILTSLPASS     0.980        0 T_0_1_sample_8_      0.000055    94.94        NA      0.193582    68.14       6156.50
+   6  HLA-DPA10103-DPB110101          ILTSLPASSSL    1   LTSLPASSS     0.600        0 T_0_1_sample_8_      0.000028    97.41        NA      0.209323    64.22       5192.39
+   1  HLA-DPA10103-DPB110101          SGKPTILTSLP    1   GKPTILTSL     0.870        0 T_0_1_sample_8_      0.000023    97.87        NA      0.136802    81.78      11379.98
+   3  HLA-DPA10103-DPB110101          KPTILTSLPAS    2   TILTSLPAS     0.510        0 T_0_1_sample_8_      0.000017    98.43        NA      0.150901    78.52       9769.91
+   8  HLA-DPA10103-DPB110101          TSLPASSSLGE    2   LSSSAPLST     0.890        1 T_0_1_sample_8_      0.000014    98.70        NA      0.083422    92.27      20275.54
+   2  HLA-DPA10103-DPB110101          GKPTILTSLPA    2   PTILTSLPA     0.680        0 T_0_1_sample_8_      0.000013    98.80        NA      0.140891    80.86      10887.48
+   9  HLA-DPA10103-DPB110101          SLPASSSLGEL    2   PASSSLGEL     0.870        0 T_0_1_sample_8_      0.000011    98.98        NA      0.112406    86.98      14817.59
+   7  HLA-DPA10103-DPB110101          LTSLPASSSLG    1   LSSSAPLST     0.580        1 T_0_1_sample_8_      0.000010    99.07        NA      0.122449    84.99      13291.87
+  10  HLA-DPA10103-DPB110101           LPASSSLGEL    1   PASSSLGEL     0.960        0 T_0_1_sample_8_      0.000002    99.81        NA      0.087747    91.55      19348.60
+   8  HLA-DPA10103-DPB110101           TSLPASSSLG    1   LSSSAPLST     0.980        1 T_0_1_sample_8_      0.000002    99.81        NA      0.065793    95.08      24536.40
+   1  HLA-DPA10103-DPB110101           SGKPTILTSL    1   GKPTILTSL     0.950        0 T_0_1_sample_8_      0.000002    99.81        NA      0.109671    87.52      15262.63
+   6  HLA-DPA10103-DPB110101            ILTSLPASS    0   ILTSLPASS     1.000        0 T_0_1_sample_8_      0.000001    99.91        NA      0.122821    84.91      13238.47
+   7  HLA-DPA10103-DPB110101           LTSLPASSSL    0   LTSLPASSS     0.780        0 T_0_1_sample_8_      0.000001    99.91        NA      0.104428    88.56      16153.48
+   4  HLA-DPA10103-DPB110101           PTILTSLPAS    1   TILTSLPAS     0.780        0 T_0_1_sample_8_      0.000001    99.91        NA      0.113692    86.73      14612.84
+   3  HLA-DPA10103-DPB110101           KPTILTSLPA    1   PTILTSLPA     0.950        0 T_0_1_sample_8_      0.000001    99.91        NA      0.096859    90.05      17532.04
+   2  HLA-DPA10103-DPB110101           GKPTILTSLP    1   KPTILTSLP     0.620        0 T_0_1_sample_8_      0.000001    99.91        NA      0.102055    89.03      16573.59
+  12  HLA-DPA10103-DPB110101            ASSSLGELP    0   ASSSLGELP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.019198    98.57      40621.80
+  11  HLA-DPA10103-DPB110101            PASSSLGEL    0   PASSSLGEL     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.049237    96.32      29349.91
+  10  HLA-DPA10103-DPB110101            LPASSSLGE    0   LPASSSLGE     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.026570    98.01      37507.51
+   9  HLA-DPA10103-DPB110101            SLPASSSLG    0   SLPASSSLG     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.028058    97.90      36908.50
+   8  HLA-DPA10103-DPB110101            TSLPASSSL    0   LSSSAPLST     1.000        1 T_0_1_sample_8_      0.000000   100.00        NA      0.040059    97.01      32414.11
+   7  HLA-DPA10103-DPB110101            LTSLPASSS    0   LTSLPASSS     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.067410    94.92      24110.85
+   5  HLA-DPA10103-DPB110101            TILTSLPAS    0   TILTSLPAS     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.074444    93.75      22343.95
+   4  HLA-DPA10103-DPB110101            PTILTSLPA    0   PTILTSLPA     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.059531    95.55      26256.43
+   3  HLA-DPA10103-DPB110101            KPTILTSLP    0   KPTILTSLP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.044313    96.69      30955.97
+   2  HLA-DPA10103-DPB110101            GKPTILTSL    0   GKPTILTSL     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.077045    93.32      21723.90
+   1  HLA-DPA10103-DPB110101            SGKPTILTS    0   SGKPTILTS     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.017334    98.70      41449.39
+   9  HLA-DPA10103-DPB110101           SLPASSSLGE    1   LPASSSLGE     0.930        0 T_0_1_sample_8_      0.000000   100.00        NA      0.046210    96.55      30327.08
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      KPTIRTTLPADMSLG    3   IRTTLPADM     0.930        0 T_0_1_sample_9_      0.020847    20.34        NA      0.291650    44.22       2130.67
+   3  HLA-DPA10103-DPB110101        KPTIRTTLPADMS    3   IRTTLPADM     0.990        0 T_0_1_sample_9_      0.016550    23.13        NA      0.215126    62.78       4876.40
+   3  HLA-DPA10103-DPB110101       KPTIRTTLPADMSL    3   IRTTLPADM     0.970        0 T_0_1_sample_9_      0.014210    25.19        NA      0.294679    43.49       2061.97
+   2  HLA-DPA10103-DPB110101     GKPTIRTTLPADMSLG    4   IRTTLPADM     0.960        0 T_0_1_sample_9_      0.013809    25.59        NA      0.303688    41.37       1870.46
+   1  HLA-DPA10103-DPB110101    GGKPTIRTTLPADMSLG    5   IRTTLPADM     0.940        0 T_0_1_sample_9_      0.006865    35.96        NA      0.281706    46.54       2372.70
+   3  HLA-DPA10103-DPB110101         KPTIRTTLPADM    3   IRTTLPADM     0.950        0 T_0_1_sample_9_      0.004297    43.36        NA      0.244869    55.48       3534.58
+   1  HLA-DPA10103-DPB110101   GGKPTIRTTLPADMSLGE    5   IRTTLPADM     0.870        0 T_0_1_sample_9_      0.003259    47.82        NA      0.231268    58.79       4094.95
+   5  HLA-DPA10103-DPB110101       TIRTTLPADMSLGE    2   RTTLPADMS     0.370        0 T_0_1_sample_9_      0.000841    69.55        NA      0.230092    59.08       4147.39
+   1  HLA-DPA10103-DPB110101        GGKPTIRTTLPAD    3   PTIRTTLPA     0.790        0 T_0_1_sample_9_      0.000745    71.35        NA      0.062682    95.32      25376.34
+   5  HLA-DPA10103-DPB110101      TIRTTLPADMSLGEP    2   RTTLPADMS     0.310        0 T_0_1_sample_9_      0.000638    73.49        NA      0.235019    57.88       3932.09
+   5  HLA-DPA10103-DPB110101     TIRTTLPADMSLGEPP    2   RTTLPADMS     0.270        0 T_0_1_sample_9_      0.000403    79.28        NA      0.244027    55.69       3566.93
+   4  HLA-DPA10103-DPB110101          PTIRTTLPADM    2   IRTTLPADM     0.980        0 T_0_1_sample_9_      0.000397    79.44        NA      0.196942    67.30       5936.71
+   6  HLA-DPA10103-DPB110101       IRTTLPADMSLGEP    3   TLPADMSLG     0.560        0 T_0_1_sample_9_      0.000304    82.55        NA      0.184071    70.50       6823.79
+   6  HLA-DPA10103-DPB110101        IRTTLPADMSLGE    1   RTTLPADMS     0.380        0 T_0_1_sample_9_      0.000268    83.83        NA      0.152753    78.08       9576.09
+   6  HLA-DPA10103-DPB110101      IRTTLPADMSLGEPP    4   LPADMSLGE     0.480        0 T_0_1_sample_9_      0.000260    84.11        NA      0.192864    68.32       6204.52
+   6  HLA-DPA10103-DPB110101         IRTTLPADMSLG    1   RTTLPADMS     0.420        0 T_0_1_sample_9_      0.000172    88.03        NA      0.195084    67.77       6057.26
+   7  HLA-DPA10103-DPB110101       RTTLPADMSLGEPP    4   PADMSLGEP     0.360        0 T_0_1_sample_9_      0.000132    89.95        NA      0.112336    87.00      14828.82
+   2  HLA-DPA10103-DPB110101         GKPTIRTTLPAD    2   PTIRTTLPA     0.500        0 T_0_1_sample_9_      0.000130    90.06        NA      0.087225    91.64      19458.18
+   1  HLA-DPA10103-DPB110101         GGKPTIRTTLPA    2   KPTIRTTLP     0.420        0 T_0_1_sample_9_      0.000129    90.13        NA      0.077932    93.18      21516.41
+   7  HLA-DPA10103-DPB110101        RTTLPADMSLGEP    3   LSMDAPLTT     0.650        1 T_0_1_sample_9_      0.000125    90.39        NA      0.084604    92.07      20017.89
+   6  HLA-DPA10103-DPB110101          IRTTLPADMSL    1   RTTLPADMS     0.370        0 T_0_1_sample_9_      0.000080    93.31        NA      0.187655    69.62       6564.25
+   7  HLA-DPA10103-DPB110101         RTTLPADMSLGE    2   TLPADMSLG     0.710        0 T_0_1_sample_9_      0.000060    94.61        NA      0.114566    86.55      14475.31
+   5  HLA-DPA10103-DPB110101           TIRTTLPADM    1   IRTTLPADM     0.990        0 T_0_1_sample_9_      0.000045    95.83        NA      0.174266    72.89       7587.51
+   8  HLA-DPA10103-DPB110101        TTLPADMSLGEPP    2   LPADMSLGE     0.330        0 T_0_1_sample_9_      0.000026    97.59        NA      0.065039    95.14      24737.38
+   8  HLA-DPA10103-DPB110101         TTLPADMSLGEP    3   LSMDAPLTT     0.400        1 T_0_1_sample_9_      0.000019    98.24        NA      0.087961    91.52      19303.85
+   3  HLA-DPA10103-DPB110101          KPTIRTTLPAD    1   PTIRTTLPA     0.540        0 T_0_1_sample_9_      0.000015    98.61        NA      0.074781    93.70      22262.62
+   6  HLA-DPA10103-DPB110101           IRTTLPADMS    1   RTTLPADMS     0.310        0 T_0_1_sample_9_      0.000009    99.17        NA      0.152483    78.14       9604.11
+   1  HLA-DPA10103-DPB110101          GGKPTIRTTLP    1   GKPTIRTTL     0.690        0 T_0_1_sample_9_      0.000006    99.44        NA      0.057159    95.73      26939.00
+   8  HLA-DPA10103-DPB110101          TTLPADMSLGE    2   LSMDAPLTT     0.600        1 T_0_1_sample_9_      0.000003    99.72        NA      0.079001    93.00      21268.98
+   9  HLA-DPA10103-DPB110101         TLPADMSLGEPP    3   ADMSLGEPP     0.330        0 T_0_1_sample_9_      0.000003    99.72        NA      0.065064    95.14      24730.69
+   6  HLA-DPA10103-DPB110101            IRTTLPADM    0   IRTTLPADM     1.000        0 T_0_1_sample_9_      0.000002    99.81        NA      0.130246    83.25      12216.54
+   8  HLA-DPA10103-DPB110101           TTLPADMSLG    1   LSMDAPLTT     0.930        1 T_0_1_sample_9_      0.000001    99.91        NA      0.063418    95.26      25175.06
+   3  HLA-DPA10103-DPB110101           KPTIRTTLPA    1   PTIRTTLPA     0.940        0 T_0_1_sample_9_      0.000001    99.91        NA      0.052664    96.06      28281.57
+   9  HLA-DPA10103-DPB110101          TLPADMSLGEP    1   LPADMSLGE     0.530        0 T_0_1_sample_9_      0.000001    99.91        NA      0.055124    95.88      27538.74
+  12  HLA-DPA10103-DPB110101            ADMSLGEPP    0   ADMSLGEPP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.018508    98.62      40926.20
+  11  HLA-DPA10103-DPB110101            PADMSLGEP    0   PADMSLGEP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.010769    99.20      44500.69
+  10  HLA-DPA10103-DPB110101            LPADMSLGE    0   LPADMSLGE     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.028654    97.86      36671.26
+   9  HLA-DPA10103-DPB110101            TLPADMSLG    0   TLPADMSLG     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.029587    97.79      36302.91
+   8  HLA-DPA10103-DPB110101            TTLPADMSL    0   LSMDAPLTT     1.000        1 T_0_1_sample_9_      0.000000   100.00        NA      0.041268    96.92      31992.85
+   7  HLA-DPA10103-DPB110101            RTTLPADMS    0   RTTLPADMS     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.043704    96.73      31160.64
+   5  HLA-DPA10103-DPB110101            TIRTTLPAD    0   TIRTTLPAD     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.033207    97.52      34908.51
+   4  HLA-DPA10103-DPB110101            PTIRTTLPA    0   PTIRTTLPA     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.023916    98.21      38600.19
+   3  HLA-DPA10103-DPB110101            KPTIRTTLP    0   KPTIRTTLP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.030807    97.70      35826.86
+   2  HLA-DPA10103-DPB110101            GKPTIRTTL    0   GKPTIRTTL     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.032817    97.55      35056.12
+   1  HLA-DPA10103-DPB110101            GGKPTIRTT    0   GGKPTIRTT     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.007359    99.45      46173.22
+  11  HLA-DPA10103-DPB110101           PADMSLGEPP    1   ADMSLGEPP     0.810        0 T_0_1_sample_9_      0.000000   100.00        NA      0.027641    97.93      37075.39
+  10  HLA-DPA10103-DPB110101           LPADMSLGEP    1   PADMSLGEP     0.580        0 T_0_1_sample_9_      0.000000   100.00        NA      0.036040    97.31      33854.71
+   9  HLA-DPA10103-DPB110101           TLPADMSLGE    0   TLPADMSLG     0.190        0 T_0_1_sample_9_      0.000000   100.00        NA      0.047509    96.45      29903.81
+   4  HLA-DPA10103-DPB110101           PTIRTTLPAD    1   TIRTTLPAD     0.720        0 T_0_1_sample_9_      0.000000   100.00        NA      0.050421    96.23      28976.32
+   2  HLA-DPA10103-DPB110101           GKPTIRTTLP    1   LTTRITPKG     0.870        1 T_0_1_sample_9_      0.000000   100.00        NA      0.051390    96.16      28674.11
+   1  HLA-DPA10103-DPB110101           GGKPTIRTTL    1   GKPTIRTTL     0.730        0 T_0_1_sample_9_      0.000000   100.00        NA      0.040875    96.95      32129.17
+  10  HLA-DPA10103-DPB110101          LPADMSLGEPP    2   ADMSLGEPP     0.520        0 T_0_1_sample_9_      0.000000   100.00        NA      0.046745    96.51      30152.04
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   3  HLA-DPA10103-DPB110101      KPTIKTSQPADSSLG    3   IKTSQPADS     0.850        0 T_0_1_sample_10      0.010408    29.61        NA      0.134110    82.38      11716.32
+   2  HLA-DPA10103-DPB110101     SKPTIKTSQPADSSLG    4   IKTSQPADS     0.810        0 T_0_1_sample_10      0.007778    33.96        NA      0.145243    79.88      10386.70
+   3  HLA-DPA10103-DPB110101       KPTIKTSQPADSSL    3   IKTSQPADS     0.880        0 T_0_1_sample_10      0.007540    34.47        NA      0.141773    80.66      10784.08
+   3  HLA-DPA10103-DPB110101        KPTIKTSQPADSS    3   IKTSQPADS     0.900        0 T_0_1_sample_10      0.005510    39.40        NA      0.091291    90.97      18620.71
+   4  HLA-DPA10103-DPB110101       PTIKTSQPADSSLG    3   KTSQPADSS     0.250        0 T_0_1_sample_10      0.005394    39.74        NA      0.113091    86.85      14708.18
+   1  HLA-DPA10103-DPB110101    GSKPTIKTSQPADSSLG    5   IKTSQPADS     0.670        0 T_0_1_sample_10      0.004641    42.13        NA      0.139668    81.14      11032.51
+   4  HLA-DPA10103-DPB110101      PTIKTSQPADSSLGA    3   KTSQPADSS     0.300        0 T_0_1_sample_10      0.003761    45.48        NA      0.113057    86.85      14713.58
+   4  HLA-DPA10103-DPB110101        PTIKTSQPADSSL    3   KTSQPADSS     0.230        0 T_0_1_sample_10      0.003621    46.08        NA      0.091401    90.95      18598.57
+   4  HLA-DPA10103-DPB110101         PTIKTSQPADSS    3   KTSQPADSS     0.150        0 T_0_1_sample_10      0.002697    51.06        NA      0.103348    88.77      16343.34
+   4  HLA-DPA10103-DPB110101     PTIKTSQPADSSLGAP    3   KTSQPADSS     0.400        0 T_0_1_sample_10      0.002485    52.47        NA      0.118132    85.85      13927.44
+   1  HLA-DPA10103-DPB110101   GSKPTIKTSQPADSSLGA    5   IKTSQPADS     0.650        0 T_0_1_sample_10      0.002350    53.37        NA      0.107527    87.95      15620.82
+   1  HLA-DPA10103-DPB110101       GSKPTIKTSQPADS    3   PTIKTSQPA     0.550        0 T_0_1_sample_10      0.001478    60.92        NA      0.098559    89.72      17212.51
+   4  HLA-DPA10103-DPB110101    PTIKTSQPADSSLGAPP    3   KTSQPADSS     0.350        0 T_0_1_sample_10      0.000927    68.22        NA      0.113043    86.86      14715.81
+   1  HLA-DPA10103-DPB110101        GSKPTIKTSQPAD    3   PTIKTSQPA     0.860        0 T_0_1_sample_10      0.000644    73.37        NA      0.037991    97.16      33147.55
+   3  HLA-DPA10103-DPB110101         KPTIKTSQPADS    3   IKTSQPADS     0.820        0 T_0_1_sample_10      0.000601    74.24        NA      0.104472    88.55      16145.79
+   6  HLA-DPA10103-DPB110101       IKTSQPADSSLGAP    1   AGLSSDAPQ     0.260        1 T_0_1_sample_10      0.000400    79.36        NA      0.079892    92.85      21064.93
+   5  HLA-DPA10103-DPB110101          TIKTSQPADSS    2   KTSQPADSS     0.230        0 T_0_1_sample_10      0.000366    80.35        NA      0.087342    91.62      19433.56
+   6  HLA-DPA10103-DPB110101      IKTSQPADSSLGAPP    1   PAGLSSDAP     0.200        1 T_0_1_sample_10      0.000224    85.53        NA      0.083950    92.18      20160.05
+   2  HLA-DPA10103-DPB110101         SKPTIKTSQPAD    2   PTIKTSQPA     0.800        0 T_0_1_sample_10      0.000214    86.01        NA      0.050406    96.23      28981.03
+   4  HLA-DPA10103-DPB110101          PTIKTSQPADS    2   IKTSQPADS     0.980        0 T_0_1_sample_10      0.000136    89.76        NA      0.080311    92.78      20969.64
+   7  HLA-DPA10103-DPB110101        KTSQPADSSLGAP    3   LSSDAPQST     0.750        1 T_0_1_sample_10      0.000097    92.21        NA      0.038976    97.09      32796.15
+   7  HLA-DPA10103-DPB110101       KTSQPADSSLGAPP    4   LSSDAPQST     0.500        1 T_0_1_sample_10      0.000086    92.92        NA      0.057805    95.68      26751.37
+   7  HLA-DPA10103-DPB110101         KTSQPADSSLGA    2   LSSDAPQST     0.690        1 T_0_1_sample_10      0.000047    95.65        NA      0.052269    96.09      28402.70
+   8  HLA-DPA10103-DPB110101        TSQPADSSLGAPP    3   GLSSDAPQS     0.500        1 T_0_1_sample_10      0.000030    97.22        NA      0.035658    97.34      33994.93
+   8  HLA-DPA10103-DPB110101         TSQPADSSLGAP    3   LSSDAPQST     0.580        1 T_0_1_sample_10      0.000023    97.87        NA      0.044866    96.65      30771.30
+   5  HLA-DPA10103-DPB110101           TIKTSQPADS    1   IKTSQPADS     1.000        0 T_0_1_sample_10      0.000022    97.96        NA      0.068726    94.70      23769.97
+   3  HLA-DPA10103-DPB110101          KPTIKTSQPAD    1   PTIKTSQPA     0.830        0 T_0_1_sample_10      0.000014    98.70        NA      0.042091    96.85      31709.22
+   6  HLA-DPA10103-DPB110101           IKTSQPADSS    1   KTSQPADSS     0.450        0 T_0_1_sample_10      0.000010    99.07        NA      0.063614    95.25      25121.74
+   7  HLA-DPA10103-DPB110101          KTSQPADSSLG    1   LSSDAPQST     0.670        1 T_0_1_sample_10      0.000010    99.07        NA      0.041328    96.91      31972.08
+   9  HLA-DPA10103-DPB110101         SQPADSSLGAPP    2   PADSSLGAP     0.320        0 T_0_1_sample_10      0.000008    99.26        NA      0.045129    96.63      30683.87
+   8  HLA-DPA10103-DPB110101          TSQPADSSLGA    2   LSSDAPQST     0.640        1 T_0_1_sample_10      0.000005    99.54        NA      0.037592    97.19      33290.96
+  10  HLA-DPA10103-DPB110101          QPADSSLGAPP    1   PADSSLGAP     0.420        0 T_0_1_sample_10      0.000003    99.72        NA      0.035668    97.33      33991.25
+   1  HLA-DPA10103-DPB110101          GSKPTIKTSQP    2   KPTIKTSQP     0.460        0 T_0_1_sample_10      0.000003    99.72        NA      0.031432    97.65      35585.42
+   6  HLA-DPA10103-DPB110101            IKTSQPADS    0   IKTSQPADS     1.000        0 T_0_1_sample_10      0.000001    99.91        NA      0.049089    96.33      29396.95
+   8  HLA-DPA10103-DPB110101           TSQPADSSLG    1   LSSDAPQST     0.890        1 T_0_1_sample_10      0.000001    99.91        NA      0.027600    97.94      37091.85
+   3  HLA-DPA10103-DPB110101           KPTIKTSQPA    1   PTIKTSQPA     0.950        0 T_0_1_sample_10      0.000001    99.91        NA      0.032416    97.58      35208.56
+  12  HLA-DPA10103-DPB110101            ADSSLGAPP    0   ADSSLGAPP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.016419    98.77      41861.78
+  11  HLA-DPA10103-DPB110101            PADSSLGAP    0   PADSSLGAP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.011075    99.17      44353.59
+  10  HLA-DPA10103-DPB110101            QPADSSLGA    0   QPADSSLGA     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.013375    99.00      43263.47
+   9  HLA-DPA10103-DPB110101            SQPADSSLG    0   SQPADSSLG     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.014979    98.88      42519.11
+   8  HLA-DPA10103-DPB110101            TSQPADSSL    0   LSSDAPQST     1.000        1 T_0_1_sample_10      0.000000   100.00        NA      0.016774    98.75      41701.29
+   7  HLA-DPA10103-DPB110101            KTSQPADSS    0   KTSQPADSS     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.019217    98.56      40613.45
+   5  HLA-DPA10103-DPB110101            TIKTSQPAD    0   TIKTSQPAD     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.011819    99.12      43997.99
+   4  HLA-DPA10103-DPB110101            PTIKTSQPA    0   PTIKTSQPA     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.016271    98.78      41928.86
+   3  HLA-DPA10103-DPB110101            KPTIKTSQP    0   KPTIKTSQP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.016847    98.74      41668.36
+   2  HLA-DPA10103-DPB110101            SKPTIKTSQ    0   SKPTIKTSQ     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.012029    99.10      43898.14
+   1  HLA-DPA10103-DPB110101            GSKPTIKTS    0   GSKPTIKTS     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.009724    99.27      45006.70
+  10  HLA-DPA10103-DPB110101           QPADSSLGAP    1   PADSSLGAP     0.840        0 T_0_1_sample_10      0.000000   100.00        NA      0.022932    98.29      39013.35
+   9  HLA-DPA10103-DPB110101           SQPADSSLGA    1   GLSSDAPQS     0.920        1 T_0_1_sample_10      0.000000   100.00        NA      0.023962    98.21      38580.97
+   2  HLA-DPA10103-DPB110101           SKPTIKTSQP    1   KPTIKTSQP     0.870        0 T_0_1_sample_10      0.000000   100.00        NA      0.024557    98.16      38333.41
+   1  HLA-DPA10103-DPB110101           GSKPTIKTSQ    1   SKPTIKTSQ     0.620        0 T_0_1_sample_10      0.000000   100.00        NA      0.020219    98.49      40175.51
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------

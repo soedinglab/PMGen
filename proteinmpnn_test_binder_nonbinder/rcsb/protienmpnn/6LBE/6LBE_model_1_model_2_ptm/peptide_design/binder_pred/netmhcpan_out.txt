@@ -1,0 +1,709 @@
+# /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/bin/netMHCpan -f tmp3/protienmpnn/6LBE/6LBE_model_1_model_2_ptm/peptide_design/seqs/multichain_6LBE_model_1_model_2_ptm.fa -BA -a SLA-2:0101
+# Tue Mar 11 20:05:18 2025
+# User: amir
+# PWD : /home/amir/amir/ParseFold/PMGen
+# Host: Linux l1161-blue3 6.8.0-52-generic x86_64
+# -f       tmp3/protienmpnn/6LBE/6LBE_model_1_model_2_ptm/peptide_design/seqs/multichain_6LBE_model_1_model_2_ptm.fa File name with input
+# -BA      1                    Include Binding affinity prediction
+# -a       SLA-2:0101           MHC allele
+# Command line parameters set to:
+#	[-rdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64 Home directory for NetMHpan
+#	[-syn filename]      /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/synlist.bin Synaps file
+#	[-v]                 0                    Verbose mode
+#	[-dirty]             0                    Dirty mode, leave tmp dir+files
+#	[-tdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpanXXXXXX Temporary directory (made with mkdtemp)
+#	[-hlapseudo filename] /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/MHC_pseudo.dat File with MHC pseudo sequences
+#	[-hlaseq filename]                        File with full length MHC sequences
+#	[-a line]            SLA-2:0101           MHC allele
+#	[-f filename]        tmp3/protienmpnn/6LBE/6LBE_model_1_model_2_ptm/peptide_design/seqs/multichain_6LBE_model_1_model_2_ptm.fa File name with input
+#	[-w]                 0                    w option for webface
+#	[-s]                 0                    Sort output on descending affinity
+#	[-p]                 0                    Use peptide input
+#	[-rth float]         0.500000             Rank Threshold for high binding peptides
+#	[-rlt float]         2.000000             Rank Threshold for low binding peptides
+#	[-l string]          8,9,10,11            Peptide length [8-11] (multiple length with ,)
+#	[-xls]               0                    Save output to xls file
+#	[-xlsfile filename]  NetMHCpan_out.xls    Filename for xls dump
+#	[-t float]           -99.900002           Threshold for output (%rank) [<0 print all]
+#	[-thrfmt filename]   /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/threshold/%s.thr.%s Format for threshold filenames
+#	[-expfix]            0                    Exclude prefix from synlist
+#	[-version filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/version File with version information
+#	[-inptype int]       0                    Input type [0] FASTA [1] Peptide
+#	[-listMHC]           0                    Print list of alleles included in netMHCpan
+#	[-allname filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/allelenames File with print names for alleles
+#	[-BA]                1                    Include Binding affinity prediction
+
+# NetMHCpan version 4.1b
+
+# Tmpdir made /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpannUdURx
+# Input is in FSA format
+
+# Peptide length 8,9,10,11
+
+# Make both EL and BA predictions
+
+SLA-2:0101 : Distance to training data  0.317 (using nearest neighbor HLA-A29:01)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      FANFCLMMI FANFCLMMI  0  0  0  0  0    FANFCLMMI multichain_6LBE 0.0042260   29.766 0.171765    3.341  7795.64
+   1  SLA-2:0101       FANFCLMM FAN-FCLMM  0  0  0  3  1     FANFCLMM multichain_6LBE 0.0030050   33.752 0.121563    9.517 13419.89
+   2  SLA-2:0101       ANFCLMMI ANF-CLMMI  0  0  0  3  1     ANFCLMMI multichain_6LBE 0.0007220   52.471 0.096717   16.045 17559.00
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein multichain_6LBE. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVKV MDMPGLVKV  0  0  0  0  0    MDMPGLVKV T_0_1_sample_1_ 0.0388780    7.718 0.106199   13.182 15846.89
+   1  SLA-2:0101       MDMPGLVK MDMP-GLVK  0  0  0  4  1     MDMPGLVK T_0_1_sample_1_ 0.0016530   41.217 0.049761   44.322 29183.98
+   2  SLA-2:0101       DMPGLVKV DM-PGLVKV  0  0  0  2  1     DMPGLVKV T_0_1_sample_1_ 0.0014040   43.382 0.030733   67.360 35855.57
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_1_. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTA MDMPGLVTA  0  0  0  0  0    MDMPGLVTA T_0_1_sample_2_ 0.0071900   23.547 0.078994   23.416 21270.60
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_2_ 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTA DM-PGLVTA  0  0  0  2  1     DMPGLVTA T_0_1_sample_2_ 0.0003630   61.811 0.026043   74.285 37722.00
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_2_. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_3_ 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_3_ 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_3_ 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_3_. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_4_ 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_4_ 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_4_ 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_4_. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_5_ 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_5_ 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_5_ 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_5_. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVKA MDFPGLVKA  0  0  0  0  0    MDFPGLVKA T_0_1_sample_6_ 0.0103940   19.528 0.059413   35.855 26289.97
+   1  SLA-2:0101       MDFPGLVK MDFPG-LVK  0  0  0  5  1     MDFPGLVK T_0_1_sample_6_ 0.0021070   38.119 0.050179   43.929 29052.29
+   2  SLA-2:0101       DFPGLVKA DFPGLVKA-  0  0  0  8  1     DFPGLVKA T_0_1_sample_6_ 0.0010880   46.722 0.016492   88.511 41828.72
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_6_. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_7_ 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_7_ 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_7_ 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_7_. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_8_ 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_8_ 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_8_ 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_8_. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVKA MDFPGLVKA  0  0  0  0  0    MDFPGLVKA T_0_1_sample_9_ 0.0103940   19.528 0.059413   35.855 26289.97
+   1  SLA-2:0101       MDFPGLVK MDFPG-LVK  0  0  0  5  1     MDFPGLVK T_0_1_sample_9_ 0.0021070   38.119 0.050179   43.929 29052.29
+   2  SLA-2:0101       DFPGLVKA DFPGLVKA-  0  0  0  8  1     DFPGLVKA T_0_1_sample_9_ 0.0010880   46.722 0.016492   88.511 41828.72
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_9_. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_10 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_10 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_10 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_10. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_11 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_11 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_11 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_11. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTA MDMPGLVTA  0  0  0  0  0    MDMPGLVTA T_0_1_sample_12 0.0071900   23.547 0.078994   23.416 21270.60
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_12 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTA DM-PGLVTA  0  0  0  2  1     DMPGLVTA T_0_1_sample_12 0.0003630   61.811 0.026043   74.285 37722.00
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_12. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVKV MDFPGLVKV  0  0  0  0  0    MDFPGLVKV T_0_1_sample_13 0.0539920    5.629 0.094627   16.749 17960.58
+   1  SLA-2:0101       MDFPGLVK MDFPG-LVK  0  0  0  5  1     MDFPGLVK T_0_1_sample_13 0.0021070   38.119 0.050179   43.929 29052.29
+   2  SLA-2:0101       DFPGLVKV DF-PGLVKV  0  0  0  2  1     DFPGLVKV T_0_1_sample_13 0.0023420   36.818 0.026691   73.310 37458.44
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_13. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVKA MDMPGLVKA  0  0  0  0  0    MDMPGLVKA T_0_1_sample_14 0.0060110   25.623 0.066631   30.714 24314.92
+   1  SLA-2:0101       MDMPGLVK MDMP-GLVK  0  0  0  4  1     MDMPGLVK T_0_1_sample_14 0.0016530   41.217 0.049761   44.322 29183.98
+   2  SLA-2:0101       DMPGLVKA DM-PGLVKA  0  0  0  2  1     DMPGLVKA T_0_1_sample_14 0.0003280   63.189 0.020334   82.890 40125.56
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_14. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_15 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_15 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_15 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_15. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_16 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_16 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_16 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_16. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_17 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_17 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_17 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_17. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_18 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_18 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_18 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_18. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_19 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_19 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_19 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_19. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTA MDFPGLVTA  0  0  0  0  0    MDFPGLVTA T_0_1_sample_20 0.0115860   18.339 0.067162   30.355 24175.63
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_20 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTA DFPGLVTA-  0  0  0  8  1     DFPGLVTA T_0_1_sample_20 0.0009050   49.169 0.020316   82.917 40133.38
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_20. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVKA MDFPGLVKA  0  0  0  0  0    MDFPGLVKA T_0_1_sample_21 0.0103940   19.528 0.059413   35.855 26289.97
+   1  SLA-2:0101       MDFPGLVK MDFPG-LVK  0  0  0  5  1     MDFPGLVK T_0_1_sample_21 0.0021070   38.119 0.050179   43.929 29052.29
+   2  SLA-2:0101       DFPGLVKA DFPGLVKA-  0  0  0  8  1     DFPGLVKA T_0_1_sample_21 0.0010880   46.722 0.016492   88.511 41828.72
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_21. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_22 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_22 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_22 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_22. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTA MDFPGLVTA  0  0  0  0  0    MDFPGLVTA T_0_1_sample_23 0.0115860   18.339 0.067162   30.355 24175.63
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_23 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTA DFPGLVTA-  0  0  0  8  1     DFPGLVTA T_0_1_sample_23 0.0009050   49.169 0.020316   82.917 40133.38
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_23. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVKA MDMPGLVKA  0  0  0  0  0    MDMPGLVKA T_0_1_sample_24 0.0060110   25.623 0.066631   30.714 24314.92
+   1  SLA-2:0101       MDMPGLVK MDMP-GLVK  0  0  0  4  1     MDMPGLVK T_0_1_sample_24 0.0016530   41.217 0.049761   44.322 29183.98
+   2  SLA-2:0101       DMPGLVKA DM-PGLVKA  0  0  0  2  1     DMPGLVKA T_0_1_sample_24 0.0003280   63.189 0.020334   82.890 40125.56
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_24. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLTTV MDMPGLTTV  0  0  0  0  0    MDMPGLTTV T_0_1_sample_25 0.0315220    9.246 0.105945   13.254 15890.50
+   1  SLA-2:0101       MDMPGLTT MDMPGLTT-  0  0  0  8  1     MDMPGLTT T_0_1_sample_25 0.0003140   63.740 0.026873   73.036 37384.76
+   2  SLA-2:0101       DMPGLTTV DM-PGLTTV  0  0  0  2  1     DMPGLTTV T_0_1_sample_25 0.0009360   48.726 0.034037   62.736 34596.42
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_25. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTA MDMPGLVTA  0  0  0  0  0    MDMPGLVTA T_0_1_sample_26 0.0071900   23.547 0.078994   23.416 21270.60
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_26 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTA DM-PGLVTA  0  0  0  2  1     DMPGLVTA T_0_1_sample_26 0.0003630   61.811 0.026043   74.285 37722.00
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_26. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVKA MDFPGLVKA  0  0  0  0  0    MDFPGLVKA T_0_1_sample_27 0.0103940   19.528 0.059413   35.855 26289.97
+   1  SLA-2:0101       MDFPGLVK MDFPG-LVK  0  0  0  5  1     MDFPGLVK T_0_1_sample_27 0.0021070   38.119 0.050179   43.929 29052.29
+   2  SLA-2:0101       DFPGLVKA DFPGLVKA-  0  0  0  8  1     DFPGLVKA T_0_1_sample_27 0.0010880   46.722 0.016492   88.511 41828.72
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_27. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVKA MDFPGLVKA  0  0  0  0  0    MDFPGLVKA T_0_1_sample_28 0.0103940   19.528 0.059413   35.855 26289.97
+   1  SLA-2:0101       MDFPGLVK MDFPG-LVK  0  0  0  5  1     MDFPGLVK T_0_1_sample_28 0.0021070   38.119 0.050179   43.929 29052.29
+   2  SLA-2:0101       DFPGLVKA DFPGLVKA-  0  0  0  8  1     DFPGLVKA T_0_1_sample_28 0.0010880   46.722 0.016492   88.511 41828.72
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_28. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVKA MDFPGLVKA  0  0  0  0  0    MDFPGLVKA T_0_1_sample_29 0.0103940   19.528 0.059413   35.855 26289.97
+   1  SLA-2:0101       MDFPGLVK MDFPG-LVK  0  0  0  5  1     MDFPGLVK T_0_1_sample_29 0.0021070   38.119 0.050179   43.929 29052.29
+   2  SLA-2:0101       DFPGLVKA DFPGLVKA-  0  0  0  8  1     DFPGLVKA T_0_1_sample_29 0.0010880   46.722 0.016492   88.511 41828.72
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_29. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_30 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_30 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_30 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_30. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_31 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_31 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_31 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_31. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTA MDFPGLVTA  0  0  0  0  0    MDFPGLVTA T_0_1_sample_32 0.0115860   18.339 0.067162   30.355 24175.63
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_32 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTA DFPGLVTA-  0  0  0  8  1     DFPGLVTA T_0_1_sample_32 0.0009050   49.169 0.020316   82.917 40133.38
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_32. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_33 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_33 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_33 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_33. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLTTV MDMPGLTTV  0  0  0  0  0    MDMPGLTTV T_0_1_sample_34 0.0315220    9.246 0.105945   13.254 15890.50
+   1  SLA-2:0101       MDMPGLTT MDMPGLTT-  0  0  0  8  1     MDMPGLTT T_0_1_sample_34 0.0003140   63.740 0.026873   73.036 37384.76
+   2  SLA-2:0101       DMPGLTTV DM-PGLTTV  0  0  0  2  1     DMPGLTTV T_0_1_sample_34 0.0009360   48.726 0.034037   62.736 34596.42
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_34. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_35 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_35 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_35 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_35. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_36 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_36 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_36 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_36. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_37 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_37 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_37 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_37. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_38 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_38 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_38 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_38. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_39 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_39 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_39 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_39. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTA MDFPGLVTA  0  0  0  0  0    MDFPGLVTA T_0_1_sample_40 0.0115860   18.339 0.067162   30.355 24175.63
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_40 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTA DFPGLVTA-  0  0  0  8  1     DFPGLVTA T_0_1_sample_40 0.0009050   49.169 0.020316   82.917 40133.38
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_40. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVKA MDMPGLVKA  0  0  0  0  0    MDMPGLVKA T_0_1_sample_41 0.0060110   25.623 0.066631   30.714 24314.92
+   1  SLA-2:0101       MDMPGLVK MDMP-GLVK  0  0  0  4  1     MDMPGLVK T_0_1_sample_41 0.0016530   41.217 0.049761   44.322 29183.98
+   2  SLA-2:0101       DMPGLVKA DM-PGLVKA  0  0  0  2  1     DMPGLVKA T_0_1_sample_41 0.0003280   63.189 0.020334   82.890 40125.56
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_41. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVKV MDMPGLVKV  0  0  0  0  0    MDMPGLVKV T_0_1_sample_42 0.0388780    7.718 0.106199   13.182 15846.89
+   1  SLA-2:0101       MDMPGLVK MDMP-GLVK  0  0  0  4  1     MDMPGLVK T_0_1_sample_42 0.0016530   41.217 0.049761   44.322 29183.98
+   2  SLA-2:0101       DMPGLVKV DM-PGLVKV  0  0  0  2  1     DMPGLVKV T_0_1_sample_42 0.0014040   43.382 0.030733   67.360 35855.57
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_42. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTV MDFPGLVTV  0  0  0  0  0    MDFPGLVTV T_0_1_sample_43 0.0477050    6.361 0.102144   14.348 16557.64
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_43 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTV DF-PGLVTV  0  0  0  2  1     DFPGLVTV T_0_1_sample_43 0.0025250   35.919 0.032149   65.331 35310.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_43. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_44 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_44 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_44 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_44. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTA MDMPGLVTA  0  0  0  0  0    MDMPGLVTA T_0_1_sample_45 0.0071900   23.547 0.078994   23.416 21270.60
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_45 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTA DM-PGLVTA  0  0  0  2  1     DMPGLVTA T_0_1_sample_45 0.0003630   61.811 0.026043   74.285 37722.00
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_45. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_46 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_46 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_46 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_46. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_47 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_47 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_47 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_47. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDFPGLVTA MDFPGLVTA  0  0  0  0  0    MDFPGLVTA T_0_1_sample_48 0.0115860   18.339 0.067162   30.355 24175.63
+   1  SLA-2:0101       MDFPGLVT MDFPGLVT-  0  0  0  8  1     MDFPGLVT T_0_1_sample_48 0.0007450   52.031 0.027726   71.753 37041.31
+   2  SLA-2:0101       DFPGLVTA DFPGLVTA-  0  0  0  8  1     DFPGLVTA T_0_1_sample_48 0.0009050   49.169 0.020316   82.917 40133.38
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_48. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_49 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_49 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_49 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_49. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-2:0101      MDMPGLVTV MDMPGLVTV  0  0  0  0  0    MDMPGLVTV T_0_1_sample_50 0.0371230    8.034 0.119377    9.956 13741.08
+   1  SLA-2:0101       MDMPGLVT MDMPGLVT-  0  0  0  8  1     MDMPGLVT T_0_1_sample_50 0.0003140   63.740 0.029135   69.650 36480.90
+   2  SLA-2:0101       DMPGLVTV DM-PGLVTV  0  0  0  2  1     DMPGLVTV T_0_1_sample_50 0.0013190   44.162 0.036897   58.904 33542.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_50. Allele SLA-2:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------

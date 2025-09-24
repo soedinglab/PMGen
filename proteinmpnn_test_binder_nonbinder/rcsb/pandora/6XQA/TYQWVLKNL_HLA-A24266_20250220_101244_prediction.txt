@@ -1,0 +1,393 @@
+# /home/amir/amir/ParseFold/ParseFold-MHC/netMHCIpan-4.1/Linux_x86_64/bin/netMHCpan -p tmp3/pandora/6XQA/TYQWVLKNL_HLA-A24266_20250220_101244.txt -a HLA-A24:266,HLA-A24:265,HLA-A24:352,HLA-A24:269,HLA-A24:150,HLA-A24:402,HLA-A24:250,HLA-A24:263,HLA-A24:423,HLA-A24:231,HLA-A24:422,HLA-A24:268,HLA-A24:271,HLA-A24:270,HLA-A24:267,HLA-A24:264,HLA-A24:401,HLA-A24:251,HLA-A24:353,HLA-A24:418,HLA-A24:249,HLA-A24:400,HLA-A24:79,HLA-A24:419,HLA-A24:383,HLA-A24:76,HLA-A24:385,HLA-A24:154,HLA-A24:354,HLA-A24:153,HLA-A24:144,HLA-A24:417
+# Thu Feb 20 10:12:44 2025
+# User: amir
+# PWD : /home/amir/amir/ParseFold/ParseFold-MHC
+# Host: Linux l1161-blue3 6.8.0-52-generic x86_64
+# -p       1                    Use peptide input
+# -a       HLA-A24:266,HLA-A24:265,HLA-A24:352,HLA-A24:269,HLA-A24:150,HLA-A24:402,HLA-A24:250,HLA-A24:263,HLA-A24:423,HLA-A24:231,HLA-A24:422,HLA-A24:268,HLA-A24:271,HLA-A24:270,HLA-A24:267,HLA-A24:264,HLA-A24:401,HLA-A24:251,HLA-A24:353,HLA-A24:418,HLA-A24:249,HLA-A24:400,HLA-A24:79,HLA-A24:419,HLA-A24:383,HLA-A24:76,HLA-A24:385,HLA-A24:154,HLA-A24:354,HLA-A24:153,HLA-A24:144,HLA-A24:417 MHC allele
+# Command line parameters set to:
+#	[-rdir filename]     /home/amir/amir/ParseFold/ParseFold-MHC/netMHCIpan-4.1/Linux_x86_64 Home directory for NetMHpan
+#	[-syn filename]      /home/amir/amir/ParseFold/ParseFold-MHC/netMHCIpan-4.1/Linux_x86_64/data/synlist.bin Synaps file
+#	[-v]                 0                    Verbose mode
+#	[-dirty]             0                    Dirty mode, leave tmp dir+files
+#	[-tdir filename]     /home/amir/amir/ParseFold/ParseFold-MHC/netMHCIpan-4.1/tmp/netMHCpanXXXXXX Temporary directory (made with mkdtemp)
+#	[-hlapseudo filename] /home/amir/amir/ParseFold/ParseFold-MHC/netMHCIpan-4.1/Linux_x86_64/data/MHC_pseudo.dat File with MHC pseudo sequences
+#	[-hlaseq filename]                        File with full length MHC sequences
+#	[-a line]            HLA-A24:266,HLA-A24:265,HLA-A24:352,HLA-A24:269,HLA-A24:150,HLA-A24:402,HLA-A24:250,HLA-A24:263,HLA-A24:423,HLA-A24:231,HLA-A24:422,HLA-A24:268,HLA-A24:271,HLA-A24:270,HLA-A24:267,HLA-A24:264,HLA-A24:401,HLA-A24:251,HLA-A24:353,HLA-A24:418,HLA-A24:249,HLA-A24:400,HLA-A24:79,HLA-A24:419,HLA-A24:383,HLA-A24:76,HLA-A24:385,HLA-A24:154,HLA-A24:354,HLA-A24:153,HLA-A24:144,HLA-A24:417 MHC allele
+#	[-f filename]                             File name with input
+#	[-w]                 0                    w option for webface
+#	[-s]                 0                    Sort output on descending affinity
+#	[-p]                 1                    Use peptide input
+#	[-rth float]         0.500000             Rank Threshold for high binding peptides
+#	[-rlt float]         2.000000             Rank Threshold for low binding peptides
+#	[-l string]          8,9,10,11            Peptide length [8-11] (multiple length with ,)
+#	[-xls]               0                    Save output to xls file
+#	[-xlsfile filename]  NetMHCpan_out.xls    Filename for xls dump
+#	[-t float]           -99.900002           Threshold for output (%rank) [<0 print all]
+#	[-thrfmt filename]   /home/amir/amir/ParseFold/ParseFold-MHC/netMHCIpan-4.1/Linux_x86_64/data/threshold/%s.thr.%s Format for threshold filenames
+#	[-expfix]            0                    Exclude prefix from synlist
+#	[-version filename]  /home/amir/amir/ParseFold/ParseFold-MHC/netMHCIpan-4.1/Linux_x86_64/data/version File with version information
+#	[-inptype int]       0                    Input type [0] FASTA [1] Peptide
+#	[-listMHC]           0                    Print list of alleles included in netMHCpan
+#	[-allname filename]  /home/amir/amir/ParseFold/ParseFold-MHC/netMHCIpan-4.1/Linux_x86_64/data/allelenames File with print names for alleles
+#	[-BA]                0                    Include Binding affinity prediction
+
+# NetMHCpan version 4.1b
+
+# Tmpdir made /home/amir/amir/ParseFold/ParseFold-MHC/netMHCIpan-4.1/tmp/netMHCpanupgOvJ
+# Input is in PEPTIDE format
+
+# Make EL predictions
+
+HLA-A24:266 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:266      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:266. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:265 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:265      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:265. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:352 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:352      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:352. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:269 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:269      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:269. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:150 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:150      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:150. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:402 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:402      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:402. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:250 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:250      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:250. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:263 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:263      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:263. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:423 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:423      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:423. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:231 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:231      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:231. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:422 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:422      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:422. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:268 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:268      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:268. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:271 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:271      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:271. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:270 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:270      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:270. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:267 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:267      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:267. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:264 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:264      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:264. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:401 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:401      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:401. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:251 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:251      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:251. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:353 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:353      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:353. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:418 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:418      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:418. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:249 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:249      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:249. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:400 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:400      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:400. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:79 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:79      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:79. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:419 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:419      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:419. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:383 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*24:383      TYQWVLKNL TYQWVLKNL  0  0  0  0  0    TYQWVLKNL         PEPLIST 0.7919770    0.108 <= SB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein PEPLIST. Allele HLA-A*24:383. Number of high binders 1. Number of weak binders 0. Number of peptides 1
+
+-----------------------------------------------------------------------------------
+
+HLA-A24:76 : Distance to training data  0.000 (using nearest neighbor HLA-A24:02)
+

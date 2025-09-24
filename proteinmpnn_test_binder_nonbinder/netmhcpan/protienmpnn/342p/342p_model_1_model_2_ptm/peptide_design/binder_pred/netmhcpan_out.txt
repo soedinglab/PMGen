@@ -1,0 +1,335 @@
+# NetMHCIIpan version 4.3f
+
+# Input is in FASTA format
+
+# Peptide length 9,10,11,12,13,14,15,16,17,18
+
+# Prediction Mode: EL+BA
+
+# Threshold for Strong binding peptides (%Rank)  1.00%
+# Threshold for Weak binding peptides (%Rank)    5.00%
+
+# HLA-DQA10101-DQB10501 : Distance to training data  0.000 (using nearest neighbor HLA-DQA10101-DQB10501)
+
+# Allele: HLA-DQA10101-DQB10501
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DQA10101-DQB10501       QDLELSWNLQGLQA    3   ELSWNLQGL     0.980        0 multichain_342p      0.369431     0.83        NA      0.574713     0.80         99.63   <= SB
+   2   HLA-DQA10101-DQB10501        QDLELSWNLQGLQ    3   ELSWNLQGL     0.990        0 multichain_342p      0.367241     0.84        NA      0.550630     1.18        129.29   <= SB
+   1   HLA-DQA10101-DQB10501      SQDLELSWNLQGLQA    4   ELSWNLQGL     0.980        0 multichain_342p      0.320447     1.02        NA      0.584787     0.68         89.35   <= WB
+   1   HLA-DQA10101-DQB10501     SQDLELSWNLQGLQAY    4   ELSWNLQGL     0.980        0 multichain_342p      0.258867     1.34        NA      0.704086     0.06         24.57   <= WB
+   3   HLA-DQA10101-DQB10501         DLELSWNLQGLQ    2   ELSWNLQGL     1.000        0 multichain_342p      0.258739     1.34        NA      0.582742     0.70         91.34   <= WB
+   3   HLA-DQA10101-DQB10501          DLELSWNLQGL    2   ELSWNLQGL     0.990        0 multichain_342p      0.101762     3.77        NA      0.564839     0.95        110.87   <= WB
+   4   HLA-DQA10101-DQB10501           LELSWNLQGL    1   ELSWNLQGL     1.000        0 multichain_342p      0.016073    15.79        NA      0.482686     3.03        269.68
+   5   HLA-DQA10101-DQB10501         ELSWNLQGLQAY    3   WNLQGLQAY     0.400        0 multichain_342p      0.011743    19.15        NA      0.496067     2.57        233.33
+   6   HLA-DQA10101-DQB10501          LSWNLQGLQAY    2   WNLQGLQAY     0.830        0 multichain_342p      0.001785    47.73        NA      0.398972     8.14        667.13
+   1   HLA-DQA10101-DQB10501         SQDLELSWNLQG    3   LELSWNLQG     0.780        0 multichain_342p      0.000466    72.39        NA      0.460437     3.97        343.08
+   5   HLA-DQA10101-DQB10501            ELSWNLQGL    0   ELSWNLQGL     1.000        0 multichain_342p      0.000183    85.14        NA      0.250607    31.58       3321.81
+   7   HLA-DQA10101-DQB10501           SWNLQGLQAY    1   WNLQGLQAY     0.970        0 multichain_342p      0.000167    86.22        NA      0.351145    13.32       1119.31
+   2   HLA-DQA10101-DQB10501          QDLELSWNLQG    2   LELSWNLQG     0.920        0 multichain_342p      0.000135    88.38        NA      0.432621     5.55        463.55
+   3   HLA-DQA10101-DQB10501           DLELSWNLQG    1   LELSWNLQG     0.990        0 multichain_342p      0.000024    97.65        NA      0.392140     8.78        718.32
+   1   HLA-DQA10101-DQB10501          SQDLELSWNLQ    1   QDLELSWNL     0.630        0 multichain_342p      0.000007    99.31        NA      0.065878    88.46      24513.84
+   8   HLA-DQA10101-DQB10501            WNLQGLQAY    0   WNLQGLQAY     1.000        0 multichain_342p      0.000001    99.90        NA      0.291799    22.73       2127.23
+   6   HLA-DQA10101-DQB10501           LSWNLQGLQA    1   SWNLQGLQA     0.680        0 multichain_342p      0.000001    99.90        NA      0.099758    77.85      16990.65
+   1   HLA-DQA10101-DQB10501           SQDLELSWNL    1   QDLELSWNL     0.760        0 multichain_342p      0.000001    99.90        NA      0.053397    91.88      28058.15
+   7   HLA-DQA10101-DQB10501            SWNLQGLQA    0   SWNLQGLQA     1.000        0 multichain_342p      0.000000   100.00        NA      0.017790    97.85      41245.38
+   6   HLA-DQA10101-DQB10501            LSWNLQGLQ    0   LSWNLQGLQ     1.000        0 multichain_342p      0.000000   100.00        NA      0.082528    83.43      20472.62
+   4   HLA-DQA10101-DQB10501            LELSWNLQG    0   LELSWNLQG     1.000        0 multichain_342p      0.000000   100.00        NA      0.301160    21.02       1922.33
+   3   HLA-DQA10101-DQB10501            DLELSWNLQ    0   DLELSWNLQ     1.000        0 multichain_342p      0.000000   100.00        NA      0.023146    97.20      38923.13
+   2   HLA-DQA10101-DQB10501            QDLELSWNL    0   QDLELSWNL     1.000        0 multichain_342p      0.000000   100.00        NA      0.023060    97.21      38959.34
+   1   HLA-DQA10101-DQB10501            SQDLELSWN    0   SQDLELSWN     1.000        0 multichain_342p      0.000000   100.00        NA      0.030208    96.34      36059.82
+   2   HLA-DQA10101-DQB10501           QDLELSWNLQ    1   DLELSWNLQ     0.600        0 multichain_342p      0.000000   100.00        NA      0.040809    95.06      32152.14
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 2 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       LPALQDFPLRELPD    3   LQDFPLREL     1.000        0 T_0_1_sample_1_      0.259901     1.33        NA      0.499545     2.45        224.71   <= WB
+   2   HLA-DQA10101-DQB10501        PALQDFPLRELPD    2   LQDFPLREL     1.000        0 T_0_1_sample_1_      0.235077     1.52        NA      0.412848     6.96        574.13   <= WB
+   1   HLA-DQA10101-DQB10501      LPALQDFPLRELPDI    3   LQDFPLREL     1.000        0 T_0_1_sample_1_      0.210029     1.75        NA      0.537156     1.44        149.59   <= WB
+   2   HLA-DQA10101-DQB10501         PALQDFPLRELP    2   LQDFPLREL     1.000        0 T_0_1_sample_1_      0.177383     2.14        NA      0.500662     2.42        222.01   <= WB
+   1   HLA-DQA10101-DQB10501     LPALQDFPLRELPDIP    3   LQDFPLREL     0.990        0 T_0_1_sample_1_      0.133682     2.88        NA      0.513802     2.01        192.59   <= WB
+   2   HLA-DQA10101-DQB10501          PALQDFPLREL    2   LQDFPLREL     0.990        0 T_0_1_sample_1_      0.048309     7.18        NA      0.476387     3.28        288.70
+   3   HLA-DQA10101-DQB10501           ALQDFPLREL    1   LQDFPLREL     1.000        0 T_0_1_sample_1_      0.007509    24.78        NA      0.439388     5.14        430.82
+   5   HLA-DQA10101-DQB10501         QDFPLRELPDIP    1   DFPLRELPD     0.740        0 T_0_1_sample_1_      0.000394    74.93        NA      0.127901    68.35      12530.46
+   5   HLA-DQA10101-DQB10501          QDFPLRELPDI    1   DFPLRELPD     0.830        0 T_0_1_sample_1_      0.000091    91.67        NA      0.114871    72.75      14427.61
+   4   HLA-DQA10101-DQB10501            LQDFPLREL    0   LQDFPLREL     1.000        0 T_0_1_sample_1_      0.000058    94.42        NA      0.342723    14.47       1226.10
+   1   HLA-DQA10101-DQB10501          LPALQDFPLRE    2   ALQDFPLRE     0.410        0 T_0_1_sample_1_      0.000054    94.75        NA      0.223691    38.37       4444.81
+   5   HLA-DQA10101-DQB10501           QDFPLRELPD    1   DFPLRELPD     1.000        0 T_0_1_sample_1_      0.000022    97.84        NA      0.071748    86.73      23005.32
+   6   HLA-DQA10101-DQB10501          DFPLRELPDIP    1   FPLRELPDI     0.390        0 T_0_1_sample_1_      0.000014    98.63        NA      0.109048    74.74      15365.85
+   2   HLA-DQA10101-DQB10501           PALQDFPLRE    1   ALQDFPLRE     0.920        0 T_0_1_sample_1_      0.000012    98.82        NA      0.112419    73.59      14815.50
+   1   HLA-DQA10101-DQB10501           LPALQDFPLR    0   LPALQDFPL     0.770        0 T_0_1_sample_1_      0.000006    99.41        NA      0.167284    55.21       8182.90
+   3   HLA-DQA10101-DQB10501            ALQDFPLRE    0   ALQDFPLRE     1.000        0 T_0_1_sample_1_      0.000001    99.90        NA      0.090269    80.97      18827.77
+   1   HLA-DQA10101-DQB10501            LPALQDFPL    0   LPALQDFPL     1.000        0 T_0_1_sample_1_      0.000001    99.90        NA      0.146382    62.13      10259.48
+   8   HLA-DQA10101-DQB10501            PLRELPDIP    0   PLRELPDIP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.014799    98.21      42602.00
+   7   HLA-DQA10101-DQB10501            FPLRELPDI    0   FPLRELPDI     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.042933    94.58      31421.66
+   6   HLA-DQA10101-DQB10501            DFPLRELPD    0   DFPLRELPD     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.053110    91.95      28145.42
+   5   HLA-DQA10101-DQB10501            QDFPLRELP    0   QDFPLRELP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.011170    98.65      44308.02
+   2   HLA-DQA10101-DQB10501            PALQDFPLR    0   PALQDFPLR     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.016632    97.99      41765.40
+   7   HLA-DQA10101-DQB10501           FPLRELPDIP    1   PLRELPDIP     0.560        0 T_0_1_sample_1_      0.000000   100.00        NA      0.057259    90.88      26909.87
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 5
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       RPALQDFPLRELPD    3   LQDFPLREL     1.000        0 T_0_1_sample_2_      0.320116     1.02        NA      0.486438     2.90        258.95   <= WB
+   1   HLA-DQA10101-DQB10501      RPALQDFPLRELPDI    3   LQDFPLREL     1.000        0 T_0_1_sample_2_      0.269812     1.27        NA      0.527497     1.67        166.06   <= WB
+   1   HLA-DQA10101-DQB10501        RPALQDFPLRELP    3   LQDFPLREL     1.000        0 T_0_1_sample_2_      0.243634     1.45        NA      0.427307     5.91        490.98   <= WB
+   1   HLA-DQA10101-DQB10501     RPALQDFPLRELPDIP    3   LQDFPLREL     0.990        0 T_0_1_sample_2_      0.180919     2.09        NA      0.504472     2.30        213.04   <= WB
+   2   HLA-DQA10101-DQB10501         PALQDFPLRELP    2   LQDFPLREL     1.000        0 T_0_1_sample_2_      0.177383     2.14        NA      0.500662     2.42        222.01   <= WB
+   2   HLA-DQA10101-DQB10501          PALQDFPLREL    2   LQDFPLREL     0.990        0 T_0_1_sample_2_      0.048309     7.18        NA      0.476387     3.28        288.70
+   3   HLA-DQA10101-DQB10501           ALQDFPLREL    1   LQDFPLREL     1.000        0 T_0_1_sample_2_      0.007509    24.78        NA      0.439388     5.14        430.82
+   5   HLA-DQA10101-DQB10501         QDFPLRELPDIP    1   DFPLRELPD     0.740        0 T_0_1_sample_2_      0.000394    74.93        NA      0.127901    68.35      12530.46
+   5   HLA-DQA10101-DQB10501          QDFPLRELPDI    1   DFPLRELPD     0.830        0 T_0_1_sample_2_      0.000091    91.67        NA      0.114871    72.75      14427.61
+   1   HLA-DQA10101-DQB10501          RPALQDFPLRE    2   ALQDFPLRE     0.650        0 T_0_1_sample_2_      0.000069    93.50        NA      0.139652    64.42      11034.42
+   4   HLA-DQA10101-DQB10501            LQDFPLREL    0   LQDFPLREL     1.000        0 T_0_1_sample_2_      0.000058    94.42        NA      0.342723    14.47       1226.10
+   5   HLA-DQA10101-DQB10501           QDFPLRELPD    1   DFPLRELPD     1.000        0 T_0_1_sample_2_      0.000022    97.84        NA      0.071748    86.73      23005.32
+   6   HLA-DQA10101-DQB10501          DFPLRELPDIP    1   FPLRELPDI     0.390        0 T_0_1_sample_2_      0.000014    98.63        NA      0.109048    74.74      15365.85
+   2   HLA-DQA10101-DQB10501           PALQDFPLRE    1   ALQDFPLRE     0.920        0 T_0_1_sample_2_      0.000012    98.82        NA      0.112419    73.59      14815.50
+   1   HLA-DQA10101-DQB10501           RPALQDFPLR    0   RPALQDFPL     0.550        0 T_0_1_sample_2_      0.000003    99.71        NA      0.060521    90.03      25976.68
+   3   HLA-DQA10101-DQB10501            ALQDFPLRE    0   ALQDFPLRE     1.000        0 T_0_1_sample_2_      0.000001    99.90        NA      0.090269    80.97      18827.77
+   1   HLA-DQA10101-DQB10501            RPALQDFPL    0   RPALQDFPL     1.000        0 T_0_1_sample_2_      0.000001    99.90        NA      0.053057    91.96      28161.56
+   8   HLA-DQA10101-DQB10501            PLRELPDIP    0   PLRELPDIP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.014799    98.21      42602.00
+   7   HLA-DQA10101-DQB10501            FPLRELPDI    0   FPLRELPDI     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.042933    94.58      31421.66
+   6   HLA-DQA10101-DQB10501            DFPLRELPD    0   DFPLRELPD     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.053110    91.95      28145.42
+   5   HLA-DQA10101-DQB10501            QDFPLRELP    0   QDFPLRELP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.011170    98.65      44308.02
+   2   HLA-DQA10101-DQB10501            PALQDFPLR    0   PALQDFPLR     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.016632    97.99      41765.40
+   7   HLA-DQA10101-DQB10501           FPLRELPDIP    1   PLRELPDIP     0.560        0 T_0_1_sample_2_      0.000000   100.00        NA      0.057259    90.88      26909.87
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 5
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       RPELQSFPLRELPD    3   LQSFPLREL     1.000        0 T_0_1_sample_3_      0.330668     0.98        NA      0.456270     4.18        358.90   <= SB
+   1   HLA-DQA10101-DQB10501      RPELQSFPLRELPDI    3   LQSFPLREL     1.000        0 T_0_1_sample_3_      0.274189     1.25        NA      0.488656     2.82        252.81   <= WB
+   1   HLA-DQA10101-DQB10501        RPELQSFPLRELP    3   LQSFPLREL     1.000        0 T_0_1_sample_3_      0.254992     1.37        NA      0.397731     8.25        676.15   <= WB
+   2   HLA-DQA10101-DQB10501         PELQSFPLRELP    2   LQSFPLREL     1.000        0 T_0_1_sample_3_      0.187880     1.99        NA      0.464164     3.81        329.52   <= WB
+   1   HLA-DQA10101-DQB10501     RPELQSFPLRELPDIP    3   LQSFPLREL     1.000        0 T_0_1_sample_3_      0.184784     2.04        NA      0.483306     3.00        267.87   <= WB
+   2   HLA-DQA10101-DQB10501          PELQSFPLREL    2   LQSFPLREL     1.000        0 T_0_1_sample_3_      0.056308     6.33        NA      0.447915     4.63        392.85
+   3   HLA-DQA10101-DQB10501           ELQSFPLREL    1   LQSFPLREL     1.000        0 T_0_1_sample_3_      0.007112    25.54        NA      0.418962     6.51        537.38
+   5   HLA-DQA10101-DQB10501         QSFPLRELPDIP    1   SFPLRELPD     0.730        0 T_0_1_sample_3_      0.000216    83.28        NA      0.148396    61.45      10038.33
+   1   HLA-DQA10101-DQB10501          RPELQSFPLRE    2   ELQSFPLRE     0.840        0 T_0_1_sample_3_      0.000065    93.83        NA      0.113647    73.17      14619.96
+   4   HLA-DQA10101-DQB10501            LQSFPLREL    0   LQSFPLREL     1.000        0 T_0_1_sample_3_      0.000058    94.42        NA      0.329048    16.45       1421.62
+   5   HLA-DQA10101-DQB10501          QSFPLRELPDI    1   SFPLRELPD     0.800        0 T_0_1_sample_3_      0.000054    94.75        NA      0.135357    65.87      11559.30
+   2   HLA-DQA10101-DQB10501           PELQSFPLRE    1   ELQSFPLRE     0.940        0 T_0_1_sample_3_      0.000022    97.84        NA      0.099503    77.93      17037.60
+   5   HLA-DQA10101-DQB10501           QSFPLRELPD    1   SFPLRELPD     0.990        0 T_0_1_sample_3_      0.000010    99.02        NA      0.091932    80.44      18492.02
+   6   HLA-DQA10101-DQB10501          SFPLRELPDIP    1   FPLRELPDI     0.450        0 T_0_1_sample_3_      0.000010    99.02        NA      0.119594    71.15      13708.86
+   6   HLA-DQA10101-DQB10501           SFPLRELPDI    1   FPLRELPDI     0.470        0 T_0_1_sample_3_      0.000001    99.90        NA      0.105025    76.09      16049.47
+   1   HLA-DQA10101-DQB10501           RPELQSFPLR    1   PELQSFPLR     0.780        0 T_0_1_sample_3_      0.000001    99.90        NA      0.034616    95.81      34380.37
+   8   HLA-DQA10101-DQB10501            PLRELPDIP    0   PLRELPDIP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.014799    98.21      42602.00
+   7   HLA-DQA10101-DQB10501            FPLRELPDI    0   FPLRELPDI     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.042933    94.58      31421.66
+   6   HLA-DQA10101-DQB10501            SFPLRELPD    0   SFPLRELPD     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.062370    89.49      25462.16
+   5   HLA-DQA10101-DQB10501            QSFPLRELP    0   QSFPLRELP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.019086    97.69      40671.05
+   3   HLA-DQA10101-DQB10501            ELQSFPLRE    0   ELQSFPLRE     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.087593    81.82      19380.86
+   2   HLA-DQA10101-DQB10501            PELQSFPLR    0   PELQSFPLR     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.017861    97.84      41213.71
+   1   HLA-DQA10101-DQB10501            RPELQSFPL    0   RPELQSFPL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.019644    97.62      40426.24
+   7   HLA-DQA10101-DQB10501           FPLRELPDIP    1   PLRELPDIP     0.560        0 T_0_1_sample_3_      0.000000   100.00        NA      0.057259    90.88      26909.87
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 1 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       KPQLQDFELRELPD    3   LQDFELREL     1.000        0 T_0_1_sample_4_      0.405815     0.69        NA      0.505836     2.26        209.92   <= SB
+   1   HLA-DQA10101-DQB10501        KPQLQDFELRELP    3   LQDFELREL     1.000        0 T_0_1_sample_4_      0.321710     1.01        NA      0.446178     4.73        400.31   <= WB
+   1   HLA-DQA10101-DQB10501      KPQLQDFELRELPDI    3   LQDFELREL     1.000        0 T_0_1_sample_4_      0.319913     1.02        NA      0.551521     1.17        128.05   <= WB
+   1   HLA-DQA10101-DQB10501     KPQLQDFELRELPDIP    3   LQDFELREL     1.000        0 T_0_1_sample_4_      0.227483     1.59        NA      0.536136     1.46        151.25   <= WB
+   2   HLA-DQA10101-DQB10501         PQLQDFELRELP    2   LQDFELREL     1.000        0 T_0_1_sample_4_      0.207448     1.77        NA      0.515323     1.97        189.44   <= WB
+   2   HLA-DQA10101-DQB10501          PQLQDFELREL    2   LQDFELREL     1.000        0 T_0_1_sample_4_      0.058417     6.13        NA      0.491759     2.71        244.46
+   3   HLA-DQA10101-DQB10501           QLQDFELREL    1   LQDFELREL     1.000        0 T_0_1_sample_4_      0.012368    18.56        NA      0.462777     3.87        334.50
+   5   HLA-DQA10101-DQB10501         QDFELRELPDIP    2   FELRELPDI     0.650        0 T_0_1_sample_4_      0.001873    46.86        NA      0.236184    35.16       3882.83
+   5   HLA-DQA10101-DQB10501          QDFELRELPDI    2   FELRELPDI     0.580        0 T_0_1_sample_4_      0.000543    69.75        NA      0.215441    40.66       4859.81
+   4   HLA-DQA10101-DQB10501            LQDFELREL    0   LQDFELREL     1.000        0 T_0_1_sample_4_      0.000361    76.32        NA      0.363171    11.82        982.74
+   1   HLA-DQA10101-DQB10501          KPQLQDFELRE    2   QLQDFELRE     0.800        0 T_0_1_sample_4_      0.000262    80.72        NA      0.106438    75.62      15805.97
+   2   HLA-DQA10101-DQB10501           PQLQDFELRE    1   QLQDFELRE     0.920        0 T_0_1_sample_4_      0.000047    95.39        NA      0.086690    82.11      19571.15
+   6   HLA-DQA10101-DQB10501           DFELRELPDI    1   FELRELPDI     0.780        0 T_0_1_sample_4_      0.000032    96.86        NA      0.191551    47.63       6293.29
+   5   HLA-DQA10101-DQB10501           QDFELRELPD    1   DFELRELPD     1.000        0 T_0_1_sample_4_      0.000018    98.24        NA      0.070662    87.05      23277.23
+   1   HLA-DQA10101-DQB10501           KPQLQDFELR    1   PQLQDFELR     0.440        0 T_0_1_sample_4_      0.000001    99.90        NA      0.040526    95.10      32250.74
+   8   HLA-DQA10101-DQB10501            ELRELPDIP    0   ELRELPDIP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.016741    97.97      41716.19
+   7   HLA-DQA10101-DQB10501            FELRELPDI    0   FELRELPDI     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.138987    64.65      11114.10
+   6   HLA-DQA10101-DQB10501            DFELRELPD    0   DFELRELPD     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.051307    92.42      28699.87
+   5   HLA-DQA10101-DQB10501            QDFELRELP    0   QDFELRELP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.017252    97.91      41486.16
+   3   HLA-DQA10101-DQB10501            QLQDFELRE    0   QLQDFELRE     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.069496    87.39      23572.76
+   2   HLA-DQA10101-DQB10501            PQLQDFELR    0   PQLQDFELR     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.018753    97.73      40817.86
+   1   HLA-DQA10101-DQB10501            KPQLQDFEL    0   KPQLQDFEL     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.028514    96.55      36726.83
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 1 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       RPQLQEFELRELPD    3   LQEFELREL     1.000        0 T_0_1_sample_5_      0.207686     1.77        NA      0.449755     4.52        385.11   <= WB
+   1   HLA-DQA10101-DQB10501        RPQLQEFELRELP    3   LQEFELREL     1.000        0 T_0_1_sample_5_      0.155624     2.46        NA      0.392528     8.74        715.31   <= WB
+   1   HLA-DQA10101-DQB10501      RPQLQEFELRELPDI    3   LQEFELREL     1.000        0 T_0_1_sample_5_      0.143355     2.69        NA      0.490140     2.77        248.78   <= WB
+   2   HLA-DQA10101-DQB10501         PQLQEFELRELP    2   LQEFELREL     1.000        0 T_0_1_sample_5_      0.107404     3.57        NA      0.459451     4.02        346.76   <= WB
+   1   HLA-DQA10101-DQB10501     RPQLQEFELRELPDIP    3   LQEFELREL     1.000        0 T_0_1_sample_5_      0.088985     4.27        NA      0.494612     2.62        237.03   <= WB
+   2   HLA-DQA10101-DQB10501          PQLQEFELREL    2   LQEFELREL     0.990        0 T_0_1_sample_5_      0.026793    11.21        NA      0.435898     5.35        447.40
+   3   HLA-DQA10101-DQB10501           QLQEFELREL    1   LQEFELREL     1.000        0 T_0_1_sample_5_      0.003497    36.12        NA      0.408762     7.28        600.08
+   4   HLA-DQA10101-DQB10501        LQEFELRELPDIP    3   FELRELPDI     0.390        0 T_0_1_sample_5_      0.003016    38.57        NA      0.343767    14.32       1212.33
+   5   HLA-DQA10101-DQB10501         QEFELRELPDIP    2   FELRELPDI     0.580        0 T_0_1_sample_5_      0.001714    48.51        NA      0.251633    31.32       3285.14
+   5   HLA-DQA10101-DQB10501          QEFELRELPDI    2   FELRELPDI     0.480        0 T_0_1_sample_5_      0.000496    71.34        NA      0.230557    36.57       4126.58
+   1   HLA-DQA10101-DQB10501          RPQLQEFELRE    2   QLQEFELRE     0.820        0 T_0_1_sample_5_      0.000142    87.91        NA      0.112612    73.52      14784.60
+   4   HLA-DQA10101-DQB10501            LQEFELREL    0   LQEFELREL     1.000        0 T_0_1_sample_5_      0.000076    92.92        NA      0.311546    19.25       1718.01
+   5   HLA-DQA10101-DQB10501           QEFELRELPD    1   EFELRELPD     1.000        0 T_0_1_sample_5_      0.000028    97.25        NA      0.086133    82.29      19689.45
+   6   HLA-DQA10101-DQB10501           EFELRELPDI    1   FELRELPDI     0.750        0 T_0_1_sample_5_      0.000027    97.35        NA      0.200320    45.03       5723.64
+   2   HLA-DQA10101-DQB10501           PQLQEFELRE    1   QLQEFELRE     0.930        0 T_0_1_sample_5_      0.000024    97.65        NA      0.097090    78.74      17488.28
+   3   HLA-DQA10101-DQB10501            QLQEFELRE    0   QLQEFELRE     1.000        0 T_0_1_sample_5_      0.000001    99.90        NA      0.080134    84.20      21009.85
+   1   HLA-DQA10101-DQB10501           RPQLQEFELR    1   PQLQEFELR     0.750        0 T_0_1_sample_5_      0.000001    99.90        NA      0.038126    95.39      33099.17
+   8   HLA-DQA10101-DQB10501            ELRELPDIP    0   ELRELPDIP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.016741    97.97      41716.19
+   7   HLA-DQA10101-DQB10501            FELRELPDI    0   FELRELPDI     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.138987    64.65      11114.10
+   6   HLA-DQA10101-DQB10501            EFELRELPD    0   EFELRELPD     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.061346    89.80      25745.84
+   5   HLA-DQA10101-DQB10501            QEFELRELP    0   QEFELRELP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.028301    96.58      36811.58
+   2   HLA-DQA10101-DQB10501            PQLQEFELR    0   PQLQEFELR     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.019828    97.60      40345.84
+   1   HLA-DQA10101-DQB10501            RPQLQEFEL    0   RPQLQEFEL     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.022735    97.25      39096.59
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 5
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       LPELRSFELRELPD    3   LRSFELREL     1.000        0 T_0_1_sample_6_      0.347324     0.91        NA      0.488561     2.82        253.07   <= SB
+   2   HLA-DQA10101-DQB10501        PELRSFELRELPD    2   LRSFELREL     1.000        0 T_0_1_sample_6_      0.342092     0.93        NA      0.411478     7.07        582.70   <= SB
+   2   HLA-DQA10101-DQB10501         PELRSFELRELP    2   LRSFELREL     1.000        0 T_0_1_sample_6_      0.263547     1.31        NA      0.485127     2.94        262.65   <= WB
+   1   HLA-DQA10101-DQB10501      LPELRSFELRELPDI    3   LRSFELREL     1.000        0 T_0_1_sample_6_      0.262530     1.31        NA      0.516259     1.94        187.54   <= WB
+   1   HLA-DQA10101-DQB10501     LPELRSFELRELPDIP    3   LRSFELREL     1.000        0 T_0_1_sample_6_      0.165637     2.31        NA      0.519985     1.84        180.13   <= WB
+   2   HLA-DQA10101-DQB10501          PELRSFELREL    2   LRSFELREL     1.000        0 T_0_1_sample_6_      0.062170     5.81        NA      0.463539     3.83        331.75
+   3   HLA-DQA10101-DQB10501           ELRSFELREL    1   LRSFELREL     1.000        0 T_0_1_sample_6_      0.005453    29.19        NA      0.433839     5.47        457.48
+   4   HLA-DQA10101-DQB10501        LRSFELRELPDIP    3   FELRELPDI     0.350        0 T_0_1_sample_6_      0.002910    39.18        NA      0.361160    12.06       1004.36
+   5   HLA-DQA10101-DQB10501         RSFELRELPDIP    2   FELRELPDI     0.660        0 T_0_1_sample_6_      0.001342    53.28        NA      0.251194    31.43       3300.78
+   5   HLA-DQA10101-DQB10501          RSFELRELPDI    2   FELRELPDI     0.520        0 T_0_1_sample_6_      0.000387    75.21        NA      0.230790    36.51       4116.18
+   4   HLA-DQA10101-DQB10501            LRSFELREL    0   LRSFELREL     1.000        0 T_0_1_sample_6_      0.000053    94.83        NA      0.334517    15.63       1339.94
+   1   HLA-DQA10101-DQB10501          LPELRSFELRE    2   ELRSFELRE     0.810        0 T_0_1_sample_6_      0.000025    97.55        NA      0.118172    71.63      13921.42
+   6   HLA-DQA10101-DQB10501           SFELRELPDI    1   FELRELPDI     0.790        0 T_0_1_sample_6_      0.000019    98.14        NA      0.203261    44.17       5544.38
+   2   HLA-DQA10101-DQB10501           PELRSFELRE    1   ELRSFELRE     0.980        0 T_0_1_sample_6_      0.000013    98.73        NA      0.088442    81.55      19203.65
+   5   HLA-DQA10101-DQB10501           RSFELRELPD    1   SFELRELPD     0.970        0 T_0_1_sample_6_      0.000008    99.22        NA      0.099781    77.84      16986.43
+   8   HLA-DQA10101-DQB10501            ELRELPDIP    0   ELRELPDIP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.016741    97.97      41716.19
+   7   HLA-DQA10101-DQB10501            FELRELPDI    0   FELRELPDI     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.138987    64.65      11114.10
+   6   HLA-DQA10101-DQB10501            SFELRELPD    0   SFELRELPD     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.073464    86.22      22582.13
+   5   HLA-DQA10101-DQB10501            RSFELRELP    0   RSFELRELP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.027078    96.72      37301.94
+   3   HLA-DQA10101-DQB10501            ELRSFELRE    0   ELRSFELRE     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.070513    87.09      23314.79
+   2   HLA-DQA10101-DQB10501            PELRSFELR    0   PELRSFELR     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.017302    97.91      41463.75
+   1   HLA-DQA10101-DQB10501            LPELRSFEL    0   LPELRSFEL     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.048941    93.03      29444.06
+   1   HLA-DQA10101-DQB10501           LPELRSFELR    1   PELRSFELR     0.370        0 T_0_1_sample_6_      0.000000   100.00        NA      0.056678    91.03      27079.57
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 2 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       RPALQDFPLRELPD    3   LQDFPLREL     1.000        0 T_0_1_sample_7_      0.320116     1.02        NA      0.486438     2.90        258.95   <= WB
+   1   HLA-DQA10101-DQB10501      RPALQDFPLRELPDI    3   LQDFPLREL     1.000        0 T_0_1_sample_7_      0.269812     1.27        NA      0.527497     1.67        166.06   <= WB
+   1   HLA-DQA10101-DQB10501        RPALQDFPLRELP    3   LQDFPLREL     1.000        0 T_0_1_sample_7_      0.243634     1.45        NA      0.427307     5.91        490.98   <= WB
+   1   HLA-DQA10101-DQB10501     RPALQDFPLRELPDIP    3   LQDFPLREL     0.990        0 T_0_1_sample_7_      0.180919     2.09        NA      0.504472     2.30        213.04   <= WB
+   2   HLA-DQA10101-DQB10501         PALQDFPLRELP    2   LQDFPLREL     1.000        0 T_0_1_sample_7_      0.177383     2.14        NA      0.500662     2.42        222.01   <= WB
+   2   HLA-DQA10101-DQB10501          PALQDFPLREL    2   LQDFPLREL     0.990        0 T_0_1_sample_7_      0.048309     7.18        NA      0.476387     3.28        288.70
+   3   HLA-DQA10101-DQB10501           ALQDFPLREL    1   LQDFPLREL     1.000        0 T_0_1_sample_7_      0.007509    24.78        NA      0.439388     5.14        430.82
+   5   HLA-DQA10101-DQB10501         QDFPLRELPDIP    1   DFPLRELPD     0.740        0 T_0_1_sample_7_      0.000394    74.93        NA      0.127901    68.35      12530.46
+   5   HLA-DQA10101-DQB10501          QDFPLRELPDI    1   DFPLRELPD     0.830        0 T_0_1_sample_7_      0.000091    91.67        NA      0.114871    72.75      14427.61
+   1   HLA-DQA10101-DQB10501          RPALQDFPLRE    2   ALQDFPLRE     0.650        0 T_0_1_sample_7_      0.000069    93.50        NA      0.139652    64.42      11034.42
+   4   HLA-DQA10101-DQB10501            LQDFPLREL    0   LQDFPLREL     1.000        0 T_0_1_sample_7_      0.000058    94.42        NA      0.342723    14.47       1226.10
+   5   HLA-DQA10101-DQB10501           QDFPLRELPD    1   DFPLRELPD     1.000        0 T_0_1_sample_7_      0.000022    97.84        NA      0.071748    86.73      23005.32
+   6   HLA-DQA10101-DQB10501          DFPLRELPDIP    1   FPLRELPDI     0.390        0 T_0_1_sample_7_      0.000014    98.63        NA      0.109048    74.74      15365.85
+   2   HLA-DQA10101-DQB10501           PALQDFPLRE    1   ALQDFPLRE     0.920        0 T_0_1_sample_7_      0.000012    98.82        NA      0.112419    73.59      14815.50
+   1   HLA-DQA10101-DQB10501           RPALQDFPLR    0   RPALQDFPL     0.550        0 T_0_1_sample_7_      0.000003    99.71        NA      0.060521    90.03      25976.68
+   3   HLA-DQA10101-DQB10501            ALQDFPLRE    0   ALQDFPLRE     1.000        0 T_0_1_sample_7_      0.000001    99.90        NA      0.090269    80.97      18827.77
+   1   HLA-DQA10101-DQB10501            RPALQDFPL    0   RPALQDFPL     1.000        0 T_0_1_sample_7_      0.000001    99.90        NA      0.053057    91.96      28161.56
+   8   HLA-DQA10101-DQB10501            PLRELPDIP    0   PLRELPDIP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.014799    98.21      42602.00
+   7   HLA-DQA10101-DQB10501            FPLRELPDI    0   FPLRELPDI     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.042933    94.58      31421.66
+   6   HLA-DQA10101-DQB10501            DFPLRELPD    0   DFPLRELPD     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.053110    91.95      28145.42
+   5   HLA-DQA10101-DQB10501            QDFPLRELP    0   QDFPLRELP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.011170    98.65      44308.02
+   2   HLA-DQA10101-DQB10501            PALQDFPLR    0   PALQDFPLR     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.016632    97.99      41765.40
+   7   HLA-DQA10101-DQB10501           FPLRELPDIP    1   PLRELPDIP     0.560        0 T_0_1_sample_7_      0.000000   100.00        NA      0.057259    90.88      26909.87
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 5
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       LPALQEFPLRELPD    3   LQEFPLREL     0.990        0 T_0_1_sample_8_      0.139252     2.77        NA      0.420845     6.37        526.54   <= WB
+   2   HLA-DQA10101-DQB10501        PALQEFPLRELPD    2   LQEFPLREL     0.990        0 T_0_1_sample_8_      0.130462     2.94        NA      0.352297    13.16       1105.44   <= WB
+   1   HLA-DQA10101-DQB10501      LPALQEFPLRELPDI    3   LQEFPLREL     0.980        0 T_0_1_sample_8_      0.106903     3.59        NA      0.457793     4.11        353.03   <= WB
+   2   HLA-DQA10101-DQB10501         PALQEFPLRELP    2   LQEFPLREL     1.000        0 T_0_1_sample_8_      0.092086     4.14        NA      0.424196     6.12        507.79   <= WB
+   1   HLA-DQA10101-DQB10501     LPALQEFPLRELPDIP    3   LQEFPLREL     0.950        0 T_0_1_sample_8_      0.057438     6.22        NA      0.437774     5.24        438.41
+   2   HLA-DQA10101-DQB10501          PALQEFPLREL    2   LQEFPLREL     0.990        0 T_0_1_sample_8_      0.021831    12.90        NA      0.404181     7.67        630.57
+   3   HLA-DQA10101-DQB10501           ALQEFPLREL    1   LQEFPLREL     1.000        0 T_0_1_sample_8_      0.001731    48.31        NA      0.375893    10.43        856.37
+   4   HLA-DQA10101-DQB10501        LQEFPLRELPDIP    2   EFPLRELPD     0.640        0 T_0_1_sample_8_      0.001282    54.10        NA      0.281760    24.66       2371.31
+   5   HLA-DQA10101-DQB10501         QEFPLRELPDIP    1   EFPLRELPD     0.790        0 T_0_1_sample_8_      0.000439    73.35        NA      0.140723    64.06      10907.29
+   5   HLA-DQA10101-DQB10501          QEFPLRELPDI    1   EFPLRELPD     0.850        0 T_0_1_sample_8_      0.000128    88.85        NA      0.128364    68.20      12467.85
+   5   HLA-DQA10101-DQB10501           QEFPLRELPD    1   EFPLRELPD     0.990        0 T_0_1_sample_8_      0.000034    96.67        NA      0.085192    82.59      19890.94
+   1   HLA-DQA10101-DQB10501          LPALQEFPLRE    2   ALQEFPLRE     0.650        0 T_0_1_sample_8_      0.000029    97.16        NA      0.170281    54.26       7921.82
+   4   HLA-DQA10101-DQB10501            LQEFPLREL    0   LQEFPLREL     1.000        0 T_0_1_sample_8_      0.000026    97.45        NA      0.293635    22.39       2085.39
+   6   HLA-DQA10101-DQB10501          EFPLRELPDIP    1   FPLRELPDI     0.440        0 T_0_1_sample_8_      0.000014    98.63        NA      0.112679    73.50      14773.89
+   2   HLA-DQA10101-DQB10501           PALQEFPLRE    1   ALQEFPLRE     0.910        0 T_0_1_sample_8_      0.000012    98.82        NA      0.117943    71.71      13955.95
+   3   HLA-DQA10101-DQB10501            ALQEFPLRE    0   ALQEFPLRE     1.000        0 T_0_1_sample_8_      0.000001    99.90        NA      0.097448    78.62      17420.67
+   1   HLA-DQA10101-DQB10501           LPALQEFPLR    1   PALQEFPLR     0.460        0 T_0_1_sample_8_      0.000001    99.90        NA      0.091318    80.64      18615.27
+   8   HLA-DQA10101-DQB10501            PLRELPDIP    0   PLRELPDIP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.014799    98.21      42602.00
+   7   HLA-DQA10101-DQB10501            FPLRELPDI    0   FPLRELPDI     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.042933    94.58      31421.66
+   6   HLA-DQA10101-DQB10501            EFPLRELPD    0   EFPLRELPD     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.058238    90.62      26626.33
+   5   HLA-DQA10101-DQB10501            QEFPLRELP    0   QEFPLRELP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.019192    97.68      40624.45
+   2   HLA-DQA10101-DQB10501            PALQEFPLR    0   PALQEFPLR     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.016920    97.95      41635.48
+   1   HLA-DQA10101-DQB10501            LPALQEFPL    0   LPALQEFPL     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.081585    83.73      20682.57
+   7   HLA-DQA10101-DQB10501           FPLRELPDIP    1   PLRELPDIP     0.560        0 T_0_1_sample_8_      0.000000   100.00        NA      0.057259    90.88      26909.87
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       KPELRDFPLRELPD    3   LRDFPLREL     1.000        0 T_0_1_sample_9_      0.428238     0.62        NA      0.490892     2.74        246.76   <= SB
+   1   HLA-DQA10101-DQB10501      KPELRDFPLRELPDI    3   LRDFPLREL     1.000        0 T_0_1_sample_9_      0.368606     0.83        NA      0.528190     1.65        164.82   <= SB
+   1   HLA-DQA10101-DQB10501        KPELRDFPLRELP    3   LRDFPLREL     1.000        0 T_0_1_sample_9_      0.339356     0.94        NA      0.432455     5.56        464.38   <= SB
+   1   HLA-DQA10101-DQB10501     KPELRDFPLRELPDIP    3   LRDFPLREL     1.000        0 T_0_1_sample_9_      0.262082     1.32        NA      0.500261     2.43        222.98   <= WB
+   2   HLA-DQA10101-DQB10501         PELRDFPLRELP    2   LRDFPLREL     1.000        0 T_0_1_sample_9_      0.224132     1.62        NA      0.491803     2.71        244.34   <= WB
+   2   HLA-DQA10101-DQB10501          PELRDFPLREL    2   LRDFPLREL     1.000        0 T_0_1_sample_9_      0.064778     5.60        NA      0.467319     3.66        318.46
+   3   HLA-DQA10101-DQB10501           ELRDFPLREL    1   LRDFPLREL     1.000        0 T_0_1_sample_9_      0.008916    22.57        NA      0.433924     5.47        457.06
+   5   HLA-DQA10101-DQB10501         RDFPLRELPDIP    1   DFPLRELPD     0.740        0 T_0_1_sample_9_      0.000371    75.90        NA      0.128407    68.18      12462.05
+   1   HLA-DQA10101-DQB10501          KPELRDFPLRE    2   ELRDFPLRE     0.740        0 T_0_1_sample_9_      0.000177    85.54        NA      0.100304    77.67      16890.58
+   5   HLA-DQA10101-DQB10501          RDFPLRELPDI    1   DFPLRELPD     0.830        0 T_0_1_sample_9_      0.000083    92.33        NA      0.115162    72.66      14382.26
+   2   HLA-DQA10101-DQB10501           PELRDFPLRE    1   ELRDFPLRE     0.960        0 T_0_1_sample_9_      0.000066    93.75        NA      0.079901    84.27      21062.88
+   4   HLA-DQA10101-DQB10501            LRDFPLREL    0   LRDFPLREL     1.000        0 T_0_1_sample_9_      0.000064    93.92        NA      0.335039    15.55       1332.39
+   5   HLA-DQA10101-DQB10501           RDFPLRELPD    1   DFPLRELPD     1.000        0 T_0_1_sample_9_      0.000020    98.04        NA      0.072746    86.43      22758.25
+   6   HLA-DQA10101-DQB10501          DFPLRELPDIP    1   FPLRELPDI     0.390        0 T_0_1_sample_9_      0.000014    98.63        NA      0.109048    74.74      15365.85
+   1   HLA-DQA10101-DQB10501           KPELRDFPLR    0   KPELRDFPL     0.680        0 T_0_1_sample_9_      0.000001    99.90        NA      0.041534    94.94      31900.90
+   8   HLA-DQA10101-DQB10501            PLRELPDIP    0   PLRELPDIP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.014799    98.21      42602.00
+   7   HLA-DQA10101-DQB10501            FPLRELPDI    0   FPLRELPDI     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.042933    94.58      31421.66
+   6   HLA-DQA10101-DQB10501            DFPLRELPD    0   DFPLRELPD     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.053110    91.95      28145.42
+   5   HLA-DQA10101-DQB10501            RDFPLRELP    0   RDFPLRELP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.010401    98.74      44678.23
+   3   HLA-DQA10101-DQB10501            ELRDFPLRE    0   ELRDFPLRE     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.067217    88.06      24161.25
+   2   HLA-DQA10101-DQB10501            PELRDFPLR    0   PELRDFPLR     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.009551    98.84      45091.04
+   1   HLA-DQA10101-DQB10501            KPELRDFPL    0   KPELRDFPL     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.038882    95.30      32829.52
+   7   HLA-DQA10101-DQB10501           FPLRELPDIP    1   PLRELPDIP     0.560        0 T_0_1_sample_9_      0.000000   100.00        NA      0.057259    90.88      26909.87
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 3 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10501       KPQLQDFEARELPD    3   LQDFEAREL     1.000        0 T_0_1_sample_10      0.610086     0.28        NA      0.493578     2.65        239.70   <= SB
+   1   HLA-DQA10101-DQB10501      KPQLQDFEARELPDI    3   LQDFEAREL     1.000        0 T_0_1_sample_10      0.544158     0.38        NA      0.529818     1.61        161.95   <= SB
+   1   HLA-DQA10101-DQB10501        KPQLQDFEARELP    3   LQDFEAREL     1.000        0 T_0_1_sample_10      0.518316     0.43        NA      0.432229     5.58        465.52   <= SB
+   1   HLA-DQA10101-DQB10501     KPQLQDFEARELPDIP    3   LQDFEAREL     1.000        0 T_0_1_sample_10      0.413457     0.67        NA      0.526744     1.69        167.42   <= SB
+   2   HLA-DQA10101-DQB10501         PQLQDFEARELP    2   LQDFEAREL     1.000        0 T_0_1_sample_10      0.380128     0.79        NA      0.514379     1.99        191.39   <= SB
+   2   HLA-DQA10101-DQB10501          PQLQDFEAREL    2   LQDFEAREL     1.000        0 T_0_1_sample_10      0.122811     3.13        NA      0.482463     3.04        270.33   <= WB
+   3   HLA-DQA10101-DQB10501           QLQDFEAREL    1   LQDFEAREL     1.000        0 T_0_1_sample_10      0.021212    13.16        NA      0.451009     4.45        379.92
+   5   HLA-DQA10101-DQB10501         QDFEARELPDIP    2   FEARELPDI     0.830        0 T_0_1_sample_10      0.002695    40.54        NA      0.202876    44.28       5567.52
+   5   HLA-DQA10101-DQB10501          QDFEARELPDI    2   FEARELPDI     0.700        0 T_0_1_sample_10      0.000454    72.82        NA      0.184114    49.90       6820.62
+   4   HLA-DQA10101-DQB10501            LQDFEAREL    0   LQDFEAREL     1.000        0 T_0_1_sample_10      0.000435    73.49        NA      0.353974    12.94       1085.57
+   1   HLA-DQA10101-DQB10501          KPQLQDFEARE    2   QLQDFEARE     0.840        0 T_0_1_sample_10      0.000238    82.06        NA      0.087263    81.93      19450.19
+   6   HLA-DQA10101-DQB10501           DFEARELPDI    1   FEARELPDI     0.860        0 T_0_1_sample_10      0.000045    95.59        NA      0.163198    56.55       8552.78
+   2   HLA-DQA10101-DQB10501           PQLQDFEARE    1   QLQDFEARE     0.920        0 T_0_1_sample_10      0.000033    96.76        NA      0.074262    85.99      22387.98
+   5   HLA-DQA10101-DQB10501           QDFEARELPD    1   DFEARELPD     0.990        0 T_0_1_sample_10      0.000016    98.43        NA      0.056633    91.04      27092.76
+   1   HLA-DQA10101-DQB10501           KPQLQDFEAR    1   PQLQDFEAR     0.470        0 T_0_1_sample_10      0.000001    99.90        NA      0.030925    96.26      35781.16
+   8   HLA-DQA10101-DQB10501            EARELPDIP    0   EARELPDIP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.013053    98.42      43414.45
+   7   HLA-DQA10101-DQB10501            FEARELPDI    0   FEARELPDI     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.114474    72.89      14489.72
+   6   HLA-DQA10101-DQB10501            DFEARELPD    0   DFEARELPD     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.041291    95.00      31984.89
+   5   HLA-DQA10101-DQB10501            QDFEARELP    0   QDFEARELP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.010777    98.70      44496.84
+   3   HLA-DQA10101-DQB10501            QLQDFEARE    0   QLQDFEARE     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.060830    89.95      25889.98
+   2   HLA-DQA10101-DQB10501            PQLQDFEAR    0   PQLQDFEAR     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.016112    98.05      42001.07
+   1   HLA-DQA10101-DQB10501            KPQLQDFEA    0   KPQLQDFEA     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.020805    97.48      39921.60
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 5 Number of weak binders: 1
+--------------------------------------------------------------------------------------------------------------------------------------------

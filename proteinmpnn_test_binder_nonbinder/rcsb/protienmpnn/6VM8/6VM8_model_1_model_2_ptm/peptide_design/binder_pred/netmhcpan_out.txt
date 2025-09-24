@@ -1,0 +1,709 @@
+# /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/bin/netMHCpan -f tmp3/protienmpnn/6VM8/6VM8_model_1_model_2_ptm/peptide_design/seqs/multichain_6VM8_model_1_model_2_ptm.fa -BA -a HLA-A01:101
+# Tue Mar 11 20:05:18 2025
+# User: amir
+# PWD : /home/amir/amir/ParseFold/PMGen
+# Host: Linux l1161-blue3 6.8.0-52-generic x86_64
+# -f       tmp3/protienmpnn/6VM8/6VM8_model_1_model_2_ptm/peptide_design/seqs/multichain_6VM8_model_1_model_2_ptm.fa File name with input
+# -BA      1                    Include Binding affinity prediction
+# -a       HLA-A01:101          MHC allele
+# Command line parameters set to:
+#	[-rdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64 Home directory for NetMHpan
+#	[-syn filename]      /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/synlist.bin Synaps file
+#	[-v]                 0                    Verbose mode
+#	[-dirty]             0                    Dirty mode, leave tmp dir+files
+#	[-tdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpanXXXXXX Temporary directory (made with mkdtemp)
+#	[-hlapseudo filename] /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/MHC_pseudo.dat File with MHC pseudo sequences
+#	[-hlaseq filename]                        File with full length MHC sequences
+#	[-a line]            HLA-A01:101          MHC allele
+#	[-f filename]        tmp3/protienmpnn/6VM8/6VM8_model_1_model_2_ptm/peptide_design/seqs/multichain_6VM8_model_1_model_2_ptm.fa File name with input
+#	[-w]                 0                    w option for webface
+#	[-s]                 0                    Sort output on descending affinity
+#	[-p]                 0                    Use peptide input
+#	[-rth float]         0.500000             Rank Threshold for high binding peptides
+#	[-rlt float]         2.000000             Rank Threshold for low binding peptides
+#	[-l string]          8,9,10,11            Peptide length [8-11] (multiple length with ,)
+#	[-xls]               0                    Save output to xls file
+#	[-xlsfile filename]  NetMHCpan_out.xls    Filename for xls dump
+#	[-t float]           -99.900002           Threshold for output (%rank) [<0 print all]
+#	[-thrfmt filename]   /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/threshold/%s.thr.%s Format for threshold filenames
+#	[-expfix]            0                    Exclude prefix from synlist
+#	[-version filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/version File with version information
+#	[-inptype int]       0                    Input type [0] FASTA [1] Peptide
+#	[-listMHC]           0                    Print list of alleles included in netMHCpan
+#	[-allname filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/allelenames File with print names for alleles
+#	[-BA]                1                    Include Binding affinity prediction
+
+# NetMHCpan version 4.1b
+
+# Tmpdir made /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpantOxMIa
+# Input is in FSA format
+
+# Peptide length 8,9,10,11
+
+# Make both EL and BA predictions
+
+HLA-A01:101 : Distance to training data  0.000 (using nearest neighbor HLA-A01:01)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      IMDQVPFSV IMDQVPFSV  0  0  0  0  0    IMDQVPFSV multichain_6VM8 0.1235130    1.112 0.275272    0.894  2543.75 <= WB
+   1 HLA-A*01:101       IMDQVPFS IMDQVPFS-  0  0  0  8  1     IMDQVPFS multichain_6VM8 0.0024340   11.048 0.071423   12.630 23086.36
+   2 HLA-A*01:101       MDQVPFSV -MDQVPFSV  0  0  0  0  1     MDQVPFSV multichain_6VM8 0.0023900   11.180 0.075325   11.410 22131.97
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein multichain_6VM8. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_1_ 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_1_ 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_1_ 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_1_. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFPV MLPPDPFPV  0  0  0  0  0    MLPPDPFPV T_0_1_sample_2_ 0.0042250    7.976 0.097962    6.869 17324.05
+   1 HLA-A*01:101       MLPPDPFP MLPPDPFP-  0  0  0  8  1     MLPPDPFP T_0_1_sample_2_ 0.0002660   38.286 0.027562   56.092 37107.09
+   2 HLA-A*01:101       LPPDPFPV -LPPDPFPV  0  0  0  0  1     LPPDPFPV T_0_1_sample_2_ 0.0002250   41.417 0.025373   60.723 37996.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_2_. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_3_ 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_3_ 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_3_ 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_3_. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_4_ 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_4_ 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_4_ 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_4_. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_5_ 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_5_ 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_5_ 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_5_. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFPV MLPPDPFPV  0  0  0  0  0    MLPPDPFPV T_0_1_sample_6_ 0.0042250    7.976 0.097962    6.869 17324.05
+   1 HLA-A*01:101       MLPPDPFP MLPPDPFP-  0  0  0  8  1     MLPPDPFP T_0_1_sample_6_ 0.0002660   38.286 0.027562   56.092 37107.09
+   2 HLA-A*01:101       LPPDPFPV -LPPDPFPV  0  0  0  0  1     LPPDPFPV T_0_1_sample_6_ 0.0002250   41.417 0.025373   60.723 37996.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_6_. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_7_ 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_7_ 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_7_ 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_7_. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_8_ 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_8_ 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_8_ 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_8_. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_9_ 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_9_ 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_9_ 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_9_. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_10 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_10 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_10 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_10. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFTV MLPPDAFTV  0  0  0  0  0    MLPPDAFTV T_0_1_sample_11 0.0075620    5.730 0.090663    7.954 18747.67
+   1 HLA-A*01:101       MLPPDAFT MLPPDAFT-  0  0  0  8  1     MLPPDAFT T_0_1_sample_11 0.0003440   33.667 0.031726   47.952 35472.39
+   2 HLA-A*01:101       LPPDAFTV -LPPDAFTV  0  0  0  0  1     LPPDAFTV T_0_1_sample_11 0.0002910   36.625 0.023719   64.462 38682.55
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_11. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFPV MLPPDPFPV  0  0  0  0  0    MLPPDPFPV T_0_1_sample_12 0.0042250    7.976 0.097962    6.869 17324.05
+   1 HLA-A*01:101       MLPPDPFP MLPPDPFP-  0  0  0  8  1     MLPPDPFP T_0_1_sample_12 0.0002660   38.286 0.027562   56.092 37107.09
+   2 HLA-A*01:101       LPPDPFPV -LPPDPFPV  0  0  0  0  1     LPPDPFPV T_0_1_sample_12 0.0002250   41.417 0.025373   60.723 37996.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_12. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPAAFPV MLPPAAFPV  0  0  0  0  0    MLPPAAFPV T_0_1_sample_13 0.0017470   13.486 0.110181    5.537 15178.64
+   1 HLA-A*01:101       MLPPAAFP MLPPA-AFP  0  0  0  5  1     MLPPAAFP T_0_1_sample_13 0.0002400   40.231 0.034797   42.653 34313.09
+   2 HLA-A*01:101       LPPAAFPV -LPPAAFPV  0  0  0  0  1     LPPAAFPV T_0_1_sample_13 0.0000850   60.952 0.029986   51.260 36146.53
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_13. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_14 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_14 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_14 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_14. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_15 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_15 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_15 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_15. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_16 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_16 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_16 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_16. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_17 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_17 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_17 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_17. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_18 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_18 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_18 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_18. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_19 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_19 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_19 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_19. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_20 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_20 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_20 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_20. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPHPV MLPPDPHPV  0  0  0  0  0    MLPPDPHPV T_0_1_sample_21 0.0101040    4.848 0.073145   12.055 22660.20
+   1 HLA-A*01:101       MLPPDPHP MLPPDPHP-  0  0  0  8  1     MLPPDPHP T_0_1_sample_21 0.0004350   29.897 0.021087   70.709 39799.98
+   2 HLA-A*01:101       LPPDPHPV -LPPDPHPV  0  0  0  0  1     LPPDPHPV T_0_1_sample_21 0.0004290   30.107 0.019675   74.124 40412.68
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_21. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_22 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_22 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_22 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_22. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPAAFPL MLPPAAFPL  0  0  0  0  0    MLPPAAFPL T_0_1_sample_23 0.0022850   11.494 0.092185    7.710 18441.46
+   1 HLA-A*01:101       MLPPAAFP MLPPA-AFP  0  0  0  5  1     MLPPAAFP T_0_1_sample_23 0.0002400   40.231 0.034797   42.653 34313.09
+   2 HLA-A*01:101       LPPAAFPL -LPPAAFPL  0  0  0  0  1     LPPAAFPL T_0_1_sample_23 0.0001110   55.600 0.027653   55.901 37070.59
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_23. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_24 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_24 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_24 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_24. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_25 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_25 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_25 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_25. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFPV MLPPDPFPV  0  0  0  0  0    MLPPDPFPV T_0_1_sample_26 0.0042250    7.976 0.097962    6.869 17324.05
+   1 HLA-A*01:101       MLPPDPFP MLPPDPFP-  0  0  0  8  1     MLPPDPFP T_0_1_sample_26 0.0002660   38.286 0.027562   56.092 37107.09
+   2 HLA-A*01:101       LPPDPFPV -LPPDPFPV  0  0  0  0  1     LPPDPFPV T_0_1_sample_26 0.0002250   41.417 0.025373   60.723 37996.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_26. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_27 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_27 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_27 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_27. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_28 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_28 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_28 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_28. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPHPV MLPPDPHPV  0  0  0  0  0    MLPPDPHPV T_0_1_sample_29 0.0101040    4.848 0.073145   12.055 22660.20
+   1 HLA-A*01:101       MLPPDPHP MLPPDPHP-  0  0  0  8  1     MLPPDPHP T_0_1_sample_29 0.0004350   29.897 0.021087   70.709 39799.98
+   2 HLA-A*01:101       LPPDPHPV -LPPDPHPV  0  0  0  0  1     LPPDPHPV T_0_1_sample_29 0.0004290   30.107 0.019675   74.124 40412.68
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_29. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_30 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_30 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_30 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_30. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFPL MLPPDPFPL  0  0  0  0  0    MLPPDPFPL T_0_1_sample_31 0.0053690    6.951 0.081266    9.828 20754.08
+   1 HLA-A*01:101       MLPPDPFP MLPPDPFP-  0  0  0  8  1     MLPPDPFP T_0_1_sample_31 0.0002660   38.286 0.027562   56.092 37107.09
+   2 HLA-A*01:101       LPPDPFPL LPPDPFP-L  0  0  0  7  1     LPPDPFPL T_0_1_sample_31 0.0003310   34.333 0.023418   65.150 38808.73
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_31. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFSV MLPPDAFSV  0  0  0  0  0    MLPPDAFSV T_0_1_sample_32 0.0074760    5.770 0.091078    7.887 18663.68
+   1 HLA-A*01:101       MLPPDAFS MLPPDAFS-  0  0  0  8  1     MLPPDAFS T_0_1_sample_32 0.0002820   37.200 0.032395   46.710 35216.55
+   2 HLA-A*01:101       LPPDAFSV -LPPDAFSV  0  0  0  0  1     LPPDAFSV T_0_1_sample_32 0.0002690   38.071 0.023631   64.661 38719.41
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_32. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFPV MLPPDPFPV  0  0  0  0  0    MLPPDPFPV T_0_1_sample_33 0.0042250    7.976 0.097962    6.869 17324.05
+   1 HLA-A*01:101       MLPPDPFP MLPPDPFP-  0  0  0  8  1     MLPPDPFP T_0_1_sample_33 0.0002660   38.286 0.027562   56.092 37107.09
+   2 HLA-A*01:101       LPPDPFPV -LPPDPFPV  0  0  0  0  1     LPPDPFPV T_0_1_sample_33 0.0002250   41.417 0.025373   60.723 37996.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_33. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPPATPV MLPPPATPV  0  0  0  0  0    MLPPPATPV T_0_1_sample_34 0.0048880    7.323 0.068636   13.612 23793.12
+   1 HLA-A*01:101       MLPPPATP MLPPPATP-  0  0  0  8  1     MLPPPATP T_0_1_sample_34 0.0003570   33.048 0.021447   69.841 39645.25
+   2 HLA-A*01:101       LPPPATPV -LPPPATPV  0  0  0  0  1     LPPPATPV T_0_1_sample_34 0.0003860   31.750 0.020835   71.318 39908.65
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_34. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_35 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_35 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_35 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_35. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_36 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_36 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_36 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_36. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAVGV MLPPDAVGV  0  0  0  0  0    MLPPDAVGV T_0_1_sample_37 0.0038870    8.390 0.061881   16.522 25597.23
+   1 HLA-A*01:101       MLPPDAVG MLPPDAVG-  0  0  0  8  1     MLPPDAVG T_0_1_sample_37 0.0001110   55.600 0.019874   73.643 40325.78
+   2 HLA-A*01:101       LPPDAVGV -LPPDAVGV  0  0  0  0  1     LPPDAVGV T_0_1_sample_37 0.0001120   55.400 0.016285   82.294 41922.51
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_37. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFPV MLPPDPFPV  0  0  0  0  0    MLPPDPFPV T_0_1_sample_38 0.0042250    7.976 0.097962    6.869 17324.05
+   1 HLA-A*01:101       MLPPDPFP MLPPDPFP-  0  0  0  8  1     MLPPDPFP T_0_1_sample_38 0.0002660   38.286 0.027562   56.092 37107.09
+   2 HLA-A*01:101       LPPDPFPV -LPPDPFPV  0  0  0  0  1     LPPDPFPV T_0_1_sample_38 0.0002250   41.417 0.025373   60.723 37996.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_38. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_39 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_39 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_39 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_39. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPAPFGV MLPPAPFGV  0  0  0  0  0    MLPPAPFGV T_0_1_sample_40 0.0076400    5.694 0.103752    6.205 16272.05
+   1 HLA-A*01:101       MLPPAPFG MLPPAPFG-  0  0  0  8  1     MLPPAPFG T_0_1_sample_40 0.0002560   39.000 0.031588   48.204 35525.39
+   2 HLA-A*01:101       LPPAPFGV -LPPAPFGV  0  0  0  0  1     LPPAPFGV T_0_1_sample_40 0.0002100   42.800 0.025654   60.088 37881.10
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_40. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_41 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_41 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_41 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_41. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFGV MLPPDAFGV  0  0  0  0  0    MLPPDAFGV T_0_1_sample_42 0.0044260    7.759 0.089401    8.185 19005.41
+   1 HLA-A*01:101       MLPPDAFG MLPPDAFG-  0  0  0  8  1     MLPPDAFG T_0_1_sample_42 0.0001240   53.387 0.028269   54.636 36824.33
+   2 HLA-A*01:101       LPPDAFGV -LPPDAFGV  0  0  0  0  1     LPPDAFGV T_0_1_sample_42 0.0001080   56.200 0.021365   70.036 39680.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_42. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_43 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_43 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_43 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_43. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_44 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_44 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_44 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_44. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFPV MLPPDPFPV  0  0  0  0  0    MLPPDPFPV T_0_1_sample_45 0.0042250    7.976 0.097962    6.869 17324.05
+   1 HLA-A*01:101       MLPPDPFP MLPPDPFP-  0  0  0  8  1     MLPPDPFP T_0_1_sample_45 0.0002660   38.286 0.027562   56.092 37107.09
+   2 HLA-A*01:101       LPPDPFPV -LPPDPFPV  0  0  0  0  1     LPPDPFPV T_0_1_sample_45 0.0002250   41.417 0.025373   60.723 37996.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_45. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDPFGV MLPPDPFGV  0  0  0  0  0    MLPPDPFGV T_0_1_sample_46 0.0086820    5.283 0.088388    8.377 19214.87
+   1 HLA-A*01:101       MLPPDPFG MLPPDPFG-  0  0  0  8  1     MLPPDPFG T_0_1_sample_46 0.0002480   39.615 0.026131   59.084 37686.11
+   2 HLA-A*01:101       LPPDPFGV -LPPDPFGV  0  0  0  0  1     LPPDPFGV T_0_1_sample_46 0.0002150   42.300 0.020764   71.490 39939.32
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_46. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_47 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_47 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_47 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_47. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_48 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_48 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_48 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_48. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_49 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_49 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_49 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_49. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1 HLA-A*01:101      MLPPDAFPV MLPPDAFPV  0  0  0  0  0    MLPPDAFPV T_0_1_sample_50 0.0020770   12.148 0.096069    7.119 17682.54
+   1 HLA-A*01:101       MLPPDAFP MLPPD-AFP  0  0  0  5  1     MLPPDAFP T_0_1_sample_50 0.0001640   47.556 0.029219   52.768 36447.77
+   2 HLA-A*01:101       LPPDAFPV -LPPDAFPV  0  0  0  0  1     LPPDAFPV T_0_1_sample_50 0.0001070   56.400 0.025689   60.009 37866.76
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_50. Allele HLA-A*01:101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------

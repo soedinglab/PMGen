@@ -1,0 +1,308 @@
+# NetMHCIIpan version 4.3f
+
+# Input is in FASTA format
+
+# Peptide length 9,10,11,12,13,14,15,16,17,18
+
+# Prediction Mode: EL+BA
+
+# Threshold for Strong binding peptides (%Rank)  1.00%
+# Threshold for Weak binding peptides (%Rank)    5.00%
+
+# HLA-DQA10101-DQB10301 : Distance to training data  0.188 (using nearest neighbor HLA-DQA10103-DQB10601)
+
+# Allele: HLA-DQA10101-DQB10301
+# Warning: This DQA-DQB pairing is likely non-functional
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301      FKVAATAANAAPAND    4   ATAANAAPA     0.580        0 multichain_228p      0.040882     0.36        NA      0.457784     0.60        353.07   <= SB
+   1   HLA-DQA10101-DQB10301       FKVAATAANAAPAN    1   KVAATAANA     0.240        0 multichain_228p      0.031422     0.63        NA      0.450172     0.76        383.38   <= SB
+   2   HLA-DQA10101-DQB10301       KVAATAANAAPAND    3   ATAANAAPA     0.790        0 multichain_228p      0.029662     0.73        NA      0.391355     3.72        724.44   <= SB
+   1   HLA-DQA10101-DQB10301        FKVAATAANAAPA    1   KVAATAANA     0.450        0 multichain_228p      0.026423     0.94        NA      0.421892     1.71        520.61   <= SB
+   1   HLA-DQA10101-DQB10301         FKVAATAANAAP    1   KVAATAANA     0.550        0 multichain_228p      0.018670     1.84        NA      0.442829     0.95        415.08   <= WB
+   2   HLA-DQA10101-DQB10301        KVAATAANAAPAN    3   ATAANAAPA     0.630        0 multichain_228p      0.016152     2.40        NA      0.367758     6.33        935.16   <= WB
+   1   HLA-DQA10101-DQB10301          FKVAATAANAA    1   KVAATAANA     0.710        0 multichain_228p      0.007747     7.12        NA      0.404555     2.71        628.03
+   2   HLA-DQA10101-DQB10301         KVAATAANAAPA    1   VAATAANAA     0.460        0 multichain_228p      0.006347     9.01        NA      0.397608     3.21        677.05
+   3   HLA-DQA10101-DQB10301         VAATAANAAPAN    2   ATAANAAPA     0.840        0 multichain_228p      0.003765    15.12        NA      0.336717    11.75       1308.42
+   1   HLA-DQA10101-DQB10301           FKVAATAANA    1   KVAATAANA     0.880        0 multichain_228p      0.002126    24.17        NA      0.326202    14.17       1466.08
+   2   HLA-DQA10101-DQB10301          KVAATAANAAP    1   VAATAANAA     0.620        0 multichain_228p      0.001785    27.35        NA      0.327415    13.86       1446.96
+   4   HLA-DQA10101-DQB10301          AATAANAAPAN    1   ATAANAAPA     0.820        0 multichain_228p      0.000623    50.87        NA      0.268432    33.67       2739.15
+   5   HLA-DQA10101-DQB10301          ATAANAAPAND    1   TAANAAPAN     0.390        0 multichain_228p      0.000251    71.69        NA      0.239078    46.98       3763.13
+   5   HLA-DQA10101-DQB10301           ATAANAAPAN    1   TAANAAPAN     0.440        0 multichain_228p      0.000061    92.50        NA      0.204034    63.46       5498.20
+   4   HLA-DQA10101-DQB10301           AATAANAAPA    1   ATAANAAPA     1.000        0 multichain_228p      0.000056    93.19        NA      0.211730    60.01       5058.91
+   3   HLA-DQA10101-DQB10301           VAATAANAAP    0   VAATAANAA     0.870        0 multichain_228p      0.000037    95.70        NA      0.179712    74.09       7153.34
+   6   HLA-DQA10101-DQB10301           TAANAAPAND    1   AANAAPAND     0.760        0 multichain_228p      0.000019    97.79        NA      0.118391    92.85      13888.47
+   2   HLA-DQA10101-DQB10301            KVAATAANA    0   KVAATAANA     1.000        0 multichain_228p      0.000018    97.91        NA      0.186143    71.43       6672.52
+   3   HLA-DQA10101-DQB10301            VAATAANAA    0   VAATAANAA     1.000        0 multichain_228p      0.000007    99.19        NA      0.143631    86.74      10569.45
+   6   HLA-DQA10101-DQB10301            TAANAAPAN    0   TAANAAPAN     1.000        0 multichain_228p      0.000002    99.77        NA      0.080786    96.26      20862.15
+   1   HLA-DQA10101-DQB10301            FKVAATAAN    0   FKVAATAAN     1.000        0 multichain_228p      0.000002    99.77        NA      0.195871    67.15       6005.90
+   5   HLA-DQA10101-DQB10301            ATAANAAPA    0   ATAANAAPA     1.000        0 multichain_228p      0.000001    99.88        NA      0.148328    85.41      10045.72
+   7   HLA-DQA10101-DQB10301            AANAAPAND    0   AANAAPAND     1.000        0 multichain_228p      0.000000   100.00        NA      0.055808    97.42      27335.68
+   4   HLA-DQA10101-DQB10301            AATAANAAP    0   AATAANAAP     1.000        0 multichain_228p      0.000000   100.00        NA      0.058198    97.31      26637.87
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 4 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIRSSTPLLHPDN    2   IRSSTPLLH     0.710        0 T_0_1_sample_1_      0.010517     4.71        NA      0.294934    23.51       2056.29   <= WB
+   1   HLA-DQA10101-DQB10301      MEIRSSTPLLHPDNL    2   IRSSTPLLH     0.650        0 T_0_1_sample_1_      0.008347     6.46        NA      0.335476    12.02       1326.11
+   1   HLA-DQA10101-DQB10301        MEIRSSTPLLHPD    2   IRSSTPLLH     0.770        0 T_0_1_sample_1_      0.007613     7.27        NA      0.261522    36.75       2951.79
+   2   HLA-DQA10101-DQB10301         EIRSSTPLLHPD    1   IRSSTPLLH     0.720        0 T_0_1_sample_1_      0.003857    14.80        NA      0.287504    26.19       2228.42
+   2   HLA-DQA10101-DQB10301          EIRSSTPLLHP    1   IRSSTPLLH     0.840        0 T_0_1_sample_1_      0.000742    46.57        NA      0.261395    36.80       2955.85
+   3   HLA-DQA10101-DQB10301         IRSSTPLLHPDN    1   RSSTPLLHP     0.260        0 T_0_1_sample_1_      0.000438    59.09        NA      0.236470    48.23       3870.83
+   3   HLA-DQA10101-DQB10301        IRSSTPLLHPDNL    1   RSSTPLLHP     0.210        0 T_0_1_sample_1_      0.000290    68.62        NA      0.194903    67.59       6069.13
+   3   HLA-DQA10101-DQB10301          IRSSTPLLHPD    1   RSSTPLLHP     0.240        0 T_0_1_sample_1_      0.000156    80.68        NA      0.223750    54.32       4441.97
+   2   HLA-DQA10101-DQB10301           EIRSSTPLLH    1   IRSSTPLLH     0.970        0 T_0_1_sample_1_      0.000074    90.69        NA      0.202086    64.34       5615.31
+   4   HLA-DQA10101-DQB10301         RSSTPLLHPDNL    1   SSTPLLHPD     0.630        0 T_0_1_sample_1_      0.000054    93.47        NA      0.121183    92.27      13475.19
+   4   HLA-DQA10101-DQB10301          RSSTPLLHPDN    1   SSTPLLHPD     0.730        0 T_0_1_sample_1_      0.000035    95.93        NA      0.102609    95.25      16474.55
+   4   HLA-DQA10101-DQB10301           RSSTPLLHPD    1   SSTPLLHPD     0.720        0 T_0_1_sample_1_      0.000006    99.30        NA      0.093101    95.69      18259.59
+   1   HLA-DQA10101-DQB10301           MEIRSSTPLL    1   EIRSSTPLL     0.950        0 T_0_1_sample_1_      0.000005    99.42        NA      0.090006    95.84      18881.42
+   3   HLA-DQA10101-DQB10301            IRSSTPLLH    0   IRSSTPLLH     1.000        0 T_0_1_sample_1_      0.000001    99.88        NA      0.151669    84.36       9689.06
+   7   HLA-DQA10101-DQB10301            TPLLHPDNL    0   TPLLHPDNL     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.011270    99.48      44260.13
+   6   HLA-DQA10101-DQB10301            STPLLHPDN    0   STPLLHPDN     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.011156    99.48      44314.74
+   5   HLA-DQA10101-DQB10301            SSTPLLHPD    0   SSTPLLHPD     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.034024    98.43      34601.29
+   4   HLA-DQA10101-DQB10301            RSSTPLLHP    0   RSSTPLLHP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.068373    96.84      23860.92
+   2   HLA-DQA10101-DQB10301            EIRSSTPLL    0   EIRSSTPLL     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.039274    98.18      32690.59
+   1   HLA-DQA10101-DQB10301            MEIRSSTPL    0   MEIRSSTPL     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.053558    97.52      28009.32
+   6   HLA-DQA10101-DQB10301           STPLLHPDNL    1   TPLLHPDNL     0.630        0 T_0_1_sample_1_      0.000000   100.00        NA      0.024171    98.88      38493.84
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 1
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIRSATPLPLPDD    2   IRSATPLPL     0.830        0 T_0_1_sample_2_      0.030995     0.66        NA      0.339957    11.05       1263.35   <= SB
+   1   HLA-DQA10101-DQB10301        MEIRSATPLPLPD    2   IRSATPLPL     0.850        0 T_0_1_sample_2_      0.019750     1.65        NA      0.310952    18.33       1729.08   <= WB
+   1   HLA-DQA10101-DQB10301      MEIRSATPLPLPDDL    2   IRSATPLPL     0.810        0 T_0_1_sample_2_      0.018259     1.92        NA      0.372182     5.73        891.45   <= WB
+   1   HLA-DQA10101-DQB10301         MEIRSATPLPLP    2   IRSATPLPL     0.900        0 T_0_1_sample_2_      0.012636     3.57        NA      0.357812     7.75       1041.41   <= WB
+   1   HLA-DQA10101-DQB10301          MEIRSATPLPL    2   IRSATPLPL     0.990        0 T_0_1_sample_2_      0.003189    17.45        NA      0.302096    21.14       1902.96
+   3   HLA-DQA10101-DQB10301         IRSATPLPLPDD    2   SATPLPLPD     0.320        0 T_0_1_sample_2_      0.000709    47.67        NA      0.283680    27.61       2322.56
+   3   HLA-DQA10101-DQB10301        IRSATPLPLPDDL    2   SATPLPLPD     0.340        0 T_0_1_sample_2_      0.000610    51.39        NA      0.231018    50.84       4106.04
+   2   HLA-DQA10101-DQB10301           EIRSATPLPL    1   IRSATPLPL     1.000        0 T_0_1_sample_2_      0.000531    54.52        NA      0.256240    39.05       3125.40
+   4   HLA-DQA10101-DQB10301          RSATPLPLPDD    1   SATPLPLPD     0.630        0 T_0_1_sample_2_      0.000077    90.28        NA      0.129862    90.47      12267.39
+   4   HLA-DQA10101-DQB10301           RSATPLPLPD    1   SATPLPLPD     0.710        0 T_0_1_sample_2_      0.000012    98.60        NA      0.112078    94.17      14870.27
+   5   HLA-DQA10101-DQB10301          SATPLPLPDDL    1   ATPLPLPDD     0.510        0 T_0_1_sample_2_      0.000005    99.42        NA      0.078400    96.37      21407.73
+   3   HLA-DQA10101-DQB10301            IRSATPLPL    0   IRSATPLPL     1.000        0 T_0_1_sample_2_      0.000004    99.53        NA      0.199391    65.55       5781.46
+   5   HLA-DQA10101-DQB10301           SATPLPLPDD    1   ATPLPLPDD     0.490        0 T_0_1_sample_2_      0.000002    99.77        NA      0.063348    97.07      25194.15
+   1   HLA-DQA10101-DQB10301           MEIRSATPLP    1   EIRSATPLP     0.740        0 T_0_1_sample_2_      0.000002    99.77        NA      0.101378    95.31      16695.43
+   7   HLA-DQA10101-DQB10301            TPLPLPDDL    0   TPLPLPDDL     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.012059    99.44      43883.90
+   6   HLA-DQA10101-DQB10301            ATPLPLPDD    0   ATPLPLPDD     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.028576    98.68      36702.21
+   5   HLA-DQA10101-DQB10301            SATPLPLPD    0   SATPLPLPD     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.041423    98.08      31939.23
+   4   HLA-DQA10101-DQB10301            RSATPLPLP    0   RSATPLPLP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.073910    96.58      22473.42
+   2   HLA-DQA10101-DQB10301            EIRSATPLP    0   EIRSATPLP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.028055    98.70      36909.68
+   1   HLA-DQA10101-DQB10301            MEIRSATPL    0   MEIRSATPL     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.080227    96.29      20988.71
+   6   HLA-DQA10101-DQB10301           ATPLPLPDDL    1   TPLPLPDDL     0.430        0 T_0_1_sample_2_      0.000000   100.00        NA      0.043356    97.99      31278.18
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 1 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIRSSTPLRHPDD    2   IRSSTPLRH     0.880        0 T_0_1_sample_3_      0.010838     4.50        NA      0.272338    32.10       2625.80   <= WB
+   1   HLA-DQA10101-DQB10301      MEIRSSTPLRHPDDL    2   IRSSTPLRH     0.850        0 T_0_1_sample_3_      0.007781     7.08        NA      0.283039    27.85       2338.72
+   1   HLA-DQA10101-DQB10301        MEIRSSTPLRHPD    2   IRSSTPLRH     0.860        0 T_0_1_sample_3_      0.006390     8.94        NA      0.248844    42.40       3385.79
+   2   HLA-DQA10101-DQB10301         EIRSSTPLRHPD    1   IRSSTPLRH     0.820        0 T_0_1_sample_3_      0.003073    18.00        NA      0.264240    35.55       2866.25
+   2   HLA-DQA10101-DQB10301          EIRSSTPLRHP    1   IRSSTPLRH     0.900        0 T_0_1_sample_3_      0.000669    49.11        NA      0.245979    43.74       3492.38
+   2   HLA-DQA10101-DQB10301           EIRSSTPLRH    1   IRSSTPLRH     0.990        0 T_0_1_sample_3_      0.000094    88.08        NA      0.193153    68.38       6185.14
+   4   HLA-DQA10101-DQB10301         RSSTPLRHPDDL    1   SSTPLRHPD     0.290        0 T_0_1_sample_3_      0.000006    99.30        NA      0.072087    96.66      22921.10
+   4   HLA-DQA10101-DQB10301          RSSTPLRHPDD    1   SSTPLRHPD     0.420        0 T_0_1_sample_3_      0.000003    99.65        NA      0.060947    97.18      25857.22
+   3   HLA-DQA10101-DQB10301            IRSSTPLRH    0   IRSSTPLRH     1.000        0 T_0_1_sample_3_      0.000002    99.77        NA      0.149148    85.18       9956.99
+   4   HLA-DQA10101-DQB10301           RSSTPLRHPD    1   SSTPLRHPD     0.560        0 T_0_1_sample_3_      0.000001    99.88        NA      0.054048    97.50      27861.22
+   1   HLA-DQA10101-DQB10301           MEIRSSTPLR    1   EIRSSTPLR     0.820        0 T_0_1_sample_3_      0.000001    99.88        NA      0.071163    96.71      23151.40
+   5   HLA-DQA10101-DQB10301          SSTPLRHPDDL    1   STPLRHPDD     0.690        0 T_0_1_sample_3_      0.000001    99.88        NA      0.028620    98.68      36684.74
+   7   HLA-DQA10101-DQB10301            TPLRHPDDL    0   TPLRHPDDL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.005474    99.75      47124.63
+   6   HLA-DQA10101-DQB10301            STPLRHPDD    0   STPLRHPDD     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.012139    99.44      43845.91
+   5   HLA-DQA10101-DQB10301            SSTPLRHPD    0   SSTPLRHPD     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.009840    99.54      44950.25
+   4   HLA-DQA10101-DQB10301            RSSTPLRHP    0   RSSTPLRHP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.045908    97.88      30426.35
+   2   HLA-DQA10101-DQB10301            EIRSSTPLR    0   EIRSSTPLR     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.022888    98.94      39031.92
+   1   HLA-DQA10101-DQB10301            MEIRSSTPL    0   MEIRSSTPL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.053558    97.52      28009.32
+   5   HLA-DQA10101-DQB10301           SSTPLRHPDD    1   STPLRHPDD     0.660        0 T_0_1_sample_3_      0.000000   100.00        NA      0.020072    99.07      40239.48
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 1
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIRSSTPLPLPDD    2   IRSSTPLPL     0.820        0 T_0_1_sample_4_      0.012482     3.64        NA      0.304987    20.21       1844.36   <= WB
+   1   HLA-DQA10101-DQB10301        MEIRSSTPLPLPD    2   IRSSTPLPL     0.870        0 T_0_1_sample_4_      0.007971     6.87        NA      0.274794    31.11       2556.94
+   1   HLA-DQA10101-DQB10301      MEIRSSTPLPLPDDL    2   IRSSTPLPL     0.790        0 T_0_1_sample_4_      0.007157     7.85        NA      0.332363    12.70       1371.53
+   1   HLA-DQA10101-DQB10301         MEIRSSTPLPLP    2   IRSSTPLPL     0.920        0 T_0_1_sample_4_      0.004338    13.26        NA      0.319540    15.91       1575.65
+   2   HLA-DQA10101-DQB10301          EIRSSTPLPLP    1   IRSSTPLPL     0.880        0 T_0_1_sample_4_      0.000925    41.41        NA      0.275284    30.91       2543.42
+   3   HLA-DQA10101-DQB10301        IRSSTPLPLPDDL    2   SSTPLPLPD     0.310        0 T_0_1_sample_4_      0.000403    61.06        NA      0.199407    65.54       5780.46
+   3   HLA-DQA10101-DQB10301         IRSSTPLPLPDD    2   SSTPLPLPD     0.320        0 T_0_1_sample_4_      0.000390    61.88        NA      0.246854    43.32       3459.48
+   2   HLA-DQA10101-DQB10301           EIRSSTPLPL    1   IRSSTPLPL     1.000        0 T_0_1_sample_4_      0.000171    79.10        NA      0.228747    51.93       4208.18
+   4   HLA-DQA10101-DQB10301          RSSTPLPLPDD    1   SSTPLPLPD     0.600        0 T_0_1_sample_4_      0.000056    93.19        NA      0.109490    94.71      15292.55
+   4   HLA-DQA10101-DQB10301           RSSTPLPLPD    1   SSTPLPLPD     0.790        0 T_0_1_sample_4_      0.000009    98.95        NA      0.093236    95.69      18232.95
+   5   HLA-DQA10101-DQB10301          SSTPLPLPDDL    1   STPLPLPDD     0.550        0 T_0_1_sample_4_      0.000006    99.30        NA      0.067262    96.89      24149.49
+   3   HLA-DQA10101-DQB10301            IRSSTPLPL    0   IRSSTPLPL     1.000        0 T_0_1_sample_4_      0.000004    99.53        NA      0.175743    75.68       7467.22
+   5   HLA-DQA10101-DQB10301           SSTPLPLPDD    1   STPLPLPDD     0.530        0 T_0_1_sample_4_      0.000002    99.77        NA      0.053110    97.54      28145.42
+   1   HLA-DQA10101-DQB10301           MEIRSSTPLP    1   EIRSSTPLP     0.780        0 T_0_1_sample_4_      0.000001    99.88        NA      0.071620    96.69      23037.21
+   7   HLA-DQA10101-DQB10301            TPLPLPDDL    0   TPLPLPDDL     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.012059    99.44      43883.90
+   6   HLA-DQA10101-DQB10301            STPLPLPDD    0   STPLPLPDD     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.024358    98.87      38416.04
+   5   HLA-DQA10101-DQB10301            SSTPLPLPD    0   SSTPLPLPD     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.035195    98.37      34165.66
+   4   HLA-DQA10101-DQB10301            RSSTPLPLP    0   RSSTPLPLP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.060179    97.22      26072.98
+   2   HLA-DQA10101-DQB10301            EIRSSTPLP    0   EIRSSTPLP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.024814    98.85      38226.96
+   1   HLA-DQA10101-DQB10301            MEIRSSTPL    0   MEIRSSTPL     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.053558    97.52      28009.32
+   6   HLA-DQA10101-DQB10301           STPLPLPDDL    1   TPLPLPDDL     0.420        0 T_0_1_sample_4_      0.000000   100.00        NA      0.038725    98.21      32885.34
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 1
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIRSATPLALPDD    2   IRSATPLAL     0.740        0 T_0_1_sample_5_      0.014945     2.73        NA      0.371251     5.85        900.48   <= WB
+   1   HLA-DQA10101-DQB10301      MEIRSATPLALPDDL    2   IRSATPLAL     0.750        0 T_0_1_sample_5_      0.011132     4.33        NA      0.405373     2.66        622.49   <= WB
+   1   HLA-DQA10101-DQB10301        MEIRSATPLALPD    2   IRSATPLAL     0.750        0 T_0_1_sample_5_      0.009332     5.56        NA      0.347838     9.47       1160.08
+   1   HLA-DQA10101-DQB10301         MEIRSATPLALP    2   IRSATPLAL     0.820        0 T_0_1_sample_5_      0.005305    10.93        NA      0.394688     3.44        698.78
+   2   HLA-DQA10101-DQB10301          EIRSATPLALP    1   IRSATPLAL     0.850        0 T_0_1_sample_5_      0.001410    32.19        NA      0.340931    10.84       1250.10
+   3   HLA-DQA10101-DQB10301         IRSATPLALPDD    2   SATPLALPD     0.430        0 T_0_1_sample_5_      0.000681    48.67        NA      0.312005    18.00       1709.49
+   3   HLA-DQA10101-DQB10301        IRSATPLALPDDL    2   SATPLALPD     0.410        0 T_0_1_sample_5_      0.000637    50.32        NA      0.256345    39.00       3121.85
+   2   HLA-DQA10101-DQB10301           EIRSATPLAL    1   IRSATPLAL     0.980        0 T_0_1_sample_5_      0.000287    68.84        NA      0.270550    32.81       2677.09
+   3   HLA-DQA10101-DQB10301          IRSATPLALPD    2   SATPLALPD     0.330        0 T_0_1_sample_5_      0.000167    79.50        NA      0.297260    22.73       2005.18
+   4   HLA-DQA10101-DQB10301           RSATPLALPD    1   SATPLALPD     0.760        0 T_0_1_sample_5_      0.000018    97.91        NA      0.144027    86.63      10524.26
+   5   HLA-DQA10101-DQB10301          SATPLALPDDL    2   TPLALPDDL     0.230        0 T_0_1_sample_5_      0.000012    98.60        NA      0.101777    95.29      16623.52
+   1   HLA-DQA10101-DQB10301           MEIRSATPLA    1   EIRSATPLA     0.950        0 T_0_1_sample_5_      0.000007    99.19        NA      0.128040    90.85      12511.63
+   3   HLA-DQA10101-DQB10301            IRSATPLAL    0   IRSATPLAL     1.000        0 T_0_1_sample_5_      0.000003    99.65        NA      0.210302    60.65       5137.68
+   6   HLA-DQA10101-DQB10301           ATPLALPDDL    1   TPLALPDDL     0.520        0 T_0_1_sample_5_      0.000001    99.88        NA      0.061490    97.16      25705.75
+   7   HLA-DQA10101-DQB10301            TPLALPDDL    0   TPLALPDDL     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.031259    98.55      35652.08
+   6   HLA-DQA10101-DQB10301            ATPLALPDD    0   ATPLALPDD     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.030068    98.61      36114.49
+   5   HLA-DQA10101-DQB10301            SATPLALPD    0   SATPLALPD     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.057082    97.36      26961.46
+   4   HLA-DQA10101-DQB10301            RSATPLALP    0   RSATPLALP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.097511    95.49      17408.80
+   2   HLA-DQA10101-DQB10301            EIRSATPLA    0   EIRSATPLA     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.057518    97.34      26834.57
+   1   HLA-DQA10101-DQB10301            MEIRSATPL    0   MEIRSATPL     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.080227    96.29      20988.71
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIRSSTPLALPDD    2   IRSSTPLAL     0.710        0 T_0_1_sample_6_      0.006151     9.33        NA      0.323561    14.85       1508.57
+   1   HLA-DQA10101-DQB10301      MEIRSSTPLALPDDL    2   IRSSTPLAL     0.690        0 T_0_1_sample_6_      0.005047    11.48        NA      0.350611     8.97       1125.80
+   1   HLA-DQA10101-DQB10301        MEIRSSTPLALPD    2   IRSSTPLAL     0.760        0 T_0_1_sample_6_      0.003812    14.95        NA      0.304999    20.20       1844.12
+   1   HLA-DQA10101-DQB10301         MEIRSSTPLALP    2   IRSSTPLAL     0.800        0 T_0_1_sample_6_      0.001960    25.59        NA      0.346752     9.67       1173.80
+   1   HLA-DQA10101-DQB10301          MEIRSSTPLAL    2   IRSSTPLAL     0.840        0 T_0_1_sample_6_      0.000445    58.74        NA      0.287491    26.20       2228.74
+   3   HLA-DQA10101-DQB10301        IRSSTPLALPDDL    2   SSTPLALPD     0.390        0 T_0_1_sample_6_      0.000438    59.09        NA      0.223842    54.28       4437.55
+   3   HLA-DQA10101-DQB10301         IRSSTPLALPDD    2   SSTPLALPD     0.420        0 T_0_1_sample_6_      0.000411    60.56        NA      0.264747    35.32       2850.57
+   2   HLA-DQA10101-DQB10301           EIRSSTPLAL    1   IRSSTPLAL     0.960        0 T_0_1_sample_6_      0.000105    86.67        NA      0.241864    45.64       3651.39
+   3   HLA-DQA10101-DQB10301          IRSSTPLALPD    1   RSSTPLALP     0.340        0 T_0_1_sample_6_      0.000097    87.69        NA      0.249974    41.90       3344.64
+   4   HLA-DQA10101-DQB10301          RSSTPLALPDD    1   SSTPLALPD     0.700        0 T_0_1_sample_6_      0.000082    89.62        NA      0.138029    88.33      11229.90
+   4   HLA-DQA10101-DQB10301           RSSTPLALPD    1   SSTPLALPD     0.750        0 T_0_1_sample_6_      0.000011    98.72        NA      0.122265    92.05      13318.35
+   1   HLA-DQA10101-DQB10301           MEIRSSTPLA    1   EIRSSTPLA     0.970        0 T_0_1_sample_6_      0.000011    98.72        NA      0.099815    95.38      16980.18
+   5   HLA-DQA10101-DQB10301          SSTPLALPDDL    2   TPLALPDDL     0.230        0 T_0_1_sample_6_      0.000011    98.72        NA      0.087246    95.96      19453.77
+   3   HLA-DQA10101-DQB10301            IRSSTPLAL    0   IRSSTPLAL     1.000        0 T_0_1_sample_6_      0.000001    99.88        NA      0.182636    72.88       6930.57
+   6   HLA-DQA10101-DQB10301           STPLALPDDL    1   TPLALPDDL     0.560        0 T_0_1_sample_6_      0.000001    99.88        NA      0.058004    97.32      26693.83
+   7   HLA-DQA10101-DQB10301            TPLALPDDL    0   TPLALPDDL     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.031259    98.55      35652.08
+   6   HLA-DQA10101-DQB10301            STPLALPDD    0   STPLALPDD     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.027457    98.73      37149.28
+   5   HLA-DQA10101-DQB10301            SSTPLALPD    0   SSTPLALPD     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.045904    97.88      30427.66
+   4   HLA-DQA10101-DQB10301            RSSTPLALP    0   RSSTPLALP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.086801    95.98      19547.66
+   2   HLA-DQA10101-DQB10301            EIRSSTPLA    0   EIRSSTPLA     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.051940    97.60      28503.97
+   1   HLA-DQA10101-DQB10301            MEIRSSTPL    0   MEIRSSTPL     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.053558    97.52      28009.32
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIRSSTPLPLPDD    2   IRSSTPLPL     0.820        0 T_0_1_sample_7_      0.012482     3.64        NA      0.304987    20.21       1844.36   <= WB
+   1   HLA-DQA10101-DQB10301        MEIRSSTPLPLPD    2   IRSSTPLPL     0.870        0 T_0_1_sample_7_      0.007971     6.87        NA      0.274794    31.11       2556.94
+   1   HLA-DQA10101-DQB10301      MEIRSSTPLPLPDDL    2   IRSSTPLPL     0.790        0 T_0_1_sample_7_      0.007157     7.85        NA      0.332363    12.70       1371.53
+   1   HLA-DQA10101-DQB10301         MEIRSSTPLPLP    2   IRSSTPLPL     0.920        0 T_0_1_sample_7_      0.004338    13.26        NA      0.319540    15.91       1575.65
+   2   HLA-DQA10101-DQB10301          EIRSSTPLPLP    1   IRSSTPLPL     0.880        0 T_0_1_sample_7_      0.000925    41.41        NA      0.275284    30.91       2543.42
+   3   HLA-DQA10101-DQB10301        IRSSTPLPLPDDL    2   SSTPLPLPD     0.310        0 T_0_1_sample_7_      0.000403    61.06        NA      0.199407    65.54       5780.46
+   3   HLA-DQA10101-DQB10301         IRSSTPLPLPDD    2   SSTPLPLPD     0.320        0 T_0_1_sample_7_      0.000390    61.88        NA      0.246854    43.32       3459.48
+   2   HLA-DQA10101-DQB10301           EIRSSTPLPL    1   IRSSTPLPL     1.000        0 T_0_1_sample_7_      0.000171    79.10        NA      0.228747    51.93       4208.18
+   4   HLA-DQA10101-DQB10301          RSSTPLPLPDD    1   SSTPLPLPD     0.600        0 T_0_1_sample_7_      0.000056    93.19        NA      0.109490    94.71      15292.55
+   4   HLA-DQA10101-DQB10301           RSSTPLPLPD    1   SSTPLPLPD     0.790        0 T_0_1_sample_7_      0.000009    98.95        NA      0.093236    95.69      18232.95
+   5   HLA-DQA10101-DQB10301          SSTPLPLPDDL    1   STPLPLPDD     0.550        0 T_0_1_sample_7_      0.000006    99.30        NA      0.067262    96.89      24149.49
+   3   HLA-DQA10101-DQB10301            IRSSTPLPL    0   IRSSTPLPL     1.000        0 T_0_1_sample_7_      0.000004    99.53        NA      0.175743    75.68       7467.22
+   5   HLA-DQA10101-DQB10301           SSTPLPLPDD    1   STPLPLPDD     0.530        0 T_0_1_sample_7_      0.000002    99.77        NA      0.053110    97.54      28145.42
+   1   HLA-DQA10101-DQB10301           MEIRSSTPLP    1   EIRSSTPLP     0.780        0 T_0_1_sample_7_      0.000001    99.88        NA      0.071620    96.69      23037.21
+   7   HLA-DQA10101-DQB10301            TPLPLPDDL    0   TPLPLPDDL     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.012059    99.44      43883.90
+   6   HLA-DQA10101-DQB10301            STPLPLPDD    0   STPLPLPDD     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.024358    98.87      38416.04
+   5   HLA-DQA10101-DQB10301            SSTPLPLPD    0   SSTPLPLPD     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.035195    98.37      34165.66
+   4   HLA-DQA10101-DQB10301            RSSTPLPLP    0   RSSTPLPLP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.060179    97.22      26072.98
+   2   HLA-DQA10101-DQB10301            EIRSSTPLP    0   EIRSSTPLP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.024814    98.85      38226.96
+   1   HLA-DQA10101-DQB10301            MEIRSSTPL    0   MEIRSSTPL     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.053558    97.52      28009.32
+   6   HLA-DQA10101-DQB10301           STPLPLPDDL    1   TPLPLPDDL     0.420        0 T_0_1_sample_7_      0.000000   100.00        NA      0.038725    98.21      32885.34
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 1
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIQSATPLPLPDD    2   IQSATPLPL     0.840        0 T_0_1_sample_8_      0.011596     4.06        NA      0.298185    22.42       1985.22   <= WB
+   1   HLA-DQA10101-DQB10301      MEIQSATPLPLPDDL    2   IQSATPLPL     0.830        0 T_0_1_sample_8_      0.007899     6.95        NA      0.334801    12.17       1335.83
+   1   HLA-DQA10101-DQB10301        MEIQSATPLPLPD    2   IQSATPLPL     0.870        0 T_0_1_sample_8_      0.006865     8.25        NA      0.267946    33.86       2753.59
+   1   HLA-DQA10101-DQB10301         MEIQSATPLPLP    2   IQSATPLPL     0.950        0 T_0_1_sample_8_      0.003851    14.82        NA      0.314053    17.42       1672.03
+   2   HLA-DQA10101-DQB10301          EIQSATPLPLP    1   IQSATPLPL     0.920        0 T_0_1_sample_8_      0.000930    41.28        NA      0.276222    30.53       2517.74
+   3   HLA-DQA10101-DQB10301         IQSATPLPLPDD    2   SATPLPLPD     0.420        0 T_0_1_sample_8_      0.000545    53.97        NA      0.254344    39.93       3190.18
+   3   HLA-DQA10101-DQB10301        IQSATPLPLPDDL    2   SATPLPLPD     0.450        0 T_0_1_sample_8_      0.000482    56.87        NA      0.205116    62.98       5434.20
+   2   HLA-DQA10101-DQB10301           EIQSATPLPL    1   IQSATPLPL     0.980        0 T_0_1_sample_8_      0.000131    83.52        NA      0.239503    46.77       3745.87
+   4   HLA-DQA10101-DQB10301          QSATPLPLPDD    1   SATPLPLPD     0.740        0 T_0_1_sample_8_      0.000069    91.39        NA      0.108769    94.86      15412.31
+   4   HLA-DQA10101-DQB10301           QSATPLPLPD    1   SATPLPLPD     0.790        0 T_0_1_sample_8_      0.000010    98.84        NA      0.088263    95.92      19240.88
+   5   HLA-DQA10101-DQB10301          SATPLPLPDDL    1   ATPLPLPDD     0.510        0 T_0_1_sample_8_      0.000005    99.42        NA      0.078400    96.37      21407.73
+   1   HLA-DQA10101-DQB10301           MEIQSATPLP    1   EIQSATPLP     0.680        0 T_0_1_sample_8_      0.000004    99.53        NA      0.112396    94.10      14819.19
+   3   HLA-DQA10101-DQB10301            IQSATPLPL    0   IQSATPLPL     1.000        0 T_0_1_sample_8_      0.000002    99.77        NA      0.189135    70.19       6459.97
+   5   HLA-DQA10101-DQB10301           SATPLPLPDD    1   ATPLPLPDD     0.490        0 T_0_1_sample_8_      0.000002    99.77        NA      0.063348    97.07      25194.15
+   7   HLA-DQA10101-DQB10301            TPLPLPDDL    0   TPLPLPDDL     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.012059    99.44      43883.90
+   6   HLA-DQA10101-DQB10301            ATPLPLPDD    0   ATPLPLPDD     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.028576    98.68      36702.21
+   5   HLA-DQA10101-DQB10301            SATPLPLPD    0   SATPLPLPD     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.041423    98.08      31939.23
+   4   HLA-DQA10101-DQB10301            QSATPLPLP    0   QSATPLPLP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.051477    97.62      28647.12
+   2   HLA-DQA10101-DQB10301            EIQSATPLP    0   EIQSATPLP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.028676    98.67      36662.53
+   1   HLA-DQA10101-DQB10301            MEIQSATPL    0   MEIQSATPL     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.089540    95.86      18976.85
+   6   HLA-DQA10101-DQB10301           ATPLPLPDDL    1   TPLPLPDDL     0.430        0 T_0_1_sample_8_      0.000000   100.00        NA      0.043356    97.99      31278.18
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 1
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIRSSTPLAHPDD    2   IRSSTPLAH     0.680        0 T_0_1_sample_9_      0.014515     2.86        NA      0.328224    13.67       1434.35   <= WB
+   1   HLA-DQA10101-DQB10301      MEIRSSTPLAHPDDL    2   IRSSTPLAH     0.600        0 T_0_1_sample_9_      0.010940     4.44        NA      0.354478     8.28       1079.66   <= WB
+   1   HLA-DQA10101-DQB10301        MEIRSSTPLAHPD    2   IRSSTPLAH     0.670        0 T_0_1_sample_9_      0.009597     5.35        NA      0.306884    19.61       1806.89
+   2   HLA-DQA10101-DQB10301         EIRSSTPLAHPD    1   IRSSTPLAH     0.610        0 T_0_1_sample_9_      0.006290     9.10        NA      0.325812    14.27       1472.28
+   2   HLA-DQA10101-DQB10301          EIRSSTPLAHP    1   IRSSTPLAH     0.780        0 T_0_1_sample_9_      0.001618    29.31        NA      0.299820    21.88       1950.40
+   2   HLA-DQA10101-DQB10301           EIRSSTPLAH    1   IRSSTPLAH     0.920        0 T_0_1_sample_9_      0.000227    73.73        NA      0.233727    49.53       3987.44
+   4   HLA-DQA10101-DQB10301         RSSTPLAHPDDL    1   SSTPLAHPD     0.630        0 T_0_1_sample_9_      0.000174    78.80        NA      0.122363    92.03      13304.24
+   4   HLA-DQA10101-DQB10301          RSSTPLAHPDD    1   SSTPLAHPD     0.720        0 T_0_1_sample_9_      0.000100    87.31        NA      0.100736    95.34      16811.81
+   4   HLA-DQA10101-DQB10301           RSSTPLAHPD    1   SSTPLAHPD     0.740        0 T_0_1_sample_9_      0.000024    97.21        NA      0.092109    95.74      18456.63
+   1   HLA-DQA10101-DQB10301           MEIRSSTPLA    1   EIRSSTPLA     0.970        0 T_0_1_sample_9_      0.000011    98.72        NA      0.099815    95.38      16980.18
+   3   HLA-DQA10101-DQB10301            IRSSTPLAH    0   IRSSTPLAH     1.000        0 T_0_1_sample_9_      0.000006    99.30        NA      0.180006    73.97       7130.62
+   6   HLA-DQA10101-DQB10301           STPLAHPDDL    1   TPLAHPDDL     0.740        0 T_0_1_sample_9_      0.000001    99.88        NA      0.032973    98.47      34997.01
+   7   HLA-DQA10101-DQB10301            TPLAHPDDL    0   TPLAHPDDL     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.019779    99.08      40367.23
+   6   HLA-DQA10101-DQB10301            STPLAHPDD    0   STPLAHPDD     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.009283    99.57      45221.96
+   5   HLA-DQA10101-DQB10301            SSTPLAHPD    0   SSTPLAHPD     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.025402    98.82      37984.53
+   4   HLA-DQA10101-DQB10301            RSSTPLAHP    0   RSSTPLAHP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.069828    96.77      23488.22
+   2   HLA-DQA10101-DQB10301            EIRSSTPLA    0   EIRSSTPLA     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.051940    97.60      28503.97
+   1   HLA-DQA10101-DQB10301            MEIRSSTPL    0   MEIRSSTPL     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.053558    97.52      28009.32
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10301       MEIRSATPLPLPDN    2   IRSATPLPL     0.830        0 T_0_1_sample_10      0.023577     1.19        NA      0.340402    10.95       1257.28   <= WB
+   1   HLA-DQA10101-DQB10301        MEIRSATPLPLPD    2   IRSATPLPL     0.850        0 T_0_1_sample_10      0.019750     1.65        NA      0.310952    18.33       1729.08   <= WB
+   1   HLA-DQA10101-DQB10301      MEIRSATPLPLPDNL    2   IRSATPLPL     0.800        0 T_0_1_sample_10      0.013990     3.03        NA      0.371765     5.78        895.48   <= WB
+   1   HLA-DQA10101-DQB10301         MEIRSATPLPLP    2   IRSATPLPL     0.900        0 T_0_1_sample_10      0.012636     3.57        NA      0.357812     7.75       1041.41   <= WB
+   1   HLA-DQA10101-DQB10301          MEIRSATPLPL    2   IRSATPLPL     0.990        0 T_0_1_sample_10      0.003189    17.45        NA      0.302096    21.14       1902.96
+   3   HLA-DQA10101-DQB10301         IRSATPLPLPDN    2   SATPLPLPD     0.320        0 T_0_1_sample_10      0.000569    53.02        NA      0.282764    27.95       2345.69
+   2   HLA-DQA10101-DQB10301           EIRSATPLPL    1   IRSATPLPL     1.000        0 T_0_1_sample_10      0.000531    54.52        NA      0.256240    39.05       3125.40
+   3   HLA-DQA10101-DQB10301        IRSATPLPLPDNL    2   SATPLPLPD     0.350        0 T_0_1_sample_10      0.000491    56.41        NA      0.229819    51.42       4159.66
+   4   HLA-DQA10101-DQB10301          RSATPLPLPDN    1   SATPLPLPD     0.660        0 T_0_1_sample_10      0.000067    91.67        NA      0.128693    90.71      12423.54
+   4   HLA-DQA10101-DQB10301           RSATPLPLPD    1   SATPLPLPD     0.710        0 T_0_1_sample_10      0.000012    98.60        NA      0.112078    94.17      14870.27
+   3   HLA-DQA10101-DQB10301            IRSATPLPL    0   IRSATPLPL     1.000        0 T_0_1_sample_10      0.000004    99.53        NA      0.199391    65.55       5781.46
+   1   HLA-DQA10101-DQB10301           MEIRSATPLP    1   EIRSATPLP     0.740        0 T_0_1_sample_10      0.000002    99.77        NA      0.101378    95.31      16695.43
+   5   HLA-DQA10101-DQB10301          SATPLPLPDNL    1   ATPLPLPDN     0.500        0 T_0_1_sample_10      0.000002    99.77        NA      0.075018    96.53      22205.61
+   7   HLA-DQA10101-DQB10301            TPLPLPDNL    0   TPLPLPDNL     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.009886    99.54      44927.88
+   6   HLA-DQA10101-DQB10301            ATPLPLPDN    0   ATPLPLPDN     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.025957    98.80      37757.12
+   5   HLA-DQA10101-DQB10301            SATPLPLPD    0   SATPLPLPD     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.041423    98.08      31939.23
+   4   HLA-DQA10101-DQB10301            RSATPLPLP    0   RSATPLPLP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.073910    96.58      22473.42
+   2   HLA-DQA10101-DQB10301            EIRSATPLP    0   EIRSATPLP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.028055    98.70      36909.68
+   1   HLA-DQA10101-DQB10301            MEIRSATPL    0   MEIRSATPL     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.080227    96.29      20988.71
+   6   HLA-DQA10101-DQB10301           ATPLPLPDNL    0   ATPLPLPDN     0.510        0 T_0_1_sample_10      0.000000   100.00        NA      0.037348    98.27      33378.98
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------

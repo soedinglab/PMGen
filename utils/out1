@@ -1,0 +1,75 @@
+# /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/bin/netMHCpan -f mypep -BA -a H-2-Dd
+# Tue Mar 11 17:11:01 2025
+# User: amir
+# PWD : /home/amir/amir/ParseFold/PMGen/utils
+# Host: Linux l1161-blue3 6.8.0-52-generic x86_64
+# -f       mypep                File name with input
+# -BA      1                    Include Binding affinity prediction
+# -a       H-2-Dd               MHC allele
+# Command line parameters set to:
+#	[-rdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64 Home directory for NetMHpan
+#	[-syn filename]      /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/synlist.bin Synaps file
+#	[-v]                 0                    Verbose mode
+#	[-dirty]             0                    Dirty mode, leave tmp dir+files
+#	[-tdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpanXXXXXX Temporary directory (made with mkdtemp)
+#	[-hlapseudo filename] /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/MHC_pseudo.dat File with MHC pseudo sequences
+#	[-hlaseq filename]                        File with full length MHC sequences
+#	[-a line]            H-2-Dd               MHC allele
+#	[-f filename]        mypep                File name with input
+#	[-w]                 0                    w option for webface
+#	[-s]                 0                    Sort output on descending affinity
+#	[-p]                 0                    Use peptide input
+#	[-rth float]         0.500000             Rank Threshold for high binding peptides
+#	[-rlt float]         2.000000             Rank Threshold for low binding peptides
+#	[-l string]          8,9,10,11            Peptide length [8-11] (multiple length with ,)
+#	[-xls]               0                    Save output to xls file
+#	[-xlsfile filename]  NetMHCpan_out.xls    Filename for xls dump
+#	[-t float]           -99.900002           Threshold for output (%rank) [<0 print all]
+#	[-thrfmt filename]   /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/threshold/%s.thr.%s Format for threshold filenames
+#	[-expfix]            0                    Exclude prefix from synlist
+#	[-version filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/version File with version information
+#	[-inptype int]       0                    Input type [0] FASTA [1] Peptide
+#	[-listMHC]           0                    Print list of alleles included in netMHCpan
+#	[-allname filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/allelenames File with print names for alleles
+#	[-BA]                1                    Include Binding affinity prediction
+
+# NetMHCpan version 4.1b
+
+# Tmpdir made /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpanSBBXwu
+# Input is in FSA format
+
+# Peptide length 8,9,10,11
+
+# Make both EL and BA predictions
+
+H-2-Dd : Distance to training data  0.000 (using nearest neighbor H2-Dd)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Dd      YQSGLSIVM YQSGLSIVM  0  0  0  0  0    YQSGLSIVM           mypep 0.0052430    5.301 0.057350   12.510 26883.40
+   1      H-2-Dd       YQSGLSIV YQSG-LSIV  0  0  0  4  1     YQSGLSIV           mypep 0.0007460   17.471 0.029739   33.538 36243.26
+   2      H-2-Dd       QSGLSIVM QSGLS-IVM  0  0  0  5  1     QSGLSIVM           mypep 0.0010450   14.694 0.034040   28.307 34595.31
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein mypep. Allele H-2-Dd. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Dd     AAVVVKLKLK AAVVVKLKL  0  0  0  0  0    AAVVVKLKL          mypep2 0.0000690   44.600 0.016883   59.486 41652.13
+   1      H-2-Dd      AAVVVKLKL AAVVVKLKL  0  0  0  0  0    AAVVVKLKL          mypep2 0.0171450    1.787 0.050078   15.843 29084.06 <= WB
+   2      H-2-Dd      AVVVKLKLK AVVVKLKLK  0  0  0  0  0    AVVVKLKLK          mypep2 0.0001730   32.533 0.014141   68.405 42906.37
+   1      H-2-Dd       AAVVVKLK AAVVVKLK-  0  0  0  8  1     AAVVVKLK          mypep2 0.0000920   40.571 0.011565   77.735 44119.09
+   2      H-2-Dd       AVVVKLKL AVVVK-LKL  0  0  0  5  1     AVVVKLKL          mypep2 0.0036970    6.812 0.027402   36.839 37171.40
+   3      H-2-Dd       VVVKLKLK VVV-KLKLK  0  0  0  3  1     VVVKLKLK          mypep2 0.0001190   37.111 0.012380   74.665 43731.74
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein mypep2. Allele H-2-Dd. Number of high binders 0. Number of weak binders 1. Number of peptides 6
+
+-----------------------------------------------------------------------------------

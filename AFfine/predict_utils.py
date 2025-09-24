@@ -40,34 +40,60 @@ def load_pdb_coords(
     if verbose:
         print('reading:', pdbfile)
     skipped_lines = False
+
+    # store altLoc variants temporarily
+    temp_residues = {}
+
     with open(pdbfile,'r') as data:
         for line in data:
-            if (line[:6] in ['ATOM  ','HETATM'] and line[17:20] != 'HOH' and
-                line[16] in ' A1'):
-                if ( line[17:20] in residue_constants.restype_3to1
-                     or line[17:20] == 'MSE'): # 2022-03-31 change to include MSE
-                    name1 = ('M' if line[17:20] == 'MSE' else
-                             residue_constants.restype_3to1[line[17:20]])
-                    resid = line[22:27]
-                    chain = line[21]
-                    if chain not in all_resids:
-                        all_resids[chain] = []
-                        all_coords[chain] = {}
-                        all_name1s[chain] = {}
-                        chains.append(chain)
-                    if line.startswith('HETATM'):
-                        print('WARNING: HETATM', pdbfile, line[:-1])
-                    atom = line[12:16].split()[0]
-                    if resid not in all_resids[chain]:
-                        all_resids[chain].append(resid)
-                        all_coords[chain][resid] = {}
-                        all_name1s[chain][resid] = name1
+            if (line[:6] in ['ATOM  ','HETATM'] and line[17:20] != 'HOH'):
+                resname = line[17:20]
+                chain = line[21]
+                resid = line[22:27]
+                altloc = line[16]
 
-                    all_coords[chain][resid][atom] = np.array(
-                        [float(line[30:38]), float(line[38:46]), float(line[46:54])])
+                if resname in residue_constants.restype_3to1 or resname == 'MSE':
+                    name1 = 'M' if resname == 'MSE' else residue_constants.restype_3to1[resname]
+                    atom = line[12:16].split()[0]
+                    coords = np.array([float(line[30:38]), float(line[38:46]), float(line[46:54])])
+
+                    # unique residue identifier (chain + resid)
+                    res_uid = (chain, resid)
+
+                    if res_uid not in temp_residues:
+                        temp_residues[res_uid] = {}
+                    if altloc not in temp_residues[res_uid]:
+                        temp_residues[res_uid][altloc] = {
+                            'coords': {},
+                            'name1': name1
+                        }
+                    temp_residues[res_uid][altloc]['coords'][atom] = coords
+
                 else:
                     print('skip ATOM line:', line[:-1], pdbfile)
                     skipped_lines = True
+
+    # choose altLoc per residue
+    for (chain, resid), altloc_dict in temp_residues.items():
+        # prefer ' ' (blank), 'A', or '1'
+        preferred = None
+        for key in [' ', 'A', '1']:
+            if key in altloc_dict:
+                preferred = key
+                break
+        # if none of those exist, take the first available altLoc (e.g. B)
+        if preferred is None:
+            preferred = sorted(altloc_dict.keys())[0]
+
+        if chain not in all_resids:
+            all_resids[chain] = []
+            all_coords[chain] = {}
+            all_name1s[chain] = {}
+            chains.append(chain)
+
+        all_resids[chain].append(resid)
+        all_coords[chain][resid] = altloc_dict[preferred]['coords']
+        all_name1s[chain][resid] = altloc_dict[preferred]['name1']
 
     # check for chainbreaks
     maxdis = 1.75
@@ -77,7 +103,7 @@ def load_pdb_coords(
             coords2 = all_coords[chain][res2]
             if 'C' in coords1 and 'N' in coords2:
                 dis = np.sqrt(np.sum(np.square(coords1['C']-coords2['N'])))
-                if dis>maxdis:
+                if dis > maxdis:
                     print('WARNING chainbreak:', chain, res1, res2, dis, pdbfile)
                     if not allow_chainbreaks:
                         print('STOP: chainbreaks', pdbfile)
@@ -373,7 +399,9 @@ def create_single_template_features(
     template_full_sequence = ''.join(all_name1s_tmp[c][r] for c,r in crs_tmp)
     if expected_template_len:
         print(expected_template_len, template_full_sequence, num_res)
-        assert len(template_full_sequence) == expected_template_len
+        assert len(template_full_sequence) == expected_template_len, (f'template name or row: {template_name} | '
+                                                                      f'template_full_sequence: {template_full_sequence} |'
+                                                                      f'expected_template_len: {expected_template_len}')
 
     all_positions_tmp, all_positions_mask_tmp = fill_afold_coords(
         chains_tmp, all_resids_tmp, all_coords_tmp)

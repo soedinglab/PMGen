@@ -1,0 +1,709 @@
+# /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/bin/netMHCpan -f tmp3/protienmpnn/6G9Q/6G9Q_model_1_model_2_ptm/peptide_design/seqs/multichain_6G9Q_model_1_model_2_ptm.fa -BA -a H-2-Db
+# Tue Mar 11 20:08:22 2025
+# User: amir
+# PWD : /home/amir/amir/ParseFold/PMGen
+# Host: Linux l1161-blue3 6.8.0-52-generic x86_64
+# -f       tmp3/protienmpnn/6G9Q/6G9Q_model_1_model_2_ptm/peptide_design/seqs/multichain_6G9Q_model_1_model_2_ptm.fa File name with input
+# -BA      1                    Include Binding affinity prediction
+# -a       H-2-Db               MHC allele
+# Command line parameters set to:
+#	[-rdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64 Home directory for NetMHpan
+#	[-syn filename]      /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/synlist.bin Synaps file
+#	[-v]                 0                    Verbose mode
+#	[-dirty]             0                    Dirty mode, leave tmp dir+files
+#	[-tdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpanXXXXXX Temporary directory (made with mkdtemp)
+#	[-hlapseudo filename] /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/MHC_pseudo.dat File with MHC pseudo sequences
+#	[-hlaseq filename]                        File with full length MHC sequences
+#	[-a line]            H-2-Db               MHC allele
+#	[-f filename]        tmp3/protienmpnn/6G9Q/6G9Q_model_1_model_2_ptm/peptide_design/seqs/multichain_6G9Q_model_1_model_2_ptm.fa File name with input
+#	[-w]                 0                    w option for webface
+#	[-s]                 0                    Sort output on descending affinity
+#	[-p]                 0                    Use peptide input
+#	[-rth float]         0.500000             Rank Threshold for high binding peptides
+#	[-rlt float]         2.000000             Rank Threshold for low binding peptides
+#	[-l string]          8,9,10,11            Peptide length [8-11] (multiple length with ,)
+#	[-xls]               0                    Save output to xls file
+#	[-xlsfile filename]  NetMHCpan_out.xls    Filename for xls dump
+#	[-t float]           -99.900002           Threshold for output (%rank) [<0 print all]
+#	[-thrfmt filename]   /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/threshold/%s.thr.%s Format for threshold filenames
+#	[-expfix]            0                    Exclude prefix from synlist
+#	[-version filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/version File with version information
+#	[-inptype int]       0                    Input type [0] FASTA [1] Peptide
+#	[-listMHC]           0                    Print list of alleles included in netMHCpan
+#	[-allname filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/allelenames File with print names for alleles
+#	[-BA]                1                    Include Binding affinity prediction
+
+# NetMHCpan version 4.1b
+
+# Tmpdir made /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpanRGIc4E
+# Input is in FSA format
+
+# Peptide length 8,9,10,11
+
+# Make both EL and BA predictions
+
+H-2-Db : Distance to training data  0.000 (using nearest neighbor H2-Db)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      KAPYDYAPI KAPYDYAPI  0  0  0  0  0    KAPYDYAPI multichain_6G9Q 0.5443910    0.090 0.588165    0.038    86.14 <= SB
+   1      H-2-Db       KAPYDYAP KAPYDYAP-  0  0  0  8  1     KAPYDYAP multichain_6G9Q 0.0007450   28.985 0.048192   23.575 29683.64
+   2      H-2-Db       APYDYAPI APY-DYAPI  0  0  0  3  1     APYDYAPI multichain_6G9Q 0.0030080   14.785 0.095695    7.948 17754.24
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein multichain_6G9Q. Allele H-2-Db. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGPPL MPPPVGPPL  0  0  0  0  0    MPPPVGPPL T_0_1_sample_1_ 0.0805900    1.303 0.121017    5.072 13499.41 <= WB
+   1      H-2-Db       MPPPVGPP MPPPVGP-P  0  0  0  7  1     MPPPVGPP T_0_1_sample_1_ 0.0003200   40.182 0.019023   61.354 40698.79
+   2      H-2-Db       PPPVGPPL -PPPVGPPL  0  0  0  0  1     PPPVGPPL T_0_1_sample_1_ 0.0010460   25.033 0.021097   56.697 39795.67
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_1_. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_2_ 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_2_ 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_2_ 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_2_. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_3_ 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_3_ 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_3_ 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_3_. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_4_ 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_4_ 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_4_ 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_4_. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_5_ 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_5_ 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_5_ 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_5_. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGTPL MPPPVGTPL  0  0  0  0  0    MPPPVGTPL T_0_1_sample_6_ 0.0882640    1.182 0.131315    4.289 12076.05 <= WB
+   1      H-2-Db       MPPPVGTP MPPPVG-TP  0  0  0  6  1     MPPPVGTP T_0_1_sample_6_ 0.0004100   36.742 0.017180   65.806 41518.49
+   2      H-2-Db       PPPVGTPL -PPPVGTPL  0  0  0  0  1     PPPVGTPL T_0_1_sample_6_ 0.0013200   22.523 0.022399   53.970 39238.98
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_6_. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGPPL MPPPVGPPL  0  0  0  0  0    MPPPVGPPL T_0_1_sample_7_ 0.0805900    1.303 0.121017    5.072 13499.41 <= WB
+   1      H-2-Db       MPPPVGPP MPPPVGP-P  0  0  0  7  1     MPPPVGPP T_0_1_sample_7_ 0.0003200   40.182 0.019023   61.354 40698.79
+   2      H-2-Db       PPPVGPPL -PPPVGPPL  0  0  0  0  1     PPPVGPPL T_0_1_sample_7_ 0.0010460   25.033 0.021097   56.697 39795.67
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_7_. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_8_ 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_8_ 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_8_ 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_8_. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGLPL MPPPVGLPL  0  0  0  0  0    MPPPVGLPL T_0_1_sample_9_ 0.0692500    1.518 0.129740    4.398 12283.60 <= WB
+   1      H-2-Db       MPPPVGLP MPPPVGL-P  0  0  0  7  1     MPPPVGLP T_0_1_sample_9_ 0.0003200   40.182 0.017574   64.802 41341.88
+   2      H-2-Db       PPPVGLPL -PPPVGLPL  0  0  0  0  1     PPPVGLPL T_0_1_sample_9_ 0.0011960   23.562 0.021994   54.759 39411.31
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_9_. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPTGVPL MPPPTGVPL  0  0  0  0  0    MPPPTGVPL T_0_1_sample_10 0.0996510    1.050 0.145096    3.469 10403.23 <= WB
+   1      H-2-Db       MPPPTGVP MPPPTGV-P  0  0  0  7  1     MPPPTGVP T_0_1_sample_10 0.0003020   41.000 0.016072   68.678 42019.25
+   2      H-2-Db       PPPTGVPL -PPPTGVPL  0  0  0  0  1     PPPTGVPL T_0_1_sample_10 0.0011120   24.357 0.023442   51.939 38798.65
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_10. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_11 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_11 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_11 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_11. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_12 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_12 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_12 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_12. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MIPPTGVPL MIPPTGVPL  0  0  0  0  0    MIPPTGVPL T_0_1_sample_13 0.1608550    0.635 0.203262    1.602  5544.32 <= WB
+   1      H-2-Db       MIPPTGVP MIPPTGVP-  0  0  0  8  1     MIPPTGVP T_0_1_sample_13 0.0000910   59.697 0.017325   65.430 41453.43
+   2      H-2-Db       IPPTGVPL IPP-TGVPL  0  0  0  3  1     IPPTGVPL T_0_1_sample_13 0.0118750    6.347 0.060622   17.037 25948.31
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_13. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGPPL MPPPVGPPL  0  0  0  0  0    MPPPVGPPL T_0_1_sample_14 0.0805900    1.303 0.121017    5.072 13499.41 <= WB
+   1      H-2-Db       MPPPVGPP MPPPVGP-P  0  0  0  7  1     MPPPVGPP T_0_1_sample_14 0.0003200   40.182 0.019023   61.354 40698.79
+   2      H-2-Db       PPPVGPPL -PPPVGPPL  0  0  0  0  1     PPPVGPPL T_0_1_sample_14 0.0010460   25.033 0.021097   56.697 39795.67
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_14. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPTGVPL MPPPTGVPL  0  0  0  0  0    MPPPTGVPL T_0_1_sample_15 0.0996510    1.050 0.145096    3.469 10403.23 <= WB
+   1      H-2-Db       MPPPTGVP MPPPTGV-P  0  0  0  7  1     MPPPTGVP T_0_1_sample_15 0.0003020   41.000 0.016072   68.678 42019.25
+   2      H-2-Db       PPPTGVPL -PPPTGVPL  0  0  0  0  1     PPPTGVPL T_0_1_sample_15 0.0011120   24.357 0.023442   51.939 38798.65
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_15. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MLPPVGVPL MLPPVGVPL  0  0  0  0  0    MLPPVGVPL T_0_1_sample_16 0.1091860    0.957 0.170193    2.435  7929.36 <= WB
+   1      H-2-Db       MLPPVGVP MLPPVGVP-  0  0  0  8  1     MLPPVGVP T_0_1_sample_16 0.0001090   56.970 0.018737   62.035 40824.92
+   2      H-2-Db       LPPVGVPL LPP-VGVPL  0  0  0  3  1     LPPVGVPL T_0_1_sample_16 0.0069420    9.016 0.055156   19.598 27529.20
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_16. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_17 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_17 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_17 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_17. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPTGVPL MPPPTGVPL  0  0  0  0  0    MPPPTGVPL T_0_1_sample_18 0.0996510    1.050 0.145096    3.469 10403.23 <= WB
+   1      H-2-Db       MPPPTGVP MPPPTGV-P  0  0  0  7  1     MPPPTGVP T_0_1_sample_18 0.0003020   41.000 0.016072   68.678 42019.25
+   2      H-2-Db       PPPTGVPL -PPPTGVPL  0  0  0  0  1     PPPTGVPL T_0_1_sample_18 0.0011120   24.357 0.023442   51.939 38798.65
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_18. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_19 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_19 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_19 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_19. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_20 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_20 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_20 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_20. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_21 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_21 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_21 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_21. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGPPL MPPPVGPPL  0  0  0  0  0    MPPPVGPPL T_0_1_sample_22 0.0805900    1.303 0.121017    5.072 13499.41 <= WB
+   1      H-2-Db       MPPPVGPP MPPPVGP-P  0  0  0  7  1     MPPPVGPP T_0_1_sample_22 0.0003200   40.182 0.019023   61.354 40698.79
+   2      H-2-Db       PPPVGPPL -PPPVGPPL  0  0  0  0  1     PPPVGPPL T_0_1_sample_22 0.0010460   25.033 0.021097   56.697 39795.67
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_22. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPAGVPL MPPPAGVPL  0  0  0  0  0    MPPPAGVPL T_0_1_sample_23 0.0776150    1.355 0.133956    4.107 11735.85 <= WB
+   1      H-2-Db       MPPPAGVP MPPPAGV-P  0  0  0  7  1     MPPPAGVP T_0_1_sample_23 0.0002150   46.154 0.015066   71.358 42479.09
+   2      H-2-Db       PPPAGVPL -PPPAGVPL  0  0  0  0  1     PPPAGVPL T_0_1_sample_23 0.0007310   29.228 0.020938   57.046 39864.20
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_23. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MLPPVGPPL MLPPVGPPL  0  0  0  0  0    MLPPVGPPL T_0_1_sample_24 0.0850290    1.229 0.145091    3.469 10403.79 <= WB
+   1      H-2-Db       MLPPVGPP MLPPVGPP-  0  0  0  8  1     MLPPVGPP T_0_1_sample_24 0.0001120   56.515 0.023125   52.556 38931.97
+   2      H-2-Db       LPPVGPPL LPP-VGPPL  0  0  0  3  1     LPPVGPPL T_0_1_sample_24 0.0053480   10.598 0.048610   23.311 29549.71
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_24. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGPPL MPPPVGPPL  0  0  0  0  0    MPPPVGPPL T_0_1_sample_25 0.0805900    1.303 0.121017    5.072 13499.41 <= WB
+   1      H-2-Db       MPPPVGPP MPPPVGP-P  0  0  0  7  1     MPPPVGPP T_0_1_sample_25 0.0003200   40.182 0.019023   61.354 40698.79
+   2      H-2-Db       PPPVGPPL -PPPVGPPL  0  0  0  0  1     PPPVGPPL T_0_1_sample_25 0.0010460   25.033 0.021097   56.697 39795.67
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_25. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGPPL MPPPVGPPL  0  0  0  0  0    MPPPVGPPL T_0_1_sample_26 0.0805900    1.303 0.121017    5.072 13499.41 <= WB
+   1      H-2-Db       MPPPVGPP MPPPVGP-P  0  0  0  7  1     MPPPVGPP T_0_1_sample_26 0.0003200   40.182 0.019023   61.354 40698.79
+   2      H-2-Db       PPPVGPPL -PPPVGPPL  0  0  0  0  1     PPPVGPPL T_0_1_sample_26 0.0010460   25.033 0.021097   56.697 39795.67
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_26. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_27 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_27 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_27 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_27. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_28 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_28 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_28 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_28. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_29 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_29 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_29 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_29. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_30 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_30 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_30 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_30. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGPPL MPPPVGPPL  0  0  0  0  0    MPPPVGPPL T_0_1_sample_31 0.0805900    1.303 0.121017    5.072 13499.41 <= WB
+   1      H-2-Db       MPPPVGPP MPPPVGP-P  0  0  0  7  1     MPPPVGPP T_0_1_sample_31 0.0003200   40.182 0.019023   61.354 40698.79
+   2      H-2-Db       PPPVGPPL -PPPVGPPL  0  0  0  0  1     PPPVGPPL T_0_1_sample_31 0.0010460   25.033 0.021097   56.697 39795.67
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_31. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPTGVPL MPPPTGVPL  0  0  0  0  0    MPPPTGVPL T_0_1_sample_32 0.0996510    1.050 0.145096    3.469 10403.23 <= WB
+   1      H-2-Db       MPPPTGVP MPPPTGV-P  0  0  0  7  1     MPPPTGVP T_0_1_sample_32 0.0003020   41.000 0.016072   68.678 42019.25
+   2      H-2-Db       PPPTGVPL -PPPTGVPL  0  0  0  0  1     PPPTGVPL T_0_1_sample_32 0.0011120   24.357 0.023442   51.939 38798.65
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_32. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPAGVPL MPPPAGVPL  0  0  0  0  0    MPPPAGVPL T_0_1_sample_33 0.0776150    1.355 0.133956    4.107 11735.85 <= WB
+   1      H-2-Db       MPPPAGVP MPPPAGV-P  0  0  0  7  1     MPPPAGVP T_0_1_sample_33 0.0002150   46.154 0.015066   71.358 42479.09
+   2      H-2-Db       PPPAGVPL -PPPAGVPL  0  0  0  0  1     PPPAGVPL T_0_1_sample_33 0.0007310   29.228 0.020938   57.046 39864.20
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_33. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_34 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_34 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_34 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_34. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGPPL MPPPVGPPL  0  0  0  0  0    MPPPVGPPL T_0_1_sample_35 0.0805900    1.303 0.121017    5.072 13499.41 <= WB
+   1      H-2-Db       MPPPVGPP MPPPVGP-P  0  0  0  7  1     MPPPVGPP T_0_1_sample_35 0.0003200   40.182 0.019023   61.354 40698.79
+   2      H-2-Db       PPPVGPPL -PPPVGPPL  0  0  0  0  1     PPPVGPPL T_0_1_sample_35 0.0010460   25.033 0.021097   56.697 39795.67
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_35. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_36 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_36 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_36 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_36. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPTGVPL MPPPTGVPL  0  0  0  0  0    MPPPTGVPL T_0_1_sample_37 0.0996510    1.050 0.145096    3.469 10403.23 <= WB
+   1      H-2-Db       MPPPTGVP MPPPTGV-P  0  0  0  7  1     MPPPTGVP T_0_1_sample_37 0.0003020   41.000 0.016072   68.678 42019.25
+   2      H-2-Db       PPPTGVPL -PPPTGVPL  0  0  0  0  1     PPPTGVPL T_0_1_sample_37 0.0011120   24.357 0.023442   51.939 38798.65
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_37. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_38 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_38 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_38 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_38. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_39 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_39 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_39 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_39. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_40 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_40 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_40 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_40. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MIPPVGPPL MIPPVGPPL  0  0  0  0  0    MIPPVGPPL T_0_1_sample_41 0.1049560    0.994 0.150530    3.211  9809.21 <= WB
+   1      H-2-Db       MIPPVGPP MIP-PVGPP  0  0  0  3  1     MIPPVGPP T_0_1_sample_41 0.0001590   50.889 0.022545   53.686 39177.06
+   2      H-2-Db       IPPVGPPL IPP-VGPPL  0  0  0  3  1     IPPVGPPL T_0_1_sample_41 0.0097690    7.231 0.057571   18.422 26819.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_41. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_42 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_42 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_42 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_42. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MLPPVGVPL MLPPVGVPL  0  0  0  0  0    MLPPVGVPL T_0_1_sample_43 0.1091860    0.957 0.170193    2.435  7929.36 <= WB
+   1      H-2-Db       MLPPVGVP MLPPVGVP-  0  0  0  8  1     MLPPVGVP T_0_1_sample_43 0.0001090   56.970 0.018737   62.035 40824.92
+   2      H-2-Db       LPPVGVPL LPP-VGVPL  0  0  0  3  1     LPPVGVPL T_0_1_sample_43 0.0069420    9.016 0.055156   19.598 27529.20
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_43. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_44 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_44 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_44 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_44. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_45 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_45 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_45 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_45. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MIPPVGVPL MIPPVGVPL  0  0  0  0  0    MIPPVGVPL T_0_1_sample_46 0.1204010    0.866 0.176238    2.259  7427.33 <= WB
+   1      H-2-Db       MIPPVGVP MIPPVGVP-  0  0  0  8  1     MIPPVGVP T_0_1_sample_46 0.0001230   54.889 0.017993   63.805 41154.90
+   2      H-2-Db       IPPVGVPL IPPVG-VPL  0  0  0  5  1     IPPVGVPL T_0_1_sample_46 0.0132630    5.881 0.064359   15.580 24920.05
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_46. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MIPPVGVPL MIPPVGVPL  0  0  0  0  0    MIPPVGVPL T_0_1_sample_47 0.1204010    0.866 0.176238    2.259  7427.33 <= WB
+   1      H-2-Db       MIPPVGVP MIPPVGVP-  0  0  0  8  1     MIPPVGVP T_0_1_sample_47 0.0001230   54.889 0.017993   63.805 41154.90
+   2      H-2-Db       IPPVGVPL IPPVG-VPL  0  0  0  5  1     IPPVGVPL T_0_1_sample_47 0.0132630    5.881 0.064359   15.580 24920.05
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_47. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_48 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_48 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_48 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_48. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_49 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_49 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_49 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_49. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1      H-2-Db      MPPPVGVPL MPPPVGVPL  0  0  0  0  0    MPPPVGVPL T_0_1_sample_50 0.0868180    1.199 0.132850    4.183 11877.14 <= WB
+   1      H-2-Db       MPPPVGVP MPPPVGV-P  0  0  0  7  1     MPPPVGVP T_0_1_sample_50 0.0002970   41.278 0.016443   67.716 41850.90
+   2      H-2-Db       PPPVGVPL -PPPVGVPL  0  0  0  0  1     PPPVGVPL T_0_1_sample_50 0.0011850   23.661 0.023135   52.537 38927.75
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_50. Allele H-2-Db. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------

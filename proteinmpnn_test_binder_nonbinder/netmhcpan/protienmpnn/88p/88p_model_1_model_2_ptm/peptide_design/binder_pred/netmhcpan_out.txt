@@ -1,0 +1,218 @@
+# NetMHCIIpan version 4.3f
+
+# Input is in FASTA format
+
+# Peptide length 9,10,11,12,13,14,15,16,17,18
+
+# Prediction Mode: EL+BA
+
+# Threshold for Strong binding peptides (%Rank)  1.00%
+# Threshold for Weak binding peptides (%Rank)    5.00%
+
+# HLA-DQA10101-DQB10201 : Distance to training data  0.251 (using nearest neighbor HLA-DQA10201-DQB10202)
+
+# Allele: HLA-DQA10101-DQB10201
+# Warning: This DQA-DQB pairing is likely non-functional
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201        AFILDMDNLFPKV    1   FILDMDNLF     0.730        0 multichain_88p_      0.002247    17.53        NA      0.299905     0.99       1948.61
+   1   HLA-DQA10101-DQB10201         AFILDMDNLFPK    1   FILDMDNLF     0.810        0 multichain_88p_      0.001634    22.81        NA      0.308111     0.73       1783.06
+   1   HLA-DQA10101-DQB10201          AFILDMDNLFP    1   FILDMDNLF     0.900        0 multichain_88p_      0.000440    52.15        NA      0.289457     1.47       2181.83
+   2   HLA-DQA10101-DQB10201         FILDMDNLFPKV    3   DMDNLFPKV     0.170        0 multichain_88p_      0.000088    85.48        NA      0.252767     4.61       3245.08
+   1   HLA-DQA10101-DQB10201           AFILDMDNLF    1   FILDMDNLF     0.960        0 multichain_88p_      0.000064    89.35        NA      0.261882     3.48       2940.32
+   3   HLA-DQA10101-DQB10201          ILDMDNLFPKV    2   DMDNLFPKV     0.370        0 multichain_88p_      0.000012    98.18        NA      0.114768    62.98      14443.70
+   4   HLA-DQA10101-DQB10201           LDMDNLFPKV    1   DMDNLFPKV     0.620        0 multichain_88p_      0.000002    99.70        NA      0.071881    86.14      22972.24
+   3   HLA-DQA10101-DQB10201           ILDMDNLFPK    1   LDMDNLFPK     0.850        0 multichain_88p_      0.000001    99.85        NA      0.101549    70.87      16664.57
+   5   HLA-DQA10101-DQB10201            DMDNLFPKV    0   DMDNLFPKV     1.000        0 multichain_88p_      0.000000   100.00        NA      0.021605    97.74      39577.53
+   4   HLA-DQA10101-DQB10201            LDMDNLFPK    0   LDMDNLFPK     1.000        0 multichain_88p_      0.000000   100.00        NA      0.057130    91.89      26947.47
+   3   HLA-DQA10101-DQB10201            ILDMDNLFP    0   ILDMDNLFP     1.000        0 multichain_88p_      0.000000   100.00        NA      0.055492    92.44      27429.31
+   2   HLA-DQA10101-DQB10201            FILDMDNLF    0   FILDMDNLF     1.000        0 multichain_88p_      0.000000   100.00        NA      0.196107    19.02       5990.58
+   1   HLA-DQA10101-DQB10201            AFILDMDNL    0   AFILDMDNL     1.000        0 multichain_88p_      0.000000   100.00        NA      0.070905    86.56      23216.12
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         DYRTVSPEPFPE    1   YRTVSPEPF     0.840        0 T_0_1_sample_1_      0.014815     1.43        NA      0.162124    34.85       8652.75   <= WB
+   1   HLA-DQA10101-DQB10201        DYRTVSPEPFPEL    1   YRTVSPEPF     0.790        0 T_0_1_sample_1_      0.014060     1.60        NA      0.152557    40.09       9596.42   <= WB
+   1   HLA-DQA10101-DQB10201          DYRTVSPEPFP    1   YRTVSPEPF     0.960        0 T_0_1_sample_1_      0.007297     4.76        NA      0.154122    39.19       9435.29   <= WB
+   1   HLA-DQA10101-DQB10201           DYRTVSPEPF    1   YRTVSPEPF     1.000        0 T_0_1_sample_1_      0.001710    22.02        NA      0.137840    48.86      11252.88
+   3   HLA-DQA10101-DQB10201          RTVSPEPFPEL    2   VSPEPFPEL     0.580        0 T_0_1_sample_1_      0.000018    97.27        NA      0.071683    86.23      23021.51
+   2   HLA-DQA10101-DQB10201            YRTVSPEPF    0   YRTVSPEPF     1.000        0 T_0_1_sample_1_      0.000006    99.09        NA      0.106526    67.94      15790.92
+   4   HLA-DQA10101-DQB10201           TVSPEPFPEL    1   VSPEPFPEL     0.790        0 T_0_1_sample_1_      0.000003    99.55        NA      0.052544    93.42      28318.31
+   3   HLA-DQA10101-DQB10201           RTVSPEPFPE    1   TVSPEPFPE     0.840        0 T_0_1_sample_1_      0.000002    99.70        NA      0.041296    95.68      31983.16
+   5   HLA-DQA10101-DQB10201            VSPEPFPEL    0   VSPEPFPEL     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.032009    96.65      35363.94
+   4   HLA-DQA10101-DQB10201            TVSPEPFPE    0   TVSPEPFPE     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.020615    97.84      40003.76
+   3   HLA-DQA10101-DQB10201            RTVSPEPFP    0   RTVSPEPFP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.023475    97.54      38784.82
+   1   HLA-DQA10101-DQB10201            DYRTVSPEP    0   DYRTVSPEP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.011955    98.75      43933.29
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         DYQTVQPELFPE    1   YQTVQPELF     0.960        0 T_0_1_sample_2_      0.004014     9.98        NA      0.188578    22.04       6499.02
+   1   HLA-DQA10101-DQB10201        DYQTVQPELFPEL    1   YQTVQPELF     0.860        0 T_0_1_sample_2_      0.002426    16.39        NA      0.191297    20.92       6310.61
+   1   HLA-DQA10101-DQB10201          DYQTVQPELFP    1   YQTVQPELF     0.990        0 T_0_1_sample_2_      0.001603    23.15        NA      0.178688    26.50       7233.03
+   1   HLA-DQA10101-DQB10201           DYQTVQPELF    1   YQTVQPELF     0.990        0 T_0_1_sample_2_      0.000297    61.89        NA      0.162876    34.41       8582.63
+   2   HLA-DQA10101-DQB10201         YQTVQPELFPEL    3   VQPELFPEL     0.500        0 T_0_1_sample_2_      0.000092    84.85        NA      0.179255    26.23       7188.79
+   3   HLA-DQA10101-DQB10201          QTVQPELFPEL    2   VQPELFPEL     0.700        0 T_0_1_sample_2_      0.000036    94.44        NA      0.100790    71.30      16801.99
+   4   HLA-DQA10101-DQB10201           TVQPELFPEL    1   VQPELFPEL     0.900        0 T_0_1_sample_2_      0.000007    98.94        NA      0.081353    81.69      20734.55
+   5   HLA-DQA10101-DQB10201            VQPELFPEL    0   VQPELFPEL     1.000        0 T_0_1_sample_2_      0.000001    99.85        NA      0.059667    91.05      26217.82
+   2   HLA-DQA10101-DQB10201            YQTVQPELF    0   YQTVQPELF     1.000        0 T_0_1_sample_2_      0.000001    99.85        NA      0.122623    58.21      13266.87
+   3   HLA-DQA10101-DQB10201           QTVQPELFPE    1   TVQPELFPE     0.810        0 T_0_1_sample_2_      0.000001    99.85        NA      0.042953    95.50      31414.86
+   4   HLA-DQA10101-DQB10201            TVQPELFPE    0   TVQPELFPE     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.021878    97.71      39460.80
+   3   HLA-DQA10101-DQB10201            QTVQPELFP    0   QTVQPELFP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.024644    97.42      38297.33
+   1   HLA-DQA10101-DQB10201            DYQTVQPEL    0   DYQTVQPEL     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.028273    97.04      36822.74
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         DYQTVMPEPFPE    1   YQTVMPEPF     0.890        0 T_0_1_sample_3_      0.004708     8.29        NA      0.182200    24.85       6963.34
+   1   HLA-DQA10101-DQB10201        DYQTVMPEPFPEL    1   YQTVMPEPF     0.720        0 T_0_1_sample_3_      0.003842    10.47        NA      0.178563    26.56       7242.82
+   1   HLA-DQA10101-DQB10201          DYQTVMPEPFP    1   YQTVMPEPF     0.950        0 T_0_1_sample_3_      0.001974    19.59        NA      0.175352    28.08       7498.88
+   1   HLA-DQA10101-DQB10201           DYQTVMPEPF    1   YQTVMPEPF     0.990        0 T_0_1_sample_3_      0.000277    63.52        NA      0.156051    38.10       9240.41
+   3   HLA-DQA10101-DQB10201          QTVMPEPFPEL    2   VMPEPFPEL     0.680        0 T_0_1_sample_3_      0.000019    97.12        NA      0.080594    82.06      20905.53
+   4   HLA-DQA10101-DQB10201           TVMPEPFPEL    1   VMPEPFPEL     0.850        0 T_0_1_sample_3_      0.000003    99.55        NA      0.063825    89.58      25064.45
+   2   HLA-DQA10101-DQB10201            YQTVMPEPF    0   YQTVMPEPF     1.000        0 T_0_1_sample_3_      0.000002    99.70        NA      0.110938    65.30      15054.82
+   3   HLA-DQA10101-DQB10201           QTVMPEPFPE    1   TVMPEPFPE     0.800        0 T_0_1_sample_3_      0.000001    99.85        NA      0.034623    96.38      34377.75
+   5   HLA-DQA10101-DQB10201            VMPEPFPEL    0   VMPEPFPEL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.043066    95.49      31376.47
+   4   HLA-DQA10101-DQB10201            TVMPEPFPE    0   TVMPEPFPE     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.019111    98.00      40660.07
+   3   HLA-DQA10101-DQB10201            QTVMPEPFP    0   QTVMPEPFP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.020125    97.89      40216.42
+   1   HLA-DQA10101-DQB10201            DYQTVMPEP    0   DYQTVMPEP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.022263    97.67      39296.77
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         DYQTVQPELFPE    1   YQTVQPELF     0.960        0 T_0_1_sample_4_      0.004014     9.98        NA      0.188578    22.04       6499.02
+   1   HLA-DQA10101-DQB10201        DYQTVQPELFPEL    1   YQTVQPELF     0.860        0 T_0_1_sample_4_      0.002426    16.39        NA      0.191297    20.92       6310.61
+   1   HLA-DQA10101-DQB10201          DYQTVQPELFP    1   YQTVQPELF     0.990        0 T_0_1_sample_4_      0.001603    23.15        NA      0.178688    26.50       7233.03
+   1   HLA-DQA10101-DQB10201           DYQTVQPELF    1   YQTVQPELF     0.990        0 T_0_1_sample_4_      0.000297    61.89        NA      0.162876    34.41       8582.63
+   2   HLA-DQA10101-DQB10201         YQTVQPELFPEL    3   VQPELFPEL     0.500        0 T_0_1_sample_4_      0.000092    84.85        NA      0.179255    26.23       7188.79
+   3   HLA-DQA10101-DQB10201          QTVQPELFPEL    2   VQPELFPEL     0.700        0 T_0_1_sample_4_      0.000036    94.44        NA      0.100790    71.30      16801.99
+   4   HLA-DQA10101-DQB10201           TVQPELFPEL    1   VQPELFPEL     0.900        0 T_0_1_sample_4_      0.000007    98.94        NA      0.081353    81.69      20734.55
+   5   HLA-DQA10101-DQB10201            VQPELFPEL    0   VQPELFPEL     1.000        0 T_0_1_sample_4_      0.000001    99.85        NA      0.059667    91.05      26217.82
+   2   HLA-DQA10101-DQB10201            YQTVQPELF    0   YQTVQPELF     1.000        0 T_0_1_sample_4_      0.000001    99.85        NA      0.122623    58.21      13266.87
+   3   HLA-DQA10101-DQB10201           QTVQPELFPE    1   TVQPELFPE     0.810        0 T_0_1_sample_4_      0.000001    99.85        NA      0.042953    95.50      31414.86
+   4   HLA-DQA10101-DQB10201            TVQPELFPE    0   TVQPELFPE     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.021878    97.71      39460.80
+   3   HLA-DQA10101-DQB10201            QTVQPELFP    0   QTVQPELFP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.024644    97.42      38297.33
+   1   HLA-DQA10101-DQB10201            DYQTVQPEL    0   DYQTVQPEL     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.028273    97.04      36822.74
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         DYQTVMPEEFPE    1   YQTVMPEEF     0.870        0 T_0_1_sample_5_      0.001948    19.80        NA      0.192176    20.55       6250.88
+   1   HLA-DQA10101-DQB10201        DYQTVMPEEFPEL    1   YQTVMPEEF     0.780        0 T_0_1_sample_5_      0.001782    21.29        NA      0.180162    25.80       7118.59
+   1   HLA-DQA10101-DQB10201          DYQTVMPEEFP    1   YQTVMPEEF     0.920        0 T_0_1_sample_5_      0.000640    42.89        NA      0.181664    25.11       7003.84
+   1   HLA-DQA10101-DQB10201           DYQTVMPEEF    1   YQTVMPEEF     0.940        0 T_0_1_sample_5_      0.000179    73.22        NA      0.169955    30.71       7949.81
+   2   HLA-DQA10101-DQB10201         YQTVMPEEFPEL    3   VMPEEFPEL     0.480        0 T_0_1_sample_5_      0.000057    90.56        NA      0.179258    26.23       7188.56
+   3   HLA-DQA10101-DQB10201          QTVMPEEFPEL    2   VMPEEFPEL     0.740        0 T_0_1_sample_5_      0.000013    98.03        NA      0.094022    75.09      18078.55
+   4   HLA-DQA10101-DQB10201           TVMPEEFPEL    1   VMPEEFPEL     0.890        0 T_0_1_sample_5_      0.000003    99.55        NA      0.065792    88.74      24536.65
+   2   HLA-DQA10101-DQB10201            YQTVMPEEF    0   YQTVMPEEF     1.000        0 T_0_1_sample_5_      0.000001    99.85        NA      0.123576    57.63      13130.77
+   3   HLA-DQA10101-DQB10201           QTVMPEEFPE    1   TVMPEEFPE     0.670        0 T_0_1_sample_5_      0.000001    99.85        NA      0.051070    93.91      28773.57
+   5   HLA-DQA10101-DQB10201            VMPEEFPEL    0   VMPEEFPEL     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.046059    95.18      30376.66
+   4   HLA-DQA10101-DQB10201            TVMPEEFPE    0   TVMPEEFPE     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.018367    98.08      40988.69
+   3   HLA-DQA10101-DQB10201            QTVMPEEFP    0   QTVMPEEFP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.037149    96.11      33450.91
+   1   HLA-DQA10101-DQB10201            DYQTVMPEE    0   DYQTVMPEE     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.039665    95.85      32552.58
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         SYQTVSPEPFPE    1   YQTVSPEPF     0.830        0 T_0_1_sample_6_      0.005195     7.33        NA      0.166380    32.52       8263.34
+   1   HLA-DQA10101-DQB10201        SYQTVSPEPFPEL    1   YQTVSPEPF     0.750        0 T_0_1_sample_6_      0.004463     8.84        NA      0.155165    38.60       9329.41
+   1   HLA-DQA10101-DQB10201          SYQTVSPEPFP    1   YQTVSPEPF     0.960        0 T_0_1_sample_6_      0.002083    18.71        NA      0.154704    38.86       9376.07
+   1   HLA-DQA10101-DQB10201           SYQTVSPEPF    1   YQTVSPEPF     1.000        0 T_0_1_sample_6_      0.000409    53.95        NA      0.139990    47.54      10994.14
+   3   HLA-DQA10101-DQB10201          QTVSPEPFPEL    2   VSPEPFPEL     0.590        0 T_0_1_sample_6_      0.000018    97.27        NA      0.066877    88.28      24250.29
+   2   HLA-DQA10101-DQB10201            YQTVSPEPF    0   YQTVSPEPF     1.000        0 T_0_1_sample_6_      0.000003    99.55        NA      0.103977    69.47      16232.49
+   4   HLA-DQA10101-DQB10201           TVSPEPFPEL    1   VSPEPFPEL     0.790        0 T_0_1_sample_6_      0.000003    99.55        NA      0.052544    93.42      28318.31
+   3   HLA-DQA10101-DQB10201           QTVSPEPFPE    1   TVSPEPFPE     0.900        0 T_0_1_sample_6_      0.000002    99.70        NA      0.034515    96.39      34417.95
+   5   HLA-DQA10101-DQB10201            VSPEPFPEL    0   VSPEPFPEL     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.032009    96.65      35363.94
+   4   HLA-DQA10101-DQB10201            TVSPEPFPE    0   TVSPEPFPE     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.020615    97.84      40003.76
+   3   HLA-DQA10101-DQB10201            QTVSPEPFP    0   QTVSPEPFP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.014418    98.49      42777.98
+   1   HLA-DQA10101-DQB10201            SYQTVSPEP    0   SYQTVSPEP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.016725    98.25      41723.40
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         DYQTVQPEPFPE    1   YQTVQPEPF     0.950        0 T_0_1_sample_7_      0.009130     3.40        NA      0.161234    35.34       8736.47   <= WB
+   1   HLA-DQA10101-DQB10201        DYQTVQPEPFPEL    1   YQTVQPEPF     0.760        0 T_0_1_sample_7_      0.007312     4.75        NA      0.157878    37.14       9059.54   <= WB
+   1   HLA-DQA10101-DQB10201          DYQTVQPEPFP    1   YQTVQPEPF     0.980        0 T_0_1_sample_7_      0.004053     9.87        NA      0.153223    39.70       9527.52
+   1   HLA-DQA10101-DQB10201           DYQTVQPEPF    1   YQTVQPEPF     0.990        0 T_0_1_sample_7_      0.000754    38.94        NA      0.141943    46.35      10764.26
+   3   HLA-DQA10101-DQB10201          QTVQPEPFPEL    2   VQPEPFPEL     0.700        0 T_0_1_sample_7_      0.000024    96.36        NA      0.074932    84.82      22226.29
+   2   HLA-DQA10101-DQB10201            YQTVQPEPF    0   YQTVQPEPF     1.000        0 T_0_1_sample_7_      0.000005    99.24        NA      0.105016    68.85      16051.03
+   4   HLA-DQA10101-DQB10201           TVQPEPFPEL    1   VQPEPFPEL     0.900        0 T_0_1_sample_7_      0.000004    99.39        NA      0.061210    90.54      25783.75
+   3   HLA-DQA10101-DQB10201           QTVQPEPFPE    1   TVQPEPFPE     0.830        0 T_0_1_sample_7_      0.000001    99.85        NA      0.026877    97.19      37383.15
+   5   HLA-DQA10101-DQB10201            VQPEPFPEL    0   VQPEPFPEL     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.043915    95.40      31089.58
+   4   HLA-DQA10101-DQB10201            TVQPEPFPE    0   TVQPEPFPE     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.014723    98.46      42637.04
+   3   HLA-DQA10101-DQB10201            QTVQPEPFP    0   QTVQPEPFP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.012747    98.67      43558.44
+   1   HLA-DQA10101-DQB10201            DYQTVQPEP    0   DYQTVQPEP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.013711    98.56      43106.48
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         SYRTVAPEPFPE    1   YRTVAPEPF     0.900        0 T_0_1_sample_8_      0.011321     2.39        NA      0.186013    23.11       6681.91   <= WB
+   1   HLA-DQA10101-DQB10201        SYRTVAPEPFPEL    1   YRTVAPEPF     0.760        0 T_0_1_sample_8_      0.010601     2.67        NA      0.175775    27.88       7464.64   <= WB
+   1   HLA-DQA10101-DQB10201          SYRTVAPEPFP    1   YRTVAPEPF     0.960        0 T_0_1_sample_8_      0.006113     5.97        NA      0.173621    28.89       7640.65
+   1   HLA-DQA10101-DQB10201           SYRTVAPEPF    1   YRTVAPEPF     1.000        0 T_0_1_sample_8_      0.001160    29.49        NA      0.154977    38.71       9348.41
+   3   HLA-DQA10101-DQB10201          RTVAPEPFPEL    2   VAPEPFPEL     0.650        0 T_0_1_sample_8_      0.000030    95.45        NA      0.080478    82.12      20931.78
+   2   HLA-DQA10101-DQB10201            YRTVAPEPF    0   YRTVAPEPF     1.000        0 T_0_1_sample_8_      0.000019    97.12        NA      0.109772    66.00      15245.96
+   4   HLA-DQA10101-DQB10201           TVAPEPFPEL    1   VAPEPFPEL     0.840        0 T_0_1_sample_8_      0.000003    99.55        NA      0.062443    90.13      25442.05
+   3   HLA-DQA10101-DQB10201           RTVAPEPFPE    1   TVAPEPFPE     0.840        0 T_0_1_sample_8_      0.000002    99.70        NA      0.043517    95.45      31223.74
+   5   HLA-DQA10101-DQB10201            VAPEPFPEL    0   VAPEPFPEL     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.040237    95.79      32351.73
+   4   HLA-DQA10101-DQB10201            TVAPEPFPE    0   TVAPEPFPE     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.021593    97.74      39582.69
+   3   HLA-DQA10101-DQB10201            RTVAPEPFP    0   RTVAPEPFP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.025264    97.36      38041.28
+   1   HLA-DQA10101-DQB10201            SYRTVAPEP    0   SYRTVAPEP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.026793    97.20      37417.13
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         DYQTVSPELFPE    1   YQTVSPELF     0.880        0 T_0_1_sample_9_      0.002647    15.11        NA      0.183906    24.01       6835.99
+   1   HLA-DQA10101-DQB10201        DYQTVSPELFPEL    1   YQTVSPELF     0.780        0 T_0_1_sample_9_      0.001853    20.63        NA      0.181844    25.03       6990.21
+   1   HLA-DQA10101-DQB10201          DYQTVSPELFP    1   YQTVSPELF     0.980        0 T_0_1_sample_9_      0.000965    33.47        NA      0.172440    29.47       7738.91
+   1   HLA-DQA10101-DQB10201           DYQTVSPELF    1   YQTVSPELF     0.980        0 T_0_1_sample_9_      0.000205    70.33        NA      0.161924    34.96       8671.50
+   2   HLA-DQA10101-DQB10201         YQTVSPELFPEL    3   VSPELFPEL     0.390        0 T_0_1_sample_9_      0.000103    83.24        NA      0.174994    28.24       7527.98
+   3   HLA-DQA10101-DQB10201          QTVSPELFPEL    2   VSPELFPEL     0.570        0 T_0_1_sample_9_      0.000038    94.07        NA      0.096322    73.81      17634.20
+   4   HLA-DQA10101-DQB10201           TVSPELFPEL    1   VSPELFPEL     0.800        0 T_0_1_sample_9_      0.000008    98.79        NA      0.074442    85.05      22344.42
+   3   HLA-DQA10101-DQB10201           QTVSPELFPE    1   TVSPELFPE     0.880        0 T_0_1_sample_9_      0.000002    99.70        NA      0.054796    92.67      27636.65
+   2   HLA-DQA10101-DQB10201            YQTVSPELF    0   YQTVSPELF     1.000        0 T_0_1_sample_9_      0.000001    99.85        NA      0.122161    58.49      13333.34
+   5   HLA-DQA10101-DQB10201            VSPELFPEL    0   VSPELFPEL     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.048138    94.88      29700.99
+   4   HLA-DQA10101-DQB10201            TVSPELFPE    0   TVSPELFPE     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.031727    96.68      35472.00
+   3   HLA-DQA10101-DQB10201            QTVSPELFP    0   QTVSPELFP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.027393    97.13      37175.02
+   1   HLA-DQA10101-DQB10201            DYQTVSPEL    0   DYQTVSPEL     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.030089    96.85      36106.27
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201         DYQTVQPEPFPE    1   YQTVQPEPF     0.950        0 T_0_1_sample_10      0.009130     3.40        NA      0.161234    35.34       8736.47   <= WB
+   1   HLA-DQA10101-DQB10201        DYQTVQPEPFPEL    1   YQTVQPEPF     0.760        0 T_0_1_sample_10      0.007312     4.75        NA      0.157878    37.14       9059.54   <= WB
+   1   HLA-DQA10101-DQB10201          DYQTVQPEPFP    1   YQTVQPEPF     0.980        0 T_0_1_sample_10      0.004053     9.87        NA      0.153223    39.70       9527.52
+   1   HLA-DQA10101-DQB10201           DYQTVQPEPF    1   YQTVQPEPF     0.990        0 T_0_1_sample_10      0.000754    38.94        NA      0.141943    46.35      10764.26
+   3   HLA-DQA10101-DQB10201          QTVQPEPFPEL    2   VQPEPFPEL     0.700        0 T_0_1_sample_10      0.000024    96.36        NA      0.074932    84.82      22226.29
+   2   HLA-DQA10101-DQB10201            YQTVQPEPF    0   YQTVQPEPF     1.000        0 T_0_1_sample_10      0.000005    99.24        NA      0.105016    68.85      16051.03
+   4   HLA-DQA10101-DQB10201           TVQPEPFPEL    1   VQPEPFPEL     0.900        0 T_0_1_sample_10      0.000004    99.39        NA      0.061210    90.54      25783.75
+   3   HLA-DQA10101-DQB10201           QTVQPEPFPE    1   TVQPEPFPE     0.830        0 T_0_1_sample_10      0.000001    99.85        NA      0.026877    97.19      37383.15
+   5   HLA-DQA10101-DQB10201            VQPEPFPEL    0   VQPEPFPEL     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.043915    95.40      31089.58
+   4   HLA-DQA10101-DQB10201            TVQPEPFPE    0   TVQPEPFPE     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.014723    98.46      42637.04
+   3   HLA-DQA10101-DQB10201            QTVQPEPFP    0   QTVQPEPFP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.012747    98.67      43558.44
+   1   HLA-DQA10101-DQB10201            DYQTVQPEP    0   DYQTVQPEP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.013711    98.56      43106.48
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------

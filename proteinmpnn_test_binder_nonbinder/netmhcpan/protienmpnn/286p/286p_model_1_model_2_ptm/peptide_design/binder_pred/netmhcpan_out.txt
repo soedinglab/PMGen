@@ -1,0 +1,301 @@
+# NetMHCIIpan version 4.3f
+
+# Input is in FASTA format
+
+# Peptide length 9,10,11,12,13,14,15,16,17,18
+
+# Prediction Mode: EL+BA
+
+# Threshold for Strong binding peptides (%Rank)  1.00%
+# Threshold for Weak binding peptides (%Rank)    5.00%
+
+# HLA-DPA10110-DPB10101 : Distance to training data  0.000 (using nearest neighbor HLA-DPA10103-DPB10101)
+
+# Allele: HLA-DPA10110-DPB10101
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KKYFAKTQFEPLAA    3   FAKTQFEPL     0.990        0 multichain_286p      0.636847     0.43        NA      0.878593     0.01          3.72   <= SB
+   2   HLA-DPA10110-DPB10101        KKYFAKTQFEPLA    3   FAKTQFEPL     0.990        0 multichain_286p      0.621215     0.46        NA      0.839154     0.01          5.70   <= SB
+   1   HLA-DPA10110-DPB10101      EKKYFAKTQFEPLAA    4   FAKTQFEPL     0.900        0 multichain_286p      0.582067     0.56        NA      0.891181     0.01          3.25   <= SB
+   2   HLA-DPA10110-DPB10101         KKYFAKTQFEPL    3   FAKTQFEPL     0.950        0 multichain_286p      0.474944     0.93        NA      0.874574     0.01          3.88   <= SB
+   3   HLA-DPA10110-DPB10101          KYFAKTQFEPL    2   FAKTQFEPL     1.000        0 multichain_286p      0.200289     3.88        NA      0.837901     0.01          5.78   <= WB
+   1   HLA-DPA10110-DPB10101         EKKYFAKTQFEP    2   KYFAKTQFE     0.990        0 multichain_286p      0.182224     4.36        NA      0.418366    18.02        540.86   <= WB
+   1   HLA-DPA10110-DPB10101          EKKYFAKTQFE    2   KYFAKTQFE     0.980        0 multichain_286p      0.039975    17.25        NA      0.340837    33.60       1251.37
+   4   HLA-DPA10110-DPB10101           YFAKTQFEPL    1   FAKTQFEPL     1.000        0 multichain_286p      0.036000    18.53        NA      0.783012     0.03         10.46
+   5   HLA-DPA10110-DPB10101            FAKTQFEPL    0   FAKTQFEPL     1.000        0 multichain_286p      0.009795    38.45        NA      0.652662     0.72         42.87
+   2   HLA-DPA10110-DPB10101           KKYFAKTQFE    1   KYFAKTQFE     1.000        0 multichain_286p      0.002955    59.55        NA      0.298794    44.11       1972.18
+   6   HLA-DPA10110-DPB10101           AKTQFEPLAA    1   KTQFEPLAA     0.990        0 multichain_286p      0.000081    96.73        NA      0.142485    83.88      10701.32
+   3   HLA-DPA10110-DPB10101            KYFAKTQFE    0   KYFAKTQFE     1.000        0 multichain_286p      0.000005    99.80        NA      0.164164    78.98       8463.86
+   7   HLA-DPA10110-DPB10101            KTQFEPLAA    0   KTQFEPLAA     1.000        0 multichain_286p      0.000001    99.96        NA      0.095745    92.33      17744.64
+   1   HLA-DPA10110-DPB10101           EKKYFAKTQF    1   KKYFAKTQF     0.950        0 multichain_286p      0.000001    99.96        NA      0.181359    74.97       7026.99
+   6   HLA-DPA10110-DPB10101            AKTQFEPLA    0   AKTQFEPLA     1.000        0 multichain_286p      0.000000   100.00        NA      0.045133    97.12      30682.55
+   4   HLA-DPA10110-DPB10101            YFAKTQFEP    0   YFAKTQFEP     1.000        0 multichain_286p      0.000000   100.00        NA      0.093429    92.69      18194.92
+   2   HLA-DPA10110-DPB10101            KKYFAKTQF    0   KKYFAKTQF     1.000        0 multichain_286p      0.000000   100.00        NA      0.152715    81.58       9580.03
+   1   HLA-DPA10110-DPB10101            EKKYFAKTQ    0   EKKYFAKTQ     1.000        0 multichain_286p      0.000000   100.00        NA      0.025602    98.36      37902.43
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 4 Number of weak binders: 2
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KKQILTTPLVPLPP    3   ILTTPLVPL     0.980        0 T_0_1_sample_1_      0.414816     1.22        NA      0.684869     0.35         30.25   <= WB
+   1   HLA-DPA10110-DPB10101      PKKQILTTPLVPLPP    4   ILTTPLVPL     0.960        0 T_0_1_sample_1_      0.349015     1.72        NA      0.695148     0.28         27.07   <= WB
+   2   HLA-DPA10110-DPB10101        KKQILTTPLVPLP    3   ILTTPLVPL     0.980        0 T_0_1_sample_1_      0.316087     2.03        NA      0.623640     1.24         58.68   <= WB
+   2   HLA-DPA10110-DPB10101         KKQILTTPLVPL    3   ILTTPLVPL     0.960        0 T_0_1_sample_1_      0.159048     5.10        NA      0.672131     0.46         34.73
+   3   HLA-DPA10110-DPB10101          KQILTTPLVPL    2   ILTTPLVPL     1.000        0 T_0_1_sample_1_      0.047159    15.25        NA      0.612763     1.50         66.01
+   1   HLA-DPA10110-DPB10101         PKKQILTTPLVP    3   QILTTPLVP     0.320        0 T_0_1_sample_1_      0.010593    37.07        NA      0.306662    42.00       1811.23
+   4   HLA-DPA10110-DPB10101           QILTTPLVPL    1   ILTTPLVPL     1.000        0 T_0_1_sample_1_      0.007285    43.54        NA      0.532663     4.95        157.04
+   2   HLA-DPA10110-DPB10101          KKQILTTPLVP    1   KQILTTPLV     0.540        0 T_0_1_sample_1_      0.001726    68.62        NA      0.278145    49.43       2465.90
+   1   HLA-DPA10110-DPB10101          PKKQILTTPLV    1   KKQILTTPL     0.510        0 T_0_1_sample_1_      0.001549    70.24        NA      0.274925    50.26       2553.32
+   1   HLA-DPA10110-DPB10101           PKKQILTTPL    1   KKQILTTPL     1.000        0 T_0_1_sample_1_      0.000265    90.70        NA      0.191319    72.45       6309.11
+   2   HLA-DPA10110-DPB10101           KKQILTTPLV    1   KQILTTPLV     0.900        0 T_0_1_sample_1_      0.000089    96.41        NA      0.245201    58.27       3521.91
+   3   HLA-DPA10110-DPB10101           KQILTTPLVP    1   QILTTPLVP     0.780        0 T_0_1_sample_1_      0.000035    98.59        NA      0.198325    70.68       5848.53
+   5   HLA-DPA10110-DPB10101            ILTTPLVPL    0   ILTTPLVPL     1.000        0 T_0_1_sample_1_      0.000025    98.99        NA      0.403174    20.67        637.48
+   3   HLA-DPA10110-DPB10101            KQILTTPLV    0   KQILTTPLV     1.000        0 T_0_1_sample_1_      0.000001    99.96        NA      0.162044    79.47       8660.25
+   2   HLA-DPA10110-DPB10101            KKQILTTPL    0   KKQILTTPL     1.000        0 T_0_1_sample_1_      0.000001    99.96        NA      0.152693    81.59       9582.31
+   6   HLA-DPA10110-DPB10101           LTTPLVPLPP    1   TTPLVPLPP     0.610        0 T_0_1_sample_1_      0.000001    99.96        NA      0.100330    91.63      16885.83
+   7   HLA-DPA10110-DPB10101            TTPLVPLPP    0   TTPLVPLPP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.022284    98.58      39287.85
+   6   HLA-DPA10110-DPB10101            LTTPLVPLP    0   LTTPLVPLP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.080064    94.72      21025.76
+   4   HLA-DPA10110-DPB10101            QILTTPLVP    0   QILTTPLVP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.075986    95.14      21974.24
+   1   HLA-DPA10110-DPB10101            PKKQILTTP    0   PKKQILTTP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.014789    99.05      42606.61
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KQTIRTTPLVPLPP    3   IRTTPLVPL     0.890        0 T_0_1_sample_2_      0.312203     2.08        NA      0.653270     0.71         42.59   <= WB
+   1   HLA-DPA10110-DPB10101      PKQTIRTTPLVPLPP    4   IRTTPLVPL     0.890        0 T_0_1_sample_2_      0.274376     2.53        NA      0.663303     0.57         38.21   <= WB
+   2   HLA-DPA10110-DPB10101        KQTIRTTPLVPLP    3   IRTTPLVPL     0.950        0 T_0_1_sample_2_      0.231430     3.24        NA      0.590640     2.13         83.86   <= WB
+   3   HLA-DPA10110-DPB10101         QTIRTTPLVPLP    2   IRTTPLVPL     0.840        0 T_0_1_sample_2_      0.112696     7.27        NA      0.603368     1.74         73.07
+   3   HLA-DPA10110-DPB10101          QTIRTTPLVPL    2   IRTTPLVPL     1.000        0 T_0_1_sample_2_      0.021756    25.38        NA      0.572928     2.78        101.58
+   4   HLA-DPA10110-DPB10101           TIRTTPLVPL    1   IRTTPLVPL     1.000        0 T_0_1_sample_2_      0.002059    65.66        NA      0.506234     7.02        209.02
+   1   HLA-DPA10110-DPB10101         PKQTIRTTPLVP    1   KQTIRTTPL     0.650        0 T_0_1_sample_2_      0.001311    72.94        NA      0.266856    52.44       2786.26
+   5   HLA-DPA10110-DPB10101          IRTTPLVPLPP    1   RTTPLVPLP     0.550        0 T_0_1_sample_2_      0.001068    75.87        NA      0.441463    14.43        421.26
+   1   HLA-DPA10110-DPB10101          PKQTIRTTPLV    1   KQTIRTTPL     0.930        0 T_0_1_sample_2_      0.000404    87.28        NA      0.240395    59.57       3709.89
+   1   HLA-DPA10110-DPB10101           PKQTIRTTPL    1   KQTIRTTPL     0.980        0 T_0_1_sample_2_      0.000142    94.45        NA      0.213884    66.62       4942.37
+   2   HLA-DPA10110-DPB10101          KQTIRTTPLVP    2   TIRTTPLVP     0.650        0 T_0_1_sample_2_      0.000062    97.50        NA      0.232747    61.61       4029.94
+   5   HLA-DPA10110-DPB10101            IRTTPLVPL    0   IRTTPLVPL     1.000        0 T_0_1_sample_2_      0.000033    98.67        NA      0.386741    23.71        761.53
+   2   HLA-DPA10110-DPB10101           KQTIRTTPLV    1   QTIRTTPLV     0.500        0 T_0_1_sample_2_      0.000006    99.76        NA      0.205832    68.73       5392.27
+   6   HLA-DPA10110-DPB10101           RTTPLVPLPP    0   RTTPLVPLP     0.660        0 T_0_1_sample_2_      0.000003    99.88        NA      0.073610    95.30      22546.48
+   3   HLA-DPA10110-DPB10101           QTIRTTPLVP    1   TIRTTPLVP     0.910        0 T_0_1_sample_2_      0.000003    99.88        NA      0.092086    92.89      18461.23
+   7   HLA-DPA10110-DPB10101            TTPLVPLPP    0   TTPLVPLPP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.022284    98.58      39287.85
+   6   HLA-DPA10110-DPB10101            RTTPLVPLP    0   RTTPLVPLP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.056888    96.36      27018.12
+   4   HLA-DPA10110-DPB10101            TIRTTPLVP    0   TIRTTPLVP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.045920    97.07      30422.38
+   3   HLA-DPA10110-DPB10101            QTIRTTPLV    0   QTIRTTPLV     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.051750    96.69      28562.64
+   2   HLA-DPA10110-DPB10101            KQTIRTTPL    0   KQTIRTTPL     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.172819    76.96       7707.24
+   1   HLA-DPA10110-DPB10101            PKQTIRTTP    0   PKQTIRTTP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.012939    99.17      43468.05
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DPA10110-DPB10101      PKKRILTSPLVPLPP    4   ILTSPLVPL     0.510        0 T_0_1_sample_3_      0.288299     2.36        NA      0.644238     0.86         46.96   <= WB
+   2   HLA-DPA10110-DPB10101       KKRILTSPLVPLPP    3   ILTSPLVPL     0.740        0 T_0_1_sample_3_      0.259069     2.77        NA      0.642749     0.88         47.72   <= WB
+   2   HLA-DPA10110-DPB10101        KKRILTSPLVPLP    3   ILTSPLVPL     0.690        0 T_0_1_sample_3_      0.189695     4.14        NA      0.578689     2.54         95.44   <= WB
+   1   HLA-DPA10110-DPB10101        PKKRILTSPLVPL    3   RILTSPLVP     0.480        0 T_0_1_sample_3_      0.129160     6.30        NA      0.563289     3.23        112.74
+   2   HLA-DPA10110-DPB10101         KKRILTSPLVPL    3   ILTSPLVPL     0.590        0 T_0_1_sample_3_      0.094235     8.59        NA      0.629321     1.11         55.18
+   1   HLA-DPA10110-DPB10101         PKKRILTSPLVP    3   RILTSPLVP     0.880        0 T_0_1_sample_3_      0.064743    11.95        NA      0.379148    25.24        826.73
+   3   HLA-DPA10110-DPB10101          KRILTSPLVPL    2   ILTSPLVPL     0.750        0 T_0_1_sample_3_      0.021848    25.32        NA      0.570674     2.88        104.09
+   2   HLA-DPA10110-DPB10101          KKRILTSPLVP    2   RILTSPLVP     0.910        0 T_0_1_sample_3_      0.012871    33.76        NA      0.355469    30.29       1068.15
+   4   HLA-DPA10110-DPB10101           RILTSPLVPL    1   ILTSPLVPL     0.990        0 T_0_1_sample_3_      0.002257    64.16        NA      0.490311     8.47        248.32
+   1   HLA-DPA10110-DPB10101          PKKRILTSPLV    2   KRILTSPLV     0.780        0 T_0_1_sample_3_      0.001905    67.03        NA      0.275804    50.03       2529.15
+   3   HLA-DPA10110-DPB10101           KRILTSPLVP    1   RILTSPLVP     0.960        0 T_0_1_sample_3_      0.000807    79.60        NA      0.286190    47.34       2260.33
+   2   HLA-DPA10110-DPB10101           KKRILTSPLV    1   KRILTSPLV     0.980        0 T_0_1_sample_3_      0.000110    95.56        NA      0.253987    55.91       3202.53
+   1   HLA-DPA10110-DPB10101           PKKRILTSPL    1   KKRILTSPL     1.000        0 T_0_1_sample_3_      0.000022    99.11        NA      0.178564    75.63       7242.74
+   5   HLA-DPA10110-DPB10101            ILTSPLVPL    0   ILTSPLVPL     1.000        0 T_0_1_sample_3_      0.000010    99.60        NA      0.346571    32.29       1176.10
+   4   HLA-DPA10110-DPB10101            RILTSPLVP    0   RILTSPLVP     1.000        0 T_0_1_sample_3_      0.000002    99.92        NA      0.155661    80.92       9279.48
+   6   HLA-DPA10110-DPB10101           LTSPLVPLPP    1   TSPLVPLPP     0.530        0 T_0_1_sample_3_      0.000001    99.96        NA      0.102963    91.23      16411.57
+   7   HLA-DPA10110-DPB10101            TSPLVPLPP    0   TSPLVPLPP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.019020    98.78      40700.10
+   6   HLA-DPA10110-DPB10101            LTSPLVPLP    0   LTSPLVPLP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.082771    94.31      20418.86
+   3   HLA-DPA10110-DPB10101            KRILTSPLV    0   KRILTSPLV     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.179978    75.30       7132.78
+   2   HLA-DPA10110-DPB10101            KKRILTSPL    0   KKRILTSPL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.148292    82.58      10049.64
+   1   HLA-DPA10110-DPB10101            PKKRILTSP    0   PKKRILTSP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.011301    99.28      44245.29
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KQVIKTTQLVPLPP    3   IKTTQLVPL     0.980        0 T_0_1_sample_4_      0.294951     2.28        NA      0.620013     1.33         61.03   <= WB
+   1   HLA-DPA10110-DPB10101      PKQVIKTTQLVPLPP    4   IKTTQLVPL     0.980        0 T_0_1_sample_4_      0.243495     3.02        NA      0.624362     1.22         58.23   <= WB
+   2   HLA-DPA10110-DPB10101        KQVIKTTQLVPLP    3   IKTTQLVPL     1.000        0 T_0_1_sample_4_      0.215414     3.54        NA      0.554150     3.70        124.46   <= WB
+   3   HLA-DPA10110-DPB10101         QVIKTTQLVPLP    2   IKTTQLVPL     0.960        0 T_0_1_sample_4_      0.087171     9.23        NA      0.568729     2.96        106.30
+   3   HLA-DPA10110-DPB10101          QVIKTTQLVPL    2   IKTTQLVPL     1.000        0 T_0_1_sample_4_      0.018487    27.86        NA      0.535459     4.77        152.36
+   1   HLA-DPA10110-DPB10101         PKQVIKTTQLVP    1   KQVIKTTQL     0.570        0 T_0_1_sample_4_      0.009941    38.18        NA      0.282912    48.18       2341.94
+   1   HLA-DPA10110-DPB10101          PKQVIKTTQLV    1   KQVIKTTQL     0.900        0 T_0_1_sample_4_      0.003399    57.27        NA      0.231363    61.98       4090.74
+   4   HLA-DPA10110-DPB10101           VIKTTQLVPL    1   IKTTQLVPL     1.000        0 T_0_1_sample_4_      0.002136    64.99        NA      0.468211    10.89        315.40
+   5   HLA-DPA10110-DPB10101          IKTTQLVPLPP    1   KTTQLVPLP     0.290        0 T_0_1_sample_4_      0.001208    74.10        NA      0.394184    22.29        702.61
+   1   HLA-DPA10110-DPB10101           PKQVIKTTQL    1   KQVIKTTQL     1.000        0 T_0_1_sample_4_      0.000629    82.70        NA      0.190623    72.63       6356.80
+   2   HLA-DPA10110-DPB10101          KQVIKTTQLVP    2   VIKTTQLVP     0.590        0 T_0_1_sample_4_      0.000254    91.04        NA      0.256033    55.36       3132.41
+   2   HLA-DPA10110-DPB10101           KQVIKTTQLV    1   QVIKTTQLV     0.630        0 T_0_1_sample_4_      0.000024    99.03        NA      0.199107    70.48       5799.26
+   5   HLA-DPA10110-DPB10101            IKTTQLVPL    0   IKTTQLVPL     1.000        0 T_0_1_sample_4_      0.000022    99.11        NA      0.338806    34.07       1279.18
+   6   HLA-DPA10110-DPB10101           KTTQLVPLPP    0   KTTQLVPLP     0.560        0 T_0_1_sample_4_      0.000004    99.84        NA      0.069621    95.55      23540.91
+   3   HLA-DPA10110-DPB10101           QVIKTTQLVP    1   VIKTTQLVP     0.790        0 T_0_1_sample_4_      0.000003    99.88        NA      0.145756    83.15      10329.21
+   2   HLA-DPA10110-DPB10101            KQVIKTTQL    0   KQVIKTTQL     1.000        0 T_0_1_sample_4_      0.000001    99.96        NA      0.157165    80.58       9129.70
+   7   HLA-DPA10110-DPB10101            TTQLVPLPP    0   TTQLVPLPP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.028803    98.16      36612.18
+   6   HLA-DPA10110-DPB10101            KTTQLVPLP    0   KTTQLVPLP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.046052    97.06      30378.98
+   4   HLA-DPA10110-DPB10101            VIKTTQLVP    0   VIKTTQLVP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.084939    93.98      19945.46
+   3   HLA-DPA10110-DPB10101            QVIKTTQLV    0   QVIKTTQLV     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.077774    95.03      21553.23
+   1   HLA-DPA10110-DPB10101            PKQVIKTTQ    0   PKQVIKTTQ     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.020320    98.70      40131.64
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KKVIKTTPLVPLPP    3   IKTTPLVPL     0.920        0 T_0_1_sample_5_      0.310072     2.10        NA      0.646744     0.82         45.70   <= WB
+   1   HLA-DPA10110-DPB10101      EKKVIKTTPLVPLPP    4   IKTTPLVPL     0.890        0 T_0_1_sample_5_      0.270063     2.60        NA      0.651794     0.73         43.27   <= WB
+   2   HLA-DPA10110-DPB10101        KKVIKTTPLVPLP    3   IKTTPLVPL     0.960        0 T_0_1_sample_5_      0.230882     3.25        NA      0.590380     2.13         84.10   <= WB
+   2   HLA-DPA10110-DPB10101         KKVIKTTPLVPL    3   IKTTPLVPL     0.970        0 T_0_1_sample_5_      0.100256     8.12        NA      0.632962     1.05         53.05
+   3   HLA-DPA10110-DPB10101          KVIKTTPLVPL    2   IKTTPLVPL     0.990        0 T_0_1_sample_5_      0.021129    25.81        NA      0.562777     3.26        113.37
+   1   HLA-DPA10110-DPB10101         EKKVIKTTPLVP    1   KKVIKTTPL     0.430        0 T_0_1_sample_5_      0.008892    40.08        NA      0.314076    40.17       1671.61
+   1   HLA-DPA10110-DPB10101          EKKVIKTTPLV    1   KKVIKTTPL     0.680        0 T_0_1_sample_5_      0.002396    63.22        NA      0.243259    58.80       3596.69
+   4   HLA-DPA10110-DPB10101           VIKTTPLVPL    1   IKTTPLVPL     1.000        0 T_0_1_sample_5_      0.002108    65.23        NA      0.484083     9.11        265.63
+   5   HLA-DPA10110-DPB10101          IKTTPLVPLPP    1   KTTPLVPLP     0.420        0 T_0_1_sample_5_      0.001102    75.39        NA      0.415284    18.54        559.19
+   2   HLA-DPA10110-DPB10101          KKVIKTTPLVP    2   VIKTTPLVP     0.480        0 T_0_1_sample_5_      0.000504    84.95        NA      0.282740    48.22       2346.30
+   1   HLA-DPA10110-DPB10101           EKKVIKTTPL    1   KKVIKTTPL     1.000        0 T_0_1_sample_5_      0.000414    87.04        NA      0.203642    69.31       5521.57
+   3   HLA-DPA10110-DPB10101           KVIKTTPLVP    1   VIKTTPLVP     0.830        0 T_0_1_sample_5_      0.000032    98.71        NA      0.173989    76.69       7610.29
+   2   HLA-DPA10110-DPB10101           KKVIKTTPLV    1   KVIKTTPLV     0.840        0 T_0_1_sample_5_      0.000031    98.75        NA      0.216885    65.83       4784.47
+   5   HLA-DPA10110-DPB10101            IKTTPLVPL    0   IKTTPLVPL     1.000        0 T_0_1_sample_5_      0.000028    98.87        NA      0.356422    30.08       1057.19
+   6   HLA-DPA10110-DPB10101           KTTPLVPLPP    0   KTTPLVPLP     0.630        0 T_0_1_sample_5_      0.000003    99.88        NA      0.057465    96.33      26849.96
+   6   HLA-DPA10110-DPB10101            KTTPLVPLP    0   KTTPLVPLP     1.000        0 T_0_1_sample_5_      0.000001    99.96        NA      0.040331    97.42      32318.84
+   3   HLA-DPA10110-DPB10101            KVIKTTPLV    0   KVIKTTPLV     1.000        0 T_0_1_sample_5_      0.000001    99.96        NA      0.086806    93.70      19546.60
+   2   HLA-DPA10110-DPB10101            KKVIKTTPL    0   KKVIKTTPL     1.000        0 T_0_1_sample_5_      0.000001    99.96        NA      0.171504    77.27       7817.68
+   7   HLA-DPA10110-DPB10101            TTPLVPLPP    0   TTPLVPLPP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.022284    98.58      39287.85
+   4   HLA-DPA10110-DPB10101            VIKTTPLVP    0   VIKTTPLVP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.101433    91.47      16685.51
+   1   HLA-DPA10110-DPB10101            EKKVIKTTP    0   PTTKIVKKE     1.000        1 T_0_1_sample_5_      0.000000   100.00        NA      0.013178    99.16      43355.78
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KKVIKTTQLVPLPP    3   IKTTQLVPL     0.980        0 T_0_1_sample_6_      0.331478     1.88        NA      0.631119     1.08         54.12   <= WB
+   1   HLA-DPA10110-DPB10101      EKKVIKTTQLVPLPP    4   IKTTQLVPL     0.970        0 T_0_1_sample_6_      0.276952     2.49        NA      0.636111     1.00         51.27   <= WB
+   2   HLA-DPA10110-DPB10101        KKVIKTTQLVPLP    3   IKTTQLVPL     0.980        0 T_0_1_sample_6_      0.247224     2.96        NA      0.569102     2.95        105.87   <= WB
+   3   HLA-DPA10110-DPB10101         KVIKTTQLVPLP    2   IKTTQLVPL     0.960        0 T_0_1_sample_6_      0.105242     7.77        NA      0.585486     2.30         88.67
+   3   HLA-DPA10110-DPB10101          KVIKTTQLVPL    2   IKTTQLVPL     0.990        0 T_0_1_sample_6_      0.022801    24.71        NA      0.552553     3.78        126.63
+   1   HLA-DPA10110-DPB10101         EKKVIKTTQLVP    1   KKVIKTTQL     0.460        0 T_0_1_sample_6_      0.012548    34.19        NA      0.289368    46.54       2183.93
+   1   HLA-DPA10110-DPB10101          EKKVIKTTQLV    1   KKVIKTTQL     0.680        0 T_0_1_sample_6_      0.003645    56.00        NA      0.234069    61.26       3972.71
+   4   HLA-DPA10110-DPB10101           VIKTTQLVPL    1   IKTTQLVPL     1.000        0 T_0_1_sample_6_      0.002136    64.99        NA      0.468211    10.89        315.40
+   5   HLA-DPA10110-DPB10101          IKTTQLVPLPP    1   KTTQLVPLP     0.290        0 T_0_1_sample_6_      0.001208    74.10        NA      0.394184    22.29        702.61
+   1   HLA-DPA10110-DPB10101           EKKVIKTTQL    1   KKVIKTTQL     1.000        0 T_0_1_sample_6_      0.000509    84.86        NA      0.177386    75.90       7335.65
+   2   HLA-DPA10110-DPB10101          KKVIKTTQLVP    1   KVIKTTQLV     0.510        0 T_0_1_sample_6_      0.000324    89.15        NA      0.255945    55.39       3135.40
+   2   HLA-DPA10110-DPB10101           KKVIKTTQLV    1   KVIKTTQLV     0.800        0 T_0_1_sample_6_      0.000027    98.91        NA      0.202967    69.49       5562.04
+   5   HLA-DPA10110-DPB10101            IKTTQLVPL    0   IKTTQLVPL     1.000        0 T_0_1_sample_6_      0.000022    99.11        NA      0.338806    34.07       1279.18
+   6   HLA-DPA10110-DPB10101           KTTQLVPLPP    0   KTTQLVPLP     0.560        0 T_0_1_sample_6_      0.000004    99.84        NA      0.069621    95.55      23540.91
+   2   HLA-DPA10110-DPB10101            KKVIKTTQL    0   KKVIKTTQL     1.000        0 T_0_1_sample_6_      0.000001    99.96        NA      0.143461    83.66      10588.91
+   7   HLA-DPA10110-DPB10101            TTQLVPLPP    0   TTQLVPLPP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.028803    98.16      36612.18
+   6   HLA-DPA10110-DPB10101            KTTQLVPLP    0   KTTQLVPLP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.046052    97.06      30378.98
+   4   HLA-DPA10110-DPB10101            VIKTTQLVP    0   VIKTTQLVP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.084939    93.98      19945.46
+   3   HLA-DPA10110-DPB10101            KVIKTTQLV    0   KVIKTTQLV     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.099645    91.74      17011.44
+   1   HLA-DPA10110-DPB10101            EKKVIKTTQ    0   QTTKIVKKE     1.000        1 T_0_1_sample_6_      0.000000   100.00        NA      0.015942    98.98      42078.39
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KKVIRTTPLVPLPP    3   IRTTPLVPL     0.890        0 T_0_1_sample_7_      0.328313     1.91        NA      0.677670     0.41         32.71   <= WB
+   1   HLA-DPA10110-DPB10101      MKKVIRTTPLVPLPP    4   IRTTPLVPL     0.880        0 T_0_1_sample_7_      0.288524     2.36        NA      0.689274     0.32         28.85   <= WB
+   2   HLA-DPA10110-DPB10101        KKVIRTTPLVPLP    3   IRTTPLVPL     0.950        0 T_0_1_sample_7_      0.245947     2.98        NA      0.618190     1.37         62.25   <= WB
+   3   HLA-DPA10110-DPB10101         KVIRTTPLVPLP    2   IRTTPLVPL     0.860        0 T_0_1_sample_7_      0.122059     6.69        NA      0.628353     1.13         55.76
+   3   HLA-DPA10110-DPB10101          KVIRTTPLVPL    2   IRTTPLVPL     1.000        0 T_0_1_sample_7_      0.024527    23.68        NA      0.597258     1.92         78.07
+   1   HLA-DPA10110-DPB10101         MKKVIRTTPLVP    1   KKVIRTTPL     0.460        0 T_0_1_sample_7_      0.002390    63.26        NA      0.340629    33.65       1254.19
+   4   HLA-DPA10110-DPB10101           VIRTTPLVPL    1   IRTTPLVPL     1.000        0 T_0_1_sample_7_      0.001838    67.62        NA      0.514150     6.36        191.86
+   5   HLA-DPA10110-DPB10101          IRTTPLVPLPP    1   RTTPLVPLP     0.550        0 T_0_1_sample_7_      0.001068    75.87        NA      0.441463    14.43        421.26
+   2   HLA-DPA10110-DPB10101          KKVIRTTPLVP    2   VIRTTPLVP     0.690        0 T_0_1_sample_7_      0.000396    87.46        NA      0.298706    44.13       1974.06
+   1   HLA-DPA10110-DPB10101          MKKVIRTTPLV    1   KKVIRTTPL     0.810        0 T_0_1_sample_7_      0.000326    89.11        NA      0.292051    45.85       2121.44
+   1   HLA-DPA10110-DPB10101           MKKVIRTTPL    1   KKVIRTTPL     1.000        0 T_0_1_sample_7_      0.000060    97.58        NA      0.246143    58.02       3486.19
+   5   HLA-DPA10110-DPB10101            IRTTPLVPL    0   IRTTPLVPL     1.000        0 T_0_1_sample_7_      0.000033    98.67        NA      0.386741    23.71        761.53
+   3   HLA-DPA10110-DPB10101           KVIRTTPLVP    1   VIRTTPLVP     0.920        0 T_0_1_sample_7_      0.000031    98.75        NA      0.170880    77.41       7870.64
+   2   HLA-DPA10110-DPB10101           KKVIRTTPLV    1   KVIRTTPLV     0.650        0 T_0_1_sample_7_      0.000009    99.64        NA      0.249671    57.07       3355.63
+   6   HLA-DPA10110-DPB10101           RTTPLVPLPP    0   RTTPLVPLP     0.660        0 T_0_1_sample_7_      0.000003    99.88        NA      0.073610    95.30      22546.48
+   7   HLA-DPA10110-DPB10101            TTPLVPLPP    0   TTPLVPLPP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.022284    98.58      39287.85
+   6   HLA-DPA10110-DPB10101            RTTPLVPLP    0   RTTPLVPLP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.056888    96.36      27018.12
+   4   HLA-DPA10110-DPB10101            VIRTTPLVP    0   VIRTTPLVP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.094083    92.59      18066.61
+   3   HLA-DPA10110-DPB10101            KVIRTTPLV    0   KVIRTTPLV     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.093228    92.72      18234.53
+   2   HLA-DPA10110-DPB10101            KKVIRTTPL    0   KKVIRTTPL     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.194237    71.72       6113.03
+   1   HLA-DPA10110-DPB10101            MKKVIRTTP    0   MKKVIRTTP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.036778    97.65      33585.47
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KKQILTTQLVPLPP    3   ILTTQLVPL     1.000        0 T_0_1_sample_8_      0.405862     1.28        NA      0.658719     0.63         40.15   <= WB
+   1   HLA-DPA10110-DPB10101      EKKQILTTQLVPLPP    4   ILTTQLVPL     0.970        0 T_0_1_sample_8_      0.349966     1.71        NA      0.676037     0.43         33.29   <= WB
+   2   HLA-DPA10110-DPB10101        KKQILTTQLVPLP    3   ILTTQLVPL     0.990        0 T_0_1_sample_8_      0.309482     2.11        NA      0.590460     2.13         84.03   <= WB
+   2   HLA-DPA10110-DPB10101         KKQILTTQLVPL    3   ILTTQLVPL     0.960        0 T_0_1_sample_8_      0.143692     5.66        NA      0.652052     0.73         43.15
+   3   HLA-DPA10110-DPB10101          KQILTTQLVPL    2   ILTTQLVPL     0.990        0 T_0_1_sample_8_      0.039076    17.53        NA      0.585574     2.30         88.59
+   1   HLA-DPA10110-DPB10101         EKKQILTTQLVP    2   KQILTTQLV     0.630        0 T_0_1_sample_8_      0.013085    33.48        NA      0.341789    33.38       1238.55
+   4   HLA-DPA10110-DPB10101           QILTTQLVPL    1   ILTTQLVPL     1.000        0 T_0_1_sample_8_      0.003521    56.64        NA      0.498731     7.65        226.70
+   1   HLA-DPA10110-DPB10101          EKKQILTTQLV    1   KKQILTTQL     0.460        0 T_0_1_sample_8_      0.002996    59.34        NA      0.293788    45.40       2081.94
+   2   HLA-DPA10110-DPB10101          KKQILTTQLVP    1   KQILTTQLV     0.730        0 T_0_1_sample_8_      0.001192    74.29        NA      0.309458    41.32       1757.26
+   1   HLA-DPA10110-DPB10101           EKKQILTTQL    1   KKQILTTQL     0.990        0 T_0_1_sample_8_      0.000502    84.98        NA      0.185254    73.99       6737.01
+   2   HLA-DPA10110-DPB10101           KKQILTTQLV    1   KQILTTQLV     0.930        0 T_0_1_sample_8_      0.000080    96.77        NA      0.262781    53.54       2911.86
+   5   HLA-DPA10110-DPB10101            ILTTQLVPL    0   ILTTQLVPL     1.000        0 T_0_1_sample_8_      0.000014    99.44        NA      0.370540    27.05        907.43
+   2   HLA-DPA10110-DPB10101            KKQILTTQL    0   KKQILTTQL     1.000        0 T_0_1_sample_8_      0.000001    99.96        NA      0.148907    82.44       9982.99
+   6   HLA-DPA10110-DPB10101           LTTQLVPLPP    1   TTQLVPLPP     0.500        0 T_0_1_sample_8_      0.000001    99.96        NA      0.111194    89.97      15013.18
+   7   HLA-DPA10110-DPB10101            TTQLVPLPP    0   TTQLVPLPP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.028803    98.16      36612.18
+   6   HLA-DPA10110-DPB10101            LTTQLVPLP    0   LTTQLVPLP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.087705    93.56      19357.39
+   4   HLA-DPA10110-DPB10101            QILTTQLVP    0   QILTTQLVP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.065565    95.81      24597.00
+   3   HLA-DPA10110-DPB10101            KQILTTQLV    0   KQILTTQLV     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.178845    75.56       7220.76
+   1   HLA-DPA10110-DPB10101            EKKQILTTQ    0   EKKQILTTQ     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.030617    98.04      35900.59
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KKQILTTQLVPLPP    3   ILTTQLVPL     1.000        0 T_0_1_sample_9_      0.405862     1.28        NA      0.658719     0.63         40.15   <= WB
+   1   HLA-DPA10110-DPB10101      PKKQILTTQLVPLPP    4   ILTTQLVPL     0.970        0 T_0_1_sample_9_      0.349943     1.71        NA      0.675915     0.43         33.33   <= WB
+   2   HLA-DPA10110-DPB10101        KKQILTTQLVPLP    3   ILTTQLVPL     0.990        0 T_0_1_sample_9_      0.309482     2.11        NA      0.590460     2.13         84.03   <= WB
+   2   HLA-DPA10110-DPB10101         KKQILTTQLVPL    3   ILTTQLVPL     0.960        0 T_0_1_sample_9_      0.143692     5.66        NA      0.652052     0.73         43.15
+   3   HLA-DPA10110-DPB10101          KQILTTQLVPL    2   ILTTQLVPL     0.990        0 T_0_1_sample_9_      0.039076    17.53        NA      0.585574     2.30         88.59
+   1   HLA-DPA10110-DPB10101         PKKQILTTQLVP    2   KQILTTQLV     0.620        0 T_0_1_sample_9_      0.012725    33.96        NA      0.337431    34.39       1298.35
+   4   HLA-DPA10110-DPB10101           QILTTQLVPL    1   ILTTQLVPL     1.000        0 T_0_1_sample_9_      0.003521    56.64        NA      0.498731     7.65        226.70
+   1   HLA-DPA10110-DPB10101          PKKQILTTQLV    1   KKQILTTQL     0.470        0 T_0_1_sample_9_      0.002843    60.17        NA      0.289227    46.58       2187.26
+   2   HLA-DPA10110-DPB10101          KKQILTTQLVP    1   KQILTTQLV     0.730        0 T_0_1_sample_9_      0.001192    74.29        NA      0.309458    41.32       1757.26
+   1   HLA-DPA10110-DPB10101           PKKQILTTQL    1   KKQILTTQL     0.980        0 T_0_1_sample_9_      0.000468    85.77        NA      0.180213    75.24       7114.67
+   2   HLA-DPA10110-DPB10101           KKQILTTQLV    1   KQILTTQLV     0.930        0 T_0_1_sample_9_      0.000080    96.77        NA      0.262781    53.54       2911.86
+   5   HLA-DPA10110-DPB10101            ILTTQLVPL    0   ILTTQLVPL     1.000        0 T_0_1_sample_9_      0.000014    99.44        NA      0.370540    27.05        907.43
+   2   HLA-DPA10110-DPB10101            KKQILTTQL    0   KKQILTTQL     1.000        0 T_0_1_sample_9_      0.000001    99.96        NA      0.148907    82.44       9982.99
+   6   HLA-DPA10110-DPB10101           LTTQLVPLPP    1   TTQLVPLPP     0.500        0 T_0_1_sample_9_      0.000001    99.96        NA      0.111194    89.97      15013.18
+   7   HLA-DPA10110-DPB10101            TTQLVPLPP    0   TTQLVPLPP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.028803    98.16      36612.18
+   6   HLA-DPA10110-DPB10101            LTTQLVPLP    0   LTTQLVPLP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.087705    93.56      19357.39
+   4   HLA-DPA10110-DPB10101            QILTTQLVP    0   QILTTQLVP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.065565    95.81      24597.00
+   3   HLA-DPA10110-DPB10101            KQILTTQLV    0   KQILTTQLV     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.178845    75.56       7220.76
+   1   HLA-DPA10110-DPB10101            PKKQILTTQ    0   PKKQILTTQ     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.024868    98.41      38204.63
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DPA10110-DPB10101       KKQILTTPLVPLPP    3   ILTTPLVPL     0.980        0 T_0_1_sample_10      0.414816     1.22        NA      0.684869     0.35         30.25   <= WB
+   1   HLA-DPA10110-DPB10101      AKKQILTTPLVPLPP    4   ILTTPLVPL     0.960        0 T_0_1_sample_10      0.348729     1.72        NA      0.695320     0.28         27.02   <= WB
+   2   HLA-DPA10110-DPB10101        KKQILTTPLVPLP    3   ILTTPLVPL     0.980        0 T_0_1_sample_10      0.316087     2.03        NA      0.623640     1.24         58.68   <= WB
+   2   HLA-DPA10110-DPB10101         KKQILTTPLVPL    3   ILTTPLVPL     0.960        0 T_0_1_sample_10      0.159048     5.10        NA      0.672131     0.46         34.73
+   3   HLA-DPA10110-DPB10101          KQILTTPLVPL    2   ILTTPLVPL     1.000        0 T_0_1_sample_10      0.047159    15.25        NA      0.612763     1.50         66.01
+   1   HLA-DPA10110-DPB10101         AKKQILTTPLVP    3   QILTTPLVP     0.320        0 T_0_1_sample_10      0.010077    37.94        NA      0.320142    38.63       1565.42
+   4   HLA-DPA10110-DPB10101           QILTTPLVPL    1   ILTTPLVPL     1.000        0 T_0_1_sample_10      0.007285    43.54        NA      0.532663     4.95        157.04
+   2   HLA-DPA10110-DPB10101          KKQILTTPLVP    1   KQILTTPLV     0.540        0 T_0_1_sample_10      0.001726    68.62        NA      0.278145    49.43       2465.90
+   1   HLA-DPA10110-DPB10101          AKKQILTTPLV    1   KKQILTTPL     0.500        0 T_0_1_sample_10      0.001477    71.05        NA      0.288922    46.65       2194.49
+   1   HLA-DPA10110-DPB10101           AKKQILTTPL    1   KKQILTTPL     1.000        0 T_0_1_sample_10      0.000263    90.76        NA      0.204921    68.97       5445.68
+   2   HLA-DPA10110-DPB10101           KKQILTTPLV    1   KQILTTPLV     0.900        0 T_0_1_sample_10      0.000089    96.41        NA      0.245201    58.27       3521.91
+   3   HLA-DPA10110-DPB10101           KQILTTPLVP    1   QILTTPLVP     0.780        0 T_0_1_sample_10      0.000035    98.59        NA      0.198325    70.68       5848.53
+   5   HLA-DPA10110-DPB10101            ILTTPLVPL    0   ILTTPLVPL     1.000        0 T_0_1_sample_10      0.000025    98.99        NA      0.403174    20.67        637.48
+   3   HLA-DPA10110-DPB10101            KQILTTPLV    0   KQILTTPLV     1.000        0 T_0_1_sample_10      0.000001    99.96        NA      0.162044    79.47       8660.25
+   2   HLA-DPA10110-DPB10101            KKQILTTPL    0   KKQILTTPL     1.000        0 T_0_1_sample_10      0.000001    99.96        NA      0.152693    81.59       9582.31
+   6   HLA-DPA10110-DPB10101           LTTPLVPLPP    1   TTPLVPLPP     0.610        0 T_0_1_sample_10      0.000001    99.96        NA      0.100330    91.63      16885.83
+   7   HLA-DPA10110-DPB10101            TTPLVPLPP    0   TTPLVPLPP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.022284    98.58      39287.85
+   6   HLA-DPA10110-DPB10101            LTTPLVPLP    0   LTTPLVPLP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.080064    94.72      21025.76
+   4   HLA-DPA10110-DPB10101            QILTTPLVP    0   QILTTPLVP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.075986    95.14      21974.24
+   1   HLA-DPA10110-DPB10101            AKKQILTTP    0   AKKQILTTP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.021668    98.62      39550.56
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------

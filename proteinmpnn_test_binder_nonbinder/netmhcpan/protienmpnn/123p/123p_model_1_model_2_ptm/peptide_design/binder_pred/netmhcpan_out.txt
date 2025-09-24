@@ -1,0 +1,304 @@
+# NetMHCIIpan version 4.3f
+
+# Input is in FASTA format
+
+# Peptide length 9,10,11,12,13,14,15,16,17,18
+
+# Prediction Mode: EL+BA
+
+# Threshold for Strong binding peptides (%Rank)  1.00%
+# Threshold for Weak binding peptides (%Rank)    5.00%
+
+# HLA-DQA10101-DQB10201 : Distance to training data  0.251 (using nearest neighbor HLA-DQA10201-DQB10202)
+
+# Allele: HLA-DQA10101-DQB10201
+# Warning: This DQA-DQB pairing is likely non-functional
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201      ASIIRLVGAVLAEQH    3   IRLVGAVLA     0.590        0 multichain_123p      0.010033     2.93        NA      0.304202     0.83       1860.09   <= WB
+   1   HLA-DQA10101-DQB10201       ASIIRLVGAVLAEQ    3   IRLVGAVLA     0.630        0 multichain_123p      0.006854     5.16        NA      0.285483     1.67       2277.69
+   2   HLA-DQA10101-DQB10201        SIIRLVGAVLAEQ    2   IRLVGAVLA     0.600        0 multichain_123p      0.005221     7.29        NA      0.259021     3.81       3032.76
+   3   HLA-DQA10101-DQB10201        IIRLVGAVLAEQH    3   LVGAVLAEQ     0.440        0 multichain_123p      0.001869    20.49        NA      0.278795     2.08       2448.62
+   2   HLA-DQA10101-DQB10201         SIIRLVGAVLAE    2   IRLVGAVLA     0.700        0 multichain_123p      0.001733    21.79        NA      0.209035    14.43       5208.60
+   4   HLA-DQA10101-DQB10201         IRLVGAVLAEQH    2   LVGAVLAEQ     0.550        0 multichain_123p      0.000898    35.00        NA      0.299312     1.01       1961.16
+   5   HLA-DQA10101-DQB10201          RLVGAVLAEQH    1   LVGAVLAEQ     0.560        0 multichain_123p      0.000287    62.70        NA      0.235063     7.61       3930.21
+   3   HLA-DQA10101-DQB10201          IIRLVGAVLAE    1   IRLVGAVLA     0.700        0 multichain_123p      0.000086    85.81        NA      0.183027    24.44       6901.31
+   5   HLA-DQA10101-DQB10201           RLVGAVLAEQ    1   LVGAVLAEQ     0.920        0 multichain_123p      0.000024    96.36        NA      0.183691    24.12       6851.91
+   6   HLA-DQA10101-DQB10201           LVGAVLAEQH    1   VGAVLAEQH     0.660        0 multichain_123p      0.000019    97.12        NA      0.191324    20.91       6308.76
+   3   HLA-DQA10101-DQB10201           IIRLVGAVLA    1   IRLVGAVLA     0.950        0 multichain_123p      0.000009    98.64        NA      0.140460    47.25      10938.37
+   1   HLA-DQA10101-DQB10201          ASIIRLVGAVL    2   IIRLVGAVL     0.880        0 multichain_123p      0.000008    98.79        NA      0.086540    79.08      19602.94
+   7   HLA-DQA10101-DQB10201            VGAVLAEQH    0   VGAVLAEQH     1.000        0 multichain_123p      0.000001    99.85        NA      0.092660    75.82      18346.93
+   6   HLA-DQA10101-DQB10201            LVGAVLAEQ    0   LVGAVLAEQ     1.000        0 multichain_123p      0.000001    99.85        NA      0.137962    48.79      11238.04
+   2   HLA-DQA10101-DQB10201           SIIRLVGAVL    1   IIRLVGAVL     1.000        0 multichain_123p      0.000001    99.85        NA      0.062254    90.19      25494.13
+   5   HLA-DQA10101-DQB10201            RLVGAVLAE    0   RLVGAVLAE     1.000        0 multichain_123p      0.000000   100.00        NA      0.067686    87.93      24038.95
+   4   HLA-DQA10101-DQB10201            IRLVGAVLA    0   IRLVGAVLA     1.000        0 multichain_123p      0.000000   100.00        NA      0.114441    63.18      14494.90
+   3   HLA-DQA10101-DQB10201            IIRLVGAVL    0   IIRLVGAVL     1.000        0 multichain_123p      0.000000   100.00        NA      0.048891    94.63      29459.99
+   2   HLA-DQA10101-DQB10201            SIIRLVGAV    0   SIIRLVGAV     1.000        0 multichain_123p      0.000000   100.00        NA      0.012232    98.72      43801.82
+   1   HLA-DQA10101-DQB10201            ASIIRLVGA    0   ASIIRLVGA     1.000        0 multichain_123p      0.000000   100.00        NA      0.035403    96.29      34088.85
+   1   HLA-DQA10101-DQB10201           ASIIRLVGAV    0   ASIIRLVGA     0.670        0 multichain_123p      0.000000   100.00        NA      0.045738    95.21      30482.36
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 1
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DQA10101-DQB10201       PVLRSVSLLPLNEE    2   LRSVSLLPL     0.600        0 T_0_1_sample_1_      0.013857     1.64        NA      0.256640     4.10       3111.91   <= WB
+   1   HLA-DQA10101-DQB10201      LPVLRSVSLLPLNEE    3   LRSVSLLPL     0.660        0 T_0_1_sample_1_      0.013829     1.65        NA      0.264529     3.21       2857.30   <= WB
+   2   HLA-DQA10101-DQB10201        PVLRSVSLLPLNE    2   LRSVSLLPL     0.680        0 T_0_1_sample_1_      0.012646     1.95        NA      0.225122     9.88       4376.52   <= WB
+   2   HLA-DQA10101-DQB10201         PVLRSVSLLPLN    2   LRSVSLLPL     0.830        0 T_0_1_sample_1_      0.006603     5.42        NA      0.242510     6.20       3625.96
+   4   HLA-DQA10101-DQB10201         LRSVSLLPLNEE    2   SVSLLPLNE     0.320        0 T_0_1_sample_1_      0.001299    27.18        NA      0.236983     7.23       3849.41
+   2   HLA-DQA10101-DQB10201          PVLRSVSLLPL    2   LRSVSLLPL     0.980        0 T_0_1_sample_1_      0.000967    33.42        NA      0.232015     8.24       4061.99
+   4   HLA-DQA10101-DQB10201          LRSVSLLPLNE    2   SVSLLPLNE     0.380        0 T_0_1_sample_1_      0.000496    49.05        NA      0.197089    18.64       5927.27
+   3   HLA-DQA10101-DQB10201           VLRSVSLLPL    1   LRSVSLLPL     1.000        0 T_0_1_sample_1_      0.000188    72.22        NA      0.211170    13.77       5089.66
+   5   HLA-DQA10101-DQB10201           RSVSLLPLNE    1   SVSLLPLNE     0.750        0 T_0_1_sample_1_      0.000069    88.55        NA      0.095520    74.26      17787.88
+   6   HLA-DQA10101-DQB10201           SVSLLPLNEE    1   VSLLPLNEE     0.780        0 T_0_1_sample_1_      0.000017    97.42        NA      0.121511    58.89      13427.45
+   4   HLA-DQA10101-DQB10201           LRSVSLLPLN    1   RSVSLLPLN     0.440        0 T_0_1_sample_1_      0.000015    97.73        NA      0.182934    24.49       6908.26
+   4   HLA-DQA10101-DQB10201            LRSVSLLPL    0   LRSVSLLPL     1.000        0 T_0_1_sample_1_      0.000002    99.70        NA      0.165238    33.11       8366.07
+   1   HLA-DQA10101-DQB10201          LPVLRSVSLLP    2   VLRSVSLLP     0.640        0 T_0_1_sample_1_      0.000002    99.70        NA      0.081759    81.49      20643.68
+   7   HLA-DQA10101-DQB10201            VSLLPLNEE    0   VSLLPLNEE     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.085100    79.85      19910.75
+   6   HLA-DQA10101-DQB10201            SVSLLPLNE    0   SVSLLPLNE     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.050194    94.20      29047.57
+   5   HLA-DQA10101-DQB10201            RSVSLLPLN    0   RSVSLLPLN     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.067473    88.02      24094.42
+   3   HLA-DQA10101-DQB10201            VLRSVSLLP    0   VLRSVSLLP     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.042276    95.58      31645.81
+   2   HLA-DQA10101-DQB10201            PVLRSVSLL    0   PVLRSVSLL     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.020453    97.86      40073.95
+   1   HLA-DQA10101-DQB10201            LPVLRSVSL    0   LPVLRSVSL     1.000        0 T_0_1_sample_1_      0.000000   100.00        NA      0.032873    96.56      35034.90
+   2   HLA-DQA10101-DQB10201           PVLRSVSLLP    1   VLRSVSLLP     0.880        0 T_0_1_sample_1_      0.000000   100.00        NA      0.061525    90.43      25696.02
+   1   HLA-DQA10101-DQB10201           LPVLRSVSLL    1   PVLRSVSLL     0.570        0 T_0_1_sample_1_      0.000000   100.00        NA      0.047291    95.05      29974.44
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DQA10101-DQB10201       PVLRSVALLPLNEE    2   LRSVALLPL     0.570        0 T_0_1_sample_2_      0.010040     2.92        NA      0.273720     2.42       2586.83   <= WB
+   2   HLA-DQA10101-DQB10201        PVLRSVALLPLNE    2   LRSVALLPL     0.700        0 T_0_1_sample_2_      0.009118     3.41        NA      0.243254     6.07       3596.89   <= WB
+   1   HLA-DQA10101-DQB10201      LPVLRSVALLPLNEE    3   LRSVALLPL     0.610        0 T_0_1_sample_2_      0.007876     4.27        NA      0.281951     1.88       2366.41   <= WB
+   2   HLA-DQA10101-DQB10201         PVLRSVALLPLN    2   LRSVALLPL     0.800        0 T_0_1_sample_2_      0.003300    12.24        NA      0.256474     4.13       3117.50
+   3   HLA-DQA10101-DQB10201         VLRSVALLPLNE    3   SVALLPLNE     0.170        0 T_0_1_sample_2_      0.001669    22.45        NA      0.253146     4.56       3231.80
+   2   HLA-DQA10101-DQB10201          PVLRSVALLPL    2   LRSVALLPL     0.950        0 T_0_1_sample_2_      0.000817    37.14        NA      0.240130     6.63       3720.54
+   4   HLA-DQA10101-DQB10201          LRSVALLPLNE    2   SVALLPLNE     0.320        0 T_0_1_sample_2_      0.000429    52.79        NA      0.206115    15.37       5375.78
+   3   HLA-DQA10101-DQB10201           VLRSVALLPL    1   LRSVALLPL     1.000        0 T_0_1_sample_2_      0.000145    77.37        NA      0.216230    12.28       4818.50
+   5   HLA-DQA10101-DQB10201           RSVALLPLNE    1   SVALLPLNE     0.670        0 T_0_1_sample_2_      0.000096    84.26        NA      0.105702    68.44      15932.34
+   6   HLA-DQA10101-DQB10201           SVALLPLNEE    1   VALLPLNEE     0.860        0 T_0_1_sample_2_      0.000022    96.67        NA      0.140249    47.38      10963.37
+   1   HLA-DQA10101-DQB10201          LPVLRSVALLP    2   VLRSVALLP     0.700        0 T_0_1_sample_2_      0.000006    99.09        NA      0.105575    68.51      15954.24
+   4   HLA-DQA10101-DQB10201            LRSVALLPL    0   LRSVALLPL     1.000        0 T_0_1_sample_2_      0.000003    99.55        NA      0.165678    32.88       8326.34
+   2   HLA-DQA10101-DQB10201           PVLRSVALLP    1   VLRSVALLP     0.930        0 T_0_1_sample_2_      0.000002    99.70        NA      0.085879    79.43      19743.64
+   7   HLA-DQA10101-DQB10201            VALLPLNEE    0   VALLPLNEE     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.099510    72.02      17036.31
+   6   HLA-DQA10101-DQB10201            SVALLPLNE    0   SVALLPLNE     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.057929    91.63      26715.51
+   5   HLA-DQA10101-DQB10201            RSVALLPLN    0   RSVALLPLN     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.073206    85.58      22645.25
+   3   HLA-DQA10101-DQB10201            VLRSVALLP    0   VLRSVALLP     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.062814    90.01      25340.13
+   2   HLA-DQA10101-DQB10201            PVLRSVALL    0   PVLRSVALL     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.025324    97.35      38016.61
+   1   HLA-DQA10101-DQB10201            LPVLRSVAL    0   LPVLRSVAL     1.000        0 T_0_1_sample_2_      0.000000   100.00        NA      0.035812    96.25      33938.32
+   1   HLA-DQA10101-DQB10201           LPVLRSVALL    1   PVLRSVALL     0.610        0 T_0_1_sample_2_      0.000000   100.00        NA      0.052142    93.55      28441.74
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201       MPVLRSVQLKPLNE    3   LRSVQLKPL     0.890        0 T_0_1_sample_3_      0.007036     4.98        NA      0.151285    40.84       9729.41   <= WB
+   1   HLA-DQA10101-DQB10201      MPVLRSVQLKPLNEE    3   LRSVQLKPL     0.840        0 T_0_1_sample_3_      0.006106     5.98        NA      0.163112    34.28       8560.75
+   1   HLA-DQA10101-DQB10201        MPVLRSVQLKPLN    3   LRSVQLKPL     0.940        0 T_0_1_sample_3_      0.005445     6.90        NA      0.135009    50.62      11602.91
+   2   HLA-DQA10101-DQB10201         PVLRSVQLKPLN    2   LRSVQLKPL     0.940        0 T_0_1_sample_3_      0.002868    13.94        NA      0.141972    46.33      10760.88
+   2   HLA-DQA10101-DQB10201          PVLRSVQLKPL    2   LRSVQLKPL     0.990        0 T_0_1_sample_3_      0.000444    51.92        NA      0.133116    51.79      11843.00
+   4   HLA-DQA10101-DQB10201         LRSVQLKPLNEE    2   SVQLKPLNE     0.510        0 T_0_1_sample_3_      0.000288    62.62        NA      0.126963    55.56      12658.28
+   5   HLA-DQA10101-DQB10201          RSVQLKPLNEE    1   SVQLKPLNE     0.630        0 T_0_1_sample_3_      0.000097    84.12        NA      0.080254    82.22      20982.57
+   5   HLA-DQA10101-DQB10201           RSVQLKPLNE    1   SVQLKPLNE     0.900        0 T_0_1_sample_3_      0.000019    97.12        NA      0.046996    95.08      30070.26
+   3   HLA-DQA10101-DQB10201           VLRSVQLKPL    1   LRSVQLKPL     1.000        0 T_0_1_sample_3_      0.000012    98.18        NA      0.111802    64.78      14914.75
+   1   HLA-DQA10101-DQB10201          MPVLRSVQLKP    2   VLRSVQLKP     0.560        0 T_0_1_sample_3_      0.000001    99.85        NA      0.071626    86.25      23035.71
+   7   HLA-DQA10101-DQB10201            VQLKPLNEE    0   VQLKPLNEE     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.040509    95.76      32256.67
+   6   HLA-DQA10101-DQB10201            SVQLKPLNE    0   SVQLKPLNE     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.024925    97.39      38181.08
+   5   HLA-DQA10101-DQB10201            RSVQLKPLN    0   RSVQLKPLN     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.022269    97.67      39294.21
+   4   HLA-DQA10101-DQB10201            LRSVQLKPL    0   LRSVQLKPL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.074505    85.02      22329.21
+   3   HLA-DQA10101-DQB10201            VLRSVQLKP    0   VLRSVQLKP     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.027276    97.15      37222.11
+   2   HLA-DQA10101-DQB10201            PVLRSVQLK    0   PVLRSVQLK     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.015845    98.34      42122.57
+   1   HLA-DQA10101-DQB10201            MPVLRSVQL    0   MPVLRSVQL     1.000        0 T_0_1_sample_3_      0.000000   100.00        NA      0.038092    96.01      33111.34
+   2   HLA-DQA10101-DQB10201           PVLRSVQLKP    1   VLRSVQLKP     0.900        0 T_0_1_sample_3_      0.000000   100.00        NA      0.044299    95.36      30960.67
+   1   HLA-DQA10101-DQB10201           MPVLRSVQLK    0   MPVLRSVQL     0.640        0 T_0_1_sample_3_      0.000000   100.00        NA      0.049462    94.44      29278.54
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 1
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201      MPVLRSVALRPLNEK    3   LRSVALRPL     0.810        0 T_0_1_sample_4_      0.005356     7.04        NA      0.203684    16.21       5519.06
+   2   HLA-DQA10101-DQB10201       PVLRSVALRPLNEK    2   LRSVALRPL     0.760        0 T_0_1_sample_4_      0.004630     8.46        NA      0.181714    25.09       7000.05
+   2   HLA-DQA10101-DQB10201        PVLRSVALRPLNE    2   LRSVALRPL     0.790        0 T_0_1_sample_4_      0.004329     9.15        NA      0.175707    27.91       7470.13
+   2   HLA-DQA10101-DQB10201         PVLRSVALRPLN    2   LRSVALRPL     0.890        0 T_0_1_sample_4_      0.002052    18.95        NA      0.189563    21.63       6430.12
+   3   HLA-DQA10101-DQB10201        VLRSVALRPLNEK    3   SVALRPLNE     0.300        0 T_0_1_sample_4_      0.001343    26.53        NA      0.155307    38.52       9315.09
+   3   HLA-DQA10101-DQB10201         VLRSVALRPLNE    3   SVALRPLNE     0.270        0 T_0_1_sample_4_      0.000846    36.37        NA      0.186803    22.78       6625.04
+   2   HLA-DQA10101-DQB10201          PVLRSVALRPL    2   LRSVALRPL     0.910        0 T_0_1_sample_4_      0.000376    56.06        NA      0.181809    25.04       6992.86
+   4   HLA-DQA10101-DQB10201          LRSVALRPLNE    2   SVALRPLNE     0.550        0 T_0_1_sample_4_      0.000187    72.33        NA      0.139880    47.61      11007.23
+   5   HLA-DQA10101-DQB10201           RSVALRPLNE    1   SVALRPLNE     0.920        0 T_0_1_sample_4_      0.000046    92.59        NA      0.071845    86.16      22981.19
+   3   HLA-DQA10101-DQB10201           VLRSVALRPL    1   LRSVALRPL     0.980        0 T_0_1_sample_4_      0.000019    97.12        NA      0.153318    39.65       9517.73
+   1   HLA-DQA10101-DQB10201          MPVLRSVALRP    2   VLRSVALRP     0.790        0 T_0_1_sample_4_      0.000009    98.64        NA      0.104520    69.15      16137.40
+   2   HLA-DQA10101-DQB10201           PVLRSVALRP    1   VLRSVALRP     0.940        0 T_0_1_sample_4_      0.000002    99.70        NA      0.081704    81.52      20655.96
+   7   HLA-DQA10101-DQB10201            VALRPLNEK    0   VALRPLNEK     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.020824    97.82      39913.39
+   6   HLA-DQA10101-DQB10201            SVALRPLNE    0   SVALRPLNE     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.046032    95.18      30385.54
+   5   HLA-DQA10101-DQB10201            RSVALRPLN    0   RSVALRPLN     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.027995    97.07      36933.66
+   4   HLA-DQA10101-DQB10201            LRSVALRPL    0   LRSVALRPL     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.099332    72.12      17069.16
+   3   HLA-DQA10101-DQB10201            VLRSVALRP    0   VLRSVALRP     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.056185    92.21      27224.40
+   2   HLA-DQA10101-DQB10201            PVLRSVALR    0   PVLRSVALR     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.012594    98.68      43630.61
+   1   HLA-DQA10101-DQB10201            MPVLRSVAL    0   MPVLRSVAL     1.000        0 T_0_1_sample_4_      0.000000   100.00        NA      0.034790    96.36      34315.71
+   1   HLA-DQA10101-DQB10201           MPVLRSVALR    0   MPVLRSVAL     0.600        0 T_0_1_sample_4_      0.000000   100.00        NA      0.043802    95.42      31127.60
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201      MPVLRSVQLLPLNEE    3   LRSVQLLPL     0.750        0 T_0_1_sample_5_      0.017501     1.02        NA      0.275831     2.28       2528.42   <= WB
+   1   HLA-DQA10101-DQB10201       MPVLRSVQLLPLNE    3   LRSVQLLPL     0.830        0 T_0_1_sample_5_      0.015599     1.29        NA      0.250098     4.99       3340.16   <= WB
+   2   HLA-DQA10101-DQB10201        PVLRSVQLLPLNE    2   LRSVQLLPL     0.810        0 T_0_1_sample_5_      0.013300     1.77        NA      0.225984     9.66       4335.89   <= WB
+   2   HLA-DQA10101-DQB10201         PVLRSVQLLPLN    2   LRSVQLLPL     0.880        0 T_0_1_sample_5_      0.007832     4.31        NA      0.249699     5.05       3354.61   <= WB
+   2   HLA-DQA10101-DQB10201          PVLRSVQLLPL    2   LRSVQLLPL     1.000        0 T_0_1_sample_5_      0.000948    33.84        NA      0.235339     7.56       3918.49
+   4   HLA-DQA10101-DQB10201         LRSVQLLPLNEE    1   RSVQLLPLN     0.190        0 T_0_1_sample_5_      0.000757    38.85        NA      0.237037     7.22       3847.16
+   5   HLA-DQA10101-DQB10201          RSVQLLPLNEE    1   SVQLLPLNE     0.290        0 T_0_1_sample_5_      0.000244    66.47        NA      0.156066    38.09       9238.91
+   4   HLA-DQA10101-DQB10201          LRSVQLLPLNE    1   RSVQLLPLN     0.380        0 T_0_1_sample_5_      0.000177    73.44        NA      0.192136    20.57       6253.58
+   3   HLA-DQA10101-DQB10201           VLRSVQLLPL    1   LRSVQLLPL     1.000        0 T_0_1_sample_5_      0.000113    81.76        NA      0.213458    13.06       4965.21
+   5   HLA-DQA10101-DQB10201           RSVQLLPLNE    1   SVQLLPLNE     0.750        0 T_0_1_sample_5_      0.000028    95.76        NA      0.082207    81.27      20543.84
+   6   HLA-DQA10101-DQB10201           SVQLLPLNEE    1   VQLLPLNEE     0.860        0 T_0_1_sample_5_      0.000021    96.82        NA      0.128029    54.91      12513.12
+   4   HLA-DQA10101-DQB10201            LRSVQLLPL    0   LRSVQLLPL     1.000        0 T_0_1_sample_5_      0.000001    99.85        NA      0.161240    35.33       8735.91
+   1   HLA-DQA10101-DQB10201          MPVLRSVQLLP    2   VLRSVQLLP     0.490        0 T_0_1_sample_5_      0.000001    99.85        NA      0.094655    74.74      17955.15
+   7   HLA-DQA10101-DQB10201            VQLLPLNEE    0   VQLLPLNEE     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.094464    74.85      17992.29
+   6   HLA-DQA10101-DQB10201            SVQLLPLNE    0   SVQLLPLNE     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.045990    95.19      30399.36
+   5   HLA-DQA10101-DQB10201            RSVQLLPLN    0   RSVQLLPLN     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.055391    92.47      27459.29
+   3   HLA-DQA10101-DQB10201            VLRSVQLLP    0   VLRSVQLLP     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.043354    95.46      31278.87
+   2   HLA-DQA10101-DQB10201            PVLRSVQLL    0   PVLRSVQLL     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.032871    96.56      35035.64
+   1   HLA-DQA10101-DQB10201            MPVLRSVQL    0   MPVLRSVQL     1.000        0 T_0_1_sample_5_      0.000000   100.00        NA      0.038092    96.01      33111.34
+   2   HLA-DQA10101-DQB10201           PVLRSVQLLP    1   VLRSVQLLP     0.800        0 T_0_1_sample_5_      0.000000   100.00        NA      0.067319    88.09      24134.60
+   1   HLA-DQA10101-DQB10201           MPVLRSVQLL    1   PVLRSVQLL     0.610        0 T_0_1_sample_5_      0.000000   100.00        NA      0.066662    88.37      24306.77
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DQA10101-DQB10201        PVLRSVALRPLNE    2   LRSVALRPL     0.790        0 T_0_1_sample_6_      0.004329     9.15        NA      0.175707    27.91       7470.13
+   2   HLA-DQA10101-DQB10201       PVLRSVALRPLNEE    2   LRSVALRPL     0.760        0 T_0_1_sample_6_      0.004210     9.44        NA      0.187445    22.51       6579.18
+   1   HLA-DQA10101-DQB10201      LPVLRSVALRPLNEE    3   LRSVALRPL     0.780        0 T_0_1_sample_6_      0.004040     9.91        NA      0.207632    14.87       5288.27
+   2   HLA-DQA10101-DQB10201         PVLRSVALRPLN    2   LRSVALRPL     0.890        0 T_0_1_sample_6_      0.002052    18.95        NA      0.189563    21.63       6430.12
+   3   HLA-DQA10101-DQB10201        VLRSVALRPLNEE    3   SVALRPLNE     0.300        0 T_0_1_sample_6_      0.001252    27.95        NA      0.161574    35.15       8704.40
+   3   HLA-DQA10101-DQB10201         VLRSVALRPLNE    3   SVALRPLNE     0.270        0 T_0_1_sample_6_      0.000846    36.37        NA      0.186803    22.78       6625.04
+   2   HLA-DQA10101-DQB10201          PVLRSVALRPL    2   LRSVALRPL     0.910        0 T_0_1_sample_6_      0.000376    56.06        NA      0.181809    25.04       6992.86
+   4   HLA-DQA10101-DQB10201          LRSVALRPLNE    2   SVALRPLNE     0.550        0 T_0_1_sample_6_      0.000187    72.33        NA      0.139880    47.61      11007.23
+   5   HLA-DQA10101-DQB10201           RSVALRPLNE    1   SVALRPLNE     0.920        0 T_0_1_sample_6_      0.000046    92.59        NA      0.071845    86.16      22981.19
+   3   HLA-DQA10101-DQB10201           VLRSVALRPL    1   LRSVALRPL     0.980        0 T_0_1_sample_6_      0.000019    97.12        NA      0.153318    39.65       9517.73
+   1   HLA-DQA10101-DQB10201          LPVLRSVALRP    2   VLRSVALRP     0.760        0 T_0_1_sample_6_      0.000007    98.94        NA      0.106292    68.08      15830.95
+   2   HLA-DQA10101-DQB10201           PVLRSVALRP    1   VLRSVALRP     0.940        0 T_0_1_sample_6_      0.000002    99.70        NA      0.081704    81.52      20655.96
+   7   HLA-DQA10101-DQB10201            VALRPLNEE    0   VALRPLNEE     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.038400    95.98      33001.19
+   6   HLA-DQA10101-DQB10201            SVALRPLNE    0   SVALRPLNE     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.046032    95.18      30385.54
+   5   HLA-DQA10101-DQB10201            RSVALRPLN    0   RSVALRPLN     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.027995    97.07      36933.66
+   4   HLA-DQA10101-DQB10201            LRSVALRPL    0   LRSVALRPL     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.099332    72.12      17069.16
+   3   HLA-DQA10101-DQB10201            VLRSVALRP    0   VLRSVALRP     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.056185    92.21      27224.40
+   2   HLA-DQA10101-DQB10201            PVLRSVALR    0   PVLRSVALR     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.012594    98.68      43630.61
+   1   HLA-DQA10101-DQB10201            LPVLRSVAL    0   LPVLRSVAL     1.000        0 T_0_1_sample_6_      0.000000   100.00        NA      0.035812    96.25      33938.32
+   1   HLA-DQA10101-DQB10201           LPVLRSVALR    1   PVLRSVALR     0.420        0 T_0_1_sample_6_      0.000000   100.00        NA      0.044326    95.36      30951.62
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 0
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   2   HLA-DQA10101-DQB10201       PVLRSVSLLPLNEE    2   LRSVSLLPL     0.600        0 T_0_1_sample_7_      0.013857     1.64        NA      0.256640     4.10       3111.91   <= WB
+   1   HLA-DQA10101-DQB10201      LPVLRSVSLLPLNEE    3   LRSVSLLPL     0.660        0 T_0_1_sample_7_      0.013829     1.65        NA      0.264529     3.21       2857.30   <= WB
+   2   HLA-DQA10101-DQB10201        PVLRSVSLLPLNE    2   LRSVSLLPL     0.680        0 T_0_1_sample_7_      0.012646     1.95        NA      0.225122     9.88       4376.52   <= WB
+   2   HLA-DQA10101-DQB10201         PVLRSVSLLPLN    2   LRSVSLLPL     0.830        0 T_0_1_sample_7_      0.006603     5.42        NA      0.242510     6.20       3625.96
+   4   HLA-DQA10101-DQB10201         LRSVSLLPLNEE    2   SVSLLPLNE     0.320        0 T_0_1_sample_7_      0.001299    27.18        NA      0.236983     7.23       3849.41
+   2   HLA-DQA10101-DQB10201          PVLRSVSLLPL    2   LRSVSLLPL     0.980        0 T_0_1_sample_7_      0.000967    33.42        NA      0.232015     8.24       4061.99
+   4   HLA-DQA10101-DQB10201          LRSVSLLPLNE    2   SVSLLPLNE     0.380        0 T_0_1_sample_7_      0.000496    49.05        NA      0.197089    18.64       5927.27
+   3   HLA-DQA10101-DQB10201           VLRSVSLLPL    1   LRSVSLLPL     1.000        0 T_0_1_sample_7_      0.000188    72.22        NA      0.211170    13.77       5089.66
+   5   HLA-DQA10101-DQB10201           RSVSLLPLNE    1   SVSLLPLNE     0.750        0 T_0_1_sample_7_      0.000069    88.55        NA      0.095520    74.26      17787.88
+   6   HLA-DQA10101-DQB10201           SVSLLPLNEE    1   VSLLPLNEE     0.780        0 T_0_1_sample_7_      0.000017    97.42        NA      0.121511    58.89      13427.45
+   4   HLA-DQA10101-DQB10201           LRSVSLLPLN    1   RSVSLLPLN     0.440        0 T_0_1_sample_7_      0.000015    97.73        NA      0.182934    24.49       6908.26
+   4   HLA-DQA10101-DQB10201            LRSVSLLPL    0   LRSVSLLPL     1.000        0 T_0_1_sample_7_      0.000002    99.70        NA      0.165238    33.11       8366.07
+   1   HLA-DQA10101-DQB10201          LPVLRSVSLLP    2   VLRSVSLLP     0.640        0 T_0_1_sample_7_      0.000002    99.70        NA      0.081759    81.49      20643.68
+   7   HLA-DQA10101-DQB10201            VSLLPLNEE    0   VSLLPLNEE     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.085100    79.85      19910.75
+   6   HLA-DQA10101-DQB10201            SVSLLPLNE    0   SVSLLPLNE     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.050194    94.20      29047.57
+   5   HLA-DQA10101-DQB10201            RSVSLLPLN    0   RSVSLLPLN     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.067473    88.02      24094.42
+   3   HLA-DQA10101-DQB10201            VLRSVSLLP    0   VLRSVSLLP     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.042276    95.58      31645.81
+   2   HLA-DQA10101-DQB10201            PVLRSVSLL    0   PVLRSVSLL     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.020453    97.86      40073.95
+   1   HLA-DQA10101-DQB10201            LPVLRSVSL    0   LPVLRSVSL     1.000        0 T_0_1_sample_7_      0.000000   100.00        NA      0.032873    96.56      35034.90
+   2   HLA-DQA10101-DQB10201           PVLRSVSLLP    1   VLRSVSLLP     0.880        0 T_0_1_sample_7_      0.000000   100.00        NA      0.061525    90.43      25696.02
+   1   HLA-DQA10101-DQB10201           LPVLRSVSLL    1   PVLRSVSLL     0.570        0 T_0_1_sample_7_      0.000000   100.00        NA      0.047291    95.05      29974.44
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201      LPVLRSVQLLPLNEE    3   LRSVQLLPL     0.750        0 T_0_1_sample_8_      0.016169     1.20        NA      0.276276     2.25       2516.27   <= WB
+   2   HLA-DQA10101-DQB10201       PVLRSVQLLPLNEE    2   LRSVQLLPL     0.710        0 T_0_1_sample_8_      0.014960     1.40        NA      0.260837     3.60       2973.75   <= WB
+   2   HLA-DQA10101-DQB10201        PVLRSVQLLPLNE    2   LRSVQLLPL     0.810        0 T_0_1_sample_8_      0.013300     1.77        NA      0.225984     9.66       4335.89   <= WB
+   2   HLA-DQA10101-DQB10201         PVLRSVQLLPLN    2   LRSVQLLPL     0.880        0 T_0_1_sample_8_      0.007832     4.31        NA      0.249699     5.05       3354.61   <= WB
+   2   HLA-DQA10101-DQB10201          PVLRSVQLLPL    2   LRSVQLLPL     1.000        0 T_0_1_sample_8_      0.000948    33.84        NA      0.235339     7.56       3918.49
+   4   HLA-DQA10101-DQB10201         LRSVQLLPLNEE    1   RSVQLLPLN     0.190        0 T_0_1_sample_8_      0.000757    38.85        NA      0.237037     7.22       3847.16
+   5   HLA-DQA10101-DQB10201          RSVQLLPLNEE    1   SVQLLPLNE     0.290        0 T_0_1_sample_8_      0.000244    66.47        NA      0.156066    38.09       9238.91
+   4   HLA-DQA10101-DQB10201          LRSVQLLPLNE    1   RSVQLLPLN     0.380        0 T_0_1_sample_8_      0.000177    73.44        NA      0.192136    20.57       6253.58
+   3   HLA-DQA10101-DQB10201           VLRSVQLLPL    1   LRSVQLLPL     1.000        0 T_0_1_sample_8_      0.000113    81.76        NA      0.213458    13.06       4965.21
+   5   HLA-DQA10101-DQB10201           RSVQLLPLNE    1   SVQLLPLNE     0.750        0 T_0_1_sample_8_      0.000028    95.76        NA      0.082207    81.27      20543.84
+   6   HLA-DQA10101-DQB10201           SVQLLPLNEE    1   VQLLPLNEE     0.860        0 T_0_1_sample_8_      0.000021    96.82        NA      0.128029    54.91      12513.12
+   4   HLA-DQA10101-DQB10201            LRSVQLLPL    0   LRSVQLLPL     1.000        0 T_0_1_sample_8_      0.000001    99.85        NA      0.161240    35.33       8735.91
+   1   HLA-DQA10101-DQB10201          LPVLRSVQLLP    2   VLRSVQLLP     0.470        0 T_0_1_sample_8_      0.000001    99.85        NA      0.096213    73.87      17655.02
+   7   HLA-DQA10101-DQB10201            VQLLPLNEE    0   VQLLPLNEE     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.094464    74.85      17992.29
+   6   HLA-DQA10101-DQB10201            SVQLLPLNE    0   SVQLLPLNE     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.045990    95.19      30399.36
+   5   HLA-DQA10101-DQB10201            RSVQLLPLN    0   RSVQLLPLN     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.055391    92.47      27459.29
+   3   HLA-DQA10101-DQB10201            VLRSVQLLP    0   VLRSVQLLP     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.043354    95.46      31278.87
+   2   HLA-DQA10101-DQB10201            PVLRSVQLL    0   PVLRSVQLL     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.032871    96.56      35035.64
+   1   HLA-DQA10101-DQB10201            LPVLRSVQL    0   LPVLRSVQL     1.000        0 T_0_1_sample_8_      0.000000   100.00        NA      0.042722    95.53      31493.48
+   2   HLA-DQA10101-DQB10201           PVLRSVQLLP    1   VLRSVQLLP     0.800        0 T_0_1_sample_8_      0.000000   100.00        NA      0.067319    88.09      24134.60
+   1   HLA-DQA10101-DQB10201           LPVLRSVQLL    1   PVLRSVQLL     0.590        0 T_0_1_sample_8_      0.000000   100.00        NA      0.068142    87.74      23920.64
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 4
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201      MPVLRSVSLLPLKEE    3   LRSVSLLPL     0.820        0 T_0_1_sample_9_      0.018196     0.94        NA      0.258496     3.88       3050.04   <= SB
+   1   HLA-DQA10101-DQB10201       MPVLRSVSLLPLKE    3   LRSVSLLPL     0.900        0 T_0_1_sample_9_      0.015905     1.24        NA      0.244151     5.91       3562.15   <= WB
+   2   HLA-DQA10101-DQB10201        PVLRSVSLLPLKE    2   LRSVSLLPL     0.820        0 T_0_1_sample_9_      0.014051     1.60        NA      0.223232    10.36       4466.93   <= WB
+   2   HLA-DQA10101-DQB10201         PVLRSVSLLPLK    2   LRSVSLLPL     0.900        0 T_0_1_sample_9_      0.007904     4.25        NA      0.241847     6.31       3652.06   <= WB
+   2   HLA-DQA10101-DQB10201          PVLRSVSLLPL    2   LRSVSLLPL     0.980        0 T_0_1_sample_9_      0.000967    33.42        NA      0.232015     8.24       4061.99
+   4   HLA-DQA10101-DQB10201         LRSVSLLPLKEE    2   SVSLLPLKE     0.520        0 T_0_1_sample_9_      0.000864    35.89        NA      0.216615    12.17       4798.47
+   4   HLA-DQA10101-DQB10201          LRSVSLLPLKE    2   SVSLLPLKE     0.450        0 T_0_1_sample_9_      0.000474    50.17        NA      0.194888    19.48       6070.12
+   3   HLA-DQA10101-DQB10201           VLRSVSLLPL    1   LRSVSLLPL     1.000        0 T_0_1_sample_9_      0.000188    72.22        NA      0.211170    13.77       5089.66
+   5   HLA-DQA10101-DQB10201           RSVSLLPLKE    1   SVSLLPLKE     0.780        0 T_0_1_sample_9_      0.000080    86.77        NA      0.087769    78.43      19343.99
+   4   HLA-DQA10101-DQB10201           LRSVSLLPLK    1   RSVSLLPLK     0.280        0 T_0_1_sample_9_      0.000049    92.04        NA      0.179443    26.14       7174.19
+   4   HLA-DQA10101-DQB10201            LRSVSLLPL    0   LRSVSLLPL     1.000        0 T_0_1_sample_9_      0.000002    99.70        NA      0.165238    33.11       8366.07
+   1   HLA-DQA10101-DQB10201          MPVLRSVSLLP    2   VLRSVSLLP     0.660        0 T_0_1_sample_9_      0.000002    99.70        NA      0.082463    81.15      20487.02
+   7   HLA-DQA10101-DQB10201            VSLLPLKEE    0   VSLLPLKEE     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.053992    92.94      27878.11
+   6   HLA-DQA10101-DQB10201            SVSLLPLKE    0   SVSLLPLKE     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.048195    94.86      29682.68
+   5   HLA-DQA10101-DQB10201            RSVSLLPLK    0   RSVSLLPLK     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.055478    92.44      27433.46
+   3   HLA-DQA10101-DQB10201            VLRSVSLLP    0   VLRSVSLLP     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.042276    95.58      31645.81
+   2   HLA-DQA10101-DQB10201            PVLRSVSLL    0   PVLRSVSLL     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.020453    97.86      40073.95
+   1   HLA-DQA10101-DQB10201            MPVLRSVSL    0   MPVLRSVSL     1.000        0 T_0_1_sample_9_      0.000000   100.00        NA      0.031169    96.74      35686.82
+   2   HLA-DQA10101-DQB10201           PVLRSVSLLP    1   VLRSVSLLP     0.880        0 T_0_1_sample_9_      0.000000   100.00        NA      0.061525    90.43      25696.02
+   1   HLA-DQA10101-DQB10201           MPVLRSVSLL    1   PVLRSVSLL     0.550        0 T_0_1_sample_9_      0.000000   100.00        NA      0.047173    95.06      30012.72
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 1 Number of weak binders: 3
+--------------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Pos                     MHC              Peptide   Of        Core  Core_Rel Inverted        Identity      Score_EL %Rank_EL  Exp_Bind      Score_BA %Rank_BA  Affinity(nM)  BindLevel
+--------------------------------------------------------------------------------------------------------------------------------------------
+   1   HLA-DQA10101-DQB10201       MPVLRSVQLKPLNE    3   LRSVQLKPL     0.890        0 T_0_1_sample_10      0.007036     4.98        NA      0.151285    40.84       9729.41   <= WB
+   1   HLA-DQA10101-DQB10201      MPVLRSVQLKPLNEE    3   LRSVQLKPL     0.840        0 T_0_1_sample_10      0.006106     5.98        NA      0.163112    34.28       8560.75
+   1   HLA-DQA10101-DQB10201        MPVLRSVQLKPLN    3   LRSVQLKPL     0.940        0 T_0_1_sample_10      0.005445     6.90        NA      0.135009    50.62      11602.91
+   2   HLA-DQA10101-DQB10201         PVLRSVQLKPLN    2   LRSVQLKPL     0.940        0 T_0_1_sample_10      0.002868    13.94        NA      0.141972    46.33      10760.88
+   2   HLA-DQA10101-DQB10201          PVLRSVQLKPL    2   LRSVQLKPL     0.990        0 T_0_1_sample_10      0.000444    51.92        NA      0.133116    51.79      11843.00
+   4   HLA-DQA10101-DQB10201         LRSVQLKPLNEE    2   SVQLKPLNE     0.510        0 T_0_1_sample_10      0.000288    62.62        NA      0.126963    55.56      12658.28
+   5   HLA-DQA10101-DQB10201          RSVQLKPLNEE    1   SVQLKPLNE     0.630        0 T_0_1_sample_10      0.000097    84.12        NA      0.080254    82.22      20982.57
+   5   HLA-DQA10101-DQB10201           RSVQLKPLNE    1   SVQLKPLNE     0.900        0 T_0_1_sample_10      0.000019    97.12        NA      0.046996    95.08      30070.26
+   3   HLA-DQA10101-DQB10201           VLRSVQLKPL    1   LRSVQLKPL     1.000        0 T_0_1_sample_10      0.000012    98.18        NA      0.111802    64.78      14914.75
+   1   HLA-DQA10101-DQB10201          MPVLRSVQLKP    2   VLRSVQLKP     0.560        0 T_0_1_sample_10      0.000001    99.85        NA      0.071626    86.25      23035.71
+   7   HLA-DQA10101-DQB10201            VQLKPLNEE    0   VQLKPLNEE     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.040509    95.76      32256.67
+   6   HLA-DQA10101-DQB10201            SVQLKPLNE    0   SVQLKPLNE     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.024925    97.39      38181.08
+   5   HLA-DQA10101-DQB10201            RSVQLKPLN    0   RSVQLKPLN     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.022269    97.67      39294.21
+   4   HLA-DQA10101-DQB10201            LRSVQLKPL    0   LRSVQLKPL     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.074505    85.02      22329.21
+   3   HLA-DQA10101-DQB10201            VLRSVQLKP    0   VLRSVQLKP     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.027276    97.15      37222.11
+   2   HLA-DQA10101-DQB10201            PVLRSVQLK    0   PVLRSVQLK     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.015845    98.34      42122.57
+   1   HLA-DQA10101-DQB10201            MPVLRSVQL    0   MPVLRSVQL     1.000        0 T_0_1_sample_10      0.000000   100.00        NA      0.038092    96.01      33111.34
+   2   HLA-DQA10101-DQB10201           PVLRSVQLKP    1   VLRSVQLKP     0.900        0 T_0_1_sample_10      0.000000   100.00        NA      0.044299    95.36      30960.67
+   1   HLA-DQA10101-DQB10201           MPVLRSVQLK    0   MPVLRSVQL     0.640        0 T_0_1_sample_10      0.000000   100.00        NA      0.049462    94.44      29278.54
+--------------------------------------------------------------------------------------------------------------------------------------------
+Number of strong binders: 0 Number of weak binders: 1
+--------------------------------------------------------------------------------------------------------------------------------------------

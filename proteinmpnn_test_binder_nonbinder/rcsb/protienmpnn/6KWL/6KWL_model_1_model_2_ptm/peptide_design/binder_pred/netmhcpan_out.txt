@@ -1,0 +1,709 @@
+# /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/bin/netMHCpan -f tmp3/protienmpnn/6KWL/6KWL_model_1_model_2_ptm/peptide_design/seqs/multichain_6KWL_model_1_model_2_ptm.fa -BA -a SLA-1:0101
+# Tue Mar 11 20:05:26 2025
+# User: amir
+# PWD : /home/amir/amir/ParseFold/PMGen
+# Host: Linux l1161-blue3 6.8.0-52-generic x86_64
+# -f       tmp3/protienmpnn/6KWL/6KWL_model_1_model_2_ptm/peptide_design/seqs/multichain_6KWL_model_1_model_2_ptm.fa File name with input
+# -BA      1                    Include Binding affinity prediction
+# -a       SLA-1:0101           MHC allele
+# Command line parameters set to:
+#	[-rdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64 Home directory for NetMHpan
+#	[-syn filename]      /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/synlist.bin Synaps file
+#	[-v]                 0                    Verbose mode
+#	[-dirty]             0                    Dirty mode, leave tmp dir+files
+#	[-tdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpanXXXXXX Temporary directory (made with mkdtemp)
+#	[-hlapseudo filename] /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/MHC_pseudo.dat File with MHC pseudo sequences
+#	[-hlaseq filename]                        File with full length MHC sequences
+#	[-a line]            SLA-1:0101           MHC allele
+#	[-f filename]        tmp3/protienmpnn/6KWL/6KWL_model_1_model_2_ptm/peptide_design/seqs/multichain_6KWL_model_1_model_2_ptm.fa File name with input
+#	[-w]                 0                    w option for webface
+#	[-s]                 0                    Sort output on descending affinity
+#	[-p]                 0                    Use peptide input
+#	[-rth float]         0.500000             Rank Threshold for high binding peptides
+#	[-rlt float]         2.000000             Rank Threshold for low binding peptides
+#	[-l string]          8,9,10,11            Peptide length [8-11] (multiple length with ,)
+#	[-xls]               0                    Save output to xls file
+#	[-xlsfile filename]  NetMHCpan_out.xls    Filename for xls dump
+#	[-t float]           -99.900002           Threshold for output (%rank) [<0 print all]
+#	[-thrfmt filename]   /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/threshold/%s.thr.%s Format for threshold filenames
+#	[-expfix]            0                    Exclude prefix from synlist
+#	[-version filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/version File with version information
+#	[-inptype int]       0                    Input type [0] FASTA [1] Peptide
+#	[-listMHC]           0                    Print list of alleles included in netMHCpan
+#	[-allname filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/allelenames File with print names for alleles
+#	[-BA]                1                    Include Binding affinity prediction
+
+# NetMHCpan version 4.1b
+
+# Tmpdir made /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpanVaX2hM
+# Input is in FSA format
+
+# Peptide length 8,9,10,11
+
+# Make both EL and BA predictions
+
+SLA-1:0101 : Distance to training data  0.229 (using nearest neighbor SLA-104:01)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MTAHITVPY MTAHITVPY  0  0  0  0  0    MTAHITVPY multichain_6KWL 0.1105540    3.063 0.231273    0.517  4094.73
+   1  SLA-1:0101       MTAHITVP MTA-HITVP  0  0  0  3  1     MTAHITVP multichain_6KWL 0.0117490   23.731 0.065529   22.669 24606.58
+   2  SLA-1:0101       TAHITVPY TAH-ITVPY  0  0  0  3  1     TAHITVPY multichain_6KWL 0.0188120   18.064 0.056367   28.279 27170.85
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein multichain_6KWL. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_1_ 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_1_ 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_1_ 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_1_. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPRTPY MPPPPRTPY  0  0  0  0  0    MPPPPRTPY T_0_1_sample_2_ 0.1724080    1.451 0.100823    9.801 16796.00 <= WB
+   1  SLA-1:0101       MPPPPRTP MPP-PPRTP  0  0  0  3  1     MPPPPRTP T_0_1_sample_2_ 0.0157270   20.125 0.031019   53.675 35744.79
+   2  SLA-1:0101       PPPPRTPY -PPPPRTPY  0  0  0  0  1     PPPPRTPY T_0_1_sample_2_ 0.0065170   31.161 0.016701   80.412 41734.25
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_2_. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_3_ 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_3_ 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_3_ 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_3_. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_4_ 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_4_ 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_4_ 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_4_. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPQTPL MPPPPQTPL  0  0  0  0  0    MPPPPQTPL T_0_1_sample_5_ 0.3866650    0.169 0.203002    0.973  5559.94 <= SB
+   1  SLA-1:0101       MPPPPQTP MP-PPPQTP  0  0  0  2  1     MPPPPQTP T_0_1_sample_5_ 0.0293530   13.181 0.038975   43.419 32796.51
+   2  SLA-1:0101       PPPPQTPL -PPPPQTPL  0  0  0  0  1     PPPPQTPL T_0_1_sample_5_ 0.0183430   18.359 0.037330   45.295 33385.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_5_. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_6_ 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_6_ 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_6_ 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_6_. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_7_ 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_7_ 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_7_ 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_7_. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_8_ 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_8_ 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_8_ 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_8_. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_9_ 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_9_ 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_9_ 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_9_. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_10 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_10 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_10 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_10. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPRTPL MPPPPRTPL  0  0  0  0  0    MPPPPRTPL T_0_1_sample_11 0.3017670    0.382 0.176348    1.773  7418.50 <= SB
+   1  SLA-1:0101       MPPPPRTP MPP-PPRTP  0  0  0  3  1     MPPPPRTP T_0_1_sample_11 0.0157270   20.125 0.031019   53.675 35744.79
+   2  SLA-1:0101       PPPPRTPL -PPPPRTPL  0  0  0  0  1     PPPPRTPL T_0_1_sample_11 0.0096520   26.186 0.030315   54.675 36018.10
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_11. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_12 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_12 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_12 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_12. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_13 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_13 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_13 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_13. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_14 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_14 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_14 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_14. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_15 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_15 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_15 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_15. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_16 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_16 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_16 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_16. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_17 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_17 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_17 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_17. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_18 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_18 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_18 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_18. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_19 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_19 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_19 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_19. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_20 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_20 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_20 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_20. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_21 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_21 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_21 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_21. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPRTPY MPPPPRTPY  0  0  0  0  0    MPPPPRTPY T_0_1_sample_22 0.1724080    1.451 0.100823    9.801 16796.00 <= WB
+   1  SLA-1:0101       MPPPPRTP MPP-PPRTP  0  0  0  3  1     MPPPPRTP T_0_1_sample_22 0.0157270   20.125 0.031019   53.675 35744.79
+   2  SLA-1:0101       PPPPRTPY -PPPPRTPY  0  0  0  0  1     PPPPRTPY T_0_1_sample_22 0.0065170   31.161 0.016701   80.412 41734.25
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_22. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_23 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_23 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_23 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_23. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPQTPL MPPPPQTPL  0  0  0  0  0    MPPPPQTPL T_0_1_sample_24 0.3866650    0.169 0.203002    0.973  5559.94 <= SB
+   1  SLA-1:0101       MPPPPQTP MP-PPPQTP  0  0  0  2  1     MPPPPQTP T_0_1_sample_24 0.0293530   13.181 0.038975   43.419 32796.51
+   2  SLA-1:0101       PPPPQTPL -PPPPQTPL  0  0  0  0  1     PPPPQTPL T_0_1_sample_24 0.0183430   18.359 0.037330   45.295 33385.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_24. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_25 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_25 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_25 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_25. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPQTPY MPPPPQTPY  0  0  0  0  0    MPPPPQTPY T_0_1_sample_26 0.2164260    0.885 0.120134    6.244 13629.00 <= WB
+   1  SLA-1:0101       MPPPPQTP MP-PPPQTP  0  0  0  2  1     MPPPPQTP T_0_1_sample_26 0.0293530   13.181 0.038975   43.419 32796.51
+   2  SLA-1:0101       PPPPQTPY PPP-PQTPY  0  0  0  3  1     PPPPQTPY T_0_1_sample_26 0.0140460   21.502 0.020535   72.250 40038.40
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_26. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_27 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_27 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_27 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_27. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_28 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_28 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_28 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_28. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_29 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_29 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_29 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_29. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_30 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_30 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_30 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_30. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_31 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_31 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_31 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_31. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_32 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_32 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_32 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_32. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_33 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_33 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_33 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_33. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_34 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_34 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_34 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_34. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_35 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_35 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_35 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_35. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_36 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_36 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_36 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_36. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_37 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_37 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_37 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_37. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPRTPY MPPPPRTPY  0  0  0  0  0    MPPPPRTPY T_0_1_sample_38 0.1724080    1.451 0.100823    9.801 16796.00 <= WB
+   1  SLA-1:0101       MPPPPRTP MPP-PPRTP  0  0  0  3  1     MPPPPRTP T_0_1_sample_38 0.0157270   20.125 0.031019   53.675 35744.79
+   2  SLA-1:0101       PPPPRTPY -PPPPRTPY  0  0  0  0  1     PPPPRTPY T_0_1_sample_38 0.0065170   31.161 0.016701   80.412 41734.25
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_38. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_39 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_39 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_39 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_39. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_40 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_40 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_40 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_40. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_41 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_41 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_41 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_41. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_42 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_42 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_42 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_42. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPRTPL MPPPPRTPL  0  0  0  0  0    MPPPPRTPL T_0_1_sample_43 0.3017670    0.382 0.176348    1.773  7418.50 <= SB
+   1  SLA-1:0101       MPPPPRTP MPP-PPRTP  0  0  0  3  1     MPPPPRTP T_0_1_sample_43 0.0157270   20.125 0.031019   53.675 35744.79
+   2  SLA-1:0101       PPPPRTPL -PPPPRTPL  0  0  0  0  1     PPPPRTPL T_0_1_sample_43 0.0096520   26.186 0.030315   54.675 36018.10
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_43. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_44 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_44 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_44 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_44. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPL MPPPPATPL  0  0  0  0  0    MPPPPATPL T_0_1_sample_45 0.3785830    0.183 0.223738    0.613  4442.54 <= SB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_45 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPL -PPPPATPL  0  0  0  0  1     PPPPATPL T_0_1_sample_45 0.0219720   16.338 0.044199   38.048 30994.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_45. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPQTPL MPPPPQTPL  0  0  0  0  0    MPPPPQTPL T_0_1_sample_46 0.3866650    0.169 0.203002    0.973  5559.94 <= SB
+   1  SLA-1:0101       MPPPPQTP MP-PPPQTP  0  0  0  2  1     MPPPPQTP T_0_1_sample_46 0.0293530   13.181 0.038975   43.419 32796.51
+   2  SLA-1:0101       PPPPQTPL -PPPPQTPL  0  0  0  0  1     PPPPQTPL T_0_1_sample_46 0.0183430   18.359 0.037330   45.295 33385.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_46. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPQTPL MPPPPQTPL  0  0  0  0  0    MPPPPQTPL T_0_1_sample_47 0.3866650    0.169 0.203002    0.973  5559.94 <= SB
+   1  SLA-1:0101       MPPPPQTP MP-PPPQTP  0  0  0  2  1     MPPPPQTP T_0_1_sample_47 0.0293530   13.181 0.038975   43.419 32796.51
+   2  SLA-1:0101       PPPPQTPL -PPPPQTPL  0  0  0  0  1     PPPPQTPL T_0_1_sample_47 0.0183430   18.359 0.037330   45.295 33385.46
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_47. Allele SLA-1:0101. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_48 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_48 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_48 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_48. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_49 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_49 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_49 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_49. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:0101      MPPPPATPY MPPPPATPY  0  0  0  0  0    MPPPPATPY T_0_1_sample_50 0.2161970    0.887 0.133553    4.589 11787.14 <= WB
+   1  SLA-1:0101       MPPPPATP MP-PPPATP  0  0  0  2  1     MPPPPATP T_0_1_sample_50 0.0239740   15.371 0.044503   37.768 30892.42
+   2  SLA-1:0101       PPPPATPY -PPPPATPY  0  0  0  0  1     PPPPATPY T_0_1_sample_50 0.0146060   21.016 0.023389   66.610 38820.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_50. Allele SLA-1:0101. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------

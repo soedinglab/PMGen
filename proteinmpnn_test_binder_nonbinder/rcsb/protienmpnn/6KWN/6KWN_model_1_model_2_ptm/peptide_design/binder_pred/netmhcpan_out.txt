@@ -1,0 +1,709 @@
+# /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/bin/netMHCpan -f tmp3/protienmpnn/6KWN/6KWN_model_1_model_2_ptm/peptide_design/seqs/multichain_6KWN_model_1_model_2_ptm.fa -BA -a SLA-1:1301
+# Tue Mar 11 20:08:57 2025
+# User: amir
+# PWD : /home/amir/amir/ParseFold/PMGen
+# Host: Linux l1161-blue3 6.8.0-52-generic x86_64
+# -f       tmp3/protienmpnn/6KWN/6KWN_model_1_model_2_ptm/peptide_design/seqs/multichain_6KWN_model_1_model_2_ptm.fa File name with input
+# -BA      1                    Include Binding affinity prediction
+# -a       SLA-1:1301           MHC allele
+# Command line parameters set to:
+#	[-rdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64 Home directory for NetMHpan
+#	[-syn filename]      /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/synlist.bin Synaps file
+#	[-v]                 0                    Verbose mode
+#	[-dirty]             0                    Dirty mode, leave tmp dir+files
+#	[-tdir filename]     /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpanXXXXXX Temporary directory (made with mkdtemp)
+#	[-hlapseudo filename] /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/MHC_pseudo.dat File with MHC pseudo sequences
+#	[-hlaseq filename]                        File with full length MHC sequences
+#	[-a line]            SLA-1:1301           MHC allele
+#	[-f filename]        tmp3/protienmpnn/6KWN/6KWN_model_1_model_2_ptm/peptide_design/seqs/multichain_6KWN_model_1_model_2_ptm.fa File name with input
+#	[-w]                 0                    w option for webface
+#	[-s]                 0                    Sort output on descending affinity
+#	[-p]                 0                    Use peptide input
+#	[-rth float]         0.500000             Rank Threshold for high binding peptides
+#	[-rlt float]         2.000000             Rank Threshold for low binding peptides
+#	[-l string]          8,9,10,11            Peptide length [8-11] (multiple length with ,)
+#	[-xls]               0                    Save output to xls file
+#	[-xlsfile filename]  NetMHCpan_out.xls    Filename for xls dump
+#	[-t float]           -99.900002           Threshold for output (%rank) [<0 print all]
+#	[-thrfmt filename]   /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/threshold/%s.thr.%s Format for threshold filenames
+#	[-expfix]            0                    Exclude prefix from synlist
+#	[-version filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/version File with version information
+#	[-inptype int]       0                    Input type [0] FASTA [1] Peptide
+#	[-listMHC]           0                    Print list of alleles included in netMHCpan
+#	[-allname filename]  /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/Linux_x86_64/data/allelenames File with print names for alleles
+#	[-BA]                1                    Include Binding affinity prediction
+
+# NetMHCpan version 4.1b
+
+# Tmpdir made /home/amir/amir/ParseFold/PMGen/netMHCIpan-4.1/tmp/netMHCpaneKsfbW
+# Input is in FSA format
+
+# Peptide length 8,9,10,11
+
+# Make both EL and BA predictions
+
+SLA-1:1301 : Distance to training data  0.158 (using nearest neighbor SLA-104:01)
+
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      NSDTVGWSW NSDTVGWSW  0  0  0  0  0    NSDTVGWSW multichain_6KWN 0.6487480    0.059 0.461656    0.037   338.58 <= SB
+   1  SLA-1:1301       NSDTVGWS NSDTVGWS-  0  0  0  8  1     NSDTVGWS multichain_6KWN 0.0160660   17.864 0.058090   33.695 26669.02
+   2  SLA-1:1301       SDTVGWSW S-DTVGWSW  0  0  0  1  1     SDTVGWSW multichain_6KWN 0.2741450    1.286 0.224933    2.222  4385.47 <= WB
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein multichain_6KWN. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGEQY VESTEGEQY  0  0  0  0  0    VESTEGEQY T_0_1_sample_1_ 0.2790530    1.244 0.174677    4.774  7553.84 <= WB
+   1  SLA-1:1301       VESTEGEQ VESTEGEQ-  0  0  0  8  1     VESTEGEQ T_0_1_sample_1_ 0.0002070   68.313 0.014442   91.665 42766.86
+   2  SLA-1:1301       ESTEGEQY ESTE-GEQY  0  0  0  4  1     ESTEGEQY T_0_1_sample_1_ 0.0668670    7.458 0.069893   26.727 23471.72
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_1_. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGETY VESTEGETY  0  0  0  0  0    VESTEGETY T_0_1_sample_2_ 0.3132540    0.978 0.194494    3.524  6096.05 <= WB
+   1  SLA-1:1301       VESTEGET VESTEGET-  0  0  0  8  1     VESTEGET T_0_1_sample_2_ 0.0002560   65.361 0.014499   91.585 42740.50
+   2  SLA-1:1301       ESTEGETY ESTE-GETY  0  0  0  4  1     ESTEGETY T_0_1_sample_2_ 0.0879420    5.885 0.083893   20.542 20172.48
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_2_. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDVEGETY VEDVEGETY  0  0  0  0  0    VEDVEGETY T_0_1_sample_3_ 0.5187450    0.220 0.276153    0.971  2519.62 <= SB
+   1  SLA-1:1301       VEDVEGET VEDVEGET-  0  0  0  8  1     VEDVEGET T_0_1_sample_3_ 0.0021110   38.344 0.026543   70.317 37518.47
+   2  SLA-1:1301       EDVEGETY E-DVEGETY  0  0  0  1  1     EDVEGETY T_0_1_sample_3_ 0.0984980    5.256 0.088937   18.822 19101.07
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_3_. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGETY VESTEGETY  0  0  0  0  0    VESTEGETY T_0_1_sample_4_ 0.3132540    0.978 0.194494    3.524  6096.05 <= WB
+   1  SLA-1:1301       VESTEGET VESTEGET-  0  0  0  8  1     VESTEGET T_0_1_sample_4_ 0.0002560   65.361 0.014499   91.585 42740.50
+   2  SLA-1:1301       ESTEGETY ESTE-GETY  0  0  0  4  1     ESTEGETY T_0_1_sample_4_ 0.0879420    5.885 0.083893   20.542 20172.48
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_4_. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEPVEGETY VEPVEGETY  0  0  0  0  0    VEPVEGETY T_0_1_sample_5_ 0.2448030    1.585 0.148243    7.148 10054.96 <= WB
+   1  SLA-1:1301       VEPVEGET VEPVEGET-  0  0  0  8  1     VEPVEGET T_0_1_sample_5_ 0.0003410   61.789 0.015365   90.358 42341.90
+   2  SLA-1:1301       EPVEGETY EPVE-GETY  0  0  0  4  1     EPVEGETY T_0_1_sample_5_ 0.0370930   11.370 0.053953   36.703 27889.87
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_5_. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEPVEGESY VEPVEGESY  0  0  0  0  0    VEPVEGESY T_0_1_sample_6_ 0.2266270    1.814 0.140566    8.057 10925.83 <= WB
+   1  SLA-1:1301       VEPVEGES VEPVEGES-  0  0  0  8  1     VEPVEGES T_0_1_sample_6_ 0.0001800   69.940 0.013478   93.030 43215.29
+   2  SLA-1:1301       EPVEGESY EPVE-GESY  0  0  0  4  1     EPVEGESY T_0_1_sample_6_ 0.0295170   13.000 0.048497   41.244 29585.84
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_6_. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGEVY VESTEGEVY  0  0  0  0  0    VESTEGEVY T_0_1_sample_7_ 0.2318190    1.746 0.172610    4.930  7724.69 <= WB
+   1  SLA-1:1301       VESTEGEV V-ESTEGEV  0  0  0  1  1     VESTEGEV T_0_1_sample_7_ 0.0012170   44.979 0.031642   61.736 35504.64
+   2  SLA-1:1301       ESTEGEVY ESTE-GEVY  0  0  0  4  1     ESTEGEVY T_0_1_sample_7_ 0.0510370    9.192 0.071087   26.085 23170.44
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_7_. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPDTTGEVY VPDTTGEVY  0  0  0  0  0    VPDTTGEVY T_0_1_sample_8_ 0.4600510    0.339 0.246720    1.572  3464.50 <= SB
+   1  SLA-1:1301       VPDTTGEV VPDTTG-EV  0  0  0  6  1     VPDTTGEV T_0_1_sample_8_ 0.0239860   14.637 0.060132   32.337 26086.24
+   2  SLA-1:1301       PDTTGEVY -PDTTGEVY  0  0  0  0  1     PDTTGEVY T_0_1_sample_8_ 0.0488230    9.481 0.071585   25.832 23045.93
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_8_. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTEGEEY VEDTEGEEY  0  0  0  0  0    VEDTEGEEY T_0_1_sample_9_ 0.4999960    0.257 0.266283    1.142  2803.59 <= SB
+   1  SLA-1:1301       VEDTEGEE VEDTEGEE-  0  0  0  8  1     VEDTEGEE T_0_1_sample_9_ 0.0007590   51.231 0.022102   78.390 39365.28
+   2  SLA-1:1301       EDTEGEEY E-DTEGEEY  0  0  0  1  1     EDTEGEEY T_0_1_sample_9_ 0.0724080    6.999 0.074686   24.332 22285.52
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_9_. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTEGEEY VEDTEGEEY  0  0  0  0  0    VEDTEGEEY T_0_1_sample_10 0.4999960    0.257 0.266283    1.142  2803.59 <= SB
+   1  SLA-1:1301       VEDTEGEE VEDTEGEE-  0  0  0  8  1     VEDTEGEE T_0_1_sample_10 0.0007590   51.231 0.022102   78.390 39365.28
+   2  SLA-1:1301       EDTEGEEY E-DTEGEEY  0  0  0  1  1     EDTEGEEY T_0_1_sample_10 0.0724080    6.999 0.074686   24.332 22285.52
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_10. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTTGETY VEDTTGETY  0  0  0  0  0    VEDTTGETY T_0_1_sample_11 0.6173670    0.082 0.316454    0.523  1629.15 <= SB
+   1  SLA-1:1301       VEDTTGET VEDTTGET-  0  0  0  8  1     VEDTTGET T_0_1_sample_11 0.0020900   38.461 0.030023   64.338 36132.08
+   2  SLA-1:1301       EDTTGETY E-DTTGETY  0  0  0  1  1     EDTTGETY T_0_1_sample_11 0.1274200    4.007 0.102658   14.889 16465.80
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_11. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTTGLSY VEDTTGLSY  0  0  0  0  0    VEDTTGLSY T_0_1_sample_12 0.6519210    0.057 0.359254    0.229  1025.29 <= SB
+   1  SLA-1:1301       VEDTTGLS VEDTTGLS-  0  0  0  8  1     VEDTTGLS T_0_1_sample_12 0.0024910   36.438 0.036189   54.982 33800.17
+   2  SLA-1:1301       EDTTGLSY E-DTTGLSY  0  0  0  1  1     EDTTGLSY T_0_1_sample_12 0.1558220    3.145 0.123490   10.539 13142.99
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_12. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTEGESY VEDTEGESY  0  0  0  0  0    VEDTEGESY T_0_1_sample_13 0.5181500    0.221 0.261708    1.230  2945.86 <= SB
+   1  SLA-1:1301       VEDTEGES VEDTEGES-  0  0  0  8  1     VEDTEGES T_0_1_sample_13 0.0006980   52.386 0.020708   80.974 39963.51
+   2  SLA-1:1301       EDTEGESY E-DTEGESY  0  0  0  1  1     EDTEGESY T_0_1_sample_13 0.0726910    6.978 0.072907   25.180 22718.64
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_13. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEPTEGESY VEPTEGESY  0  0  0  0  0    VEPTEGESY T_0_1_sample_14 0.2622570    1.398 0.148434    7.127 10034.21 <= WB
+   1  SLA-1:1301       VEPTEGES VEPTEGES-  0  0  0  8  1     VEPTEGES T_0_1_sample_14 0.0001820   69.819 0.013074   93.602 43404.60
+   2  SLA-1:1301       EPTEGESY E-PTEGESY  0  0  0  1  1     EPTEGESY T_0_1_sample_14 0.0301920   12.840 0.045029   44.548 30717.10
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_14. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGESY VESTEGESY  0  0  0  0  0    VESTEGESY T_0_1_sample_15 0.2850890    1.192 0.180306    4.369  7107.51 <= WB
+   1  SLA-1:1301       VESTEGES VESTEGES-  0  0  0  8  1     VESTEGES T_0_1_sample_15 0.0001740   70.424 0.012202   94.837 43816.04
+   2  SLA-1:1301       ESTEGESY ESTE-GESY  0  0  0  4  1     ESTEGESY T_0_1_sample_15 0.0713630    7.086 0.075542   23.933 22080.07
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_15. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGESY VESTEGESY  0  0  0  0  0    VESTEGESY T_0_1_sample_16 0.2850890    1.192 0.180306    4.369  7107.51 <= WB
+   1  SLA-1:1301       VESTEGES VESTEGES-  0  0  0  8  1     VESTEGES T_0_1_sample_16 0.0001740   70.424 0.012202   94.837 43816.04
+   2  SLA-1:1301       ESTEGESY ESTE-GESY  0  0  0  4  1     ESTEGESY T_0_1_sample_16 0.0713630    7.086 0.075542   23.933 22080.07
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_16. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPDTDGETY VPDTDGETY  0  0  0  0  0    VPDTDGETY T_0_1_sample_17 0.4586460    0.343 0.234311    1.915  3962.32 <= SB
+   1  SLA-1:1301       VPDTDGET VPDTDGET-  0  0  0  8  1     VPDTDGET T_0_1_sample_17 0.0013650   43.527 0.021947   78.678 39431.34
+   2  SLA-1:1301       PDTDGETY -PDTDGETY  0  0  0  0  1     PDTDGETY T_0_1_sample_17 0.0432310   10.311 0.062547   30.830 25413.45
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_17. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      PESTEGESY PESTEGESY  0  0  0  0  0    PESTEGESY T_0_1_sample_18 0.0519240    9.077 0.078752   22.554 21326.36
+   1  SLA-1:1301       PESTEGES PESTEGES-  0  0  0  8  1     PESTEGES T_0_1_sample_18 0.0000090   96.250 0.005390   97.770 47167.47
+   2  SLA-1:1301       ESTEGESY ESTE-GESY  0  0  0  4  1     ESTEGESY T_0_1_sample_18 0.0713630    7.086 0.075542   23.933 22080.07
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_18. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTEGEVY VEDTEGEVY  0  0  0  0  0    VEDTEGEVY T_0_1_sample_19 0.4441390    0.380 0.247190    1.558  3446.92 <= SB
+   1  SLA-1:1301       VEDTEGEV VEDTEG-EV  0  0  0  6  1     VEDTEGEV T_0_1_sample_19 0.0043370   30.449 0.043837   45.750 31115.82
+   2  SLA-1:1301       EDTEGEVY E-DTEGEVY  0  0  0  1  1     EDTEGEVY T_0_1_sample_19 0.0556670    8.616 0.071988   25.633 22945.66
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_19. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTEGETY VEDTEGETY  0  0  0  0  0    VEDTEGETY T_0_1_sample_20 0.5465860    0.167 0.275742    0.978  2530.85 <= SB
+   1  SLA-1:1301       VEDTEGET VEDTEGET-  0  0  0  8  1     VEDTEGET T_0_1_sample_20 0.0014340   42.921 0.024165   74.579 38496.35
+   2  SLA-1:1301       EDTEGETY E-DTEGETY  0  0  0  1  1     EDTEGETY T_0_1_sample_20 0.0952310    5.431 0.082345   21.123 20513.19
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_20. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPSTEGEVY VPSTEGEVY  0  0  0  0  0    VPSTEGEVY T_0_1_sample_21 0.1902420    2.417 0.139949    8.137 10999.02
+   1  SLA-1:1301       VPSTEGEV VPSTEG-EV  0  0  0  6  1     VPSTEGEV T_0_1_sample_21 0.0023280   37.193 0.029367   65.422 36389.45
+   2  SLA-1:1301       PSTEGEVY PSTE-GEVY  0  0  0  4  1     PSTEGEVY T_0_1_sample_21 0.0199580   16.090 0.047461   42.200 29919.36
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_21. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGLSY VESTEGLSY  0  0  0  0  0    VESTEGLSY T_0_1_sample_22 0.3443780    0.810 0.216709    2.507  4793.59 <= WB
+   1  SLA-1:1301       VESTEGLS VESTEGLS-  0  0  0  8  1     VESTEGLS T_0_1_sample_22 0.0002540   65.482 0.016416   88.632 41863.12
+   2  SLA-1:1301       ESTEGLSY ESTEG-LSY  0  0  0  5  1     ESTEGLSY T_0_1_sample_22 0.0998900    5.181 0.099797   15.612 16983.49
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_22. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPSTEGLSY VPSTEGLSY  0  0  0  0  0    VPSTEGLSY T_0_1_sample_23 0.2923650    1.124 0.184004    4.127  6828.74 <= WB
+   1  SLA-1:1301       VPSTEGLS VPSTEGLS-  0  0  0  8  1     VPSTEGLS T_0_1_sample_23 0.0001660   71.102 0.015671   89.909 42201.94
+   2  SLA-1:1301       PSTEGLSY PSTE-GLSY  0  0  0  4  1     PSTEGLSY T_0_1_sample_23 0.0284530   13.306 0.062554   30.826 25411.52
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_23. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGETY VESTEGETY  0  0  0  0  0    VESTEGETY T_0_1_sample_24 0.3132540    0.978 0.194494    3.524  6096.05 <= WB
+   1  SLA-1:1301       VESTEGET VESTEGET-  0  0  0  8  1     VESTEGET T_0_1_sample_24 0.0002560   65.361 0.014499   91.585 42740.50
+   2  SLA-1:1301       ESTEGETY ESTE-GETY  0  0  0  4  1     ESTEGETY T_0_1_sample_24 0.0879420    5.885 0.083893   20.542 20172.48
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_24. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGETY VESTEGETY  0  0  0  0  0    VESTEGETY T_0_1_sample_25 0.3132540    0.978 0.194494    3.524  6096.05 <= WB
+   1  SLA-1:1301       VESTEGET VESTEGET-  0  0  0  8  1     VESTEGET T_0_1_sample_25 0.0002560   65.361 0.014499   91.585 42740.50
+   2  SLA-1:1301       ESTEGETY ESTE-GETY  0  0  0  4  1     ESTEGETY T_0_1_sample_25 0.0879420    5.885 0.083893   20.542 20172.48
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_25. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEPTEGESY VEPTEGESY  0  0  0  0  0    VEPTEGESY T_0_1_sample_26 0.2622570    1.398 0.148434    7.127 10034.21 <= WB
+   1  SLA-1:1301       VEPTEGES VEPTEGES-  0  0  0  8  1     VEPTEGES T_0_1_sample_26 0.0001820   69.819 0.013074   93.602 43404.60
+   2  SLA-1:1301       EPTEGESY E-PTEGESY  0  0  0  1  1     EPTEGESY T_0_1_sample_26 0.0301920   12.840 0.045029   44.548 30717.10
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_26. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGETY VESTEGETY  0  0  0  0  0    VESTEGETY T_0_1_sample_27 0.3132540    0.978 0.194494    3.524  6096.05 <= WB
+   1  SLA-1:1301       VESTEGET VESTEGET-  0  0  0  8  1     VESTEGET T_0_1_sample_27 0.0002560   65.361 0.014499   91.585 42740.50
+   2  SLA-1:1301       ESTEGETY ESTE-GETY  0  0  0  4  1     ESTEGETY T_0_1_sample_27 0.0879420    5.885 0.083893   20.542 20172.48
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_27. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPDTEGEVY VPDTEGEVY  0  0  0  0  0    VPDTEGEVY T_0_1_sample_28 0.3862300    0.594 0.214825    2.584  4892.31 <= WB
+   1  SLA-1:1301       VPDTEGEV VPDTEG-EV  0  0  0  6  1     VPDTEGEV T_0_1_sample_28 0.0195910   16.248 0.048651   41.104 29536.60
+   2  SLA-1:1301       PDTEGEVY -PDTEGEVY  0  0  0  0  1     PDTEGEVY T_0_1_sample_28 0.0320700   12.397 0.057616   34.016 26806.13
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_28. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPDTEGEVY VPDTEGEVY  0  0  0  0  0    VPDTEGEVY T_0_1_sample_29 0.3862300    0.594 0.214825    2.584  4892.31 <= WB
+   1  SLA-1:1301       VPDTEGEV VPDTEG-EV  0  0  0  6  1     VPDTEGEV T_0_1_sample_29 0.0195910   16.248 0.048651   41.104 29536.60
+   2  SLA-1:1301       PDTEGEVY -PDTEGEVY  0  0  0  0  1     PDTEGEVY T_0_1_sample_29 0.0320700   12.397 0.057616   34.016 26806.13
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_29. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEPTEGETY VEPTEGETY  0  0  0  0  0    VEPTEGETY T_0_1_sample_30 0.2789320    1.245 0.155034    6.454  9342.65 <= WB
+   1  SLA-1:1301       VEPTEGET VEPTEGET-  0  0  0  8  1     VEPTEGET T_0_1_sample_30 0.0003190   62.683 0.014974   90.912 42521.41
+   2  SLA-1:1301       EPTEGETY E-PTEGETY  0  0  0  1  1     EPTEGETY T_0_1_sample_30 0.0375710   11.280 0.049650   40.251 29219.05
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_30. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPSTEGETY VPSTEGETY  0  0  0  0  0    VPSTEGETY T_0_1_sample_31 0.2666900    1.356 0.159385    6.027  8913.02 <= WB
+   1  SLA-1:1301       VPSTEGET VPSTEGET-  0  0  0  8  1     VPSTEGET T_0_1_sample_31 0.0002610   65.060 0.014392   91.736 42790.00
+   2  SLA-1:1301       PSTEGETY PSTE-GETY  0  0  0  4  1     PSTEGETY T_0_1_sample_31 0.0350280   11.760 0.055296   35.707 27487.53
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_31. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTTGESY VEDTTGESY  0  0  0  0  0    VEDTTGESY T_0_1_sample_32 0.5912030    0.109 0.300971    0.660  1926.27 <= SB
+   1  SLA-1:1301       VEDTTGES VEDTTGES-  0  0  0  8  1     VEDTTGES T_0_1_sample_32 0.0011880   45.284 0.026024   71.247 37729.76
+   2  SLA-1:1301       EDTTGESY E-DTTGESY  0  0  0  1  1     EDTTGESY T_0_1_sample_32 0.1031890    5.004 0.092261   17.766 18426.30
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_32. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGETY VESTEGETY  0  0  0  0  0    VESTEGETY T_0_1_sample_33 0.3132540    0.978 0.194494    3.524  6096.05 <= WB
+   1  SLA-1:1301       VESTEGET VESTEGET-  0  0  0  8  1     VESTEGET T_0_1_sample_33 0.0002560   65.361 0.014499   91.585 42740.50
+   2  SLA-1:1301       ESTEGETY ESTE-GETY  0  0  0  4  1     ESTEGETY T_0_1_sample_33 0.0879420    5.885 0.083893   20.542 20172.48
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_33. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPDTEGEVY VPDTEGEVY  0  0  0  0  0    VPDTEGEVY T_0_1_sample_34 0.3862300    0.594 0.214825    2.584  4892.31 <= WB
+   1  SLA-1:1301       VPDTEGEV VPDTEG-EV  0  0  0  6  1     VPDTEGEV T_0_1_sample_34 0.0195910   16.248 0.048651   41.104 29536.60
+   2  SLA-1:1301       PDTEGEVY -PDTEGEVY  0  0  0  0  1     PDTEGEVY T_0_1_sample_34 0.0320700   12.397 0.057616   34.016 26806.13
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_34. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGEVY VESTEGEVY  0  0  0  0  0    VESTEGEVY T_0_1_sample_35 0.2318190    1.746 0.172610    4.930  7724.69 <= WB
+   1  SLA-1:1301       VESTEGEV V-ESTEGEV  0  0  0  1  1     VESTEGEV T_0_1_sample_35 0.0012170   44.979 0.031642   61.736 35504.64
+   2  SLA-1:1301       ESTEGEVY ESTE-GEVY  0  0  0  4  1     ESTEGEVY T_0_1_sample_35 0.0510370    9.192 0.071087   26.085 23170.44
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_35. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTSGESY VEDTSGESY  0  0  0  0  0    VEDTSGESY T_0_1_sample_36 0.5823230    0.120 0.301908    0.651  1906.84 <= SB
+   1  SLA-1:1301       VEDTSGES VEDTSGES-  0  0  0  8  1     VEDTSGES T_0_1_sample_36 0.0011810   45.358 0.026027   71.242 37728.52
+   2  SLA-1:1301       EDTSGESY E-DTSGESY  0  0  0  1  1     EDTSGESY T_0_1_sample_36 0.0949140    5.448 0.092375   17.732 18403.60
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_36. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGETY VESTEGETY  0  0  0  0  0    VESTEGETY T_0_1_sample_37 0.3132540    0.978 0.194494    3.524  6096.05 <= WB
+   1  SLA-1:1301       VESTEGET VESTEGET-  0  0  0  8  1     VESTEGET T_0_1_sample_37 0.0002560   65.361 0.014499   91.585 42740.50
+   2  SLA-1:1301       ESTEGETY ESTE-GETY  0  0  0  4  1     ESTEGETY T_0_1_sample_37 0.0879420    5.885 0.083893   20.542 20172.48
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_37. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPSTEGEVY VPSTEGEVY  0  0  0  0  0    VPSTEGEVY T_0_1_sample_38 0.1902420    2.417 0.139949    8.137 10999.02
+   1  SLA-1:1301       VPSTEGEV VPSTEG-EV  0  0  0  6  1     VPSTEGEV T_0_1_sample_38 0.0023280   37.193 0.029367   65.422 36389.45
+   2  SLA-1:1301       PSTEGEVY PSTE-GEVY  0  0  0  4  1     PSTEGEVY T_0_1_sample_38 0.0199580   16.090 0.047461   42.200 29919.36
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_38. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTSGLTY VEDTSGLTY  0  0  0  0  0    VEDTSGLTY T_0_1_sample_39 0.6674280    0.052 0.370826    0.187   904.63 <= SB
+   1  SLA-1:1301       VEDTSGLT VEDTSGLT-  0  0  0  8  1     VEDTSGLT T_0_1_sample_39 0.0043690   30.374 0.041166   48.682 32028.17
+   2  SLA-1:1301       EDTSGLTY E-DTSGLTY  0  0  0  1  1     EDTSGLTY T_0_1_sample_39 0.1750160    2.712 0.135592    8.708 11529.95
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_39. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGESY VESTEGESY  0  0  0  0  0    VESTEGESY T_0_1_sample_40 0.2850890    1.192 0.180306    4.369  7107.51 <= WB
+   1  SLA-1:1301       VESTEGES VESTEGES-  0  0  0  8  1     VESTEGES T_0_1_sample_40 0.0001740   70.424 0.012202   94.837 43816.04
+   2  SLA-1:1301       ESTEGESY ESTE-GESY  0  0  0  4  1     ESTEGESY T_0_1_sample_40 0.0713630    7.086 0.075542   23.933 22080.07
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_40. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGEVY VESTEGEVY  0  0  0  0  0    VESTEGEVY T_0_1_sample_41 0.2318190    1.746 0.172610    4.930  7724.69 <= WB
+   1  SLA-1:1301       VESTEGEV V-ESTEGEV  0  0  0  1  1     VESTEGEV T_0_1_sample_41 0.0012170   44.979 0.031642   61.736 35504.64
+   2  SLA-1:1301       ESTEGEVY ESTE-GEVY  0  0  0  4  1     ESTEGEVY T_0_1_sample_41 0.0510370    9.192 0.071087   26.085 23170.44
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_41. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPDTSGLSY VPDTSGLSY  0  0  0  0  0    VPDTSGLSY T_0_1_sample_42 0.5935090    0.107 0.317369    0.516  1613.11 <= SB
+   1  SLA-1:1301       VPDTSGLS VPDTSGLS-  0  0  0  8  1     VPDTSGLS T_0_1_sample_42 0.0036910   32.124 0.033065   59.503 34962.18
+   2  SLA-1:1301       PDTSGLSY -PDTSGLSY  0  0  0  0  1     PDTSGLSY T_0_1_sample_42 0.0721810    7.018 0.092574   17.673 18364.01
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_42. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGLSY VESTEGLSY  0  0  0  0  0    VESTEGLSY T_0_1_sample_43 0.3443780    0.810 0.216709    2.507  4793.59 <= WB
+   1  SLA-1:1301       VESTEGLS VESTEGLS-  0  0  0  8  1     VESTEGLS T_0_1_sample_43 0.0002540   65.482 0.016416   88.632 41863.12
+   2  SLA-1:1301       ESTEGLSY ESTEG-LSY  0  0  0  5  1     ESTEGLSY T_0_1_sample_43 0.0998900    5.181 0.099797   15.612 16983.49
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_43. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDTTGETY VEDTTGETY  0  0  0  0  0    VEDTTGETY T_0_1_sample_44 0.6173670    0.082 0.316454    0.523  1629.15 <= SB
+   1  SLA-1:1301       VEDTTGET VEDTTGET-  0  0  0  8  1     VEDTTGET T_0_1_sample_44 0.0020900   38.461 0.030023   64.338 36132.08
+   2  SLA-1:1301       EDTTGETY E-DTTGETY  0  0  0  1  1     EDTTGETY T_0_1_sample_44 0.1274200    4.007 0.102658   14.889 16465.80
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_44. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPSTEGEVY VPSTEGEVY  0  0  0  0  0    VPSTEGEVY T_0_1_sample_45 0.1902420    2.417 0.139949    8.137 10999.02
+   1  SLA-1:1301       VPSTEGEV VPSTEG-EV  0  0  0  6  1     VPSTEGEV T_0_1_sample_45 0.0023280   37.193 0.029367   65.422 36389.45
+   2  SLA-1:1301       PSTEGEVY PSTE-GEVY  0  0  0  4  1     PSTEGEVY T_0_1_sample_45 0.0199580   16.090 0.047461   42.200 29919.36
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_45. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGETY VESTEGETY  0  0  0  0  0    VESTEGETY T_0_1_sample_46 0.3132540    0.978 0.194494    3.524  6096.05 <= WB
+   1  SLA-1:1301       VESTEGET VESTEGET-  0  0  0  8  1     VESTEGET T_0_1_sample_46 0.0002560   65.361 0.014499   91.585 42740.50
+   2  SLA-1:1301       ESTEGETY ESTE-GETY  0  0  0  4  1     ESTEGETY T_0_1_sample_46 0.0879420    5.885 0.083893   20.542 20172.48
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_46. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEPTEGEVY VEPTEGEVY  0  0  0  0  0    VEPTEGEVY T_0_1_sample_47 0.1931630    2.367 0.133451    8.994 11800.16
+   1  SLA-1:1301       VEPTEGEV V-EPTEGEV  0  0  0  1  1     VEPTEGEV T_0_1_sample_47 0.0025690   36.089 0.032445   60.445 35197.50
+   2  SLA-1:1301       EPTEGEVY E-PTEGEVY  0  0  0  1  1     EPTEGEVY T_0_1_sample_47 0.0218380   15.369 0.041002   48.869 32085.07
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_47. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VEDVEGEVY VEDVEGEVY  0  0  0  0  0    VEDVEGEVY T_0_1_sample_48 0.4180390    0.467 0.249301    1.499  3369.09 <= SB
+   1  SLA-1:1301       VEDVEGEV VEDVEG-EV  0  0  0  6  1     VEDVEGEV T_0_1_sample_48 0.0040840   31.054 0.046257   43.366 30311.66
+   2  SLA-1:1301       EDVEGEVY E-DVEGEVY  0  0  0  1  1     EDVEGEVY T_0_1_sample_48 0.0555950    8.625 0.076443   23.542 21865.86
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_48. Allele SLA-1:1301. Number of high binders 1. Number of weak binders 0. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VPSTEGETY VPSTEGETY  0  0  0  0  0    VPSTEGETY T_0_1_sample_49 0.2666900    1.356 0.159385    6.027  8913.02 <= WB
+   1  SLA-1:1301       VPSTEGET VPSTEGET-  0  0  0  8  1     VPSTEGET T_0_1_sample_49 0.0002610   65.060 0.014392   91.736 42790.00
+   2  SLA-1:1301       PSTEGETY PSTE-GETY  0  0  0  4  1     PSTEGETY T_0_1_sample_49 0.0350280   11.760 0.055296   35.707 27487.53
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_49. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
+# Rank Threshold for Strong binding peptides   0.500
+# Rank Threshold for Weak binding peptides   2.000
+---------------------------------------------------------------------------------------------------------------------------
+ Pos         MHC        Peptide      Core Of Gp Gl Ip Il        Icore        Identity  Score_EL %Rank_EL Score_BA %Rank_BA  Aff(nM) BindLevel
+---------------------------------------------------------------------------------------------------------------------------
+   1  SLA-1:1301      VESTEGESY VESTEGESY  0  0  0  0  0    VESTEGESY T_0_1_sample_50 0.2850890    1.192 0.180306    4.369  7107.51 <= WB
+   1  SLA-1:1301       VESTEGES VESTEGES-  0  0  0  8  1     VESTEGES T_0_1_sample_50 0.0001740   70.424 0.012202   94.837 43816.04
+   2  SLA-1:1301       ESTEGESY ESTE-GESY  0  0  0  4  1     ESTEGESY T_0_1_sample_50 0.0713630    7.086 0.075542   23.933 22080.07
+---------------------------------------------------------------------------------------------------------------------------
+
+Protein T_0_1_sample_50. Allele SLA-1:1301. Number of high binders 0. Number of weak binders 1. Number of peptides 3
+
+-----------------------------------------------------------------------------------
