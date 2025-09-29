@@ -160,12 +160,12 @@ def main():
         if args.mode == 'wrapper':
             if not args.df:
                 raise ValueError("--df is required for wrapper mode")
+            AMINO_ACIDS = set('ARNDCEQGHILKMFPSTWYV/')
             try:
                 df = pd.read_csv(args.df, sep='\t')
-                df['mhc_seq'] = [i.replace('-', '') for i in df.mhc_seq.tolist()]  # remove gaps from df:
             except:
                 df = pd.read_csv(args.df)
-                df['mhc_seq'] = [i.replace('-', '') for i in df.mhc_seq.tolist()]  # remove gaps from df:
+            df['mhc_seq'] = [''.join([aa.upper() for aa in seq if aa.upper() in AMINO_ACIDS]) for seq in df['mhc_seq'].tolist()]  # remove gaps from df:
             if args.multiple_anchors:
                 L1 = len(df)
                 ma = MultipleAnchors(args, args.dirty_mode)
