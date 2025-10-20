@@ -2,7 +2,8 @@ import argparse
 import pandas as pd
 from run_utils import (run_PMGen_wrapper, run_PMGen_modeling, protein_mpnn_wrapper, bioemu_assertions,
                        MultipleAnchors, get_best_structres, retrieve_anchors_and_fixed_positions, assert_iterative_mode,
-                       collect_generated_binders, create_new_input_and_fixed_positions, create_fixed_positions_if_given)
+                       collect_generated_binders, create_new_input_and_fixed_positions, create_fixed_positions_if_given,
+                       mutation_screen)
 import shutil
 from Bio import SeqIO
 import warnings
@@ -99,6 +100,12 @@ def main():
     parser.add_argument('--bioemu_run_on_iter', type=int, default=None, help='Optional, only works when iterative_peptide_gen > 0. Runs bioemu on the structure taken'
                                                                              'from the iteration number given by user. If not set, runs on the 0 iteration by default.')
 
+    # Mutation screen Arguments
+    parser.add_argument('--mutation_screen', action='store_true', help='samples <n_mutations> point mutations over each structure.'
+                                                                       'e.g, if n_mutations==1, and peptide length is 9, samples 9 mutations '
+                                                                       'one over each position using structure aware peptide selection pipeline.')
+    parser.add_argument('--n_mutations', type=int, default=1, help='number of mutations in a single run on a single peptide in mutation_screen.')
+
 
     # Setting to Run only a part:
     parser.add_argument('--no_alphafold', action='store_false', help='does not run alphafold.')
@@ -110,6 +117,7 @@ def main():
     parser.add_argument('--only_collect_generated_binders', action='store_true', help='Use it only if you have a previous run with generated binders and you do not want'
                                                                                       'to run proteinmpnn again, and instead you want to predict and collect binders using BA predictions.'
                                                                                       'Overwrites all proteinmpnn flags.')
+    parser.add_argument('--only_mutation_screen', action='store_true')
 
     # Setting to run iterative peptide generation
     parser.add_argument('--iterative_peptide_gen', type=int, default=0, help='If used, the iterative peptide generation is performed, defines the number of iterations.')
@@ -119,7 +127,8 @@ def main():
     for iteration in range(args.iterative_peptide_gen + 1):
         if iteration == 0:
             fixed_positions_path = create_fixed_positions_if_given(args)
-            args.fix_anchors = True
+            if args.fixed_positions_given:
+                args.fix_anchors = True
         else: fixed_positions_path = None
         # if we have entered the iterative generation mode
         if args.iterative_peptide_gen > 0:
@@ -163,8 +172,10 @@ def main():
             AMINO_ACIDS = set('ARNDCEQGHILKMFPSTWYV/')
             try:
                 df = pd.read_csv(args.df, sep='\t')
+                _ = df['mhc_seq']
             except:
                 df = pd.read_csv(args.df)
+                _ = df['mhc_seq']
             df['mhc_seq'] = [''.join([aa.upper() for aa in seq if aa.upper() in AMINO_ACIDS]) for seq in df['mhc_seq'].tolist()]  # remove gaps from df:
             if args.multiple_anchors:
                 L1 = len(df)
@@ -187,9 +198,9 @@ def main():
                                            benchmark=args.benchmark, best_n_templates=args.best_n_templates,
                                            n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora,
                                             no_modelling=args.initial_guess, return_all_outputs=args.return_all_outputs)
-            if args.run == 'parallel' and not args.only_protein_mpnn:
+            if args.run == 'parallel' and not args.only_protein_mpnn and not args.only_mutation_screen:
                 runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
-            elif args.run == 'single' and not args.only_protein_mpnn:
+            elif args.run == 'single' and not args.only_protein_mpnn and not args.only_mutation_screen:
                 runner.run_wrapper(run_alphafold=args.no_alphafold)
             else:
                 print('--Warning!-- Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
@@ -222,17 +233,17 @@ def main():
                                             n_homology_models=args.n_homology_models,
                                             pandora_force_run=args.no_pandora,
                                             return_all_outputs=args.return_all_outputs)
-            if not args.only_protein_mpnn:
+            if not args.only_protein_mpnn and not args.only_mutation_screen:
                 runner.run_PMGen(run_alphafold=args.no_alphafold)
             else:
-                print('--Warning!-- Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
+                print('Only ProteinMPNN mode, Alphafold and PANDORA are skipped.')
             output_pdbs_dict = {}
             out_alphafold = os.path.join(args.output_dir, 'alphafold', args.id)
             output_pdbs_dict[args.id] = [os.path.join(out_alphafold, i) for i in os.listdir(out_alphafold) if
                                          i.endswith('.pdb') and 'model_' in i and not i.endswith('.npy')]
             # {'id':[output1, output2, ...]}
 
-        if not args.only_protein_mpnn:
+        if not args.only_protein_mpnn and not args.only_mutation_screen:
             print("Alphafold Runs completed.")
         else:
             print('Alphafold Runs Skipped!')
@@ -260,9 +271,16 @@ def main():
                 print("### Start ProteinMPNN runs ###")
                 print('files:\n', output_pdbs_dict)
                 protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, anchor_and_peptide=anchor_and_peptide, mode=args.run)
-                if (args.peptide_design and args.mode and args.binder_pred == "wrapper") or args.only_collect_generated_binders:
+                if (args.peptide_design and args.binder_pred and args.mode == "wrapper") or args.only_collect_generated_binders:
                     print("Collecting the best binders")
                     collected_generated_binders_path = collect_generated_binders(args, df, iteration)
+
+    if args.mutation_screen:
+        print('**Mutation Screen Initiating**')
+        assert os.path.join(args.output_dir, 'alphafold'), f'alphafold directory does not exist!'
+        mt = mutation_screen(args, df)
+        mt.run_mutation_screen()
+
 
     if args.run_bioemu:
         print('**BioEmu runs initiating**')
