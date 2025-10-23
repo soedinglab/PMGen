@@ -884,47 +884,72 @@ def rename_files(directory, num_template, copy_if_less_template=False):
     return modified_files
 
 
-
-
 def parse_netmhcpan_file(file_path):
-    # Read the entire file
+    """
+    Optimized parser for NetMHCpan output files.
+    Uses efficient regex patterns and minimizes string operations.
+    """
+    # Read file once
     with open(file_path, 'r') as f:
-        content = f.read()
-    # Split into sections using dashed lines (flexible length)
-    sections = re.split(r'-{50,}', content)
+        lines = f.readlines()
+
+    # Pre-compile regex patterns (compiled once, reused many times)
+    dash_pattern = re.compile(r'^-{50,}')
+    pos_pattern = re.compile(r'^\s*Pos\s+')
+    data_pattern = re.compile(r'^\s*\d+\s+')
+    whitespace_splitter = re.compile(r'\s+')
+
     tables = []
-    itis_header = False
-    for section in sections:
-        lines = section.strip().split('\n')
-        if not lines:
-            continue
-        # Look for header starting with "Pos"
-        data = []
-        for i, line in enumerate(lines):
-            if itis_header: # if previous one was header, no add data until reach end of table
-                if re.match(r'^\s*\d+\s+', line):  # Collect data rows (lines starting with a number)
-                    data.append(re.split(r'\s+', line.strip())[:len(columns)])
-            if line.strip().startswith("Pos"):
-                header_line = line
-                itis_header = True
-                # Extract column names from header (split on 2+ spaces) and remove "BinderLevel" in the end which is empty usually
-                columns = re.split(r'\s+', header_line.strip())
-                columns = columns[:-1] if columns[-1] == 'BindLevel' else columns
-                break
-        if itis_header and len(data) != 0: # if header found and data is loaded, write the table
-            df = pd.DataFrame(data=data, columns=columns)
-            try:# most likely works for mhc1
-                df = df.astype({'Score_EL':'float', 'Aff(nM)':'float'})
-                df = df.sort_values(["Aff(nM)", "Score_EL"], ascending=[True, False])
-            except:# for mhc2
-                df = df.astype({'Score_EL':'float', 'Affinity(nM)':'float'})
-                df = df.sort_values(["Affinity(nM)", "Score_EL"], ascending=[True, False])
-            itis_header = False # after data, again refresh the header and search for next table
-            tables.append(df)
-    try:
-        return pd.concat(tables)
-    except:
+    i = 0
+    n_lines = len(lines)
+    while i < n_lines:
+        line = lines[i]
+        # Check if this is a header line
+        if pos_pattern.match(line):
+            # Extract columns
+            columns = whitespace_splitter.split(line.strip())
+            if columns[-1] == 'BindLevel':
+                columns = columns[:-1]
+            n_cols = len(columns)
+            i += 1
+            # Skip the dashed line after header
+            if i < n_lines and dash_pattern.match(lines[i]):
+                i += 1
+            # Collect data rows
+            data = []
+            while i < n_lines:
+                line = lines[i]
+                # Stop at next separator or end
+                if dash_pattern.match(line) or not line.strip():
+                    break
+                # Check if it's a data row
+                if data_pattern.match(line):
+                    row = whitespace_splitter.split(line.strip())[:n_cols]
+                    data.append(row)
+                i += 1
+            # Create DataFrame if we have data
+            if data:
+                df = pd.DataFrame(data, columns=columns)
+                # Determine MHC type and convert/sort
+                if 'Aff(nM)' in df.columns:
+                    # MHC-I
+                    df['Score_EL'] = pd.to_numeric(df['Score_EL'], errors='coerce')
+                    df['Aff(nM)'] = pd.to_numeric(df['Aff(nM)'], errors='coerce')
+                    df.sort_values(['Aff(nM)', 'Score_EL'], ascending=[True, False], inplace=True)
+                elif 'Affinity(nM)' in df.columns:
+                    # MHC-II
+                    df['Score_EL'] = pd.to_numeric(df['Score_EL'], errors='coerce')
+                    df['Affinity(nM)'] = pd.to_numeric(df['Affinity(nM)'], errors='coerce')
+                    df.sort_values(['Affinity(nM)', 'Score_EL'], ascending=[True, False], inplace=True)
+
+                tables.append(df)
+        else:
+            i += 1
+
+    if not tables:
         raise ValueError(f"debugging message: {file_path} could not be parsed by parse_netmhcpan_file")
+
+    return pd.concat(tables, ignore_index=True)
     
 
 def find_similar_strings(a: str, file_path: str, num_matches=100):
@@ -1012,7 +1037,6 @@ def match_inputseq_to_netmhcpan_allele(sequence, mhc_type, mhc_allele=None,
     return matched_allele[0]
 
 
-
 def run_netmhcpan(peptide_fasta, allele_list, output, mhc_type,
                   netmhcipan_path=netmhcipan_path, netmhciipan_path=netmhciipan_path):
     assert mhc_type in [1, 2]
@@ -1038,6 +1062,131 @@ def run_netmhcpan(peptide_fasta, allele_list, output, mhc_type,
     with open(output, 'w') as f:
         subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, check=True)
 
+###################################################################
+from multiprocessing import Pool, cpu_count
+from pathlib import Path
+import tempfile
+import shutil
+
+
+def split_fasta(fasta_file, n_chunks):
+    """Split FASTA file into n_chunks smaller files"""
+    from Bio import SeqIO
+
+    sequences = list(SeqIO.parse(fasta_file, "fasta"))
+    chunk_size = len(sequences) // n_chunks + 1
+
+    chunk_files = []
+    for i in range(n_chunks):
+        chunk = sequences[i * chunk_size:(i + 1) * chunk_size]
+        if not chunk:
+            break
+
+        chunk_file = tempfile.NamedTemporaryFile(mode='w', suffix='.fasta', delete=False)
+        SeqIO.write(chunk, chunk_file.name, "fasta")
+        chunk_files.append(chunk_file.name)
+        chunk_file.close()
+
+    return chunk_files
+
+
+def run_netmhcpan_chunk(args):
+    """Run NetMHCpan on a single chunk"""
+    peptide_fasta, allele_list, output, mhc_type, netmhcipan_path, netmhciipan_path = args
+
+    if mhc_type == 1:
+        cmd = [str(netmhcipan_path), '-f', str(peptide_fasta),
+               '-BA', '-a', str(allele_list[0])]
+    elif mhc_type == 2:
+        final_allele = ""
+        for allele in allele_list:
+            if 'H-2' in allele or 'DRB' in allele:
+                final_allele = allele
+            else:
+                if 'DQA' in allele or 'DPA' in allele:
+                    final_allele += allele
+                if 'DQB' in allele or 'DPB' in allele:
+                    final_allele += f'-{allele.replace("HLA-", "")}'
+        cmd = [str(netmhciipan_path), '-f', str(peptide_fasta),
+               '-BA', '-u', '-s', '-length', '9,10,11,12,13,14,15,16,17,18',
+               '-inptype', '0', '-a', str(final_allele)]
+
+    with open(output, 'w') as f:
+        subprocess.run(cmd, stdout=f, stderr=subprocess.PIPE, check=True)
+
+    return output
+
+
+def run_netmhcpan_parallel(peptide_fasta, allele_list, output, mhc_type,
+                           netmhcipan_path=netmhcipan_path,
+                           netmhciipan_path=netmhciipan_path,
+                           n_jobs=None, verbose=False):
+    """
+    Run NetMHCpan in parallel by splitting the input FASTA
+
+    Args:
+        n_jobs: Number of parallel jobs (default: use all CPU cores)
+    """
+    assert mhc_type in [1, 2]
+
+    if n_jobs is None:
+        n_jobs = cpu_count()
+
+    # Split FASTA into chunks
+    if verbose:
+        print(f"Splitting FASTA into {n_jobs} chunks...")
+    chunk_files = split_fasta(peptide_fasta, n_jobs)
+
+    # Prepare arguments for each chunk
+    temp_outputs = []
+    args_list = []
+    for i, chunk_file in enumerate(chunk_files):
+        temp_output = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
+        temp_output.close()
+        temp_outputs.append(temp_output.name)
+
+        args_list.append((
+            chunk_file, allele_list, temp_output.name, mhc_type,
+            netmhcipan_path, netmhciipan_path
+        ))
+
+    # Run in parallel
+    if verbose:
+        print(f"Running NetMHCpan on {len(chunk_files)} chunks in parallel...")
+    with Pool(processes=n_jobs) as pool:
+        pool.map(run_netmhcpan_chunk, args_list)
+
+    # Merge outputs
+    if verbose:
+        print("Merging results...")
+    with open(output, 'w') as outfile:
+        for i, temp_output in enumerate(temp_outputs):
+            with open(temp_output, 'r') as infile:
+                if i == 0:
+                    # Include header from first file
+                    outfile.write(infile.read())
+                else:
+                    # Skip header lines for subsequent files
+                    lines = infile.readlines()
+                    # Find where data starts (after header lines starting with #)
+                    data_start = 0
+                    for j, line in enumerate(lines):
+                        if not line.startswith('#') and not line.startswith('-'):
+                            data_start = j
+                            break
+                    outfile.writelines(lines[data_start:])
+
+    # Cleanup temporary files
+    if verbose:
+        print("Cleaning up temporary files...")
+    for chunk_file in chunk_files:
+        Path(chunk_file).unlink()
+    for temp_output in temp_outputs:
+        Path(temp_output).unlink()
+    if verbose:
+        print(f"Done! Results saved to {output}")
+
+###################################################################
 
 def fetch_polypeptide_sequences(pdb_path):
     """

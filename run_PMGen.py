@@ -60,6 +60,7 @@ def main():
     parser.add_argument('--max_cores', type=int, default=4, help='Maximum number of CPU cores (only for parallel mode)')
     parser.add_argument('--dirty_mode', action='store_true')
     parser.add_argument('--initial_guess', action='store_true', help='Activates Faster and more accurate AF initial Guess mode instead of Homology modelling mode')
+    parser.add_argument('--verbose', action='store_true')
 
     # Wrapper mode argument
     parser.add_argument('--df', type=str, help='Recommended. Path to input TSV file (required for wrapper mode)'

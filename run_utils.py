@@ -889,10 +889,10 @@ def protein_mpnn_wrapper(output_pdbs_dict, args, max_jobs, anchor_and_peptide=No
     else:
         raise ValueError("Invalid mode! Choose 'parallel' or 'single'.")
 
-
+import time
 def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_list=[], mhc_allele=None,
-                            dirty_mode=False, verbose=False, outfilename='netmhcpan_out', return_match_allele=False,
-                            match_with_netmhcpan=True):
+                            dirty_mode=False, verbose=True, outfilename='netmhcpan_out', return_match_allele=False,
+                            match_with_netmhcpan=True, n_jobs=1, parallel=False):
     assert mhc_type in [1,2]
     if not mhc_allele and len(mhc_seq_list) == 0:
         raise ValueError(f'at least one of mhc_seq_list or mhc_allele should be provided')
@@ -923,8 +923,17 @@ def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_li
         matched_allele.append(a)
         if mhc_type == 1: break
     if verbose: print("Matched Alleles", matched_allele)
-    processing_functions.run_netmhcpan(peptide_fasta_file, matched_allele, outfile, mhc_type)
+    if parallel:
+        processing_functions.run_netmhcpan_parallel(peptide_fasta_file, matched_allele, outfile, mhc_type, n_jobs=n_jobs, verbose=verbose)
+    else:
+        processing_functions.run_netmhcpan(peptide_fasta_file, matched_allele, outfile, mhc_type)
+    if verbose:
+        s = time.time()
+        print('Parsing netmhcpan output on ', outfile)
     df = processing_functions.parse_netmhcpan_file(outfile)
+    if verbose:
+        e = time.time()
+        print('parsing finished', 'time:', e-s)
     df.to_csv(outfile_csv, index=False)
     if not dirty_mode:
         os.remove(outfile)
@@ -965,7 +974,8 @@ class MultipleAnchors:
         elif mhc_type == 1:
             assert len(mhc_seq_list) == 1, (f'mhc_seq for mhc_type==1, should be string with no "/", '
                                             f'found: \n {str(row.mhc_seq)}')
-        netmhc_df = run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, self.tmp, mhc_seq_list, verbose=False, outfilename=str(row.id))
+        parallel = True if self.args.run == 'parallel' else False
+        netmhc_df = run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, self.tmp, mhc_seq_list, verbose=self.args.verbose, outfilename=str(row.id), n_jobs=self.args.max_cores, parallel=parallel)
         seen_cores = []
         results = {'anchors': [], 'mhc_seqs': [], 'ids': [], 'peptides': [], 'mhc_types': []}
         counter = 0
@@ -1352,23 +1362,32 @@ def generate_mutants(peptide, positions, fasta_out, id, one_indexed=True):
 
 def filter_peptides_from_netmhcpan_csv_output(df):
     """
+    Optimized version:
     1. Removes rows where 'Identity' starts with 'multichain'.
     2. For each remaining Identity, keeps the row with the longest peptide.
     3. Sorts the resulting rows by '%Rank_EL' in ascending order (lower = better).
     """
-    # Step 1: Remove 'multichain' rows
-    df = df[~df['Identity'].astype(str).str.startswith('multichain')].copy()
-    # Step 2: Compute peptide lengths
+    # Step 1: Remove 'multichain' rows using vectorized string operation
+    # Avoid .copy() if not modifying the original df elsewhere
+    mask = ~df['Identity'].str.startswith('multichain', na=False)
+    df = df[mask]
+
+    # Step 2: Compute peptide lengths (vectorized, no need for .copy())
     df['Peptide_length'] = df['Peptide'].str.len()
-    # Step 3: For each Identity, keep the row with the longest peptide
-    df = df.loc[df.groupby('Identity')['Peptide_length'].idxmax()]
-    # Step 4: Sort by '%Rank_EL' (ascending)
-    df = df.sort_values(by='%Rank_EL', ascending=True)
-    # Step 5: Drop helper column and reset index
-    df = df.drop(columns='Peptide_length').reset_index(drop=True)
-    df.drop_duplicates(subset=['Peptide'], inplace=True)
-    df.drop_duplicates(subset=['Identity'], inplace=True)
-    return df
+
+    # Step 3: Keep longest peptide per Identity (single operation)
+    # Use sort_values + drop_duplicates instead of groupby + idxmax (faster for large datasets)
+    df = df.sort_values(['Identity', 'Peptide_length'], ascending=[True, False])
+    df = df.drop_duplicates(subset='Identity', keep='first')
+
+    # Step 4: Drop duplicates by Peptide (moved before sorting for efficiency)
+    df = df.drop_duplicates(subset='Peptide', keep='first')
+
+    # Step 5: Sort by '%Rank_EL' (only once at the end)
+    df = df.sort_values('%Rank_EL', ascending=True)
+
+    # Step 6: Clean up and return
+    return df.drop(columns='Peptide_length').reset_index(drop=True)
 
 class mutation_screen():
     def __init__(self, args, df, **kwargs):
@@ -1451,18 +1470,24 @@ class mutation_screen():
                     if self.args.benchmark:
                         peptide_fasta_file = os.path.join(comb_path, 'peptide_design', 'binder_pred', 'mutants_bench.fa')
                         generate_mutants(peptide, comb, peptide_fasta_file, id, one_indexed=True)
+                        parallel = False
+                        if self.args.run == 'parallel': parallel=True
                         df_mut = run_and_parse_netmhcpan(
                             peptide_fasta_file,
                             mhc_type=mhc_type,
                             output_dir=os.path.join(comb_path, 'peptide_design', 'binder_pred'),
                             mhc_seq_list=[],
                             mhc_allele='/'.join(runner.matched_allele),
-                            dirty_mode=False, verbose=False,
+                            dirty_mode=False, verbose=self.args.verbose,
                             outfilename='netmhcpan_out_mutant_benchmark',
                             return_match_allele=False,
-                            match_with_netmhcpan=False
+                            match_with_netmhcpan=False,
+                            n_jobs=self.args.max_cores,
+                            parallel=parallel
                         )
+                        print('filter peptides from netmhcpan output')
                         df_mut = filter_peptides_from_netmhcpan_csv_output(df_mut)
+                        print('filter done')
                         dataframe_mut = pd.DataFrame({
                             'peptide': df_mut.Peptide.tolist(),
                             'mhc_seq': [mhc_seq] * len(df_mut.Peptide),
@@ -1490,18 +1515,18 @@ class mutation_screen():
             return pd.DataFrame()
 
     def run_mutation_screen(self):
-        if self.args.run == 'parallel':
-            with Pool(processes=self.args.max_cores) as pool:
-                results = pool.map(self.process_single_id, self.df.id.tolist())
-            ALL_DF = pd.concat([r for r in results if not r.empty])
-        else:
+        #if self.args.run == 'parallel':
+        #    with Pool(processes=self.args.max_cores) as pool:
+        #        results = pool.map(self.process_single_id, self.df.id.tolist())
+        #    ALL_DF = pd.concat([r for r in results if not r.empty])
+        #else:
             # sequential mode
-            ALL_DF = []
-            for id in self.df.id.tolist():
-                df_id = self.process_single_id(id)
-                if not df_id.empty:
-                    ALL_DF.append(df_id)
-            ALL_DF = pd.concat(ALL_DF)
+        ALL_DF = []
+        for id in self.df.id.tolist():
+            df_id = self.process_single_id(id)
+            if not df_id.empty:
+                ALL_DF.append(df_id)
+        ALL_DF = pd.concat(ALL_DF)
 
         ALL_DF.to_csv(os.path.join(self.args.output_dir, f'mutation_selection_{self.mt_num}.csv'), index=False)
 
