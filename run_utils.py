@@ -747,6 +747,7 @@ class run_proteinmpnn():
         output_dir = os.path.join(self.output_dir, 'peptide_design')
         peptide_fasta_file = [i for i in os.listdir(output_dir+'/'+'seqs') if i.endswith('.fa')][0]
         peptide_fasta_file = os.path.join(output_dir+'/'+'seqs', peptide_fasta_file)
+        processing_functions.clean_fasta_headers(peptide_fasta_file, peptide_fasta_file)
         mhc_type = 2 if len(self.chain_dict_dist.keys()) == 2 else 1
         mhc_seq_dict = processing_functions.fetch_polypeptide_sequences(self.multichain_pdb)
         mhc_seq_list = [mhc_seq_dict['A'], mhc_seq_dict['B']] if mhc_type==2 else [mhc_seq_dict['A']]

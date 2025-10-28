@@ -1188,6 +1188,61 @@ def run_netmhcpan_parallel(peptide_fasta, allele_list, output, mhc_type,
 
 ###################################################################
 
+def clean_fasta_headers(input_fasta, output_fasta):
+    """
+    Clean FASTA headers by standardizing sample numbering and reorganizing metadata.
+    Keeps the first header unchanged and only modifies subsequent headers.
+
+    Parameters:
+    -----------
+    input_fasta : str
+        Path to input FASTA file
+    output_fasta : str
+        Path to output cleaned FASTA file
+
+    Example:
+    --------
+    First header: unchanged
+    Subsequent headers:
+        Input:  >T=1.5, sample=1, score=1.8596, global_score=1.7745, seq_recovery=0.5000
+        Output: >sample_1, score=1.8596, global_score=1.7745, seq_recovery=0.5000, T=1.5
+    """
+    with open(input_fasta) as f, open(output_fasta, "w") as out:
+        sample_counter = 1
+        header_counter = 0
+        for line in f:
+            line = line.strip()
+            if line.startswith(">"):
+                header_counter += 1
+
+                # Keep first header unchanged
+                if header_counter == 1:
+                    out.write(line + "\n")
+                else:
+                    # Extract T value
+                    t_match = re.search(r"T=([\d\.]+)", line)
+                    t_value = t_match.group(1) if t_match else None
+
+                    # Remove "T=..." and "sample=..." parts from the header
+                    clean_header = re.sub(r"T=[\d\.]+,?\s*", "", line)
+                    clean_header = re.sub(r"sample=\d+,?\s*", "", clean_header)
+
+                    # Remove leading ">" and whitespace
+                    clean_header = clean_header.lstrip("> ").strip()
+
+                    # Add new standardized header
+                    if t_value:
+                        new_header = f">sample_{sample_counter}, {clean_header}, T={t_value}"
+                    else:
+                        new_header = f">sample_{sample_counter}, {clean_header}"
+
+                    out.write(new_header + "\n")
+                    sample_counter += 1
+            else:
+                # Sequence line
+                out.write(line + "\n")
+
+
 def fetch_polypeptide_sequences(pdb_path):
     """
     Fetches the polypeptide sequences from a PDB file.
