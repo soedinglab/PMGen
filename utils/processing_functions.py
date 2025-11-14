@@ -1562,4 +1562,84 @@ def mutate_peptide(peptide: str, positions: list, k: int) -> list:
     return mutated_peptides
 
 
+def add_plddt_as_bfactor_verbose(array_path, pdb_path, output_pdb_path, verbose=False):
+    """
+    Add pLDDT values from a numpy array as B-factors to a PDB structure (verbose version).
+    Args:
+        array_path: Path to numpy array file (.npy) with shape (seq,) containing pLDDT values
+        pdb_path: Path to input PDB file (single chain)
+        output_pdb_path: Path to save output PDB file with updated B-factors
+        verbose: Whether to print detailed information
+    Returns:
+        dict with statistics about the operation
+    """
+    # Load pLDDT array
+    plddt_array = np.load(array_path)
+    if verbose:
+        print(f"Loaded pLDDT array with shape: {plddt_array.shape}")
+        print(f"pLDDT range: [{plddt_array.min():.2f}, {plddt_array.max():.2f}]")
+    # Initialize PDB parser
+    parser = PDB.PDBParser(QUIET=True)
+    # Parse the structure
+    structure = parser.get_structure('protein', pdb_path)
+    # Get the first model and first chain
+    model = structure[0]
+    chains = list(model.get_chains())
+    if len(chains) == 0:
+        raise ValueError("No chains found in PDB structure")
+    if len(chains) > 1 and verbose:
+        print(f"Warning: Multiple chains found ({len(chains)}). Using first chain: {chains[0].id}")
+    # Use the first chain
+    chain = chains[0]
+    # Get all residues (excluding hetero atoms)
+    residues = [res for res in chain.get_residues() if res.id[0] == ' ']
+    # Check dimensions
+    n_residues = len(residues)
+    n_plddt = len(residues)
+    if verbose:
+        print(f"\nProcessing {n_residues} residues:")
+        print(f"{'Residue':<10} {'Res_Num':<10} {'Array_Idx':<12} {'pLDDT':<10} {'N_Atoms':<10}")
+        print("-" * 60)
+    # Statistics
+    stats = {
+        'n_residues': n_residues,
+        'n_atoms_total': 0,
+        'plddt_values': []
+    }
+    # Iterate over residues (residue 1 -> array index 0)
+    for array_idx, residue in enumerate(residues):
+        # Get pLDDT value from array
+        plddt_value = float(plddt_array[array_idx])
+        stats['plddt_values'].append(plddt_value)
+        # Get residue information
+        res_name = residue.get_resname()
+        res_num = residue.id[1]  # Residue number from PDB
+        # Count atoms in this residue
+        atoms = list(residue.get_atoms())
+        n_atoms = len(atoms)
+        stats['n_atoms_total'] += n_atoms
+        # Set B-factor for all atoms in this residue
+        for atom in atoms:
+            atom.set_bfactor(plddt_value)
+        # Verbose output for first 5 and last 5 residues
+        if verbose and (array_idx < 5 or array_idx >= n_residues - 5):
+            print(f"{res_name:<10} {res_num:<10} {array_idx:<12} {plddt_value:<10.2f} {n_atoms:<10}")
+        elif verbose and array_idx == 5:
+            print("...")
+    io = PDBIO()
+    io.set_structure(structure)
+    io.save(output_pdb_path)
+    if verbose:
+        print("\n" + "=" * 60)
+        print(f"Summary:")
+        print(f"  Output saved to: {output_pdb_path}")
+        print(f"  Total residues processed: {stats['n_residues']}")
+        print(f"  Total atoms updated: {stats['n_atoms_total']}")
+        print(f"  pLDDT statistics:")
+        print(f"    Mean: {np.mean(stats['plddt_values']):.2f}")
+        print(f"    Std:  {np.std(stats['plddt_values']):.2f}")
+        print(f"    Min:  {np.min(stats['plddt_values']):.2f}")
+        print(f"    Max:  {np.max(stats['plddt_values']):.2f}")
+        print("=" * 60)
+    return stats
 
