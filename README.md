@@ -192,9 +192,24 @@ output/
 ```
 
 ## Citation
+Cite PMGen with the following DOI:
+Asgary AH, Amirreza, et al. PMGen: From Peptide-MHC Prediction to Neoantigen Generation. bioRxiv [Preprint]. 2025 Nov 14:2025.11.14.688404. doi: 10.1101/2025.11.14.688404.
 
-If you use PMGen, please cite the underlying methods:
+@article{asgary2025pmgen,
+  author = {Asgary, Amir H. and Amirreza and others},
+  title = {PMGen: From Peptide-MHC Prediction to Neoantigen Generation},
+  journal = {bioRxiv},
+  year = {2025},
+  month = {11},
+  date = {2025-11-14},
+  doi = {10.1101/2025.11.14.688404},
+  url = {https://doi.org/10.1101/2025.11.14.688404},
+  note = {Preprint}
+}
 
+
+
+PMGen uses the following tools and papers:
 - **PANDORA**: [Antunes et al., Front. Immunol. 2022](https://www.frontiersin.org/articles/10.3389/fimmu.2022.878762/full)
 - **AlphaFold**: [Jumper et al., Nature 2021](https://www.nature.com/articles/s41586-021-03819-2)
 - **AFfine**: [Bradley et al., PNAS 2023](https://www.pnas.org/doi/abs/10.1073/pnas.2216697120)
