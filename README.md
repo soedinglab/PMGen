@@ -195,7 +195,7 @@ output/
 Cite PMGen with the following DOI:
 Asgary AH, Amirreza, et al. PMGen: From Peptide-MHC Prediction to Neoantigen Generation. bioRxiv [Preprint]. 2025 Nov 14:2025.11.14.688404. doi: 10.1101/2025.11.14.688404.
 
-`
+```
 @article{asgary2025pmgen,
   author = {Asgary, Amir H. and Amirreza and others},
   title = {PMGen: From Peptide-MHC Prediction to Neoantigen Generation},
@@ -207,7 +207,7 @@ Asgary AH, Amirreza, et al. PMGen: From Peptide-MHC Prediction to Neoantigen Gen
   url = {https://doi.org/10.1101/2025.11.14.688404},
   note = {Preprint}
 }
-`
+```
 
 
 PMGen uses the following tools and papers:
