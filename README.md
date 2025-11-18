@@ -192,8 +192,6 @@ output/
 ```
 
 ## Citation
-Cite PMGen with the following DOI:
-Asgary AH, Amirreza, et al. PMGen: From Peptide-MHC Prediction to Neoantigen Generation. bioRxiv [Preprint]. 2025 Nov 14:2025.11.14.688404. doi: 10.1101/2025.11.14.688404.
 
 ```
 @article{asgary2025pmgen,
