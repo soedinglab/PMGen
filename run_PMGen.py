@@ -173,10 +173,14 @@ def main():
             AMINO_ACIDS = set('ARNDCEQGHILKMFPSTWYV/')
             try:
                 df = pd.read_csv(args.df, sep='\t')
+                print(df)
                 _ = df['mhc_seq']
             except:
                 df = pd.read_csv(args.df)
+                print(df)
                 _ = df['mhc_seq']
+
+
             df['mhc_seq'] = [''.join([aa.upper() for aa in seq if aa.upper() in AMINO_ACIDS]) for seq in df['mhc_seq'].tolist()]  # remove gaps from df:
             if args.multiple_anchors:
                 L1 = len(df)

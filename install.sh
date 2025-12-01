@@ -80,7 +80,6 @@ else
     ACTIVATE_CMD="conda activate"
     echo "⚠ Mamba not found! Falling back to Conda."
 fi
-
 # Step 3: Ensure Conda is initialized
 if [ -z "$CONDA_PREFIX" ]; then
     source "$(conda info --base)/etc/profile.d/conda.sh"

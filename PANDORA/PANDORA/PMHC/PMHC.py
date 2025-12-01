@@ -316,7 +316,7 @@ class Target(PMHC):
                 try:
                     print(top_ids[:5])
                     top_id = top_ids[self.top_rank_num][0]  # blast_results is a list of top ids as tuples
-                    print('###############################DDDDD', top_ids[self.top_rank_num][0])
+                    print( top_ids[self.top_rank_num][0])
                     self.allele_type = [top_id]
                     print('Predicting Anchors for:', self.allele_type, self.top_rank_num)
                     self.anchors = Modelling_functions.predict_anchors_netMHCpan(
@@ -334,7 +334,7 @@ class Target(PMHC):
                           f"(top_rank_num={self.top_rank_num}) - {e}")
 
             elif MHC_class == 'II' and len(anchors) < 4:
-                print('WARNING: no anchor positions provided. Pandora will predict them using netMHCIIpan. anchors:', anchors)
+                print('WARNING: no anchor positions provided. Pandora will predict them using netMHCIIpan. anchorssssss:', anchors)
                 try:
                     print(top_ids[:5])
                     top_id = top_ids[0][1]
