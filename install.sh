@@ -23,8 +23,9 @@ error_handler() {
     echo "========================================="
     echo "⚠ An error occurred during the installation process."
     echo "If it is a GPU related issue, please adjust your CUDA and CUDNN version in .yml files."
+    echo "You can ignore --> fatal: destination path 'ProteinMPNN' already exists and is not an empty directory."
     echo "Please open an issue on our GitHub. We try to fix it in 24 hours!"
-    echo "GitHub: https://github.com/AmirAsgary/PMGen-MHC"
+    echo "GitHub: https://github.com/soedinglab/PMGen/issues"
     echo "========================================="
     exit 1
 }
