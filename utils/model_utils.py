@@ -13,13 +13,29 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers, Model
 import numpy as np
+from Bio.PDB import PDBParser, Superimposer
 from typing import List, Tuple, Optional, Dict
+import pandas as pd
 from dataclasses import dataclass
 import functools
+import os
+import datetime
+
+
 tf.random.set_seed(42)
 mixed_precision = False
 if mixed_precision:
     tf.keras.mixed_precision.set_global_policy('mixed_float16')
+
+# ============================================================================
+# Script Arguments
+# ============================================================================
+DATA_PREP=False
+INPUT_PATH = '/home/amir/amir/ParseFold/PMGen/outputs/good_structures_mutscreen_structure_pred/mutation_structures/structures'
+REFERENCE_PATH = '/home/amir/amir/ParseFold/pdbs/test/PMGen'
+OUTPUT_DIR = '/home/amir/amir/ParseFold/PMGen/outputs/good_structures_mutscreen_structure_pred/arrays'
+
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 # ============================================================================
 # CONSTANTS
 # ============================================================================
@@ -31,7 +47,7 @@ AMINO_ACIDS = [
 AA_TO_IDX = {aa: i for i, aa in enumerate(AMINO_ACIDS)}
 NUM_AA = len(AMINO_ACIDS)
 
-ATOM_TYPES = ['N', 'CA', 'C', 'O', 'CB']
+ATOM_TYPES = ['N', 'CA', 'C', 'O'] #'CB'
 ATOM_TO_IDX = {a: i for i, a in enumerate(ATOM_TYPES)}
 NUM_ATOM_TYPES = len(ATOM_TYPES)
 
@@ -74,7 +90,7 @@ VDW_RADII = {
     'CA': 1.70,
     'C': 1.70,
     'O': 1.52,
-    'CB': 1.70,
+    #'CB': 1.70,
 }
 
 LDDT_THRESHOLDS = [0.5, 1.0, 2.0, 4.0]
@@ -110,6 +126,82 @@ class Mutation:
     def __repr__(self):
         return f"{self.wild_type}{self.position + 1}{self.mutant}"
 
+
+# ============================================================================
+# PREP FUNCTIONS
+# ============================================================================
+
+def parse_and_align_pdb(input_pdb_path, reference_pdb_path):
+    parser = PDBParser(QUIET=True)
+    input_structure = parser.get_structure('input', input_pdb_path)
+    ref_structure = parser.get_structure('reference', reference_pdb_path)
+    input_residues = [res for res in input_structure.get_residues() if res.get_id()[0] == ' ']
+    ref_residues = [res for res in ref_structure.get_residues() if res.get_id()[0] == ' ']
+    input_ca_atoms = [res['CA'] for res in input_residues]
+    ref_ca_atoms = [res['CA'] for res in ref_residues]
+    super_imposer = Superimposer()
+    super_imposer.set_atoms(ref_ca_atoms, input_ca_atoms)
+    super_imposer.apply(input_structure.get_atoms())
+    n_res = len(input_residues)
+    coords = np.zeros((n_res, 4, 3), dtype=np.float32)
+    aa_indices = np.zeros(n_res, dtype=np.int64)
+    backbone_atoms = ['N', 'CA', 'C', 'O']
+    for i, res in enumerate(input_residues):
+        res_name = res.get_resname()
+        aa_indices[i] = AA_TO_IDX.get(res_name, -1)
+        for j, atom_name in enumerate(backbone_atoms):
+            if atom_name in res:
+                coords[i, j] = res[atom_name].get_coord()
+    return coords, aa_indices #(N,4,3), (N,)
+
+def parse_and_align_pdb_all(input_dir, reference_dir, output_dir, PAD_TOKEN=-2):
+    os.makedirs(output_dir, exist_ok=True)
+    input_strs = [f for f in os.listdir(input_dir) if f.endswith('.pdb')]
+    print(f"Found {len(input_strs)} PDB files in {input_dir}")
+    COORDS = []
+    SEQS = []
+    PDBS = []
+    FULL_NAME = []
+    RES_MASK = []
+    max_len = 0
+    failed = []
+    for input_str in input_strs:
+        inp_path = os.path.join(input_dir, input_str)
+        pdb = input_str.split('_')[0]
+        ref_path = os.path.join(reference_dir, f'{pdb}_PMGen.pdb')
+        try:
+            coords, aa_indices = parse_and_align_pdb(inp_path, ref_path)
+            if coords.shape[0] > max_len:
+                max_len = coords.shape[0]
+            COORDS.append(coords)
+            SEQS.append(aa_indices)
+            PDBS.append(pdb)
+            FULL_NAME.append(input_str)
+            RES_MASK.append(coords.shape[0])
+        except Exception as e:
+            failed.append(input_str)
+            print(f"Warning: Failed to process {input_str}: {e}")
+    print(f"Successfully processed {len(COORDS)}/{len(input_strs)} structures")
+    print(f"Max sequence length: {max_len}")
+    if failed:
+        print(f"Failed structures: {failed}")
+    print("Padding arrays...")
+    COORDS = [np.pad(c, ((0, max_len - c.shape[0]), (0, 0), (0, 0)), constant_values=0.) for c in COORDS]
+    SEQS = [np.pad(s, (0, max_len - s.shape[0]), constant_values=PAD_TOKEN) for s in SEQS]
+    COORDS = np.array(COORDS)
+    SEQS = np.array(SEQS)
+    print(f"Final COORDS shape: {COORDS.shape}")
+    print(f"Final SEQS shape: {SEQS.shape}")
+    DF = pd.DataFrame({'full_name': FULL_NAME, 'pdb': PDBS, 'length': RES_MASK})
+    DF['index'] = range(len(DF))
+    print("Saving outputs...")
+    np.save(os.path.join(output_dir, 'coords.npy'), COORDS)
+    np.save(os.path.join(output_dir, 'seqs.npy'), SEQS)
+    DF.to_csv(os.path.join(output_dir, 'df.csv'), index=False)
+    pair_df = DF.merge(DF, on='pdb', suffixes=('_1', '_2'))
+    pair_df = pair_df[pair_df['index_1'] != pair_df['index_2']]
+    pair_df.to_csv(os.path.join(output_dir, 'paired.csv'), index=False)
+    print(f"Saved coords.npy, seqs.npy, and df.csv to {output_dir}")
 
 # ============================================================================
 # UTILITY FUNCTIONS (BATCHED)
@@ -191,7 +283,7 @@ def rbf_encode(distances: tf.Tensor, num_rbf: int = 32,
     return tf.exp(-(diff ** 2) / (2 * gamma ** 2))
 
 
-def build_batched_node_adjacency(coords, mask, threshold, PAD_TOKEN=-2.):
+def build_batched_node_adjacency(coords, mask, threshold):
     """
     Builds a (B, N, N) adjacency matrix based on distance and padding.
     Args:
@@ -201,13 +293,13 @@ def build_batched_node_adjacency(coords, mask, threshold, PAD_TOKEN=-2.):
     Returns:
         adj: Tensor of shape (B, N, N) with 1.0 for neighbors and 0.0 otherwise.
     """
-    mask = tf.where(mask == PAD_TOKEN, 0., 1.)
     # 1. Compute pairwise squared distances using broadcasting
     # [B, N, 1, 3] - [B, 1, N, 3] -> [B, N, N, 3]
     diff = tf.expand_dims(coords, 2) - tf.expand_dims(coords, 1)
     dist_sq = tf.reduce_sum(tf.square(diff), axis=-1)
+    dist = tf.sqrt(dist_sq + 1e-8)
     # 2. Apply the threshold
-    adj = tf.cast(dist_sq <= threshold, tf.float32)
+    adj = tf.cast(dist <= threshold, tf.float32)
     # 3. Set diagonal to 0 (remove self-loops)
     # tf.linalg.set_diag needs a vector of shape (B, N) to put on the diagonal
     batch_size = tf.shape(coords)[0]
@@ -345,7 +437,7 @@ class RBFLayer(layers.Layer):
 class AttEGNNLayer(layers.Layer):
     def __init__(self, node_dim: int, edge_dim: int, hidden_dim: int = 64,
                  name='AttEGNN', heads: int = 4,
-                 return_attention_map: bool = False, **kwargs):
+                 return_attention_map: bool = False, edge_att=False, **kwargs):
         super(AttEGNNLayer, self).__init__(name=name, **kwargs)  # BUG FIX: Must call parent __init__ for Keras layers to work properly
         self.node_dim = node_dim
         self.edge_dim = edge_dim
@@ -353,6 +445,7 @@ class AttEGNNLayer(layers.Layer):
         self._name = name  # BUG FIX: Use _name to avoid conflict with parent class 'name' property
         self.heads = heads
         self.return_attention_map = return_attention_map
+        self.edge_att = edge_att
 
     def build(self, input_shape):
         # general params
@@ -367,13 +460,17 @@ class AttEGNNLayer(layers.Layer):
         self.node_out = self.add_weight(shape=(int(self.heads * self.node_dim), self.node_dim), initializer='random_normal', trainable=True, name=f'{self._name}_node_out', dtype=self.compute_dtype)
         self.node_ln2 = layers.LayerNormalization(name = f'{self._name}_node_ln2')
         # Define Edge Layers --> self att
-        self.edge_ln1 = layers.LayerNormalization(name = f'{self._name}_edge_ln1')
-        self.W_edge_key = self.add_weight(shape=(self.heads, 1, self.edge_dim, self.hidden_dim), initializer='random_normal', trainable=True, name=f'{self._name}_W_edge_key', dtype=self.compute_dtype)
-        self.W_edge_query = self.add_weight(shape=(self.heads, 1, self.edge_dim, self.hidden_dim), initializer='random_normal', trainable=True, name=f'{self._name}_W_edge_query', dtype=self.compute_dtype)
-        self.W_edge_value = self.add_weight(shape=(self.heads, 1, self.edge_dim, self.edge_dim), initializer='random_normal', trainable=True, name=f'{self._name}_W_edge_value', dtype=self.compute_dtype)
-        self.edge_bias = self.add_weight(shape=(self.heads, 1, self.edge_dim, 1), initializer='zeros', trainable=True, name=f'{self._name}_edge_bias', dtype=self.compute_dtype)
-        self.edge_gate = self.add_weight(shape=(self.heads, 1, self.edge_dim, self.edge_dim), initializer='random_uniform', trainable=True, name=f'{self._name}_edge_gate', dtype=self.compute_dtype)
-        self.edge_out = self.add_weight(shape=(int(self.heads * self.edge_dim), self.edge_dim),initializer='random_normal', trainable=True, name=f'{self._name}_edge_out', dtype=self.compute_dtype)
+        if self.edge_att:
+            self.edge_ln1 = layers.LayerNormalization(name = f'{self._name}_edge_ln1')
+            self.W_edge_key = self.add_weight(shape=(self.heads, 1, self.edge_dim, self.hidden_dim), initializer='random_normal', trainable=True, name=f'{self._name}_W_edge_key', dtype=self.compute_dtype)
+            self.W_edge_query = self.add_weight(shape=(self.heads, 1, self.edge_dim, self.hidden_dim), initializer='random_normal', trainable=True, name=f'{self._name}_W_edge_query', dtype=self.compute_dtype)
+            self.W_edge_value = self.add_weight(shape=(self.heads, 1, self.edge_dim, self.edge_dim), initializer='random_normal', trainable=True, name=f'{self._name}_W_edge_value', dtype=self.compute_dtype)
+            self.edge_bias = self.add_weight(shape=(self.heads, 1, self.edge_dim, 1), initializer='zeros', trainable=True, name=f'{self._name}_edge_bias', dtype=self.compute_dtype)
+            self.edge_gate = self.add_weight(shape=(self.heads, 1, self.edge_dim, self.edge_dim), initializer='random_uniform', trainable=True, name=f'{self._name}_edge_gate', dtype=self.compute_dtype)
+            self.edge_out = self.add_weight(shape=(int(self.heads * self.edge_dim), self.edge_dim),initializer='random_normal', trainable=True, name=f'{self._name}_edge_out', dtype=self.compute_dtype)
+        else:
+            self.edge_out1 = self.add_weight(shape=(self.edge_dim, self.hidden_dim),initializer='random_normal', trainable=True, name=f'{self._name}_edge_out1', dtype=self.compute_dtype)
+            self.edge_out2 = self.add_weight(shape=(self.hidden_dim, self.edge_dim),initializer='random_normal', trainable=True, name=f'{self._name}_edge_out2', dtype=self.compute_dtype)
         self.edge_ln2 = layers.LayerNormalization(name = f'{self._name}_edge_ln2')
         # update edge || node --> edge
         self.update_w_edge1 = self.add_weight(shape=(self.edge_dim + self.node_dim, self.hidden_dim), initializer='random_normal', trainable=True, name=f'{self._name}_update_w_edge1')
@@ -417,50 +514,72 @@ class AttEGNNLayer(layers.Layer):
         return node_out, node_att
 
     def _edge_attention(self, edge_features, edge_coadj):
-        edge_Q = tf.matmul(edge_features, self.W_edge_query) #(B,E,d_e) . (H,1,d_e,d_h) -> (H,B,E,d_h)
-        edge_K = tf.matmul(edge_features, self.W_edge_key)
-        edge_V = tf.matmul(edge_features, self.W_edge_value) # (B,E,d_e) . (H,1,d_e, d_e) -> (H,B,E,d_e)
-        edge_G = tf.nn.sigmoid(tf.matmul(edge_features, self.edge_gate)) # (H,B,E,d_e)
-        edge_B = tf.matmul(edge_features, self.edge_bias) # (H,B,E,1)
-        # edge attention
-        edge_QK = tf.matmul(edge_Q, edge_K, transpose_b=True) * self.scale
-        #mask out non connected edges
-        edge_mask_out = -1e4 * (1. - tf.expand_dims(edge_coadj, axis=0)) #(1,B,E,E)
-        edge_att = tf.nn.softmax(edge_QK + edge_mask_out + edge_B) #(H,B,E,E) + (1,B,E,E) + (H,B,E,1)
-        edge_att *= tf.expand_dims(edge_coadj, axis=0)
-        edge_out = tf.matmul(edge_att, edge_V) # (H,B,E,E) * (H,B,E,d_e) -> (H,B,E,d_e)
-        edge_out += tf.expand_dims(edge_features, 0) # (H,B,E,d_e) + (H,B,E,d_e)
-        edge_out = self.edge_ln1(edge_out)
-        # gating
-        edge_out *= edge_G # (H,B,E,d_e) * (H,B,E,d_e)
-        edge_out = tf.transpose(edge_out, perm=[1, 2, 3, 0])
-        b, h, n, o = tf.shape(edge_out)[0], tf.shape(edge_out)[-1], tf.shape(edge_out)[1], tf.shape(edge_out)[2]
-        edge_out = tf.reshape(edge_out, [b, n, h * o]) #(B,E,d_e * H)
-        edge_out = tf.nn.relu(tf.matmul(edge_out, self.edge_out)) # (B, E, d_e)
+        if not self.edge_att:
+            # convolutional operation H_1 = A*E*W
+            AE = tf.matmul(edge_coadj, edge_features) #(B,E,E) * (B,E,d_e) -> (B,E,d_e)
+            AEW = tf.matmul(AE, self.edge_out1) #(B,E,d_e) * (d_e, d_h) -> (B,E,d_h)
+            edge_att = tf.matmul(AEW, self.edge_out2) #(B,E,d_h) * (d_h, d_e) -> (B,E,d_e)
+            edge_out = tf.nn.relu(edge_att)
+        else:
+            edge_Q = tf.matmul(edge_features, self.W_edge_query) #(B,E,d_e) . (H,1,d_e,d_h) -> (H,B,E,d_h)
+            edge_K = tf.matmul(edge_features, self.W_edge_key)
+            edge_V = tf.matmul(edge_features, self.W_edge_value) # (B,E,d_e) . (H,1,d_e, d_e) -> (H,B,E,d_e)
+            edge_G = tf.nn.sigmoid(tf.matmul(edge_features, self.edge_gate)) # (H,B,E,d_e)
+            edge_B = tf.matmul(edge_features, self.edge_bias) # (H,B,E,1)
+            # edge attention
+            edge_QK = tf.matmul(edge_Q, edge_K, transpose_b=True) * self.scale
+            #mask out non connected edges
+            edge_mask_out = -1e4 * (1. - tf.expand_dims(edge_coadj, axis=0)) #(1,B,E,E)
+            edge_att = tf.nn.softmax(edge_QK + edge_mask_out + edge_B) #(H,B,E,E) + (1,B,E,E) + (H,B,E,1)
+            edge_att *= tf.expand_dims(edge_coadj, axis=0)
+            edge_out = tf.matmul(edge_att, edge_V) # (H,B,E,E) * (H,B,E,d_e) -> (H,B,E,d_e)
+            edge_out += tf.expand_dims(edge_features, 0) # (H,B,E,d_e) + (H,B,E,d_e)
+            edge_out = self.edge_ln1(edge_out)
+            # gating
+            edge_out *= edge_G # (H,B,E,d_e) * (H,B,E,d_e)
+            edge_out = tf.transpose(edge_out, perm=[1, 2, 3, 0])
+            b, h, n, o = tf.shape(edge_out)[0], tf.shape(edge_out)[-1], tf.shape(edge_out)[1], tf.shape(edge_out)[2]
+            edge_out = tf.reshape(edge_out, [b, n, h * o]) #(B,E,d_e * H)
+            edge_out = tf.nn.relu(tf.matmul(edge_out, self.edge_out)) # (B, E, d_e)
         return edge_out, edge_att
 
     def _coord_update(self, node_update, coords_flat, node_adj_matrix, atom_mask_flat_zero):
-        rel_pos = tf.expand_dims(coords_flat, 2) - tf.expand_dims(coords_flat, 1)  # (B,N,N,3)
-        dist_sq = tf.reduce_sum(rel_pos ** 2, axis=-1, keepdims=True)  # [B, N, N, 1]
-        dist = tf.sqrt(dist_sq + 1e-8)
-        # Pairwise node features: (B,N,N,2*d_n)
-        node_i = tf.expand_dims(node_update, 2)  # (B,N,1,d_n)
-        node_j = tf.expand_dims(node_update, 1)  # (B,1,N,d_n)
-        node_i = tf.broadcast_to(node_i, [tf.shape(node_update)[0], tf.shape(node_update)[1], tf.shape(node_update)[1], self.node_dim])
-        node_j = tf.broadcast_to(node_j, [tf.shape(node_update)[0], tf.shape(node_update)[1], tf.shape(node_update)[1], self.node_dim]) #(B,N,N,d_n)
-        # Combine features for coordinate MLP
-        coord_input = tf.concat([node_i, node_j, dist], axis=-1)  # (B,N,N, 2*d_n+1)
-        # Compute pairwise weights
-        coord_weights = tf.nn.silu(tf.matmul(coord_input, self.coord_mlp1))  # (B,N,N,hidden)
-        coord_weights = tf.matmul(coord_weights, self.coord_mlp2)  # (B,N,N,1)
-        # Normalize relative positions to get direction
-        rel_pos_norm = rel_pos / (dist + 1.0)  # (B,N,N,3)
-        # Mask with adjacency (only aggregate from neighbors)
-        coord_weights = coord_weights * tf.expand_dims(node_adj_matrix, axis=-1)  # (B,N,N,1)
-        # Weighted sum of directions
-        coord_updates = coord_weights * rel_pos_norm  # (B,N,N,3)
-        x_agg = tf.reduce_sum(coord_updates, axis=2)  # (B,N,3)
-        # Apply atom mask and update
+        """
+        Sparse coordinate update - O(E) memory instead of O(N²)
+        Only computes for actual edges in adjacency matrix.
+        """
+        batch_size = tf.shape(coords_flat)[0]
+        n_nodes = tf.shape(coords_flat)[1]
+        # Get edge indices from adjacency: (E_total, 3) with [batch, src, dst]
+        edge_indices = tf.where(node_adj_matrix > 0)
+        batch_idx = tf.cast(edge_indices[:, 0], tf.int32)
+        src_idx = tf.cast(edge_indices[:, 1], tf.int32)
+        dst_idx = tf.cast(edge_indices[:, 2], tf.int32)
+        # Flat indices for gathering: batch * N + node_idx
+        flat_src = batch_idx * n_nodes + src_idx
+        flat_dst = batch_idx * n_nodes + dst_idx
+        # Gather node features for edge endpoints: (E_total, d_n)
+        node_flat = tf.reshape(node_update, [-1, self.node_dim])
+        node_i = tf.gather(node_flat, flat_src)
+        node_j = tf.gather(node_flat, flat_dst)
+        # Gather coordinates: (E_total, 3)
+        coords_reshape = tf.reshape(coords_flat, [-1, 3])
+        coord_i = tf.gather(coords_reshape, flat_src)
+        coord_j = tf.gather(coords_reshape, flat_dst)
+        # Relative position and distance: (E_total, 3), (E_total, 1)
+        rel_pos = coord_i - coord_j
+        dist = tf.sqrt(tf.reduce_sum(rel_pos ** 2, axis=-1, keepdims=True) + 1e-8)
+        # Edge features and weights: (E_total, 2*d_n+1) -> (E_total, 1)
+        coord_input = tf.concat([node_i, node_j, dist], axis=-1)
+        coord_weights = tf.nn.silu(tf.matmul(coord_input, self.coord_mlp1))
+        coord_weights = tf.matmul(coord_weights, self.coord_mlp2)
+        # Weighted direction: (E_total, 3)
+        rel_pos_norm = rel_pos / (dist + 1.0)
+        weighted_dir = coord_weights * rel_pos_norm
+        # Aggregate back to nodes using segment sum
+        x_agg_flat = tf.math.unsorted_segment_sum(weighted_dir,flat_src,num_segments=batch_size * n_nodes)
+        x_agg = tf.reshape(x_agg_flat, [batch_size, n_nodes, 3])
+        # Apply mask and update
         x_agg = x_agg * tf.expand_dims(atom_mask_flat_zero, -1)
         x_new = coords_flat + x_agg
         return x_new
@@ -679,7 +798,7 @@ class ProteinFeatureEncoder(layers.Layer):
         ], name='mutation_encoder')
 
         # Positional encoding
-        self.pos_embedding = layers.Embedding(100, 16) #(max number of residues is around 100, peptide + mhc_pseudoseq)
+        self.pos_embedding = layers.Embedding(10, 16) #(max number of residues is around 100, peptide + mhc_pseudoseq)
 
         # Combined node encoder
         self.node_encoder = keras.Sequential([
@@ -707,6 +826,7 @@ class ProteinFeatureEncoder(layers.Layer):
                 - mut_indices: [B, N_res] mutant AA indices
                 - mutation_mask: [B, N_res] 1.0 for mutated positions
                 - atom_mask: [B, N_res, N_atoms]
+                - res_indices: [B, N_res * N_atoms]
 
         Returns:
             node_features: [B, N_res * N_atoms, node_dim]
@@ -720,6 +840,7 @@ class ProteinFeatureEncoder(layers.Layer):
         mut_indices = inputs['mut_indices']
         mutation_mask = inputs['mutation_mask']
         atom_mask = inputs['atom_mask']
+        res_indices = inputs['res_indices']
 
         batch_size = tf.shape(coords)[0]
         n_res = tf.shape(coords)[1]
@@ -745,11 +866,6 @@ class ProteinFeatureEncoder(layers.Layer):
         atom_embed = self.atom_embedding(atom_types)
 
         # Positional encoding [B, N_res * N_atoms, 16]
-        res_indices_single = tf.repeat(tf.range(n_res), n_atoms)  # [N_res * N_atoms]
-        res_indices = tf.tile(
-            tf.expand_dims(res_indices_single, 0),
-            [batch_size, 1]
-        )  # [B, N_res * N_atoms]
         pos_embed = self.pos_embedding(res_indices)
 
         # AA properties [B, N_res * N_atoms, 4]
@@ -779,15 +895,15 @@ class ProteinFeatureEncoder(layers.Layer):
         # Flatten coordinates and mask [B, N_res * N_atoms, 3]
         coords_flat = tf.reshape(coords, [batch_size, -1, 3])
         atom_mask_flat = tf.reshape(atom_mask, [batch_size, -1])
-        atom_mask_flat_zero = tf.where(atom_mask_flat == self.PAD_TOKEN, 0., 1) #(B,  N_res * N_atoms)
-        atom_mask_flat_zero = tf.expand_dims(atom_mask_flat_zero, -1) #(B, N_res * N_atoms, 1)
+        #atom_mask_flat_zero = tf.where(atom_mask_flat == self.PAD_TOKEN, 0., 1) #(B,  N_res * N_atoms)
+        atom_mask_flat_zero = tf.expand_dims(atom_mask_flat, -1) #(B, N_res * N_atoms, 1)
         node_features = node_features * tf.cast(atom_mask_flat_zero, compute_dtype) #(B, N_res*N_atoms, D) * (B, N_res * N_atoms, 1)
         # ================================================================
         # Compute edge features using RBF and edge encoder
         # ================================================================
         # Compute pairwise distances [B, N_res * N_atoms, N_res * N_atoms] -> (B,E,1)
         # coords_flat: [B, N_res * N_atoms, 3]
-        node_adj_matrix = build_batched_node_adjacency(coords_flat, atom_mask_flat, self.cut_off, PAD_TOKEN=self.PAD_TOKEN) #[B, N_res * N_atoms, N_res * N_atoms]
+        node_adj_matrix = build_batched_node_adjacency(coords_flat, atom_mask_flat, self.cut_off) #[B, N_res * N_atoms, N_res * N_atoms]
         incidence, edge_coadj, edge_dist, edge_mask = build_batched_edge_matrices(node_adj_matrix, coords_flat) #(B,E,N), (B,E,E) , (B,E,1), (B,E) 1 for real and 0 for padded edges
         cov_edges_vs_non_cov = tf.where(edge_dist < 2., 1., 0.) #(B,E,1)
         rbf_features = self.rbf_layer(tf.squeeze(edge_dist, axis=-1)) #(B,E,32)
@@ -847,6 +963,7 @@ class MutationStructurePredictorAtt(Model):
          edge_coadj,  # (B,E,E)
          incidence  # (B,E,N)
          ) = self.encoder(inputs, training=training)
+        #tf.print(inputs['wt_indices'])
         # ================= EGNN Layers ===================
         for egnn_layer in self.egnn_layers:
             node_features, edge_features, coords_flat, node_att, edge_att = egnn_layer((node_features,  # (B, N, d_n)
@@ -858,6 +975,7 @@ class MutationStructurePredictorAtt(Model):
                                                      edge_coadj,  # (B,E,E)
                                                      incidence  # (B,E,N)
                                                      ), training=training)
+            
         # Reshape to [B, N_res, N_atoms, 3]
         predicted_coords = tf.reshape(coords_flat, [batch_size, n_res, n_atoms, 3])
         return predicted_coords, node_att, edge_att
@@ -1383,6 +1501,7 @@ class TorsionAngleLoss(keras.layers.Layer):
         """
         pred_coords = tf.cast(pred_coords, self.compute_dtype)
         true_coords = tf.cast(true_coords, self.compute_dtype)
+        ca_mask = tf.cast(atom_mask[:, :, ATOM_CA], tf.float32)
         pred_torsions = self.compute_backbone_torsions(pred_coords)
         true_torsions = self.compute_backbone_torsions(true_coords)
 
@@ -1408,10 +1527,11 @@ class StericClashLoss(keras.layers.Layer):
         super().__init__(**kwargs)
         self.clash_tolerance = clash_tolerance
         self.exclude_neighbors = exclude_neighbors
-        self.vdw_radii_list = [
-            VDW_RADII['N'], VDW_RADII['CA'], VDW_RADII['C'],
-            VDW_RADII['O'], VDW_RADII['CB']
-        ]
+        self.vdw_radii_list = [VDW_RADII[key] for key in VDW_RADII.keys()]
+        #self.vdw_radii_list = [
+        #    VDW_RADII['N'], VDW_RADII['CA'], VDW_RADII['C'],
+        #    VDW_RADII['O'], VDW_RADII['CB']
+        #]
 
     def call(self, pred_coords: tf.Tensor,
              atom_mask: Optional[tf.Tensor] = None) -> tf.Tensor:
@@ -1588,7 +1708,7 @@ class StructuralLoss(keras.layers.Layer):
         losses['total'] = (
             self.loss_weights['fape'] * losses['fape'] +
             self.loss_weights['rmsd'] * losses['rmsd'] +
-            self.loss_weights['torsion'] * losses['torsion'] +
+            #self.loss_weights['torsion'] * losses['torsion'] +
             self.loss_weights['clash'] * losses['clash'] +
             self.loss_weights['lddt'] * losses['lddt']
         )
@@ -1599,156 +1719,213 @@ class StructuralLoss(keras.layers.Layer):
 # ============================================================================
 # EXAMPLE USAGE
 # ============================================================================
+class BatchedDataLoader:
+    def __init__(self, coords, seqs, paired_inds, n_atoms, cutoff=10., pad_token=-2):
+        self.coords = coords
+        self.seqs = seqs
+        self.paired_inds = paired_inds
+        self.n_atoms = n_atoms
+        self.cutoff = cutoff
+        self.pad_token = pad_token
+        self.num_samples = len(paired_inds)
+        print(f"DataLoader initialized with {self.num_samples} samples")
+    
+    def _preprocess_single(self, idx):
+        pind = self.paired_inds[idx]
+        length = pind[2]
+        pep_len = pind[3]
+        input_coords = self.coords[pind[0]][:length]
+        true_coords = self.coords[pind[1]][:length]
+        ca_coords = input_coords[:, ATOM_CA, :][np.newaxis, :, :]
+        num_res = ca_coords.shape[1]
+        adj, _ = build_radius_graph(
+            coords=ca_coords,
+            mask=np.ones_like(ca_coords, dtype=np.float32)[:, :, 0],
+            cutoff=self.cutoff
+        )
+        adj = adj[0]
+        adj_inds = np.argwhere(adj == 1)
+        pep_residues = np.arange(num_res - pep_len, num_res)
+        mask = np.isin(adj_inds[:, 0], pep_residues)
+        remained_inds = np.unique(adj_inds[mask].flatten())
+        remained_inds = np.sort(remained_inds)[::-1]
+        n_remained = len(remained_inds)
+        if n_remained == 0:
+            return None
+        input_coords = input_coords[remained_inds, :, :]
+        true_coords = true_coords[remained_inds, :, :]
+        wt_indices = self.seqs[pind[0]][:length][remained_inds]
+        mut_indices = self.seqs[pind[1]][:length][remained_inds]
+        # Count how many peptide residues in remained_inds
+        pep_remained = np.sum(np.isin(remained_inds, pep_residues))
+        # Build res_indices: 1 for peptide, 0 for non-peptide, repeated for each atom
+        res_indices_single = np.concatenate([
+            np.ones(pep_remained, dtype=np.int32),
+            np.zeros(n_remained - pep_remained, dtype=np.int32)
+        ])
+        res_indices = np.repeat(res_indices_single, self.n_atoms)
+        return {
+            'input_coords': input_coords.astype(np.float32),
+            'true_coords': true_coords.astype(np.float32),
+            'wt_indices': wt_indices.astype(np.int32),
+            'mut_indices': mut_indices.astype(np.int32),
+            'res_indices': res_indices,
+            'length': n_remained
+        }
+    
+    def _collate_batch(self, batch_data):
+        batch_size = len(batch_data)
+        max_len = max(d['length'] for d in batch_data)
+        max_res_idx_len = max(len(d['res_indices']) for d in batch_data)
+        input_coords = np.zeros((batch_size, max_len, self.n_atoms, 3), dtype=np.float32)
+        true_coords = np.zeros((batch_size, max_len, self.n_atoms, 3), dtype=np.float32)
+        wt_indices = np.full((batch_size, max_len), self.pad_token, dtype=np.int32)
+        mut_indices = np.full((batch_size, max_len), self.pad_token, dtype=np.int32)
+        res_indices = np.zeros((batch_size, max_res_idx_len), dtype=np.int32)
+        atom_mask = np.zeros((batch_size, max_len, self.n_atoms), dtype=np.float32)
+        for i, d in enumerate(batch_data):
+            l = d['length']
+            input_coords[i, :l] = d['input_coords']
+            true_coords[i, :l] = d['true_coords']
+            wt_indices[i, :l] = d['wt_indices']
+            mut_indices[i, :l] = d['mut_indices']
+            res_indices[i, :len(d['res_indices'])] = d['res_indices']
+            atom_mask[i, :l] = 1.
+        mutation_mask = np.where(wt_indices == mut_indices, 0., 1.).astype(np.float32)
+        inputs = {
+            'coords': tf.constant(input_coords),
+            'wt_indices': tf.constant(wt_indices),
+            'mut_indices': tf.constant(mut_indices),
+            'mutation_mask': tf.constant(mutation_mask),
+            'atom_mask': tf.constant(atom_mask),
+            'res_indices': tf.constant(res_indices),
+        }
+        true_coords_tf = tf.constant(true_coords)
+        atom_mask_tf = tf.constant(atom_mask)
+        return inputs, true_coords_tf, atom_mask_tf
+    
+    def get_batches(self, batch_size, shuffle=True):
+        indices = np.arange(self.num_samples)
+        if shuffle:
+            np.random.shuffle(indices)
+        for start_idx in range(0, len(indices), batch_size):
+            batch_indices = indices[start_idx:start_idx + batch_size]
+            batch_data = []
+            for idx in batch_indices:
+                try:
+                    sample = self._preprocess_single(idx)
+                    if sample is not None:
+                        batch_data.append(sample)
+                except Exception as e:
+                    continue
+            if len(batch_data) > 0:
+                yield self._collate_batch(batch_data)
+    
+    def get_num_batches(self, batch_size):
+        return (self.num_samples + batch_size - 1) // batch_size
 
-def create_example_structure(n_residues: int = 50) -> ProteinStructure:
-    """Create example helical protein structure"""
-    n_atoms = NUM_ATOM_TYPES
-    coords = np.zeros((n_residues, n_atoms, 3), dtype=np.float32)
 
-    for i in range(n_residues):
-        t = i * 100 * np.pi / 180
-        rise = 1.5
-        radius = 2.3
-
-        ca_x = radius * np.cos(t)
-        ca_y = radius * np.sin(t)
-        ca_z = i * rise
-
-        coords[i, ATOM_TO_IDX['CA']] = [ca_x, ca_y, ca_z]
-        coords[i, ATOM_TO_IDX['N']] = [ca_x - 0.5, ca_y + 0.8, ca_z - 0.5]
-        coords[i, ATOM_TO_IDX['C']] = [ca_x + 0.5, ca_y - 0.3, ca_z + 0.5]
-        coords[i, ATOM_TO_IDX['O']] = [ca_x + 0.7, ca_y - 1.2, ca_z + 0.8]
-        coords[i, ATOM_TO_IDX['CB']] = [ca_x + 1.0, ca_y + 0.5, ca_z]
-
-    sequence = [AMINO_ACIDS[i % NUM_AA] for i in range(n_residues)]
-
-    atom_mask = np.ones((n_residues, n_atoms), dtype=np.float32)
-    for i, aa in enumerate(sequence):
-        if aa == 'GLY':
-            atom_mask[i, ATOM_TO_IDX['CB']] = 0
-
-    return ProteinStructure(
-        coords=tf.constant(coords),
-        sequence=sequence,
-        atom_mask=tf.constant(atom_mask)
-    )
-
-
-def test_batched_model():
-    """Test batched model"""
+def train_batched():
     print("=" * 60)
-    print("Testing Batched Model")
+    print("Batched Training")
     print("=" * 60)
     tf.random.set_seed(42)
-    batch_size = 1
-    n_res = 200
+    
+    # Config
+    batch_size = 20
+    num_epochs = 3
     n_atoms = NUM_ATOM_TYPES
-    optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
-    if mixed_precision:
-        optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
-    # Create batched inputs
-    coords = tf.random.normal([batch_size, n_res, n_atoms, 3]) * 5
-    wt_indices = tf.random.uniform([batch_size, n_res], 0, NUM_AA, dtype=tf.int32)
-    mut_indices = tf.random.uniform([batch_size, n_res], 0, NUM_AA, dtype=tf.int32)
-    mutation_mask = tf.zeros([batch_size, n_res], dtype=tf.float32)
-    atom_mask = tf.ones([batch_size, n_res, n_atoms], dtype=tf.float32)
-
-    inputs = {
-        'coords': coords,
-        'wt_indices': wt_indices,
-        'mut_indices': mut_indices,
-        'mutation_mask': mutation_mask,
-        'atom_mask': atom_mask,
-    }
-
-    print(f"\nInput shapes:")
-    for k, v in inputs.items():
-        print(f"  {k}: {v.shape}")
-
-    # Create model
-    #model = MutationStructurePredictor(
-    #    node_dim=100, edge_dim=100, num_layers=3, cutoff=7.0
-    #)
-    model = MutationStructurePredictorAtt(node_dim=128, edge_dim=128, hidden_dim=256, heads=8, num_layers=1, cutoff=2.,
-                                  PAD_TOKEN=-2.)
-    # Forward pass
-    pred_coords, node_att, edge_att = model(inputs, training=False)
-    print(f"\nOutput shape: {pred_coords.shape}")
-    print(f"Expected: [4, 30, 5, 3]")
-
-    # Test losses
-    print("\nTesting losses...")
-    true_coords = coords + tf.random.normal(coords.shape) * 0.3
+    
+    # Load data
+    coords = np.load(os.path.join(OUTPUT_DIR, 'coords.npy'))
+    paired = pd.read_csv(os.path.join(OUTPUT_DIR, 'paired.csv'))
+    seqs = np.load(os.path.join(OUTPUT_DIR, 'seqs.npy'))
+    paired_inds = np.array(paired[['index_1', 'index_2', 'length_1', 'p_len']])
+    
+    # Create data loader
+    data_loader = BatchedDataLoader(coords, seqs, paired_inds, n_atoms, cutoff=9., pad_token=-2)
+    num_batches = data_loader.get_num_batches(batch_size)
+    
+    # Model and optimizer
+    model = MutationStructurePredictorAtt(
+        node_dim=128, edge_dim=128, hidden_dim=256, heads=8, num_layers=1, cutoff=3., PAD_TOKEN=-2.
+    )
 
     loss_fn = StructuralLoss()
-    losses = loss_fn(pred_coords, true_coords, atom_mask)
-
-    print("Losses:")
-    for k, v in losses.items():
-        print(f"  {k}: {v.numpy():.4f}")
-
-    # Test alignment
-    print("\nTesting alignment...")
-    aligned = align_structures(coords, true_coords, atom_mask)
-    print(f"Aligned shape: {aligned.shape}")
-
-    print("\nTesting gradient flow...")
     optimizer = tf.keras.optimizers.Adam(learning_rate=1e-4)
     if mixed_precision:
         optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer)
-
-    for e in range(300):
-        with tf.GradientTape() as tape:
-            pred, node_att, edge_att = model(inputs, training=True)
-            losses = loss_fn(pred, true_coords, atom_mask)
-            # Ensure loss is float32!
-            total_loss = losses['total']
+    
+    # TensorBoard
+    log_dir = os.path.join(OUTPUT_DIR, 'logs', datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))
+    train_summary_writer = tf.summary.create_file_writer(log_dir)
+    print(f"TensorBoard: tensorboard --logdir {os.path.join(OUTPUT_DIR, 'logs')}")
+    
+    # Checkpointing
+    checkpoint_dir = os.path.join(OUTPUT_DIR, 'checkpoints')
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    best_loss = float('inf')
+    recent_losses = []
+    global_step = 0
+    
+    # Training loop
+    for epoch in range(num_epochs):
+        print(f"\nEpoch {epoch}/{num_epochs}")
+        epoch_losses = []
+        
+        for batch_idx, (inputs, true_coords, atom_mask) in enumerate(data_loader.get_batches(batch_size, shuffle=True)):
+            with tf.GradientTape() as tape:
+                pred, node_att, edge_att = model(inputs, training=True)
+                losses = loss_fn(pred, true_coords, atom_mask)
+                total_loss = losses['total']
+                if mixed_precision:
+                    scaled_loss = optimizer.get_scaled_loss(total_loss)
+                else:
+                    scaled_loss = total_loss
+            
+            grads = tape.gradient(scaled_loss, model.trainable_variables)
             if mixed_precision:
-                scaled_loss = optimizer.get_scaled_loss(total_loss)
-            else:
-                scaled_loss = total_loss
-        # Compute gradients
-        grads = tape.gradient(scaled_loss, model.trainable_variables)
-        if mixed_precision:
-            grads = optimizer.get_unscaled_gradients(grads)
-        # ===== DEBUG: Check gradient health =====
-        if e % 50 == 0:
-            none_grads = sum(1 for g in grads if g is None)
-            zero_grads = sum(1 for g in grads if g is not None and tf.reduce_all(g == 0))
-            nan_grads = sum(1 for g in grads if g is not None and tf.reduce_any(tf.math.is_nan(g)))
+                grads = optimizer.get_unscaled_gradients(grads)
+            optimizer.apply_gradients(zip(grads, model.trainable_variables))
+            loss_val = total_loss.numpy()
+            epoch_losses.append(loss_val)
+            recent_losses.append(loss_val)
+           
+            if batch_idx % 1 == 0:
+                print(f"  Batch {batch_idx}/{num_batches}, Loss: {loss_val:.6f}, Shape {tf.shape(pred)}")
+            
+            if global_step % 500 == 0 and global_step > 0:
+                avg_recent_loss = np.mean(recent_losses)
+                with train_summary_writer.as_default():
+                    tf.summary.scalar('loss/avg_500_steps', avg_recent_loss, step=global_step)
+                    tf.summary.scalar('loss/best', best_loss, step=global_step)
+                if avg_recent_loss < best_loss:
+                    best_loss = avg_recent_loss
+                    model.save_weights(os.path.join(checkpoint_dir, 'best_model.weights.h5'))
+                    print(f"  Step {global_step}: New best! Loss: {best_loss:.6f}")
+                else:
+                    print(f"  Step {global_step}: Avg: {avg_recent_loss:.6f}, Best: {best_loss:.6f}")
+                recent_losses = []
+            
+            if global_step % 100 == 0:
+                with train_summary_writer.as_default():
+                    tf.summary.scalar('loss/total', total_loss, step=global_step)
+                    for k, v in losses.items():
+                        tf.summary.scalar(f'loss/{k}', v, step=global_step)
+            
+            global_step += 1
+        avg_epoch_loss = np.mean(epoch_losses)
+        print(f"Epoch {epoch} complete. Avg Loss: {avg_epoch_loss:.6f}, Best: {best_loss:.6f}")
+        with train_summary_writer.as_default():
+            tf.summary.scalar('epoch/avg_loss', avg_epoch_loss, step=epoch)
+        
+        if (epoch + 1) % 10 == 0:
+            model.save_weights(os.path.join(checkpoint_dir, f'model_epoch_{epoch+1}.weights.h5'))
+            print(f"Checkpoint saved at epoch {epoch+1}")
+    
+    model.save_weights(os.path.join(checkpoint_dir, 'final_model.weights.h5'))
+    print(f"\nTraining complete! Best loss: {best_loss:.6f}")
 
-            grad_norms = [tf.norm(g).numpy() for g in grads if g is not None]
-            max_grad = max(grad_norms) if grad_norms else 0
-            min_grad = min(grad_norms) if grad_norms else 0
-            mean_grad = sum(grad_norms) / len(grad_norms) if grad_norms else 0
 
-            print(f"\nIteration {e}:")
-            print(f"  Loss: {total_loss.numpy():.6f}")
-            print(f"  None gradients: {none_grads}/{len(grads)}")
-            print(f"  Zero gradients: {zero_grads}/{len(grads)}")
-            print(f"  NaN gradients: {nan_grads}/{len(grads)}")
-            print(f"  Grad norm - min: {min_grad:.2e}, max: {max_grad:.2e}, mean: {mean_grad:.2e}")
-            if mixed_precision:
-                print(f"  Loss scale: {optimizer.loss_scale.numpy()}")
-
-        # Apply gradients
-        optimizer.apply_gradients(zip(grads, model.trainable_variables))
-        # Print loss every iteration
-        print(f"e={e}: total={total_loss.numpy():.6f}")
-        print(losses)
-
-    print("\n✓ All tests passed!")
-    print("=" * 60)
-
-import os
-import random
 if __name__ == "__main__":
-    # 1. Set all seeds at the very beginning
-    seed_value = 42
-    os.environ['PYTHONHASHSEED'] = str(seed_value)
-    random.seed(seed_value)
-    np.random.seed(seed_value)
-    tf.random.set_seed(seed_value)
-
-    print("TensorFlow version:", tf.__version__)
-    test_batched_model()
+    train_batched()

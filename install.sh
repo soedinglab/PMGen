@@ -4,12 +4,17 @@ set -e  # Exit immediately if a command fails
 
 # Default flag value
 cpu=0
+no_modeller=0
 
 # Parse command-line arguments
 for arg in "$@"; do
     case $arg in
         --cpu)
         cpu=1
+        shift
+        ;;
+        --no_modeller)
+        no_modeller=1
         shift
         ;;
         *)
@@ -66,10 +71,17 @@ echo "   Paper: https://www.science.org/doi/10.1126/science.add2187"
 echo "########################################################"
 
 # Step 1: Ask for Modeller License Key
-echo -n "Please enter your Modeller license key: "
-read -r KEY_MODELLER
-export KEY_MODELLER="$KEY_MODELLER"
-echo "✔ Modeller license key has been set."
+if [ "$no_modeller" -eq 1 ]; then
+    echo "⚡ No Modeller version being installed"
+    KEY_MODELLER="NOMODELLERKEY"
+    export KEY_MODELLER="$KEY_MODELLER"
+    echo "✔ Modeller license key has been set to NOMODELLERKEY."
+else
+    echo -n "Please enter your Modeller license key: "
+    read -r KEY_MODELLER
+    export KEY_MODELLER="$KEY_MODELLER"
+    echo "✔ Modeller license key has been set."
+fi
 
 # Step 2: Check if mamba exists; otherwise, use conda
 if command -v mamba &>/dev/null; then
