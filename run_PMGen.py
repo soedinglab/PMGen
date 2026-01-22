@@ -21,6 +21,7 @@ def remove_files_in_directory(directory):
 
 
 def main():
+    allowed_mpnn_models = [i.replace('.pt','') for i in os.listdir('ProteinMPNN/vanilla_model_weights/')]
     parser = argparse.ArgumentParser(description="Run PMGen wrapper or modeling.")
 
     # Default settings
@@ -89,6 +90,7 @@ def main():
                                                                              "Fixed positions should be provided as a list for each row in --df, and the columnname should be"
                                                                              "'fixed_positions'. It will automaticallly enables --fix_anchors as well, but uses fixed positions"
                                                                              "given to it only.")
+    parser.add_argument("--proteinmpnn_model_name", type=str, default="v_48_020_soft_ft", help=f"ProteinMPNN model name. Allowed values: {allowed_mpnn_models}")
 
     # BioEmu Argumetns
     parser.add_argument('--run_bioemu', action='store_true', help='Enables bioemu pMHC sampling.')
@@ -124,6 +126,7 @@ def main():
     parser.add_argument('--iterative_peptide_gen', type=int, default=0, help='If used, the iterative peptide generation is performed, defines the number of iterations.')
 
     args = parser.parse_args()
+    assert(args.proteinmpnn_model_name) in allowed_mpnn_models, f"Allowed models: {allowed_mpnn_models}"
     bioemu_assertions(args)
     for iteration in range(args.iterative_peptide_gen + 1):
         if iteration == 0:

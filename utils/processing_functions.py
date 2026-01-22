@@ -7,7 +7,6 @@ from Bio.PDB import PDBParser, PPBuilder, PDBIO
 from Bio import pairwise2, PDB, SeqIO
 from Bio.Align import substitution_matrices
 from scipy.spatial.distance import cdist
-import shutil
 import random
 import sys
 import Levenshtein
@@ -1643,3 +1642,22 @@ def add_plddt_as_bfactor_verbose(array_path, pdb_path, output_pdb_path, verbose=
         print("=" * 60)
     return stats
 
+
+def anchor_combinations_mhc2(n, d1=3, d2=2, d3=3):
+    quadruplets = []
+    for i in range(1, n + 1):
+        j = i + d1
+        k = j + d2
+        l = k + d3
+        if l <= n:
+            quadruplets.append([i, j, k, l])
+    return quadruplets
+
+
+def anchor_combinations_mhc1(n, min_distance=6):
+    pairs = []
+    for i in range(1, n + 1):
+        for j in range(i + 1, n + 1):
+            if j - i >= min_distance:
+                pairs.append([i, j])
+    return pairs
