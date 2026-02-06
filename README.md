@@ -5,6 +5,18 @@
   </tr>
 </table>
 
+<p align="center">
+  <a href="https://colab.research.google.com/github/soedinglab/PMGen/blob/main/colab.ipynb">
+    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+  </a>
+  <a href="https://github.com/soedinglab/PMGen">
+    <img src="https://img.shields.io/github/stars/soedinglab/PMGen?style=social" alt="GitHub Stars"/>
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"/>
+  </a>
+</p>
+
 PMGen (Peptide MHC Generator) is a comprehensive pipeline for predicting peptide-MHC (pMHC) complex structures and designing optimized peptide sequences. 
 
 ## Key Features
