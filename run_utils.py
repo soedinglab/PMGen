@@ -903,7 +903,7 @@ def protein_mpnn_wrapper(output_pdbs_dict, args, max_jobs, anchor_and_peptide=No
 import time
 def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_list=[], mhc_allele=None,
                             dirty_mode=False, verbose=True, outfilename='netmhcpan_out', return_match_allele=False,
-                            match_with_netmhcpan=True, n_jobs=1, parallel=False):
+                            match_with_netmhcpan=True, n_jobs=1, parallel=False, length='9,10,11,12,13,14,15,16,17,18'):
     assert mhc_type in [1,2]
     if not mhc_allele and len(mhc_seq_list) == 0:
         raise ValueError(f'at least one of mhc_seq_list or mhc_allele should be provided')
@@ -935,9 +935,9 @@ def run_and_parse_netmhcpan(peptide_fasta_file, mhc_type, output_dir, mhc_seq_li
         if mhc_type == 1: break
     if verbose: print("Matched Alleles", matched_allele)
     if parallel:
-        processing_functions.run_netmhcpan_parallel(peptide_fasta_file, matched_allele, outfile, mhc_type, n_jobs=n_jobs, verbose=verbose)
+        processing_functions.run_netmhcpan_parallel(peptide_fasta_file, matched_allele, outfile, mhc_type, n_jobs=n_jobs, verbose=verbose, length=length)
     else:
-        processing_functions.run_netmhcpan(peptide_fasta_file, matched_allele, outfile, mhc_type)
+        processing_functions.run_netmhcpan(peptide_fasta_file, matched_allele, outfile, mhc_type, length=length)
     if verbose:
         s = time.time()
         print('Parsing netmhcpan output on ', outfile)

@@ -1037,7 +1037,7 @@ def match_inputseq_to_netmhcpan_allele(sequence, mhc_type, mhc_allele=None,
 
 
 def run_netmhcpan(peptide_fasta, allele_list, output, mhc_type,
-                  netmhcipan_path=netmhcipan_path, netmhciipan_path=netmhciipan_path):
+                  netmhcipan_path=netmhcipan_path, netmhciipan_path=netmhciipan_path, length='9,10,11,12,13,14,15,16,17,18'):
     assert mhc_type in [1, 2]
 
     if mhc_type == 1:
@@ -1055,7 +1055,7 @@ def run_netmhcpan(peptide_fasta, allele_list, output, mhc_type,
                 if 'DQB' in allele or 'DPB' in allele:
                     final_allele += f'-{allele.replace("HLA-", "")}'
         cmd = [str(netmhciipan_path), '-f', str(peptide_fasta),
-               '-BA', '-u', '-s', '-length', '9,10,11,12,13,14,15,16,17,18',
+               '-BA', '-u', '-s', '-length', length,
                '-inptype', '0', '-a', str(final_allele)]
     # Open the output file and redirect stdout to it
     with open(output, 'w') as f:
@@ -1091,7 +1091,7 @@ def split_fasta(fasta_file, n_chunks):
 
 def run_netmhcpan_chunk(args):
     """Run NetMHCpan on a single chunk"""
-    peptide_fasta, allele_list, output, mhc_type, netmhcipan_path, netmhciipan_path = args
+    peptide_fasta, allele_list, output, mhc_type, netmhcipan_path, netmhciipan_path, length = args
 
     if mhc_type == 1:
         cmd = [str(netmhcipan_path), '-f', str(peptide_fasta),
@@ -1107,7 +1107,7 @@ def run_netmhcpan_chunk(args):
                 if 'DQB' in allele or 'DPB' in allele:
                     final_allele += f'-{allele.replace("HLA-", "")}'
         cmd = [str(netmhciipan_path), '-f', str(peptide_fasta),
-               '-BA', '-u', '-s', '-length', '9,10,11,12,13,14,15,16,17,18',
+               '-BA', '-u', '-s', '-length', length,
                '-inptype', '0', '-a', str(final_allele)]
 
     with open(output, 'w') as f:
@@ -1119,7 +1119,7 @@ def run_netmhcpan_chunk(args):
 def run_netmhcpan_parallel(peptide_fasta, allele_list, output, mhc_type,
                            netmhcipan_path=netmhcipan_path,
                            netmhciipan_path=netmhciipan_path,
-                           n_jobs=None, verbose=False):
+                           n_jobs=None, verbose=False, length='9,10,11,12,13,14,15,16,17,18'):
     """
     Run NetMHCpan in parallel by splitting the input FASTA
 
@@ -1130,7 +1130,7 @@ def run_netmhcpan_parallel(peptide_fasta, allele_list, output, mhc_type,
 
     if n_jobs is None:
         n_jobs = cpu_count()
-
+    print(length)
     # Split FASTA into chunks
     if verbose:
         print(f"Splitting FASTA into {n_jobs} chunks...")
@@ -1146,7 +1146,7 @@ def run_netmhcpan_parallel(peptide_fasta, allele_list, output, mhc_type,
 
         args_list.append((
             chunk_file, allele_list, temp_output.name, mhc_type,
-            netmhcipan_path, netmhciipan_path
+            netmhcipan_path, netmhciipan_path, length
         ))
 
     # Run in parallel
