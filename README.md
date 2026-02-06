@@ -6,7 +6,7 @@
 </table>
 
 <p align="center">
-  <a href="https://colab.research.google.com/github/soedinglab/PMGen/blob/main/colab.ipynb">
+  <a href="https://colab.research.google.com/github/soedinglab/PMGen/blob/master/colab.ipynb">
     <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
   </a>
   <a href="https://github.com/soedinglab/PMGen">
