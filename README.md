@@ -36,6 +36,7 @@ Please download the data and the notebook to reproduce paper results at https://
 - Python 3.8+
 - Conda or Mamba
 - Git
+
 Optional
 - Modeller (requires a license key - [get it here](https://salilab.org/modeller/registration.html))
 - CUDA-enabled GPU (Required for faster Alphafold predictions)
