@@ -90,7 +90,7 @@ def main():
                                                                              "Fixed positions should be provided as a list for each row in --df, and the columnname should be"
                                                                              "'fixed_positions'. It will automaticallly enables --fix_anchors as well, but uses fixed positions"
                                                                              "given to it only.")
-    parser.add_argument("--proteinmpnn_model_name", type=str, default="v_48_020_soft_ft", help=f"ProteinMPNN model name. Allowed values: {allowed_mpnn_models}")
+    parser.add_argument("--proteinmpnn_model_name", type=str, default="v_48_020", help=f"ProteinMPNN model name. Allowed values: {allowed_mpnn_models}")
 
     # BioEmu Argumetns
     parser.add_argument('--run_bioemu', action='store_true', help='Enables bioemu pMHC sampling.')

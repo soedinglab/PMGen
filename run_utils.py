@@ -686,8 +686,8 @@ class run_proteinmpnn():
             "--sampling_temp", f'{self.sampling_temp}',
             "--seed", "37",
             "--batch_size", f'{self.batch_size}',
-            "--save_probs", "1",
-            "--save_score", "1",
+            #"--save_probs", "1",
+            #"--save_score", "1",
             "--model_name", f"{self.model_name}"
         ], check=True)
         print('Full MHC Sequence Generation Mode Done! *****\n')
@@ -722,8 +722,8 @@ class run_proteinmpnn():
             "--sampling_temp", f'{self.sampling_temp}',
             "--seed", "37",
             "--batch_size", f'{self.batch_size}',
-            "--save_probs", "1",
-            "--save_score", "1",
+            #"--save_probs", "1",
+            #"--save_score", "1",
             "--omit_AAs", "X",
             "--path_to_model_weights", "ProteinMPNN/vanilla_model_weights",
             "--model_name", f"{self.model_name}"
@@ -816,8 +816,8 @@ class run_proteinmpnn():
             "--sampling_temp", f'{self.sampling_temp}',
             "--seed", "37",
             "--batch_size", f'{self.batch_size}',
-            "--save_probs", "1",
-            "--save_score", "1",
+            #"--save_probs", "1",
+            #"--save_score", "1",
             "--model_name", f"{self.model_name}"
         ], check=True)
         print('MHC Pseudo Sequence Generation Mode Done! *****\n')
