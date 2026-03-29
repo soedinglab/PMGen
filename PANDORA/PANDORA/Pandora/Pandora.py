@@ -176,6 +176,7 @@ class Pandora:
             self.no_modelling_output_dict['aln_template'] += [aln_template]
             self.no_modelling_output_dict['aln_target'] += [aln_target]
             self.no_modelling_output_dict['template_path'] += [tmp.get_pdb_path()]
+        print("no_modelling_output_dict.json file being created", self.target.output_dir)
         with open(os.path.join(self.target.output_dir, 'no_modelling_output_dict.json'), 'w') as f:
             json.dump(self.no_modelling_output_dict, f)
         ######## added by amir till here

@@ -68,6 +68,10 @@ def main():
                                                'check the github documentation for more information.')
     parser.add_argument('--multiple_anchors', action='store_true', help='If enabled, not the best anchor, but all predicted anchors will '
                                                                       'be used for separate predictions and the best ones will be reported. default False.')
+    parser.add_argument('--no_netmhcpan', action='store_true', help='If set together with --multiple_anchors, skips netMHCpan prediction '
+                                                                     'and instead enumerates all possible anchor combinations. Default: False (netMHCpan is used if available).')
+    parser.add_argument('--only_last_anchor', action='store_true', help='Only works with --no_netmhcpan. Keeps at most 2 anchor combinations per peptide: '
+                                                                        '[1, last] and [2, last] where last is the peptide length. Default: False.')
     parser.add_argument('--top_k', type=int, default=3, help='if --multiple_anchors is True, number of top anchors to predict the structures for.')
     parser.add_argument('--best_structures', action='store_true', help='If multiple anchors or multiple models are being used'
                                                                        'Activating this flag will find the best structures from their core'
