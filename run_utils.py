@@ -1027,7 +1027,7 @@ class MultipleAnchors:
             anchor_combinations = processing_functions.anchor_combinations_mhc1(pep_len)
         elif mhc_type == 2:
             anchor_combinations = processing_functions.anchor_combinations_mhc2(pep_len)
-        if self.only_last_anchor:
+        if self.only_last_anchor and mhc_type == 1:
             anchor_combinations = [a for a in anchor_combinations if a[0] in [1, 2] and a[-1] == pep_len]
         assert len(anchor_combinations) > 0, f'no anchor combination is found for {row.id}. The peptide sequence "{row.peptide}" length should be longer than 9 for mhc2 and 8 for mhc1'
         for counter, anchors in enumerate(anchor_combinations):
