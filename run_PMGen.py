@@ -55,6 +55,8 @@ def main():
                         default='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                         help='Path to fine-tuned model')
     parser.add_argument('--benchmark', action='store_true', help='Enable benchmarking')
+    parser.add_argument('--benchmark_similarity_threshold', type=float, default=0.95,help='When --benchmark is set, exclude templates with MHC sequence similarity '
+                         'above this fraction (0-1). Default: 0.95.') # added after review --> similarity threshold
     parser.add_argument('--best_n_templates', type=int, default=4, help='Best N templates')
     parser.add_argument('--n_homology_models', type=int, default=1, help='Number of homology models')
     parser.add_argument('--max_ram', type=int, default=3, help='Maximum RAM GB per job (only for parallel mode)')
@@ -209,8 +211,9 @@ def main():
                                            fine_tuned_model_path=args.fine_tuned_model_path,
                                            benchmark=args.benchmark, best_n_templates=args.best_n_templates,
                                            n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora,
-                                            no_modelling=args.initial_guess, return_all_outputs=args.return_all_outputs)
-            if args.run == 'parallel' and not args.only_protein_mpnn and not args.only_mutation_screen:
+                                            no_modelling=args.initial_guess, return_all_outputs=args.return_all_outputs,
+                                            benchmark_similarity_threshold=args.benchmark_similarity_threshold,)  # added after review --> similarity threshold
+            if args.run == 'parallel' and not args.only_protein_mpnn and not args.only_mutation_screen: 
                 runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
             elif args.run == 'single' and not args.only_protein_mpnn and not args.only_mutation_screen:
                 runner.run_wrapper(run_alphafold=args.no_alphafold)
@@ -244,7 +247,8 @@ def main():
                                             benchmark=args.benchmark, best_n_templates=args.best_n_templates,
                                             n_homology_models=args.n_homology_models,
                                             pandora_force_run=args.no_pandora,
-                                            return_all_outputs=args.return_all_outputs)
+                                            return_all_outputs=args.return_all_outputs,
+                                            benchmark_similarity_threshold=args.benchmark_similarity_threshold,)  # added after review --> similarity threshold
             if not args.only_protein_mpnn and not args.only_mutation_screen:
                 runner.run_PMGen(run_alphafold=args.no_alphafold)
             else:

@@ -490,7 +490,8 @@ def score_peptide_alignment(target, template, substitution_matrix='PAM30'):
         return aligned.score
 
 
-def find_template(target, database, best_n_templates=1, benchmark=False,
+def find_template(target, database, best_n_templates=1, 
+                  benchmark=False, benchmark_similarity_threshold=None, # added for pmgen benchmarking # added after review --> similarity threshold
                   blastdb=PANDORA.PANDORA_data + '/BLAST_databases/templates_blast_db/templates_blast_db'):
     ''' Selects the template structure that is best suited as template for homology modelling of the target
 
@@ -620,6 +621,31 @@ def find_template(target, database, best_n_templates=1, benchmark=False,
             putative_templates = {k: v for k, v in putative_templates.items() if
                                   len(database.MHCII_data[k].anchors) == 4}
 
+    # Added for benchmark of similarity, # added after review --> similarity threshold
+    similarity_info = None
+    if benchmark and benchmark_similarity_threshold is not None:
+        score_key = class_variables[2]  # 'M_score' or 'Avg_score'
+        # Build (id, similarity_fraction) list for what's left after target removal
+        sim_list = [(k, v[score_key] / 100.0) for k, v in putative_templates.items()
+                    if score_key in v]
+        if len(sim_list) == 0:
+            raise Exception('No putative templates with similarity scores after target removal.')
+        min_similarity = min(s for _, s in sim_list)
+        below = [(k, s) for k, s in sim_list if s <= benchmark_similarity_threshold]
+        at_least_one_below = len(below) > 0
+        if at_least_one_below:
+            keep_ids = set(k for k, _ in below)
+        else:
+            # all above threshold -> take the lowest-similarity ones (up to best_n_templates)
+            sim_list_sorted = sorted(sim_list, key=lambda x: x[1])
+            keep_ids = set(k for k, _ in sim_list_sorted[:best_n_templates])
+        putative_templates = {k: v for k, v in putative_templates.items() if k in keep_ids}
+        similarity_info = {
+            'min_similarity': min_similarity,
+            'at_least_one_below_threshold': at_least_one_below,
+            'all_similarities': dict(sim_list),  # for later lookup of selected templates
+        }
+
     # For both chains
     # Sort for average score
     putative_templates = sorted(putative_templates.items(),
@@ -650,7 +676,7 @@ def find_template(target, database, best_n_templates=1, benchmark=False,
 
     templates = [getattr(database, class_variables[1])[tmpl] for tmpl in template_id]
     keep_IL = any(check_target_template(target, tmpl) for tmpl in templates)
-    return templates, scores, keep_IL
+    return templates, scores, keep_IL, similarity_info # added after review --> similarity threshold
 
 
 def write_ini_script(target, template, alignment_file, output_dir, clip_C_domain=False):

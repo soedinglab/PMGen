@@ -32,7 +32,7 @@ class run_PMGen_modeling():
                  fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                  benchmark=False, n_homology_models=1, best_n_templates=4,
                  pandora_force_run=True, no_modelling=False,
-                 return_all_outputs=False):
+                 return_all_outputs=False, benchmark_similarity_threshold=0.95): # added after review --> similarity threshold
         """
         Initializes the PMGen modeling pipeline.
 
@@ -56,6 +56,7 @@ class run_PMGen_modeling():
             pandora_force_run (bool): Weather to force run pandora or not, default=True.
             no_modelling (bool): If active, no modeller homology modeling happens and only PANDORA is used for template search and alignment.
             return_all_outputs (bool): If active, all alphafold outputs are saved.
+            benchmark_similarity_threshold (float): Only used during benchmarking, exludes sequences above this similarity threshold.
         """
         super().__init__()
         self.peptide = peptide
@@ -77,6 +78,7 @@ class run_PMGen_modeling():
         self.pandora_force_run = pandora_force_run
         self.no_modelling = no_modelling
         self.return_all_outputs = return_all_outputs
+        self.benchmark_similarity_threshold = benchmark_similarity_threshold # added after review --> similarity threshold
         self.input_assertion()
         if len(self.models) > 1:
             print(f'\n #### Warning! You are running for multiple models {self.models}'
@@ -167,9 +169,25 @@ class run_PMGen_modeling():
                                     use_netmhcpan=self.predict_anchor, anchors=anchor)
                     case = Pandora.Pandora(target, self.db, no_modelling=self.no_modelling)
                     case.model(n_loop_models=self.num_templates, benchmark=self.benchmark,
-                               n_homology_models=self.n_homology_models,
-                               best_n_templates=self.best_n_templates)
+                            benchmark_similarity_threshold=(self.benchmark_similarity_threshold if self.benchmark else None), # added after review --> similarity threshold
+                            n_homology_models=self.n_homology_models,
+                            best_n_templates=self.best_n_templates) 
                     print("Pandora modeling completed successfully.")
+                    # Persist similarity info for later CSV aggregation # added after review --> similarity threshold
+                    if self.benchmark and getattr(case, 'similarity_info', None) is not None:
+                        selected_ids = [t.id[:4] for t in case.template]
+                        sims = case.similarity_info.get('all_similarities', {})
+                        template_sims = [(tid, sims.get(tid[:4], None)) for tid in selected_ids]
+                        info = {
+                            'id': self.id,
+                            'min_similarity': case.similarity_info['min_similarity'],
+                            'at_least_one_below_threshold': case.similarity_info['at_least_one_below_threshold'],
+                            'n_templates_used': len(selected_ids),
+                            'template_similarities': template_sims,  # list of (template_id, similarity_fraction)
+                        }
+                        json_path = os.path.join(self.pandora_output, self.id, 'benchmark_similarity.json')
+                        with open(json_path, 'w') as fjs:
+                            json.dump(info, fjs)
                 except Exception as e:
                     print(f"❌ An error occurred during template engineering {self.id}: {str(e)}", file=sys.stderr)
                     raise
@@ -380,7 +398,7 @@ class run_PMGen_wrapper():
                  alphafold_param_folder='AFfine/af_params/params_original/',
                  fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                  max_ram_per_job=3, num_cpu=1, benchmark=False, best_n_templates=1, n_homology_models=1,
-                 pandora_force_run=True, no_modelling=False, return_all_outputs=False):
+                 pandora_force_run=True, no_modelling=False, return_all_outputs=False, benchmark_similarity_threshold=0.95): # added after review --> similarity threshold
         """
         Initializes the run_PMGen_wrapper class.
         :param df: pandas DataFrame containing input data. Required columns:
@@ -405,6 +423,7 @@ class run_PMGen_wrapper():
         :param no_modelling (bool): If active, no modeller homology modeling happens and only PANDORA is used for template search and alignment.
         :param pandora_force_run (bool): If active, PANDORA will be forced to run even if files already exist.
         :param return_all_outputs (bool): If active, all alphafold outputs are saved.
+        :param benchmark_similarity_threshold (float): Only used during benchmarking, exludes sequences above this similarity threshold.
         The function `input_assertion()` checks if all inputs are correctly formatted and whether required files and directories exist.
 
         Raises:
@@ -425,6 +444,7 @@ class run_PMGen_wrapper():
         self.pandora_force_run = pandora_force_run
         self.no_modelling = no_modelling
         self.return_all_outputs = return_all_outputs
+        self.benchmark_similarity_threshold = benchmark_similarity_threshold # added after review --> similarity threshold
         self.input_assertion()
 
     def run_wrapper(self, run_alphafold=True):
@@ -444,7 +464,7 @@ class run_PMGen_wrapper():
                                             fine_tuned_model_path=self.fine_tuned_model_path, benchmark=self.benchmark,
                                             n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates,
                                             pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling,
-                                            return_all_outputs=self.return_all_outputs)
+                                            return_all_outputs=self.return_all_outputs, benchmark_similarity_threshold=self.benchmark_similarity_threshold,) # added after review --> similarity threshold
             runner.run_PMGen(run_alphafold=False)
             input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
             input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])] # id/id
@@ -453,6 +473,7 @@ class run_PMGen_wrapper():
             alphafold_out = self.output_dir + '/alphafold'
             pd.concat(INPUT_DF).to_csv(f'{alphafold_out}/alphafold_input_file.tsv', sep='\t', index=False)
             runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
+        self._aggregate_benchmark_similarity_csv() # added after review --> similarity threshold
 
 
     def get_available_memory(self):
@@ -478,7 +499,7 @@ class run_PMGen_wrapper():
                                         fine_tuned_model_path=self.fine_tuned_model_path, benchmark=self.benchmark,
                                         n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates,
                                         pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling,
-                                        return_all_outputs=self.return_all_outputs)
+                                        return_all_outputs=self.return_all_outputs, benchmark_similarity_threshold=self.benchmark_similarity_threshold,) # added after review --> similarity threshold
         runner.run_PMGen(run_alphafold=False)
         input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
         input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])]  # id/id
@@ -537,7 +558,41 @@ class run_PMGen_wrapper():
                                             return_all_outputs=self.return_all_outputs)
         if run_alphafold:
             runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')
+        self._aggregate_benchmark_similarity_csv() # added after review --> similarity threshold
 
+    def _aggregate_benchmark_similarity_csv(self):
+        if not self.benchmark:
+            return
+        rows = []
+        max_t = 0
+        for _, row in self.df.iterrows():
+            json_path = os.path.join(self.output_dir, 'pandora', str(row['id']), 'benchmark_similarity.json')
+            if not os.path.exists(json_path):
+                continue
+            with open(json_path) as fjs:
+                info = json.load(fjs)
+            max_t = max(max_t, len(info['template_similarities']))
+            rows.append(info)
+        if not rows:
+            return
+        out_rows = []
+        for info in rows:
+            d = {
+                'id': info['id'],
+                'min_similarity': info['min_similarity'],
+                'at_least_one_below_threshold': info['at_least_one_below_threshold'],
+                'n_templates_used': info['n_templates_used'],
+            }
+            for i in range(max_t):
+                if i < len(info['template_similarities']):
+                    tid, sim = info['template_similarities'][i]
+                    d[f'template_{i+1}_id'] = tid
+                    d[f'template_{i+1}_similarity'] = sim
+                else:
+                    d[f'template_{i+1}_id'] = None
+                    d[f'template_{i+1}_similarity'] = None
+            out_rows.append(d)
+        pd.DataFrame(out_rows).to_csv(os.path.join(self.output_dir, 'benchmark_similarity.csv'), index=False)
 
     def input_assertion(self):
         """

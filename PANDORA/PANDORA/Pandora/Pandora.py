@@ -71,13 +71,14 @@ class Pandora:
         self.no_modelling_output_dict = {}
         self.keep_IL = False
         self.logfile = f'{self.target.output_dir}/{target.id}.log'
+        self.similarity_info = None # added after review --> similarity threshold
 
         if database is None and template is None:
             raise Exception('Provide a Database object so Pandora can find the best suitable template structure for '
                             'modelling. Alternatively, you can specify a user defined Template object.')
         
 
-    def find_template(self, best_n_templates=1, benchmark=False, verbose=True):
+    def find_template(self, best_n_templates=1, benchmark=False, benchmark_similarity_threshold=None, verbose=True,): # added after review --> similarity threshold
         ''' Find the best template structure given a Target object
 
         Args:
@@ -106,10 +107,11 @@ class Pandora:
                 print('\tLooking for a template...')
             # Find the best template. If the target already exists in the database,
             # also consider the initial loop model as a model
-            self.template, self.pept_ali_scores, self.keep_IL = Modelling_functions.find_template(self.target,
-                                                                    self.database,
-                                                                    best_n_templates=best_n_templates,
-                                                                    benchmark=benchmark)
+            self.template, self.pept_ali_scores, self.keep_IL, self.similarity_info = Modelling_functions.find_template(self.target,
+                                                                                        self.database,
+                                                                                        best_n_templates=best_n_templates,
+                                                                                        benchmark=benchmark,
+                                                                                        benchmark_similarity_threshold=benchmark_similarity_threshold) # added after review --> similarity threshold
             self.target.templates = [i.id for i in self.template]
             if verbose:
                 print('\tSelected template structure (%s): %s' %(len(self.template), [i.id for i in self.template]))
@@ -378,7 +380,8 @@ class Pandora:
 
     def model(self, n_loop_models=20, n_homology_models=1,
               best_n_templates=1, n_jobs=None, loop_refinement='slow', pickle_out=False,
-              benchmark=False, verbose=True, helix=False, sheet=False, 
+              benchmark=False, benchmark_similarity_threshold=None, # added after review --> similarity threshold
+              verbose=True, helix=False, sheet=False, 
               RMSD_atoms=['C', 'CA', 'N', 'O'], clip_C_domain=False, restraints_stdev=False):
         '''Wrapper function that combines all modelling steps.
 
@@ -438,7 +441,7 @@ class Pandora:
         # Find the best template structure given the Target
         if self.template==None:
             try:
-                self.find_template(best_n_templates=best_n_templates, benchmark=benchmark, verbose=verbose)
+                self.find_template(best_n_templates=best_n_templates, benchmark=benchmark, benchmark_similarity_threshold=benchmark_similarity_threshold, verbose=verbose) # added after review --> similarity threshold
             except:
                 self.__log(self.target.id, 'None', 'Could not find a template')
                 raise Exception('Could not find a template')
