@@ -55,8 +55,11 @@ def main():
                         default='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                         help='Path to fine-tuned model')
     parser.add_argument('--benchmark', action='store_true', help='Enable benchmarking')
-    parser.add_argument('--benchmark_similarity_threshold', type=float, default=0.95,help='When --benchmark is set, exclude templates with MHC sequence similarity '
-                         'above this fraction (0-1). Default: 0.95.') # added after review --> similarity threshold
+    parser.add_argument('--benchmark_similarity_threshold', type=float, default=1.0,
+        help='When --benchmark is set, exclude templates with peptide-MHC (pMHC) sequence '
+            'similarity above this fraction (0-1). pMHC similarity is the length-weighted '
+            'average of MHC G-domain identity and peptide identity. Default: 1.0.') # added after review --> similarity benchmark
+    parser.add_argument('--benchmark_exclude_ids', action="store_true", help="If activated, none of the ids in df are used as templates for benchmarking.")
     parser.add_argument('--best_n_templates', type=int, default=4, help='Best N templates')
     parser.add_argument('--n_homology_models', type=int, default=1, help='Number of homology models')
     parser.add_argument('--max_ram', type=int, default=3, help='Maximum RAM GB per job (only for parallel mode)')
@@ -191,6 +194,11 @@ def main():
 
 
             df['mhc_seq'] = [''.join([aa.upper() for aa in seq if aa.upper() in AMINO_ACIDS]) for seq in df['mhc_seq'].tolist()]  # remove gaps from df:
+            # Build benchmark exclusion list (4-letter PDB prefixes from all test ids) # added after review --> similarity threshold
+            benchmark_exclude_ids = None
+            if args.benchmark_exclude_ids: # not activated for main benchmarking, bcz other methods used all templates and the comparision was not fair if we do it. Instead done in supplementary to asses model performance.
+                benchmark_exclude_ids = sorted({str(x).split('_')[0][:4] for x in df['id'].tolist()})
+                print(f'Benchmark mode: excluding {len(benchmark_exclude_ids)} test PDB IDs from template search.')
             if args.multiple_anchors:
                 L1 = len(df)
                 ma = MultipleAnchors(args, args.dirty_mode)
@@ -212,7 +220,7 @@ def main():
                                            benchmark=args.benchmark, best_n_templates=args.best_n_templates,
                                            n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora,
                                             no_modelling=args.initial_guess, return_all_outputs=args.return_all_outputs,
-                                            benchmark_similarity_threshold=args.benchmark_similarity_threshold,)  # added after review --> similarity threshold
+                                            benchmark_similarity_threshold=args.benchmark_similarity_threshold, benchmark_exclude_ids=benchmark_exclude_ids,)  # added after review --> similarity threshold
             if args.run == 'parallel' and not args.only_protein_mpnn and not args.only_mutation_screen: 
                 runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
             elif args.run == 'single' and not args.only_protein_mpnn and not args.only_mutation_screen:
@@ -248,7 +256,8 @@ def main():
                                             n_homology_models=args.n_homology_models,
                                             pandora_force_run=args.no_pandora,
                                             return_all_outputs=args.return_all_outputs,
-                                            benchmark_similarity_threshold=args.benchmark_similarity_threshold,)  # added after review --> similarity threshold
+                                            benchmark_similarity_threshold=args.benchmark_similarity_threshold, # added after review --> similarity threshold
+                                            benchmark_exclude_ids=[args.id.split('_')[0][:4]] if args.benchmark and args.id else None,)  
             if not args.only_protein_mpnn and not args.only_mutation_screen:
                 runner.run_PMGen(run_alphafold=args.no_alphafold)
             else:

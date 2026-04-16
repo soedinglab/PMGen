@@ -490,8 +490,29 @@ def score_peptide_alignment(target, template, substitution_matrix='PAM30'):
         return aligned.score
 
 
+def _peptide_identity(target_pept, template_pept, target_anchors, template_anchors):
+    """Return (matches, alignment_length) for a peptide pair using PANDORA's
+    anchor-aware alignment (MHC-I) or naive padding (MHC-II)."""
+    try:
+        if len(target_anchors) >= 2 and len(template_anchors) >= 2:
+            a1_t, a2_t = target_anchors[0], target_anchors[1]
+            a1_p, a2_p = template_anchors[0], template_anchors[1]
+            aligned_t, aligned_p = align_peptides(target_pept, a1_t, a2_t,
+                                                  template_pept, a1_p, a2_p)
+        else:
+            L = max(len(target_pept), len(template_pept))
+            aligned_t = target_pept.ljust(L, '-')
+            aligned_p = template_pept.ljust(L, '-')
+    except Exception:
+        L = max(len(target_pept), len(template_pept))
+        aligned_t = target_pept.ljust(L, '-')
+        aligned_p = template_pept.ljust(L, '-')
+    matches = sum(1 for a, b in zip(aligned_t, aligned_p) if a == b and a != '-')
+    aln_len = max(len(aligned_t.replace('-', '')), len(aligned_p.replace('-', '')))
+    return matches, max(aln_len, 1)
+
 def find_template(target, database, best_n_templates=1, 
-                  benchmark=False, benchmark_similarity_threshold=None, # added for pmgen benchmarking # added after review --> similarity threshold
+                  benchmark=False, benchmark_similarity_threshold=None, benchmark_exclude_ids=None, # added for pmgen benchmarking # added after review --> similarity threshold
                   blastdb=PANDORA.PANDORA_data + '/BLAST_databases/templates_blast_db/templates_blast_db'):
     ''' Selects the template structure that is best suited as template for homology modelling of the target
 
@@ -607,6 +628,12 @@ def find_template(target, database, best_n_templates=1,
     if benchmark:
         if target.id[:4] in putative_templates.keys(): # only 4 letters of PDB used in target.id[:4]
             del putative_templates[target.id[:4]]
+    
+    # Exclude all test-set PDB IDs (4-letter prefixes) when benchmarking # added after review --> similarity threshold
+    if benchmark and benchmark_exclude_ids:
+        for excl in benchmark_exclude_ids:
+            putative_templates.pop(excl[:4].upper(), None)
+            putative_templates.pop(excl[:4].lower(), None)
 
     if target.MHC_class == 'II':
         for ID in putative_templates:
@@ -623,28 +650,7 @@ def find_template(target, database, best_n_templates=1,
 
     # Added for benchmark of similarity, # added after review --> similarity threshold
     similarity_info = None
-    if benchmark and benchmark_similarity_threshold is not None:
-        score_key = class_variables[2]  # 'M_score' or 'Avg_score'
-        # Build (id, similarity_fraction) list for what's left after target removal
-        sim_list = [(k, v[score_key] / 100.0) for k, v in putative_templates.items()
-                    if score_key in v]
-        if len(sim_list) == 0:
-            raise Exception('No putative templates with similarity scores after target removal.')
-        min_similarity = min(s for _, s in sim_list)
-        below = [(k, s) for k, s in sim_list if s <= benchmark_similarity_threshold]
-        at_least_one_below = len(below) > 0
-        if at_least_one_below:
-            keep_ids = set(k for k, _ in below)
-        else:
-            # all above threshold -> take the lowest-similarity ones (up to best_n_templates)
-            sim_list_sorted = sorted(sim_list, key=lambda x: x[1])
-            keep_ids = set(k for k, _ in sim_list_sorted[:best_n_templates])
-        putative_templates = {k: v for k, v in putative_templates.items() if k in keep_ids}
-        similarity_info = {
-            'min_similarity': min_similarity,
-            'at_least_one_below_threshold': at_least_one_below,
-            'all_similarities': dict(sim_list),  # for later lookup of selected templates
-        }
+
 
     # For both chains
     # Sort for average score
@@ -670,6 +676,57 @@ def find_template(target, database, best_n_templates=1,
         raise Exception(
             'Pandora could not find any putative template! Please try to define your own template or contact us for help')
 
+    # --- pMHC similarity filter (added after review: pMHC = MHC + peptide, length-weighted) --- # added after review --> similarity threshold
+    if benchmark and benchmark_similarity_threshold is not None:
+        score_key = class_variables[2]  # 'M_score' or 'Avg_score'
+        # MHC G-domain length(s) for length-weighted combination
+        if target.MHC_class == 'I':
+            L_mhc = PANDORA.MHCI_G_domain[0][1]
+        else:
+            L_mhc = PANDORA.MHCII_G_domain[0][1] + PANDORA.MHCII_G_domain[1][1]
+
+        pmhc_sim = {}   # id -> pMHC identity fraction
+        mhc_sim = {}    # id -> mhc identity fraction (bookkeeping)
+        pep_sim = {}    # id -> pep identity fraction (bookkeeping)
+        for _, _, ID in pos_list:
+            if ID not in putative_templates or score_key not in putative_templates[ID]:
+                continue
+            mhc_id = putative_templates[ID][score_key] / 100.0
+            templ = getattr(database, class_variables[1])[ID]
+            matches, aln_len = _peptide_identity(target.peptide, templ.peptide,
+                                                target.anchors, templ.anchors)
+            pep_id = matches / aln_len
+            L_pep = max(len(target.peptide), len(templ.peptide))
+            combined = (L_mhc * mhc_id + L_pep * pep_id) / (L_mhc + L_pep)
+            mhc_sim[ID] = mhc_id
+            pep_sim[ID] = pep_id
+            pmhc_sim[ID] = combined
+
+        if not pmhc_sim:
+            raise Exception('No putative templates after pMHC similarity computation.')
+
+        min_similarity = min(pmhc_sim.values())
+        below = {k: v for k, v in pmhc_sim.items() if v <= benchmark_similarity_threshold}
+        at_least_one_below = len(below) > 0
+        if at_least_one_below:
+            keep_ids = set(below.keys())
+        else:
+            keep_ids = set(k for k, _ in sorted(pmhc_sim.items(), key=lambda x: x[1])[:best_n_templates])
+
+        # Filter pos_list to keep only surviving candidates
+        pos_list = [t for t in pos_list if t[-1] in keep_ids]
+        if len(pos_list) == 0:
+            raise Exception('Pandora could not find any putative template after pMHC similarity filter!')
+
+        similarity_info = {
+            'min_similarity': min_similarity,                    # NOW pMHC identity
+            'at_least_one_below_threshold': at_least_one_below,
+            'all_similarities': pmhc_sim,                        # pMHC identity per candidate id
+            'n_templates_below_threshold': len(below),
+            'mhc_similarities': mhc_sim,                         # optional extras
+            'pep_similarities': pep_sim,
+        }
+    # --- end pMHC filter ---
     # Sort templates per peptide score
     template_id = [i[-1] for i in sorted(pos_list, key=lambda elem: elem[0], reverse=True)][:best_n_templates]
     scores = sorted(pos_list, key=lambda elem: elem[0], reverse=True)[:best_n_templates]

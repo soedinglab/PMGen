@@ -8,11 +8,7 @@ from Bio.PDB import PDBParser
 from Bio import pairwise2
 
 ######### added by Amir from here
-def constrained_alignment(seq1, seq2, pos_seq1, pos_seq2, match=1, mismatch=-1, gap=-2):
-    # Convert to 0-based indexing if input is 1-based
-    #pos_seq1 = [p - 1 for p in pos_seq1]
-    #pos_seq2 = [p - 1 for p in pos_seq2]
-
+def constrained_alignment(seq1, seq2, pos_seq1, pos_seq2, match=1, mismatch=-1, gap=-2, only_anchor=False):
     # Split sequences into segments
     segments = []
     prev1, prev2 = -1, -1
@@ -22,18 +18,25 @@ def constrained_alignment(seq1, seq2, pos_seq1, pos_seq2, match=1, mismatch=-1, 
         prev1, prev2 = p1, p2
     segments.append((seq1[prev1 + 1:], seq2[prev2 + 1:]))  # After last anchor
 
-    # Align each non-anchor segment (simplified here)
+    # Align each segment
     result1, result2 = "", ""
     for i, (s1, s2) in enumerate(segments):
         if i % 2 == 0:  # Non-anchor segment
-            # Use a simple alignment (or call Needleman-Wunsch)
-            aligned1, aligned2 = naive_align(s1, s2, match, mismatch, gap)
-            result1 += aligned1
-            result2 += aligned2
+            if only_anchor:
+                # Gap out both sides: target gets gaps against template, and vice versa
+                # Target residues paired with gaps in template → no template info
+                # Template residues paired with gaps in target → ignored
+                result1 += s1 + "-" * len(s2)
+                result2 += "-" * len(s1) + s2
+            else:
+                aligned1, aligned2 = naive_align(s1, s2, match, mismatch, gap)
+                result1 += aligned1
+                result2 += aligned2
         else:  # Anchor point
             result1 += s1
             result2 += s2
-    print('DEEEEEEEEEEBUG:','seq1:', seq1, 'seq2:', seq2, pos_seq1, pos_seq2, result1, result2)
+
+    print('DEBUG:', 'seq1:', seq1, 'seq2:', seq2, pos_seq1, pos_seq2, result1, result2)
     return result1, result2
 
 
@@ -78,7 +81,9 @@ class Pandora:
                             'modelling. Alternatively, you can specify a user defined Template object.')
         
 
-    def find_template(self, best_n_templates=1, benchmark=False, benchmark_similarity_threshold=None, verbose=True,): # added after review --> similarity threshold
+    def find_template(self, best_n_templates=1, benchmark=False, 
+                      benchmark_similarity_threshold=None, benchmark_exclude_ids=None, # added after review --> similarity threshold
+                      verbose=True,): 
         ''' Find the best template structure given a Target object
 
         Args:
@@ -111,7 +116,8 @@ class Pandora:
                                                                                         self.database,
                                                                                         best_n_templates=best_n_templates,
                                                                                         benchmark=benchmark,
-                                                                                        benchmark_similarity_threshold=benchmark_similarity_threshold) # added after review --> similarity threshold
+                                                                                        benchmark_similarity_threshold=benchmark_similarity_threshold,
+                                                                                        benchmark_exclude_ids=benchmark_exclude_ids) # added after review --> similarity threshold
             self.target.templates = [i.id for i in self.template]
             if verbose:
                 print('\tSelected template structure (%s): %s' %(len(self.template), [i.id for i in self.template]))
@@ -380,7 +386,7 @@ class Pandora:
 
     def model(self, n_loop_models=20, n_homology_models=1,
               best_n_templates=1, n_jobs=None, loop_refinement='slow', pickle_out=False,
-              benchmark=False, benchmark_similarity_threshold=None, # added after review --> similarity threshold
+              benchmark=False, benchmark_similarity_threshold=None, benchmark_exclude_ids=None, # added after review --> similarity threshold
               verbose=True, helix=False, sheet=False, 
               RMSD_atoms=['C', 'CA', 'N', 'O'], clip_C_domain=False, restraints_stdev=False):
         '''Wrapper function that combines all modelling steps.
@@ -441,7 +447,11 @@ class Pandora:
         # Find the best template structure given the Target
         if self.template==None:
             try:
-                self.find_template(best_n_templates=best_n_templates, benchmark=benchmark, benchmark_similarity_threshold=benchmark_similarity_threshold, verbose=verbose) # added after review --> similarity threshold
+                self.find_template(best_n_templates=best_n_templates,
+                   benchmark=benchmark,
+                   benchmark_similarity_threshold=benchmark_similarity_threshold, # added after review --> similarity threshold
+                   benchmark_exclude_ids=benchmark_exclude_ids,
+                   verbose=verbose) 
             except:
                 self.__log(self.target.id, 'None', 'Could not find a template')
                 raise Exception('Could not find a template')
