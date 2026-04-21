@@ -33,7 +33,11 @@ class run_PMGen_modeling():
                  benchmark=False, n_homology_models=1, best_n_templates=4,
                  pandora_force_run=True, no_modelling=False,
                  return_all_outputs=False, 
-                 benchmark_similarity_threshold=0.95, benchmark_exclude_ids=None,): # added after review --> similarity threshold
+                 benchmark_similarity_threshold=0.95, benchmark_exclude_ids=None, # added after review --> similarity threshold
+                sampling_mode=False, n_times_sampling=200, sampling_fraction_IG=0.5, # Sampling mode added
+                sampling_fraction_evo=0.3, sampling_dropout_rate=0.5, sampling_seed=42,
+                radius=8.0, pep_sampling=None,
+    ):
         """
         Initializes the PMGen modeling pipeline.
 
@@ -82,6 +86,14 @@ class run_PMGen_modeling():
         self.return_all_outputs = return_all_outputs
         self.benchmark_similarity_threshold = benchmark_similarity_threshold # added after review --> similarity threshold
         self.benchmark_exclude_ids = benchmark_exclude_ids # added after review --> similarity threshold
+        self.sampling_mode = sampling_mode
+        self.n_times_sampling = n_times_sampling
+        self.sampling_fraction_IG = sampling_fraction_IG
+        self.sampling_fraction_evo = sampling_fraction_evo
+        self.sampling_dropout_rate = sampling_dropout_rate
+        self.sampling_seed = sampling_seed
+        self.radius = radius
+        self.pep_sampling = pep_sampling
         self.input_assertion()
         if len(self.models) > 1:
             print(f'\n #### Warning! You are running for multiple models {self.models}'
@@ -316,6 +328,17 @@ class run_PMGen_modeling():
             "--ignore_identities",
             "--num_recycles", f"{self.num_recycles}"
         ]
+        if self.sampling_mode:
+            command += ['--sampling_mode',
+                        '--return_all_outputs',
+                        '--n_times_sampling', str(self.n_times_sampling),
+                        '--sampling_fraction_IG', str(self.sampling_fraction_IG),
+                        '--sampling_fraction_evo', str(self.sampling_fraction_evo),
+                        '--sampling_dropout_rate', str(self.sampling_dropout_rate),
+                        '--sampling_seed', str(self.sampling_seed),
+                        '--radius', str(self.radius)]
+            if self.pep_sampling:
+                command += ['--pep_sampling', self.pep_sampling]
         if not self.no_modelling:
             command += ['--no_initial_guess']
         else:
@@ -412,7 +435,11 @@ class run_PMGen_wrapper():
                  fine_tuned_model_path='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                  max_ram_per_job=3, num_cpu=1, benchmark=False, best_n_templates=1, n_homology_models=1,
                  pandora_force_run=True, no_modelling=False, return_all_outputs=False, 
-                 benchmark_similarity_threshold=0.95, benchmark_exclude_ids=None): # added after review --> similarity threshold
+                 benchmark_similarity_threshold=0.95, benchmark_exclude_ids=None,  # added after review --> similarity threshold
+                 sampling_mode=False, n_times_sampling=200, sampling_fraction_IG=0.5, # Sampling mode added
+                sampling_fraction_evo=0.3, sampling_dropout_rate=0.5, sampling_seed=42,
+                radius=8.0, pep_sampling=None,
+                 ):
         """
         Initializes the run_PMGen_wrapper class.
         :param df: pandas DataFrame containing input data. Required columns:
@@ -460,6 +487,14 @@ class run_PMGen_wrapper():
         self.return_all_outputs = return_all_outputs
         self.benchmark_similarity_threshold = benchmark_similarity_threshold # added after review --> similarity threshold
         self.benchmark_exclude_ids = benchmark_exclude_ids
+        self.sampling_mode = sampling_mode
+        self.n_times_sampling = n_times_sampling
+        self.sampling_fraction_IG = sampling_fraction_IG
+        self.sampling_fraction_evo = sampling_fraction_evo
+        self.sampling_dropout_rate = sampling_dropout_rate
+        self.sampling_seed = sampling_seed
+        self.radius = radius
+        self.pep_sampling = pep_sampling
         self.input_assertion()
 
     def run_wrapper(self, run_alphafold=True):
@@ -480,8 +515,17 @@ class run_PMGen_wrapper():
                                             n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates,
                                             pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling,
                                             return_all_outputs=self.return_all_outputs, 
-                                            benchmark_similarity_threshold=self.benchmark_similarity_threshold, benchmark_exclude_ids=self.benchmark_exclude_ids,) # added after review --> similarity threshold
-            runner.run_PMGen(run_alphafold=False)
+                                            benchmark_similarity_threshold=self.benchmark_similarity_threshold, benchmark_exclude_ids=self.benchmark_exclude_ids, # added after review --> similarity threshold
+                                            sampling_mode=self.sampling_mode, #v2
+                                            n_times_sampling=self.n_times_sampling,
+                                            sampling_fraction_IG=self.sampling_fraction_IG,
+                                            sampling_fraction_evo=self.sampling_fraction_evo,
+                                            sampling_dropout_rate=self.sampling_dropout_rate,
+                                            sampling_seed=self.sampling_seed,
+                                            radius=self.radius,
+                                            pep_sampling=self.pep_sampling,
+                                        )
+            runner.run_PMGen(test_mode=False, run_alphafold=False)
             input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
             input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])] # id/id
             INPUT_DF.append(input_df)
@@ -517,7 +561,16 @@ class run_PMGen_wrapper():
                                         n_homology_models=self.n_homology_models, best_n_templates=self.best_n_templates,
                                         pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling,
                                         return_all_outputs=self.return_all_outputs, 
-                                        benchmark_similarity_threshold=self.benchmark_similarity_threshold, benchmark_exclude_ids=self.benchmark_exclude_ids,) # added after review --> similarity threshold
+                                        benchmark_similarity_threshold=self.benchmark_similarity_threshold, benchmark_exclude_ids=self.benchmark_exclude_ids, # added after review --> similarity threshold
+                                        sampling_mode=self.sampling_mode, #v2
+                                        n_times_sampling=self.n_times_sampling,
+                                        sampling_fraction_IG=self.sampling_fraction_IG,
+                                        sampling_fraction_evo=self.sampling_fraction_evo,
+                                        sampling_dropout_rate=self.sampling_dropout_rate,
+                                        sampling_seed=self.sampling_seed,
+                                        radius=self.radius,
+                                        pep_sampling=self.pep_sampling,
+        )
         runner.run_PMGen(run_alphafold=False)
         input_df = pd.read_csv(runner.alphafold_input_file, sep='\t', header=0)
         input_df['targetid'] = [str(row['id']) + '/' + str(row['id'])]  # id/id
@@ -573,7 +626,15 @@ class run_PMGen_wrapper():
                                             num_templates=self.num_templates, num_recycles=self.num_recycles,
                                             models=self.models, alphafold_param_folder=self.alphafold_param_folder,
                                             fine_tuned_model_path=self.fine_tuned_model_path, no_modelling=self.no_modelling,
-                                            return_all_outputs=self.return_all_outputs)
+                                            return_all_outputs=self.return_all_outputs,
+                                            sampling_mode=self.sampling_mode, #v2
+                                            n_times_sampling=self.n_times_sampling,
+                                            sampling_fraction_IG=self.sampling_fraction_IG,
+                                            sampling_fraction_evo=self.sampling_fraction_evo,
+                                            sampling_dropout_rate=self.sampling_dropout_rate,
+                                            sampling_seed=self.sampling_seed,
+                                            radius=self.radius,
+                                            pep_sampling=self.pep_sampling,)
         self._aggregate_benchmark_similarity_csv() # added after review --> similarity threshold
         if run_alphafold:
             runner.run_alphafold(input_file=f'{alphafold_out}/alphafold_input_file.tsv', output_prefix=alphafold_out + '/')

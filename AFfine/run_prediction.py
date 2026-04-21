@@ -17,8 +17,12 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import warnings
 warnings.filterwarnings('ignore', category=FutureWarning)
 warnings.filterwarnings('ignore', category=DeprecationWarning)
+from rank_pep_plddt import rank_peptide_plddt
 ###
 import argparse
+from run_prediction_ig_patch import (
+    add_ig_pipeline_args, setup_ig_pipeline, process_target_with_ig_pipeline,
+)
 
 parser = argparse.ArgumentParser(
     description="Run simple template-based alphafold inference",
@@ -71,6 +75,10 @@ parser.add_argument('--num_templates', type=int, nargs='*', default=4, help='num
 parser.add_argument('--no_initial_guess', action='store_true', default=False, help='When active, no intial guess is used to direct modeling and only template is used.')
 parser.add_argument('--return_all_outputs', action='store_true', default=False, help='Save all alphafold outputs including evoformer output')
 parser.add_argument('--use_msa', action='store_true', default=False, help='If Enabled, use MSA for prediction. If not, only template is used.')
+parser = add_ig_pipeline_args(parser)
+parser.add_argument('--pep_sampling', type=str, default=None,
+    help='Peptide sampling scope: "all", "anchors", or comma-separated '
+         '1-indexed peptide positions e.g. "2,5,9"')
 args = parser.parse_args()
 
 import os
@@ -108,7 +116,7 @@ model_runners = predict_utils.load_model_runners(
     num_recycle = args.num_recycles[0],
     args = args
 )
-
+ig_config = setup_ig_pipeline(args)
 final_dfl = []
 for counter, targetl in targets.iterrows():
     print('START:', counter, 'of', targets.shape[0])
@@ -191,25 +199,25 @@ for counter, targetl in targets.iterrows():
         msa = [query_sequence] + msa
         
 
-   
-
-    all_metrics = predict_utils.run_alphafold_prediction(
-        query_sequence=query_sequence,
-        msa=msa,
-        deletion_matrix=deletion_matrix,
-        chainbreak_sequence=query_chainseq,
-        template_features=all_template_features,
-        model_runners=model_runners,
-        out_prefix=outfile_prefix,
-        crop_size=crop_size,
-        dump_pdbs = not (args.no_pdbs or args.terse),
-        dump_metrics = not args.terse,
-        template_pdb_dict = template_pdb_dict, # added by Amir for getting pandora data
-        no_initial_guess=args.no_initial_guess,
-        return_all_outputs=args.return_all_outputs
+    # ── Build peptide mask per-target if sampling requested ──
+    all_metrics = process_target_with_ig_pipeline(
+            args, ig_config, targetl, query_sequence, query_chainseq,
+            all_template_features, model_runners, outfile_prefix,
+            crop_size, msa, deletion_matrix,
+        )
+    # -------- End of V2 after sampling mode -------------- #
+    all_metrics = process_target_with_ig_pipeline(
+        args, ig_config, targetl, query_sequence, query_chainseq,
+        all_template_features, model_runners, outfile_prefix,
+        crop_size, msa, deletion_matrix,
     )
 
-
+    # ── Rank sampled structures by peptide pLDDT ──
+    if getattr(args, 'pep_sampling', None) is not None:
+        for model_name in args.model_names:
+            npz_path = f'{outfile_prefix}_{model_name}_sampling_results.npz'
+            if os.path.exists(npz_path):
+                rank_peptide_plddt(npz_path, query_chainseq)
     outl = targetl.copy()
     for model_name, metrics in all_metrics.items():
         plddts = metrics['plddt']

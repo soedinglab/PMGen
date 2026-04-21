@@ -54,12 +54,6 @@ def main():
     parser.add_argument('--fine_tuned_model_path', type=str,
                         default='AFfine/af_params/params_finetune/params/model_ft_mhc_20640.pkl',
                         help='Path to fine-tuned model')
-    parser.add_argument('--benchmark', action='store_true', help='Enable benchmarking')
-    parser.add_argument('--benchmark_similarity_threshold', type=float, default=1.0,
-        help='When --benchmark is set, exclude templates with peptide-MHC (pMHC) sequence '
-            'similarity above this fraction (0-1). pMHC similarity is the length-weighted '
-            'average of MHC G-domain identity and peptide identity. Default: 1.0.') # added after review --> similarity benchmark
-    parser.add_argument('--benchmark_exclude_ids', action="store_true", help="If activated, none of the ids in df are used as templates for benchmarking.")
     parser.add_argument('--best_n_templates', type=int, default=4, help='Best N templates')
     parser.add_argument('--n_homology_models', type=int, default=1, help='Number of homology models')
     parser.add_argument('--max_ram', type=int, default=3, help='Maximum RAM GB per job (only for parallel mode)')
@@ -133,6 +127,24 @@ def main():
 
     # Setting to run iterative peptide generation
     parser.add_argument('--iterative_peptide_gen', type=int, default=0, help='If used, the iterative peptide generation is performed, defines the number of iterations.')
+
+    # Evoformer sampling arguments
+    parser.add_argument('--sampling_mode', action='store_true', help='Enable evoformer dropout sampling on peptide region')
+    parser.add_argument('--n_times_sampling', type=int, default=50, help='Number of structure module samples')
+    parser.add_argument('--pep_sampling', type=str, default=None, help='"all" | "non_anchors" | "2,5,9" (1-indexed peptide positions)')
+    parser.add_argument('--sampling_fraction_IG', type=float, default=0.5)
+    parser.add_argument('--sampling_fraction_evo', type=float, default=0.3)
+    parser.add_argument('--sampling_dropout_rate', type=float, default=0.3)
+    parser.add_argument('--sampling_seed', type=int, default=42)
+    parser.add_argument('--sampling_radius', type=float, default=8.0)
+    
+    #benchamark flags
+    parser.add_argument('--benchmark', action='store_true', help='Enable benchmarking')
+    parser.add_argument('--benchmark_similarity_threshold', type=float, default=1.0,
+        help='When --benchmark is set, exclude templates with peptide-MHC (pMHC) sequence '
+            'similarity above this fraction (0-1). pMHC similarity is the length-weighted '
+            'average of MHC G-domain identity and peptide identity. Default: 1.0.') # added after review --> similarity benchmark
+    parser.add_argument('--benchmark_exclude_ids', action="store_true", help="If activated, none of the ids in df are used as templates for benchmarking.")
 
     args = parser.parse_args()
     assert(args.proteinmpnn_model_name) in allowed_mpnn_models, f"Allowed models: {allowed_mpnn_models}"
@@ -220,7 +232,16 @@ def main():
                                            benchmark=args.benchmark, best_n_templates=args.best_n_templates,
                                            n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora,
                                             no_modelling=args.initial_guess, return_all_outputs=args.return_all_outputs,
-                                            benchmark_similarity_threshold=args.benchmark_similarity_threshold, benchmark_exclude_ids=benchmark_exclude_ids,)  # added after review --> similarity threshold
+                                            benchmark_similarity_threshold=args.benchmark_similarity_threshold, benchmark_exclude_ids=benchmark_exclude_ids,  # added after review --> similarity threshold
+                                            sampling_mode=args.sampling_mode,
+                                            n_times_sampling=args.n_times_sampling,
+                                            sampling_fraction_IG=args.sampling_fraction_IG,
+                                            sampling_fraction_evo=args.sampling_fraction_evo,
+                                            sampling_dropout_rate=args.sampling_dropout_rate,
+                                            sampling_seed=args.sampling_seed,
+                                            radius=args.sampling_radius,
+                                            pep_sampling=args.pep_sampling,
+            )
             if args.run == 'parallel' and not args.only_protein_mpnn and not args.only_mutation_screen: 
                 runner.run_wrapper_parallel(max_ram=args.max_ram, max_cores=args.max_cores, run_alphafold=args.no_alphafold)
             elif args.run == 'single' and not args.only_protein_mpnn and not args.only_mutation_screen:
@@ -257,7 +278,16 @@ def main():
                                             pandora_force_run=args.no_pandora,
                                             return_all_outputs=args.return_all_outputs,
                                             benchmark_similarity_threshold=args.benchmark_similarity_threshold, # added after review --> similarity threshold
-                                            benchmark_exclude_ids=[args.id.split('_')[0][:4]] if args.benchmark and args.id else None,)  
+                                            benchmark_exclude_ids=[args.id.split('_')[0][:4]] if args.benchmark and args.id else None,
+                                            sampling_mode=args.sampling_mode,
+                                            n_times_sampling=args.n_times_sampling,
+                                            sampling_fraction_IG=args.sampling_fraction_IG,
+                                            sampling_fraction_evo=args.sampling_fraction_evo,
+                                            sampling_dropout_rate=args.sampling_dropout_rate,
+                                            sampling_seed=args.sampling_seed,
+                                            radius=args.sampling_radius,
+                                            pep_sampling=args.pep_sampling,
+                                            )  
             if not args.only_protein_mpnn and not args.only_mutation_screen:
                 runner.run_PMGen(run_alphafold=args.no_alphafold)
             else:
