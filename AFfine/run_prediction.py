@@ -106,7 +106,6 @@ if args.verbose:
           targets.shape[0], 'max_len=', crop_size)
 
 sys.stdout.flush()
-print('###########DEBUG', args.model_names)
 model_runners = predict_utils.load_model_runners(
     args.model_names,
     crop_size,
@@ -161,6 +160,7 @@ for counter, targetl in targets.iterrows():
         except:
             data = data.sample(frac=1).reset_index(drop=True)
             data = data.iloc[:int(num_templates)]
+    print(f"AlphaFold long: Using {len(data)} templates")
         
         
     cols = ('template_pdbfile target_to_template_alignstring identities '

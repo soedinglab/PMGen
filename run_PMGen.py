@@ -140,7 +140,7 @@ def main():
     
     #benchamark flags
     parser.add_argument('--benchmark', action='store_true', help='Enable benchmarking')
-    parser.add_argument('--benchmark_similarity_threshold', type=float, default=1.0,
+    parser.add_argument('--benchmark_similarity_threshold', type=float, default=100.0,
         help='When --benchmark is set, exclude templates with peptide-MHC (pMHC) sequence '
             'similarity above this fraction (0-1). pMHC similarity is the length-weighted '
             'average of MHC G-domain identity and peptide identity. Default: 1.0.') # added after review --> similarity benchmark

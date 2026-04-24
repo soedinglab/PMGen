@@ -326,7 +326,8 @@ class run_PMGen_modeling():
             "--model_names", *model_names.split(),
             "--model_params_files", *model_params_files.split(),
             "--ignore_identities",
-            "--num_recycles", f"{self.num_recycles}"
+            "--num_recycles", f"{self.num_recycles}", 
+            "--num_templates", f"{self.num_templates}"
         ]
         if self.sampling_mode:
             command += ['--sampling_mode',
@@ -623,7 +624,8 @@ class run_PMGen_wrapper():
         runner = run_PMGen_modeling(peptide=row['peptide'], mhc_seq=row['mhc_seq'],
                                             mhc_type=row['mhc_type'], id=f"{row['id']}", output_dir=self.output_dir,
                                             anchors=anchors, mhc_allele=mhc_allele, predict_anchor=predict_anchor,
-                                            num_templates=self.num_templates, num_recycles=self.num_recycles,
+                                            num_templates=self.num_templates, best_n_templates=self.best_n_templates,
+                                            num_recycles=self.num_recycles,
                                             models=self.models, alphafold_param_folder=self.alphafold_param_folder,
                                             fine_tuned_model_path=self.fine_tuned_model_path, no_modelling=self.no_modelling,
                                             return_all_outputs=self.return_all_outputs,

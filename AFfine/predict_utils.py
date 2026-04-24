@@ -398,7 +398,7 @@ def create_single_template_features(
     num_res_tmp = len(crs_tmp)
     template_full_sequence = ''.join(all_name1s_tmp[c][r] for c,r in crs_tmp)
     if expected_template_len:
-        print(expected_template_len, template_full_sequence, num_res)
+        #print(expected_template_len, template_full_sequence, num_res)
         assert len(template_full_sequence) == expected_template_len, (f'template name or row: {template_name} | '
                                                                       f'template_full_sequence: {template_full_sequence} |'
                                                                       f'expected_template_len: {expected_template_len}')
