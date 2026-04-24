@@ -36,7 +36,8 @@ class run_PMGen_modeling():
                  benchmark_similarity_threshold=0.95, benchmark_exclude_ids=None, # added after review --> similarity threshold
                 sampling_mode=False, n_times_sampling=200, sampling_fraction_IG=0.5, # Sampling mode added
                 sampling_fraction_evo=0.3, sampling_dropout_rate=0.5, sampling_seed=42,
-                radius=8.0, pep_sampling=None,
+                radius=8.0, pep_sampling=None, benchmark_release_dates_map=None, 
+                target_release_date=None,
     ):
         """
         Initializes the PMGen modeling pipeline.
@@ -86,6 +87,8 @@ class run_PMGen_modeling():
         self.return_all_outputs = return_all_outputs
         self.benchmark_similarity_threshold = benchmark_similarity_threshold # added after review --> similarity threshold
         self.benchmark_exclude_ids = benchmark_exclude_ids # added after review --> similarity threshold
+        self.benchmark_release_dates_map = benchmark_release_dates_map   # NEW
+        self.target_release_date = target_release_date                   # NEW
         self.sampling_mode = sampling_mode
         self.n_times_sampling = n_times_sampling
         self.sampling_fraction_IG = sampling_fraction_IG
@@ -94,6 +97,7 @@ class run_PMGen_modeling():
         self.sampling_seed = sampling_seed
         self.radius = radius
         self.pep_sampling = pep_sampling
+        
         self.input_assertion()
         if len(self.models) > 1:
             print(f'\n #### Warning! You are running for multiple models {self.models}'
@@ -186,6 +190,8 @@ class run_PMGen_modeling():
                     case.model(n_loop_models=self.num_templates, benchmark=self.benchmark,
                             benchmark_similarity_threshold=(self.benchmark_similarity_threshold if self.benchmark else None), # added after review --> similarity threshold
                             benchmark_exclude_ids=(self.benchmark_exclude_ids if self.benchmark else None),
+                            benchmark_release_dates_map=(self.benchmark_release_dates_map if self.benchmark else None),
+                            target_release_date=(self.target_release_date if self.benchmark else None),    
                             n_homology_models=self.n_homology_models,
                             best_n_templates=self.best_n_templates) 
                     print("Pandora modeling completed successfully.")
@@ -439,7 +445,7 @@ class run_PMGen_wrapper():
                  benchmark_similarity_threshold=0.95, benchmark_exclude_ids=None,  # added after review --> similarity threshold
                  sampling_mode=False, n_times_sampling=200, sampling_fraction_IG=0.5, # Sampling mode added
                 sampling_fraction_evo=0.3, sampling_dropout_rate=0.5, sampling_seed=42,
-                radius=8.0, pep_sampling=None,
+                radius=8.0, pep_sampling=None, benchmark_release_dates_map=None,
                  ):
         """
         Initializes the run_PMGen_wrapper class.
@@ -466,6 +472,9 @@ class run_PMGen_wrapper():
         :param pandora_force_run (bool): If active, PANDORA will be forced to run even if files already exist.
         :param return_all_outputs (bool): If active, all alphafold outputs are saved.
         :param benchmark_similarity_threshold (float): Only used during benchmarking, exludes sequences above this similarity threshold.
+        :param benchmark_release_dates_map: Only valid with --benchmark. When set, templates whose PDB release 
+                date is >= the target structure\'s release date are excluded. Requires a "release_date" (or "PDB release date") column in --df. 
+                Templates whose PDB IDs are not in --df are kept (assumed pre-2018).
         The function `input_assertion()` checks if all inputs are correctly formatted and whether required files and directories exist.
 
         Raises:
@@ -488,6 +497,7 @@ class run_PMGen_wrapper():
         self.return_all_outputs = return_all_outputs
         self.benchmark_similarity_threshold = benchmark_similarity_threshold # added after review --> similarity threshold
         self.benchmark_exclude_ids = benchmark_exclude_ids
+        self.benchmark_release_dates_map = benchmark_release_dates_map 
         self.sampling_mode = sampling_mode
         self.n_times_sampling = n_times_sampling
         self.sampling_fraction_IG = sampling_fraction_IG
@@ -517,6 +527,11 @@ class run_PMGen_wrapper():
                                             pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling,
                                             return_all_outputs=self.return_all_outputs, 
                                             benchmark_similarity_threshold=self.benchmark_similarity_threshold, benchmark_exclude_ids=self.benchmark_exclude_ids, # added after review --> similarity threshold
+                                            benchmark_release_dates_map=self.benchmark_release_dates_map,
+                                            target_release_date=(
+                                                self.benchmark_release_dates_map.get(str(row['id']).split('_')[0][:4].upper())
+                                                if self.benchmark_release_dates_map is not None else None
+                                            ),
                                             sampling_mode=self.sampling_mode, #v2
                                             n_times_sampling=self.n_times_sampling,
                                             sampling_fraction_IG=self.sampling_fraction_IG,
@@ -563,6 +578,11 @@ class run_PMGen_wrapper():
                                         pandora_force_run=self.pandora_force_run, no_modelling=self.no_modelling,
                                         return_all_outputs=self.return_all_outputs, 
                                         benchmark_similarity_threshold=self.benchmark_similarity_threshold, benchmark_exclude_ids=self.benchmark_exclude_ids, # added after review --> similarity threshold
+                                        benchmark_release_dates_map=self.benchmark_release_dates_map,
+                                        target_release_date=(
+                                            self.benchmark_release_dates_map.get(str(row['id']).split('_')[0][:4].upper())
+                                            if self.benchmark_release_dates_map is not None else None
+                                        ),
                                         sampling_mode=self.sampling_mode, #v2
                                         n_times_sampling=self.n_times_sampling,
                                         sampling_fraction_IG=self.sampling_fraction_IG,
@@ -629,6 +649,11 @@ class run_PMGen_wrapper():
                                             models=self.models, alphafold_param_folder=self.alphafold_param_folder,
                                             fine_tuned_model_path=self.fine_tuned_model_path, no_modelling=self.no_modelling,
                                             return_all_outputs=self.return_all_outputs,
+                                            benchmark_release_dates_map=self.benchmark_release_dates_map,
+                                            target_release_date=(
+                                                self.benchmark_release_dates_map.get(str(row['id']).split('_')[0][:4].upper())
+                                                if self.benchmark_release_dates_map is not None else None
+                                            ),
                                             sampling_mode=self.sampling_mode, #v2
                                             n_times_sampling=self.n_times_sampling,
                                             sampling_fraction_IG=self.sampling_fraction_IG,

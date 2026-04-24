@@ -83,7 +83,7 @@ class Pandora:
 
     def find_template(self, best_n_templates=1, benchmark=False, 
                       benchmark_similarity_threshold=None, benchmark_exclude_ids=None, # added after review --> similarity threshold
-                      verbose=True,): 
+                      verbose=True, benchmark_release_dates_map=None, target_release_date=None,): 
         ''' Find the best template structure given a Target object
 
         Args:
@@ -116,8 +116,15 @@ class Pandora:
                                                                                         self.database,
                                                                                         best_n_templates=best_n_templates,
                                                                                         benchmark=benchmark,
-                                                                                        benchmark_similarity_threshold=benchmark_similarity_threshold,
-                                                                                        benchmark_exclude_ids=benchmark_exclude_ids) # added after review --> similarity threshold
+                                                                                        benchmark_similarity_threshold=benchmark_similarity_threshold,  # added after review --> similarity threshold
+                                                                                        benchmark_exclude_ids=benchmark_exclude_ids,
+                                                                                        benchmark_release_dates_map=benchmark_release_dates_map,  
+                                                                                        target_release_date=target_release_date,
+                                                                                        benchmark_release_dates_map=benchmark_release_dates_map,   
+                                                                                        target_release_date=target_release_date,
+                                                                                        verbose=verbose                 
+                                                                                        )
+                                                                                       
             self.target.templates = [i.id for i in self.template]
             if verbose:
                 print('\tSelected template structure (%s): %s' %(len(self.template), [i.id for i in self.template]))
@@ -387,6 +394,8 @@ class Pandora:
     def model(self, n_loop_models=20, n_homology_models=1,
               best_n_templates=1, n_jobs=None, loop_refinement='slow', pickle_out=False,
               benchmark=False, benchmark_similarity_threshold=None, benchmark_exclude_ids=None, # added after review --> similarity threshold
+              benchmark_release_dates_map=None,
+              target_release_date=None,
               verbose=True, helix=False, sheet=False, 
               RMSD_atoms=['C', 'CA', 'N', 'O'], clip_C_domain=False, restraints_stdev=False):
         '''Wrapper function that combines all modelling steps.

@@ -23,6 +23,30 @@ from copy import deepcopy
 import re
 import json
 
+def _parse_release_date(s):
+    """Parse a release-date string in any of the common formats. Returns a
+    datetime or None if the input is missing/unparseable."""
+    from datetime import datetime
+    if s is None:
+        return None
+    if isinstance(s, datetime):
+        return s
+    s = str(s).strip()
+    if not s or s.lower() in ('nan', 'none', 'nat'):
+        return None
+    for fmt in ('%m/%d/%Y', '%Y-%m-%d', '%d/%m/%Y', '%Y/%m/%d', '%m-%d-%Y'):
+        try:
+            return datetime.strptime(s, fmt)
+        except (ValueError, TypeError):
+            continue
+    try:
+        parsed = pd.to_datetime(s, errors='coerce')
+        if pd.isna(parsed):
+            return None
+        return parsed.to_pydatetime()
+    except Exception:
+        return None
+
 def check_target_template(target, template):
     """ Checks if the target and the template are the same. If the user gave sequence info in the target, use that, else
         use the allele type.
@@ -511,8 +535,12 @@ def _peptide_identity(target_pept, template_pept, target_anchors, template_ancho
     aln_len = max(len(aligned_t.replace('-', '')), len(aligned_p.replace('-', '')))
     return matches, max(aln_len, 1)
 
+        
+
 def find_template(target, database, best_n_templates=1, 
                   benchmark=False, benchmark_similarity_threshold=None, benchmark_exclude_ids=None, # added for pmgen benchmarking # added after review --> similarity threshold
+                  benchmark_release_dates_map=None,   
+                  target_release_date=None,  
                   blastdb=PANDORA.PANDORA_data + '/BLAST_databases/templates_blast_db/templates_blast_db'):
     ''' Selects the template structure that is best suited as template for homology modelling of the target
 
@@ -634,6 +662,34 @@ def find_template(target, database, best_n_templates=1,
         for excl in benchmark_exclude_ids:
             putative_templates.pop(excl[:4].upper(), None)
             putative_templates.pop(excl[:4].lower(), None)
+    
+    if (benchmark
+            and benchmark_release_dates_map is not None
+            and target_release_date is not None):
+        tgt_date = _parse_release_date(target_release_date)
+        if tgt_date is None:
+            print(f'[benchmark_before_date] WARNING: could not parse target '
+                  f'release date "{target_release_date}". Skipping date filter.')
+        else:
+            excluded_by_date = []
+            for ID in list(putative_templates.keys()):
+                key = ID[:4].upper()
+                if key not in benchmark_release_dates_map:
+                    # Unknown date -> keep (assumed pre-2018)
+                    continue
+                t_date = _parse_release_date(benchmark_release_dates_map[key])
+                if t_date is None:
+                    continue
+                if t_date >= tgt_date:
+                    excluded_by_date.append(ID)
+                    putative_templates.pop(ID, None)
+            print(f'[benchmark_before_date] Target {target.id} '
+                  f'(date={tgt_date.date()}) — excluded '
+                  f'{len(excluded_by_date)} templates with date >= target.')
+            if not putative_templates:
+                raise Exception(
+                    f'No candidate templates remain after benchmark_before_date '
+                    f'filter for target {target.id} (date={tgt_date.date()}).')
 
     if target.MHC_class == 'II':
         for ID in putative_templates:

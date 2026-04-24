@@ -145,8 +145,13 @@ def main():
             'similarity above this fraction (0-1). pMHC similarity is the length-weighted '
             'average of MHC G-domain identity and peptide identity. Default: 1.0.') # added after review --> similarity benchmark
     parser.add_argument('--benchmark_exclude_ids', action="store_true", help="If activated, none of the ids in df are used as templates for benchmarking.")
+    parser.add_argument('--benchmark_before_date', action='store_true', default=False, help='Only valid with --benchmark. When set, templates whose PDB release '
+         'date is >= the target structure\'s release date are excluded. '
+         'Requires a "release_date" (or "PDB release date") column in --df. '
+         'Templates whose PDB IDs are not in --df are kept (assumed pre-2018).')
 
     args = parser.parse_args()
+    if args.benchmark_before_date: assert args.benchmark, "--benchmark_before_date requires --benchmark to be set."
     assert(args.proteinmpnn_model_name) in allowed_mpnn_models, f"Allowed models: {allowed_mpnn_models}"
     bioemu_assertions(args)
     for iteration in range(args.iterative_peptide_gen + 1):
@@ -206,6 +211,25 @@ def main():
 
 
             df['mhc_seq'] = [''.join([aa.upper() for aa in seq if aa.upper() in AMINO_ACIDS]) for seq in df['mhc_seq'].tolist()]  # remove gaps from df:
+            # Build PDB -> release_date map for --benchmark_before_date
+            benchmark_release_dates_map = None
+            if args.benchmark and args.benchmark_before_date:
+                _date_col_candidates = ['release_date', 'PDB release date',
+                                        'PDB_release_date', 'PDB release\xa0date']
+                _date_col = next((c for c in _date_col_candidates if c in df.columns), None)
+                if _date_col is None:
+                    raise ValueError(
+                        f"--benchmark_before_date requires a release-date column in --df. "
+                        f"Expected one of {_date_col_candidates}. Found: {list(df.columns)}"
+                    )
+                benchmark_release_dates_map = {}
+                for _, _r in df.iterrows():
+                    _pdb_key = str(_r['id']).split('_')[0][:4].upper()
+                    _d = _r[_date_col]
+                    if pd.notna(_d):
+                        benchmark_release_dates_map[_pdb_key] = str(_d)
+                print(f'[benchmark_before_date] Built date map for '
+                    f'{len(benchmark_release_dates_map)} PDB IDs (column "{_date_col}").')
             # Build benchmark exclusion list (4-letter PDB prefixes from all test ids) # added after review --> similarity threshold
             benchmark_exclude_ids = None
             if args.benchmark_exclude_ids: # not activated for main benchmarking, bcz other methods used all templates and the comparision was not fair if we do it. Instead done in supplementary to asses model performance.
@@ -233,6 +257,7 @@ def main():
                                            n_homology_models=args.n_homology_models, pandora_force_run=args.no_pandora,
                                             no_modelling=args.initial_guess, return_all_outputs=args.return_all_outputs,
                                             benchmark_similarity_threshold=args.benchmark_similarity_threshold, benchmark_exclude_ids=benchmark_exclude_ids,  # added after review --> similarity threshold
+                                            benchmark_release_dates_map=benchmark_release_dates_map,
                                             sampling_mode=args.sampling_mode,
                                             n_times_sampling=args.n_times_sampling,
                                             sampling_fraction_IG=args.sampling_fraction_IG,
@@ -279,6 +304,7 @@ def main():
                                             return_all_outputs=args.return_all_outputs,
                                             benchmark_similarity_threshold=args.benchmark_similarity_threshold, # added after review --> similarity threshold
                                             benchmark_exclude_ids=[args.id.split('_')[0][:4]] if args.benchmark and args.id else None,
+                                            benchmark_release_dates_map=None,
                                             sampling_mode=args.sampling_mode,
                                             n_times_sampling=args.n_times_sampling,
                                             sampling_fraction_IG=args.sampling_fraction_IG,
