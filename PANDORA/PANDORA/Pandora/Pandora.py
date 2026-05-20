@@ -120,9 +120,7 @@ class Pandora:
                                                                                         benchmark_exclude_ids=benchmark_exclude_ids,
                                                                                         benchmark_release_dates_map=benchmark_release_dates_map,  
                                                                                         target_release_date=target_release_date,
-                                                                                        benchmark_release_dates_map=benchmark_release_dates_map,   
-                                                                                        target_release_date=target_release_date,
-                                                                                        verbose=verbose                 
+                                                                                                        
                                                                                         )
                                                                                        
             self.target.templates = [i.id for i in self.template]
@@ -460,7 +458,9 @@ class Pandora:
                    benchmark=benchmark,
                    benchmark_similarity_threshold=benchmark_similarity_threshold, # added after review --> similarity threshold
                    benchmark_exclude_ids=benchmark_exclude_ids,
-                   verbose=verbose) 
+                   benchmark_release_dates_map=benchmark_release_dates_map,
+                   target_release_date=target_release_date,
+                   ) 
             except:
                 self.__log(self.target.id, 'None', 'Could not find a template')
                 raise Exception('Could not find a template')

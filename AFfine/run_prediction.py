@@ -170,7 +170,7 @@ for counter, targetl in targets.iterrows():
         #(template_pdbfile, target_to_template_alignstring,
         # identities, target_len, template_len) = line[cols]
 
-        assert row.target_len == len(query_sequence), f'{row.target_len},{len(query_sequence)}'
+        assert row.target_len == len(query_sequence), f'{row.target_len},{len(query_sequence), row}'
         target_to_template_alignment = {
             int(x.split(':')[0]) : int(x.split(':')[1]) # 0-indexed
             for x in row.target_to_template_alignstring.split(';')
@@ -199,12 +199,6 @@ for counter, targetl in targets.iterrows():
         msa = [query_sequence] + msa
         
 
-    # ── Build peptide mask per-target if sampling requested ──
-    all_metrics = process_target_with_ig_pipeline(
-            args, ig_config, targetl, query_sequence, query_chainseq,
-            all_template_features, model_runners, outfile_prefix,
-            crop_size, msa, deletion_matrix,
-        )
     # -------- End of V2 after sampling mode -------------- #
     all_metrics = process_target_with_ig_pipeline(
         args, ig_config, targetl, query_sequence, query_chainseq,

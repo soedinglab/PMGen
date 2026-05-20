@@ -1031,7 +1031,8 @@ def run_single_proteinmpnn(path, directory, args, anchor_and_peptide=None):
         binder_pred=args.binder_pred,
         fix_anchors=args.fix_anchors,
         anchor_and_peptide=anchor_and_peptide,
-        model_name=args.proteinmpnn_model_name
+        model_name=args.proteinmpnn_model_name,
+        only_multichain=False, 
     )
     runner_mpnn.run() #
 

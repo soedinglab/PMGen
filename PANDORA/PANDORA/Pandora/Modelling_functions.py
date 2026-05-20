@@ -22,6 +22,7 @@ from datetime import datetime
 from copy import deepcopy
 import re
 import json
+import pandas as pd
 
 def _parse_release_date(s):
     """Parse a release-date string in any of the common formats. Returns a
@@ -680,7 +681,7 @@ def find_template(target, database, best_n_templates=1,
                 t_date = _parse_release_date(benchmark_release_dates_map[key])
                 if t_date is None:
                     continue
-                if t_date >= tgt_date:
+                if t_date > tgt_date:
                     excluded_by_date.append(ID)
                     putative_templates.pop(ID, None)
             print(f'[benchmark_before_date] Target {target.id} '
