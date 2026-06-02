@@ -18,6 +18,7 @@ from PANDORA import Database
 import glob
 from utils import processing_functions
 import pandas as pd
+import re
 import subprocess
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -1408,7 +1409,14 @@ def assert_iterative_mode(args):
         assert args.df, f"When using iterative_peptide_gen, --df must be given"
         assert args.df.endswith('.tsv'), (f"When using iterative_peptide_gen, please make sure your "
                                           f"--df file endswith '.tsv' and is a tab separated file, found {args.df}")
-        assert args.binder_pred == True, f"When using iterative_peptide_gen, --binder_pred flag must be used."
+        if getattr(args, 'selection_method', 'netmhcpan') == 'netmhcpan':
+            assert args.binder_pred == True, ("When using iterative_peptide_gen with "
+                                              "--selection_method netmhcpan, --binder_pred must be used.")
+        else:
+            # proteinmpnn_score / proteinmpnn_profile select straight from the .fa; no netMHCpan needed.
+            if args.binder_pred:
+                print("selection_method is ProteinMPNN-based; --binder_pred is ignored (netMHCpan skipped).")
+            args.binder_pred = False
         assert len(args.models) == 1, (f"When using iterative_peptide_gen, only one model must be used, found {args.models}"
                                       f"and len(): {len(args.models)}")
         if not args.fix_anchors: print("Warning, You have chosen iterative mode, "
@@ -1432,6 +1440,63 @@ def swap_columns(df, col1, col2):
     return df[cols]
 
 
+def _parse_mpnn_seqs_fasta(fa_path):
+    """Parse a ProteinMPNN seqs/*.fa. Returns [{'score': float|None, 'seq': str}, ...]
+    in file order. Record 0 is the original (sampled-from) peptide; 1.. are samples."""
+    records, header, seq_lines = [], None, []
+    with open(fa_path) as f:
+        for line in f:
+            line = line.rstrip('\n')
+            if line.startswith('>'):
+                if header is not None:
+                    records.append((header, ''.join(seq_lines)))
+                header, seq_lines = line, []
+            elif line.strip():
+                seq_lines.append(line.strip())
+    if header is not None:
+        records.append((header, ''.join(seq_lines)))
+    out = []
+    for h, s in records:
+        m = re.search(r'score=([0-9.]+)', h)   # first match is the standalone score=, not global_score=
+        out.append({'score': float(m.group(1)) if m else None, 'seq': s})
+    return out
+
+
+def select_best_peptide_from_mpnn(fa_path, method):
+    """Returns (best_peptide, original_peptide, gen_score, original_score)."""
+    records = _parse_mpnn_seqs_fasta(fa_path)
+    if len(records) < 2:
+        raise ValueError(f"Need >=1 sampled sequence in {fa_path}, found {len(records)} records")
+    original_peptide = records[0]['seq']
+    original_score = records[0]['score'] if records[0]['score'] is not None else np.nan
+    sampled = records[1:]
+
+    if method == 'proteinmpnn_score':
+        scored = [r for r in sampled if r['score'] is not None]
+        if not scored:
+            raise ValueError(f"No 'score=' found in sampled headers of {fa_path}")
+        best = min(scored, key=lambda r: r['score'])      # lower is better
+        return best['seq'], original_peptide, best['score'], original_score
+
+    if method == 'proteinmpnn_profile':
+        seqs = [r['seq'] for r in sampled]
+        L = len(seqs[0])
+        if any(len(s) != L for s in seqs):
+            raise ValueError(f"Sampled peptides have unequal lengths in {fa_path}")
+        n = len(seqs)
+        consensus, neglogp = [], 0.0
+        for i in range(L):
+            counts = {}
+            for s in seqs:
+                counts[s[i]] = counts.get(s[i], 0) + 1
+            aa = max(sorted(counts), key=lambda a: counts[a])  # argmax, alphabetical tie-break
+            consensus.append(aa)
+            neglogp += -np.log(counts[aa] / n)                 # -log freq of chosen residue
+        profile_score = float(neglogp / L)                     # mean per-position; lower is better
+        return ''.join(consensus), original_peptide, profile_score, original_score
+
+    raise ValueError(f"Unknown selection_method: {method}")
+
 def collect_generated_binders(args, df, iter, debugging=True):
     protmpnn_path = os.path.join(args.output_dir, "protienmpnn")
     id_paths = os.listdir(protmpnn_path)
@@ -1449,6 +1514,24 @@ def collect_generated_binders(args, df, iter, debugging=True):
                         )
                     else:
                         model_folder = model_folders[0]
+
+                    # Request 1: alternative selection straight from the ProteinMPNN .fa
+                    selection_method = getattr(args, 'selection_method', 'netmhcpan')
+                    if selection_method in ('proteinmpnn_score', 'proteinmpnn_profile'):
+                        seqs_dir = os.path.join(idp, model_folder, "peptide_design", "seqs")
+                        fa_files = [f for f in os.listdir(seqs_dir) if f.endswith('.fa')]
+                        if not fa_files:
+                            continue
+                        best_peptide, _orig, gen_score, original_score = \
+                            select_best_peptide_from_mpnn(os.path.join(seqs_dir, fa_files[0]), selection_method)
+                        DF.append(pd.DataFrame({
+                            "id": [id],
+                            f"generated_peptide_{iter}": [best_peptide],
+                            f"generated_affinity_{iter}": [gen_score],
+                            f"original_affinity_{iter}": [original_score],
+                        }))
+                        continue
+                    # ----- netmhcpan path below, unchanged -----
                     netmhcpan_out = os.path.join(idp, model_folder, "peptide_design", "binder_pred", "netmhcpan_out.csv")
                     if not os.path.exists(netmhcpan_out):
                         continue
@@ -1495,7 +1578,15 @@ def collect_generated_binders(args, df, iter, debugging=True):
         else:
             raise ValueError(f"No valid binder prediction outputs found.")
     DF = pd.concat(DF, ignore_index=True)
-    final = pd.merge(df, DF, on=['id'], how='inner')
+    merge_df = df
+    if getattr(args, 'iterative_peptide_gen', 0) > 0 and getattr(args, 'multiple_anchors', False):
+        # DF is keyed by ORIGINAL pMHC id (best structure collapsed); merge against the
+        # pre-expansion input (args.df), not the anchor-expanded df.
+        try:
+            merge_df = pd.read_csv(args.df, sep='\t' if str(args.df).endswith('.tsv') else ',')
+        except Exception:
+            merge_df = df
+    final = pd.merge(merge_df, DF, on=['id'], how='inner')
     p = os.path.join(args.output_dir, f"best_generated_peptides_{iter}.tsv")
     final.to_csv(p, sep="\t", index=False)
     print(f"Best binders saved in {p}")

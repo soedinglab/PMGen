@@ -3,7 +3,7 @@ import pandas as pd
 from run_utils import (run_PMGen_wrapper, run_PMGen_modeling, protein_mpnn_wrapper, bioemu_assertions,
                        MultipleAnchors, get_best_structres, retrieve_anchors_and_fixed_positions, assert_iterative_mode,
                        collect_generated_binders, create_new_input_and_fixed_positions, create_fixed_positions_if_given,
-                       mutation_screen)
+                       mutation_screen, fixed_anchor_pos)
 import shutil
 from Bio import SeqIO
 import warnings
@@ -127,6 +127,13 @@ def main():
 
     # Setting to run iterative peptide generation
     parser.add_argument('--iterative_peptide_gen', type=int, default=0, help='If used, the iterative peptide generation is performed, defines the number of iterations.')
+    parser.add_argument('--selection_method', choices=['netmhcpan', 'proteinmpnn_score', 'proteinmpnn_profile'], default='proteinmpnn_profile',
+                        help='How to pick the best peptide each --iterative_peptide_gen round. '
+                             '"netmhcpan": lowest %%Rank_EL (default). '
+                             '"proteinmpnn_score": lowest ProteinMPNN score= among sampled peptides. '
+                             '"proteinmpnn_profile": per-position argmax (consensus) over sampled peptides. '
+                             'Anchor/fixed positions stay constant during generation under --fix_anchors, '
+                             'so they are preserved automatically.')
 
     # Evoformer sampling arguments
     parser.add_argument('--sampling_mode', action='store_true', help='Enable evoformer dropout sampling on peptide region')
@@ -154,6 +161,10 @@ def main():
     if args.benchmark_before_date: assert args.benchmark, "--benchmark_before_date requires --benchmark to be set."
     assert(args.proteinmpnn_model_name) in allowed_mpnn_models, f"Allowed models: {allowed_mpnn_models}"
     bioemu_assertions(args)
+    if args.iterative_peptide_gen > 0 and args.multiple_anchors and not args.best_structures:
+        print("Iterative + multiple_anchors: forcing --best_structures ON so ProteinMPNN "
+            "samples only the best structure per pMHC.")
+        args.best_structures = True
     for iteration in range(args.iterative_peptide_gen + 1):
         if iteration == 0:
             fixed_positions_path = create_fixed_positions_if_given(args)
@@ -196,6 +207,7 @@ def main():
                 args.id = args.peptide  # Use peptide as ID if not provided
 
         # Run wrapper mode
+        collapsed_anchor_and_peptide = None
         if args.mode == 'wrapper':
             if not args.df:
                 raise ValueError("--df is required for wrapper mode")
@@ -280,8 +292,31 @@ def main():
                 output_pdbs_dict[key] = [os.path.join(value, i) for i in os.listdir(value) if i.endswith('.pdb') and
                                          'model_' in i and not i.endswith('.npy')]
             if args.best_structures: # get best structure out of multiple models and multiple predicted anchors:
-                _ = get_best_structres(args.output_dir, df, args.multiple_anchors)
-        # Run modeling mode
+                final_df = get_best_structres(args.output_dir, df, args.multiple_anchors)
+                # Request 2: in iterative + multiple_anchors, feed ProteinMPNN ONLY the single
+                # best structure per pMHC (collapses anchor suffixes -> avoids exponential blow-up).
+                if args.iterative_peptide_gen > 0 and args.multiple_anchors:
+                    best_dir = os.path.join(args.output_dir, 'best_structures')
+                    output_pdbs_dict = {}
+                    collapsed_anchor_and_peptide = {}
+                    for _, frow in final_df.iterrows():
+                        win_id  = str(frow['id'])           # winning anchor id, e.g. 6OKJ_2
+                        orig_id = str(frow['unique_ids'])   # original pMHC id,  e.g. 6OKJ
+                        best_pdb = os.path.join(best_dir, f'{win_id}_PMGen.pdb')
+                        if not os.path.exists(best_pdb):
+                            continue
+                        output_pdbs_dict[orig_id] = [best_pdb]   # key by ORIGINAL id (matches anchor dict + collect)
+                        anchors_list = [int(a) for a in str(frow['anchors']).split(';')]
+                        pep = str(frow['peptide'])
+                        fixed_non = fixed_anchor_pos(pep, args.peptide_random_fix_fraction, anchors_list)
+                        collapsed_anchor_and_peptide[orig_id] = [anchors_list + fixed_non, pep]
+                    # persist fixed_positions.tsv (original-id keyed) so the NEXT iter can read it
+                    if args.fix_anchors and collapsed_anchor_and_peptide:
+                        rows = [{"id": k, "anchor": v[0], "peptide": v[1]}
+                                for k, v in collapsed_anchor_and_peptide.items()]
+                        pd.DataFrame(rows).to_csv(
+                            os.path.join(args.output_dir, 'fixed_positions.tsv'), sep='\t', index=False)        # Run modeling mode
+                        
         elif args.mode == 'modeling':
             sequences = []
             if not args.mhc_seq:
@@ -331,11 +366,15 @@ def main():
         # get the pdb outputs for listing them and protmpnn
 
         if args.fix_anchors:
-            anchor_and_peptide = retrieve_anchors_and_fixed_positions(args,
-                                  peptide_random_fix_fraction=args.peptide_random_fix_fraction,
-                                  fixed_positions_path=fixed_positions_path)
+            if collapsed_anchor_and_peptide is not None:
+                anchor_and_peptide = collapsed_anchor_and_peptide
+            else:
+                anchor_and_peptide = retrieve_anchors_and_fixed_positions(args,
+                                      peptide_random_fix_fraction=args.peptide_random_fix_fraction,
+                                      fixed_positions_path=fixed_positions_path)
         else:
             anchor_and_peptide = None
+
         if not args.no_protein_mpnn:
             if args.peptide_design or args.only_pseudo_sequence_design or args.mhc_design or args.protein_mpnn_dryrun or args.only_collect_generated_binders:
                 if args.protein_mpnn_dryrun:
@@ -352,7 +391,9 @@ def main():
                 print("### Start ProteinMPNN runs ###")
                 print('files:\n', output_pdbs_dict)
                 protein_mpnn_wrapper(output_pdbs_dict, args, args.max_cores, anchor_and_peptide=anchor_and_peptide, mode=args.run)
-                if (args.peptide_design and args.binder_pred and args.mode == "wrapper") or args.only_collect_generated_binders:
+                _mpnn_select = getattr(args, 'selection_method', 'netmhcpan') in ('proteinmpnn_score', 'proteinmpnn_profile')
+                if (args.peptide_design and (args.binder_pred or _mpnn_select) and args.mode == "wrapper") \
+                        or args.only_collect_generated_binders:
                     print("Collecting the best binders")
                     collected_generated_binders_path = collect_generated_binders(args, df, iteration)
 
