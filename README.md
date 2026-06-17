@@ -18,9 +18,11 @@
 
 PMGen (Peptide MHC Generator) is a comprehensive pipeline for predicting peptide-MHC (pMHC) complex structures and designing optimized peptide sequences.
 
-<p align="center">
-  <img src="pipeline.png" width="200" alt="PMGen Pipeline"/>
-</p>
+<table align="center" border="0" cellpadding="0" cellspacing="0">
+  <tr>
+    <td><img src="pipeline.png" width="200" alt="PMGen Logo"/></td>
+  </tr>
+</table>
 
 ## Key Features
 
