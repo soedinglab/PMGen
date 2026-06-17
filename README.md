@@ -213,17 +213,19 @@ output/
 ## Citation
 
 ```
-@article{asgary2025pmgen,
-  author = {Asgary, Amir H. and Amirreza and others},
-  title = {PMGen: From Peptide-MHC Prediction to Neoantigen Generation},
-  journal = {bioRxiv},
-  year = {2025},
-  month = {11},
-  date = {2025-11-14},
-  doi = {10.1101/2025.11.14.688404},
-  url = {https://doi.org/10.1101/2025.11.14.688404},
-  note = {Preprint}
+@article{10.1093/bioinformatics/btag381,
+    author = {Asgary, Amir H and Aleyasin, Amirreza and Mehl, Jonas A and Fallah, Salman S and Aintablian, Hasmig and Ludewig, Burkhard and Mishto, Michele and Liepe, Juliane and Söding, Johannes},
+    title = {PMGen: From Peptide-MHC Structure Prediction to Peptide Generation},
+    journal = {Bioinformatics},
+    pages = {btag381},
+    year = {2026},
+    month = {06},
+    issn = {1367-4811},
+    doi = {10.1093/bioinformatics/btag381},
+    url = {https://doi.org/10.1093/bioinformatics/btag381},
+    eprint = {https://academic.oup.com/bioinformatics/advance-article-pdf/doi/10.1093/bioinformatics/btag381/68524503/btag381.pdf},
 }
+
 ```
 
 
