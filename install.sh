@@ -133,7 +133,7 @@ pandora-fetch || echo "⚠ pandora-fetch failed, Do not worry, we will try fallb
 
 # Resolve the actual PANDORA data dir from the package
 PANDORA_DIR=$(python -c "import PANDORA; print(PANDORA.PANDORA_data)")
-PANDORA_DB_URL="https://owncloud.gwdg.de/index.php/s/gebWa9TN3VNHy31"
+PANDORA_DB_URL="https://owncloud.gwdg.de/index.php/s/gebWa9TN3VNHy31/download"
 
 if [ ! -f "$PANDORA_DIR/PANDORA_database.pkl" ]; then
     echo "⚠ PANDORA_database.pkl missing. Downloading fallback DB..."
