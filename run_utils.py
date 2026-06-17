@@ -1510,10 +1510,8 @@ def collect_generated_binders(args, df, iter, debugging=True):
                     if len(model_folders) > 1:
                         model_folder = next(
                             i for i in model_folders
-                            if "model_" in i and "peptide_design" in os.listdir(os.path.join(idp, i))
+                            if os.path.isdir(os.path.join(idp, i)) and "peptide_design" in os.listdir(os.path.join(idp, i))
                         )
-                    else:
-                        model_folder = model_folders[0]
 
                     # Request 1: alternative selection straight from the ProteinMPNN .fa
                     selection_method = getattr(args, 'selection_method', 'netmhcpan')
