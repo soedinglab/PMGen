@@ -129,7 +129,24 @@ $CONDA_CMD env update -f "$CURRENT_DIR/$ENV_FILE"
 
 # Step 7: Fetch PANDORA Data
 echo "✔ Fetching PANDORA data..."
-pandora-fetch
+pandora-fetch || echo "⚠ pandora-fetch failed, Do not worry, we will try fallback."
+
+# Resolve the actual PANDORA data dir from the package
+PANDORA_DIR=$(python -c "import PANDORA; print(PANDORA.PANDORA_data)")
+PANDORA_DB_URL="https://owncloud.gwdg.de/index.php/s/gebWa9TN3VNHy31"
+
+if [ ! -f "$PANDORA_DIR/PANDORA_database.pkl" ]; then
+    echo "⚠ PANDORA_database.pkl missing. Downloading fallback DB..."
+    mkdir -p "$PANDORA_DIR"
+    wget -O /tmp/pandora_db.zip "$PANDORA_DB_URL"
+    unzip -o /tmp/pandora_db.zip -d "$PANDORA_DIR"
+    rm /tmp/pandora_db.zip
+    if [ ! -f "$PANDORA_DIR/PANDORA_database.pkl" ]; then
+        echo "❌ Fallback DB unpack failed." >&2
+        exit 1
+    fi
+    echo "✔ Fallback DB installed at $PANDORA_DIR."
+fi
 
 # Step 8: Download and Extract AFfine Data
 echo "✔ Downloading AFfine data ..."
