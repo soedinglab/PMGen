@@ -398,6 +398,16 @@ def apply_ig_mask(all_positions: np.ndarray,
     # Broadcast: [N_res] → [N_res, 1, 1] * [N_res, 37, 3]
     masked_positions[zero_mask] = 0.0
     return masked_positions
+
+
+def apply_ig_atom_mask(all_positions_mask: np.ndarray,
+                       mask_array: np.ndarray) -> np.ndarray:
+
+    masked_atom_mask = all_positions_mask.copy()
+    masked_atom_mask[mask_array == TOKEN_MASK] = 0.0
+    return masked_atom_mask
+
+
 def legacy_anchors_to_mask(n_res: int,
                            pep_len: int,
                            anchors: List[int],
@@ -531,6 +541,20 @@ def initial_guess_features_v2(
         all_positions = apply_ig_mask(all_positions, mask_array)
     # Convert to jax array (same as legacy parse_initial_guess)
     return jnp.array(all_positions, dtype=jnp.float32)
+
+
+def initial_guess_atom_mask_v2(
+        structure_output: dict,
+        mask_array: Optional[np.ndarray] = None
+) -> 'jnp.ndarray':
+    import jax.numpy as jnp
+    all_positions_mask = structure_output['all_positions_mask'].copy()
+    if mask_array is not None:
+        all_positions_mask = apply_ig_atom_mask(
+            all_positions_mask, mask_array)
+    return jnp.array(all_positions_mask, dtype=jnp.float32)
+
+
 def initial_guess_features_legacy(
         query_seq: str,
         template_pdb_path: str,
@@ -538,7 +562,8 @@ def initial_guess_features_legacy(
         aln=None,
         anchors=None,
         peptide_seq: Optional[str] = None,
-        ig_mask: Optional[np.ndarray] = None
+        ig_mask: Optional[np.ndarray] = None,
+        return_mask: bool = False,
 ) -> 'jnp.ndarray':
     """Backward-compatible wrapper around the legacy IG path.
     If ig_mask is provided, uses new masking. Otherwise falls back to
@@ -557,17 +582,25 @@ def initial_guess_features_legacy(
     import jax.numpy as jnp
     from af2_util import get_atom_positions_initial_guess, parse_initial_guess
     # Get raw coordinates via the original alignment-based path
-    all_positions, _ = get_atom_positions_initial_guess(
+    all_positions, all_positions_mask = get_atom_positions_initial_guess(
         template_pdb_path, query_seq, template_sequence, aln, anchors, peptide_seq)
     # Apply mask
     if ig_mask is not None:
         all_positions = apply_ig_mask(all_positions, ig_mask)
+        all_positions_mask = apply_ig_atom_mask(
+            all_positions_mask, ig_mask)
     elif anchors is not None and peptide_seq is not None:
         # Legacy path: auto-convert to mask array
         n_res = all_positions.shape[0]
         pep_len = len(peptide_seq)
         legacy_mask = legacy_anchors_to_mask(n_res, pep_len, anchors)
         all_positions = apply_ig_mask(all_positions, legacy_mask)
-    return parse_initial_guess(all_positions)
-
+        all_positions_mask = apply_ig_atom_mask(
+            all_positions_mask, legacy_mask)
+    initial_guess = parse_initial_guess(all_positions)
+    initial_guess_mask = jnp.asarray(
+        all_positions_mask, dtype=jnp.float32)
+    if return_mask:
+        return initial_guess, initial_guess_mask
+    return initial_guess
 

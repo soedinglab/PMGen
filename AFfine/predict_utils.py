@@ -164,7 +164,8 @@ def initial_guess_features(query_seq, template_pdb_path, template_sequence, aln=
                                                                                   template_sequence,
                                                                                   aln, anchors, peptide_seq)
     initial_guess = af2_util.parse_initial_guess(all_positions)
-    return initial_guess
+    initial_guess_mask = np.asarray(all_positions_mask, dtype=np.float32)
+    return initial_guess, initial_guess_mask
 
 def run_alphafold_prediction(
         query_sequence: str,
@@ -267,11 +268,18 @@ def predict_structure(
             anchors = template_pdb_dict['target_anchors'][0]
             peptide_seq = template_pdb_dict['aln_P'][0][0].replace('-','') #[n][0] target, [n][1] template
             assert len(template_pdb_list) > 0
-            initial_guess = initial_guess_features(query_sequence, template_pdb_path=template_pdb_list[0],
-                                                   template_sequence=None, aln=aln, anchors=anchors,
-                                                   peptide_seq=peptide_seq) #added by https://github.com/AmirAsgary/
-            prediction_result = model_runner.predict(processed_feature_dict, initial_guess,
-                                                     return_representations=return_all_outputs) #added by https://github.com/AmirAsgary/
+            initial_guess, initial_guess_mask = initial_guess_features(
+                query_sequence,
+                template_pdb_path=template_pdb_list[0],
+                template_sequence=None,
+                aln=aln,
+                anchors=anchors,
+                peptide_seq=peptide_seq)
+            prediction_result = model_runner.predict(
+                processed_feature_dict,
+                initial_guess=initial_guess,
+                initial_guess_mask=initial_guess_mask,
+                return_representations=return_all_outputs)
         else:
             prediction_result = model_runner.predict(processed_feature_dict, return_representations=return_all_outputs) #added by https://github.com/AmirAsgary/
         
@@ -597,6 +605,4 @@ def create_batch_for_training(
     if verbose:
         print('features_at_end:', ' '.join(processed_feature_dict.keys()))
     return processed_feature_dict
-
-
 

@@ -61,6 +61,7 @@ class RunModel:
                     compute_loss=False,
                     ensemble_representations=False,
                     initial_guess=None, # added by https://github.com/AmirAsgary
+                    initial_guess_mask=None,
                     return_representations=False): # added by https://github.com/AmirAsgary
       model = modules.AlphaFold(self.config.model)
       return model(
@@ -69,6 +70,7 @@ class RunModel:
           compute_loss=compute_loss,
           ensemble_representations=False,
           initial_guess=initial_guess, # added by https://github.com/AmirAsgary
+          initial_guess_mask=initial_guess_mask,
           return_representations=return_representations) # added by https://github.com/AmirAsgary
 
     self.apply = jax.jit(hk.transform(partial(_forward_fn, is_training=True, compute_loss=True)).apply)
@@ -87,6 +89,10 @@ class RunModel:
     Args:
       feat: A dictionary of NumPy feature arrays as output by
         RunModel.process_features.
+      initial_guess: Optional initial all-atom coordinates.
+      return_representations: Whether to return intermediate representations.
+      initial_guess_mask: Optional atom-validity mask paired with
+        ``initial_guess``.
       random_seed: A random seed to use to initialize the parameters if none
         were set when this class was initialized.
     """
@@ -130,7 +136,9 @@ class RunModel:
     logging.info('Output shape was %s', shape)
     return shape
 
-  def predict(self, feat: features.FeatureDict, initial_guess=None, return_representations=False) -> Mapping[str, Any]: # added by https://github.com/AmirAsgary
+  def predict(self, feat: features.FeatureDict, initial_guess=None,
+              return_representations=False,
+              initial_guess_mask=None) -> Mapping[str, Any]: # added by https://github.com/AmirAsgary
     """Makes a prediction by inferencing the model on the provided features.
 
     Args:
@@ -143,7 +151,9 @@ class RunModel:
     self.init_params(feat)
     logging.info('Running predict with shape(feat) = %s',
                  tree.map_structure(lambda x: x.shape, feat))
-    result = self.apply_predict(self.params, jax.random.PRNGKey(0), feat, initial_guess=initial_guess,
+    result = self.apply_predict(self.params, jax.random.PRNGKey(0), feat,
+                                initial_guess=initial_guess,
+                                initial_guess_mask=initial_guess_mask,
                                 return_representations=return_representations)# added by https://github.com/AmirAsgary # was apply(
     # This block is to ensure benchmark timings are accurate. Some blocking is
     # already happening when computing get_confidence_metrics, and this ensures

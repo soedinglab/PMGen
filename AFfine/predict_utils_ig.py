@@ -24,6 +24,7 @@ from ig_pipeline import (
     apply_template_mask,
     create_template_features_from_structure,
     initial_guess_features_v2,
+    initial_guess_atom_mask_v2,
     initial_guess_features_legacy,
     legacy_anchors_to_mask,
     TOKEN_MASK,
@@ -103,13 +104,17 @@ def initial_guess_features_unified(
         result['structure_output'] = structure_output
         result['initial_guess'] = initial_guess_features_v2(
             structure_output, mask_array=ig_mask)
+        result['initial_guess_mask'] = initial_guess_atom_mask_v2(
+            structure_output, mask_array=ig_mask)
         if ig_mask is not None:
             result['mask_array'] = ig_mask
     # ── Legacy path: template PDB + alignment ──
     elif template_pdb_path is not None:
-        result['initial_guess'] = initial_guess_features_legacy(
+        initial_guess, initial_guess_mask = initial_guess_features_legacy(
             query_seq, template_pdb_path, template_sequence,
-            aln, anchors, peptide_seq, ig_mask=ig_mask)
+            aln, anchors, peptide_seq, ig_mask=ig_mask, return_mask=True)
+        result['initial_guess'] = initial_guess
+        result['initial_guess_mask'] = initial_guess_mask
         if ig_mask is not None:
             result['mask_array'] = ig_mask
         elif anchors is not None and peptide_seq is not None:
@@ -187,11 +192,14 @@ def predict_structure_v2(
             feature_dict, random_seed=random_seed)
         # ── Run prediction ──
         initial_guess = None
+        initial_guess_mask = None
         if not no_initial_guess and ig_result is not None:
             initial_guess = ig_result.get('initial_guess', None)
+            initial_guess_mask = ig_result.get('initial_guess_mask', None)
         prediction_result = model_runner.predict(
             processed_feature_dict,
             initial_guess=initial_guess,
+            initial_guess_mask=initial_guess_mask,
             return_representations=(return_all_outputs or sampling_mode))
         # ── Task 4: Sampling Pipeline ──
         if sampling_mode and ig_result is not None:

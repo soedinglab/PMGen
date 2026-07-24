@@ -288,7 +288,8 @@ class AlphaFold(hk.Module):
             compute_loss=False,
             ensemble_representations=False,
             return_representations=False,
-            initial_guess=None):  # added by https://github.com/AmirAsgary
+            initial_guess=None,
+            initial_guess_mask=None):  # added by https://github.com/AmirAsgary
         """Run the AlphaFold model.
 
         Arguments:
@@ -299,6 +300,10 @@ class AlphaFold(hk.Module):
           ensemble_representations: Whether to use ensembling of representations.
           return_representations: Whether to also return the intermediate
             representations.
+          initial_guess: Optional all-atom coordinates used to initialize
+            ``prev_pos``.
+          initial_guess_mask: Optional atom-validity mask paired with
+            ``initial_guess``.
 
         Returns:
           When compute_loss is True:
@@ -312,6 +317,9 @@ class AlphaFold(hk.Module):
 
         impl = AlphaFoldIteration(self.config, self.global_config)
         batch_size, num_residues = batch['aatype'].shape
+        emb_config = self.config.embeddings_and_evoformer
+        use_initial_guess = (
+            emb_config.initial_guess and initial_guess is not None)
 
         def get_prev(ret):
             new_prev = {
@@ -320,6 +328,9 @@ class AlphaFold(hk.Module):
                 'prev_msa_first_row': ret['representations']['msa_first_row'],
                 'prev_pair': ret['representations']['pair'],
             }
+            if use_initial_guess:
+                new_prev['prev_pos_mask'] = (
+                    ret['structure_module']['final_atom_mask'])
             return jax.tree_map(jax.lax.stop_gradient, new_prev)
 
         def do_call(prev,
@@ -348,10 +359,18 @@ class AlphaFold(hk.Module):
                 ensemble_representations=ensemble_representations)
 
         if self.config.num_recycle:
-            emb_config = self.config.embeddings_and_evoformer
             prev_pos = jnp.zeros([num_residues, residue_constants.atom_type_num, 3])
+            prev_pos_mask = jnp.zeros(
+                [num_residues, residue_constants.atom_type_num],
+                dtype=jnp.float32)
             #### added by https://github.com/AmirAsgary
-            if emb_config.initial_guess:
+            if use_initial_guess:
+                if initial_guess_mask is None:
+                    # Backward compatibility for callers that only provide
+                    # coordinates. New PMGen paths pass the explicit atom mask.
+                    initial_guess_mask = (
+                        jnp.sum(jnp.abs(initial_guess), axis=-1) > 1e-6
+                    ).astype(jnp.float32)
                 # Check if prev_pos.shape[0] > initial_guess.shape[0]
                 if prev_pos.shape[0] > initial_guess.shape[0]:
                     # Calculate padding size
@@ -363,14 +382,31 @@ class AlphaFold(hk.Module):
                         mode='constant',
                         constant_values=0  # Pad with zeros
                     )
+                    initial_guess_mask = jnp.pad(
+                        initial_guess_mask,
+                        pad_width=((0, pad_size), (0, 0)),
+                        mode='constant',
+                        constant_values=0
+                    )
+                elif prev_pos.shape[0] < initial_guess.shape[0]:
+                    raise ValueError(
+                        'Initial guess has more residues than the AlphaFold '
+                        f'input: {initial_guess.shape[0]} > {prev_pos.shape[0]}.')
+                if initial_guess_mask.shape != prev_pos_mask.shape:
+                    raise ValueError(
+                        'Initial-guess atom mask must have shape '
+                        f'{prev_pos_mask.shape}, got {initial_guess_mask.shape}.')
                 # Now add initial_guess to prev_pos (shapes should match)
                 prev_pos += initial_guess
+                prev_pos_mask = initial_guess_mask.astype(jnp.float32)
             #### before added by https://github.com/AmirAsgary
             prev = {
                 'prev_pos': prev_pos,
                 'prev_msa_first_row': jnp.zeros([num_residues, emb_config.msa_channel]),
                 'prev_pair': jnp.zeros([num_residues, num_residues, emb_config.pair_channel]),
             }
+            if use_initial_guess:
+                prev['prev_pos_mask'] = prev_pos_mask
             if 'num_iter_recycling' in batch:
                 # Training time: num_iter_recycling is in batch.
                 # The value for each ensemble batch is the same, so arbitrarily taking
@@ -1575,6 +1611,14 @@ def dgram_from_positions(positions, num_bins, min_bin, max_bin):
     return dgram
 
 
+def mask_recycle_dgram(dgram, pseudo_beta_mask):
+    """Remove IG-derived geometry for pairs lacking valid coordinates."""
+    valid_pair = (
+        pseudo_beta_mask[..., :, None]
+        * pseudo_beta_mask[..., None, :])
+    return dgram * valid_pair[..., None]
+
+
 def pseudo_beta_fn(aatype, all_atom_positions, all_atom_masks):
     """Create pseudo beta features."""
 
@@ -1775,9 +1819,20 @@ class EmbeddingsAndEvoformer(hk.Module):
         # Jumper et al. (2021) Suppl. Alg. 2 "Inference" line 6
         # Jumper et al. (2021) Suppl. Alg. 32 "RecyclingEmbedder"
         if c.recycle_pos and 'prev_pos' in batch:
-            prev_pseudo_beta = pseudo_beta_fn(
-                batch['aatype'], batch['prev_pos'], None)
+            prev_pos_mask = batch.get('prev_pos_mask')
+            if prev_pos_mask is None:
+                prev_pseudo_beta = pseudo_beta_fn(
+                    batch['aatype'], batch['prev_pos'], None)
+                prev_pseudo_beta_mask = None
+            else:
+                prev_pseudo_beta, prev_pseudo_beta_mask = pseudo_beta_fn(
+                    batch['aatype'], batch['prev_pos'], prev_pos_mask)
             dgram = dgram_from_positions(prev_pseudo_beta, **self.config.prev_pos)
+            if prev_pseudo_beta_mask is not None:
+                # Invalid pairs receive the standard all-zero recycle
+                # distogram input instead of distances to the coordinate origin.
+                dgram = mask_recycle_dgram(
+                    dgram, prev_pseudo_beta_mask)
             pair_activations += common_modules.Linear(
                 c.pair_channel, name='prev_pos_linear')(
                 dgram)
